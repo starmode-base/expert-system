@@ -1,0 +1,22 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# In React components:
+
+- Do not destructure props inline
+- Prefer `React.PropsWithChildren` over `{ children: React.ReactNode }`
+
+
+```ts
+// Prefer this
+function ExampleComponentA(props: React.PropsWithChildren) {
+  return <div>{props.children}</div>;
+}
+
+// over this
+function ExampleComponentB({ children }: { children: React.ReactNode }) {
+  return <div>{children}</div>;
+}
+```

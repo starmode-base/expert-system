@@ -1,0 +1,8 @@
+# TanStack Start
+**/build
+**/public
+pnpm-lock.yaml
+routeTree.gen.ts
+
+# Drizzle migrations
+drizzle/meta

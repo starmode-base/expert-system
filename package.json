@@ -1,0 +1,72 @@
+{
+  "name": "starmode-sworks",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "export $(grep ^PORT= .env | tr -d '\"') && vinxi dev",
+    "dev:inngest": "export $(grep ^PORT= .env | tr -d '\"') && inngest-cli dev -u http://localhost:$PORT/api/inngest",
+    "build": "tsc && prettier --check . && eslint --max-warnings 0 && vitest run && vinxi build && drizzle-kit migrate",
+    "start": "export $(grep -v '^#' .env | xargs) && vinxi start",
+    "format": "prettier --write .",
+    "lint": "eslint --max-warnings 0 --fix",
+    "test": "vitest",
+    "env:pull": "bunx vercel@latest env pull .env && ./scripts/dev-env.sh",
+    "clean": "rm -rf node_modules tsconfig.tsbuildinfo bun.lock .output .vinxi && bun install",
+    "db:generate": "drizzle-kit generate",
+    "db:generate:custom": "drizzle-kit generate --custom",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:pull": "drizzle-kit pull",
+    "db:check": "drizzle-kit check",
+    "db:up": "drizzle-kit up",
+    "db:studio": "drizzle-kit studio"
+  },
+  "trustedDependencies": [
+    "inngest-cli"
+  ],
+  "dependencies": {
+    "@clerk/tanstack-start": "^0.11.5",
+    "@neondatabase/serverless": "^0.10.4",
+    "@tanstack/react-router": "^1.114.27",
+    "@tanstack/react-router-devtools": "^1.114.27",
+    "@tanstack/react-start": "^1.114.27",
+    "ably": "^2.6.4",
+    "drizzle-orm": "^0.41.0",
+    "inngest": "^3.32.9",
+    "lucide-react": "^0.483.0",
+    "openai": "^4.89.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.0.2",
+    "vinxi": "0.5.3",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "@inngest/eslint-plugin": "^0.0.7",
+    "@tailwindcss/postcss": "^4.0.15",
+    "@tanstack/eslint-plugin-router": "^1.114.12",
+    "@total-typescript/ts-reset": "^0.6.1",
+    "@types/node": "^22.13.11",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "autoprefixer": "^10.4.21",
+    "drizzle-kit": "^0.30.5",
+    "eslint": "^9.23.0",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "inngest-cli": "^1.5.5",
+    "postcss": "^8.5.3",
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "tailwindcss": "^4.0.15",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.27.0",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.0.9"
+  }
+}

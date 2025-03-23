@@ -1,0 +1,23 @@
+/* Font imports must be at the top of this file, even before the tailwind import */
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+/* Tailwind CSS */
+@import "tailwindcss";
+
+@theme {
+  /* Font tokens */
+  --font-sans: "Inter", sans-serif;
+
+  /* Colors */
+  --color-cerise-50: oklch(0.971 0.02 318);
+  --color-cerise-100: oklch(0.948 0.041 319);
+  --color-cerise-200: oklch(0.899 0.089 320);
+  --color-cerise-300: oklch(0.823 0.174 320);
+  --color-cerise-400: oklch(0.718 0.293 320);
+  --color-cerise-500: oklch(0.656 0.35 320); /* Hollywood Cerise reference */
+  --color-cerise-600: oklch(0.592 0.362 320);
+  --color-cerise-700: oklch(0.525 0.324 320);
+  --color-cerise-800: oklch(0.459 0.272 320);
+  --color-cerise-900: oklch(0.408 0.222 320);
+  --color-cerise-950: oklch(0.284 0.158 320);
+}

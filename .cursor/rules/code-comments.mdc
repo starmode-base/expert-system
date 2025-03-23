@@ -1,0 +1,10 @@
+---
+description: Instructions for code comments
+globs: 
+alwaysApply: true
+---
+# In code comments:
+
+- Use sentence case
+- If the code comment consist of one sentence, skip the ending period character.
+- If the code comment has two or more sentences, end all sentences with a period.
