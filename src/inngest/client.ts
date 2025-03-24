@@ -8,7 +8,7 @@ const userSchema = z.object({
 
 // Create a client to send and receive events
 export const inngest = new Inngest({
-  id: "starmode-sworks",
+  id: "expert-system",
   schemas: new EventSchemas().fromZod({
     /**
      * Hello world
