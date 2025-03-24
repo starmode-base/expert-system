@@ -15,6 +15,13 @@
       "when": 1742072571506,
       "tag": "0001_charming_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1742791589809,
+      "tag": "0002_overrated_roland_deschain",
+      "breakpoints": true
     }
   ]
 }
