@@ -19,7 +19,7 @@ const sendEventSF = createServerFn({ method: "POST" })
   .validator(z.object({ animal: z.string() }))
   .handler(async ({ context, data }) => {
     await inngest.send({
-      name: "test/hello.world",
+      name: "test/hello.world.expert",
       data: {
         animal: data.animal,
       },

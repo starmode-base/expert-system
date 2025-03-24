@@ -13,7 +13,7 @@ export const inngest = new Inngest({
     /**
      * Hello world
      */
-    "test/hello.world": {
+    "test/hello.world.expert": {
       data: z.object({
         animal: z.string(),
       }),

@@ -4,7 +4,7 @@ import { makeBedtimeStoryLLM } from "../steps/hello-world";
 
 export const helloWorld = inngest.createFunction(
   { id: "hello-world" },
-  { event: "test/hello.world" },
+  { event: "test/hello.world.expert" },
   async ({ event, step }) => {
     /**
      * Step 1: Sleep for a moment
