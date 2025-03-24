@@ -78,3 +78,23 @@ export const accounts = pgTable("accounts", {
     .references(() => organizations.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
 });
+
+/**
+ * Documents table
+ */
+
+export const documents = pgTable("documents", {
+  ...baseSchema,
+  // TODO - add user and org foreign keys
+  //   userId: text()
+  //   .notNull()
+  //   .references(() => users.id, { onDelete: "cascade" }),
+  // organizationId: text()
+  //   .notNull()
+  //   .references(() => organizations.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  pubDate: text("pubDate").notNull(),
+  link: text("link").notNull(),
+  articleText: text("articleText").notNull(),
+});
