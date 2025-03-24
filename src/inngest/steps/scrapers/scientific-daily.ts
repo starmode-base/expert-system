@@ -62,7 +62,7 @@ export async function scrapeScientificDaily(rssUrl: string): Promise<string[]> {
       const link = item.link[0];
 
       if (!pubDate || !title || !description || !link) {
-        console.log(`Skipping item due to missing data:`, item);
+        console.log(`Missing data, skipping item:`, item);
         continue;
       }
 
