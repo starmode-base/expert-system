@@ -2,8 +2,8 @@ import fetch from "node-fetch";
 import { parseStringPromise } from "xml2js";
 import * as cheerio from "cheerio";
 import { invariant } from "@tanstack/react-router";
-import { db } from "~/postgres/db";
-import { documents } from "~/postgres/schema";
+import { Article, saveContent } from "./save-content";
+import { getArticleTags } from "~/lib/ai-helpers/tag-article";
 
 // Define the output structure
 interface RSSItem {
@@ -22,14 +22,6 @@ interface RSSFeed {
   rss: {
     channel: RSSChannel[];
   };
-}
-
-interface Article {
-  pubDate: string;
-  title: string;
-  description: string;
-  link: string;
-  articleText: string;
 }
 
 // Extract article content from linked page
@@ -51,24 +43,7 @@ async function scrapeArticleText(url: string): Promise<string> {
   }
 }
 
-async function saveResults(articles: Article[]) {
-  const userId = "JfdOiPJhx9FnAarLLOKi6JOO";
-  const organizationId = "Org1";
-
-  await db.insert(documents).values(
-    articles.map((article) => ({
-      userId,
-      organizationId,
-      title: article.title,
-      description: article.description,
-      pubDate: article.pubDate,
-      link: article.link,
-      articleText: article.articleText,
-    })),
-  );
-}
-
-export async function scrapeRSSFeed(rssUrl: string): Promise<Article[]> {
+export async function scrapeScientificDaily(rssUrl: string): Promise<string[]> {
   try {
     const res = await fetch(rssUrl);
     const xml = await res.text();
@@ -80,7 +55,7 @@ export async function scrapeRSSFeed(rssUrl: string): Promise<Article[]> {
 
     const results: Article[] = [];
 
-    for (const item of items) {
+    for (const item of items.slice(0, 5)) {
       const pubDate = item.pubDate[0];
       const title = item.title[0];
       const description = item.description[0];
@@ -92,12 +67,12 @@ export async function scrapeRSSFeed(rssUrl: string): Promise<Article[]> {
       }
 
       const articleText = await scrapeArticleText(link);
-      results.push({ pubDate, title, description, link, articleText });
+      const tags = await getArticleTags(description);
+
+      results.push({ pubDate, title, description, link, articleText, tags });
     }
 
-    await saveResults(results);
-
-    return results;
+    return await saveContent(results);
   } catch (err) {
     console.error("Failed to parse RSS feed:", err);
     return [];
