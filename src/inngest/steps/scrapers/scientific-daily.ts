@@ -78,7 +78,3 @@ export async function scrapeScientificDaily(rssUrl: string): Promise<string[]> {
     return [];
   }
 }
-
-await scrapeScientificDaily(
-  "https://www.sciencedaily.com/rss/top/technology.xml",
-);
