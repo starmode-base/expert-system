@@ -97,4 +97,16 @@ export const documents = pgTable("documents", {
   pubDate: text("pubDate").notNull(),
   link: text("link").notNull(),
   articleText: text("articleText").notNull(),
+  tags: text("tags").array().notNull(),
+});
+
+export const takeaways = pgTable("takeaways", {
+  ...baseSchema,
+  documentId: text()
+    .notNull()
+    .references(() => documents.id, { onDelete: "cascade" }),
+  takeaway: text("takeaway").notNull(),
+  novelty: text("novelty").notNull(),
+  importance: text("importance").notNull(),
+  monetization: text("monetization").notNull(),
 });
