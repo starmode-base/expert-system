@@ -92,7 +92,7 @@ function RootDocument(props: React.PropsWithChildren) {
               />
               <div className="flex flex-1 flex-col items-center justify-center gap-8 pb-10">
                 <div className="max-w-4xl text-center text-5xl font-semibold text-slate-800 sm:text-7xl">
-                  Skunkworks
+                  Expert-System
                 </div>
                 <div className="flex gap-2">
                   <SignInButton mode="modal">
