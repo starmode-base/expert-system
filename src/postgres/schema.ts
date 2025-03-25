@@ -133,7 +133,7 @@ export const takeawayEmbeddings = pgTable(
     takeawayId: text()
       .notNull()
       .references(() => takeaways.id, { onDelete: "cascade" }),
-    embedding: vector("embedding", { dimensions: 1536 }),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
   },
   (table) => [
     index("takeawayEmbeddingIndex").using(
@@ -150,7 +150,7 @@ export const conceptEmbeddings = pgTable(
     takeawayId: text()
       .notNull()
       .references(() => takeaways.id, { onDelete: "cascade" }),
-    embedding: vector("embedding", { dimensions: 1536 }),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
   },
   (table) => [
     index("conceptEmbeddingIndex").using(

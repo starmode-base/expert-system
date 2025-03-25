@@ -1,12 +1,43 @@
 import { relations } from "drizzle-orm/relations";
 import {
+  takeaways,
+  conceptEmbeddings,
+  takeawayEmbeddings,
   users,
   accounts,
   organizations,
   documents,
-  takeaways,
   organizationMembers,
 } from "./schema";
+
+export const conceptEmbeddingsRelations = relations(
+  conceptEmbeddings,
+  ({ one }) => ({
+    takeaway: one(takeaways, {
+      fields: [conceptEmbeddings.takeawayId],
+      references: [takeaways.id],
+    }),
+  }),
+);
+
+export const takeawaysRelations = relations(takeaways, ({ one, many }) => ({
+  conceptEmbeddings: many(conceptEmbeddings),
+  takeawayEmbeddings: many(takeawayEmbeddings),
+  document: one(documents, {
+    fields: [takeaways.documentId],
+    references: [documents.id],
+  }),
+}));
+
+export const takeawayEmbeddingsRelations = relations(
+  takeawayEmbeddings,
+  ({ one }) => ({
+    takeaway: one(takeaways, {
+      fields: [takeawayEmbeddings.takeawayId],
+      references: [takeaways.id],
+    }),
+  }),
+);
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, {
@@ -27,13 +58,6 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   accounts: many(accounts),
   organizationMembers: many(organizationMembers),
-}));
-
-export const takeawaysRelations = relations(takeaways, ({ one }) => ({
-  document: one(documents, {
-    fields: [takeaways.documentId],
-    references: [documents.id],
-  }),
 }));
 
 export const documentsRelations = relations(documents, ({ many }) => ({
