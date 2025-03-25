@@ -20,13 +20,13 @@ export const Route = createFileRoute("/news-feed/$documentid")({
   component: RouteComponent,
 });
 
-function DocumentContent({
+export function DocumentContent({
   selectedDoc,
 }: {
   selectedDoc: DocumentSelectWithTakeaways | null;
 }) {
   return (
-    <div className="flex w-2/3 flex-col">
+    <div className="flex flex-col">
       {selectedDoc ? (
         <>
           {/* Top: Takeaways */}
@@ -109,7 +109,9 @@ function RouteComponent() {
       </div>
 
       {/* Right Detail View */}
-      <DocumentContent selectedDoc={selectedDoc} />
+      <div className="flex w-2/3 flex-col">
+        <DocumentContent selectedDoc={selectedDoc} />
+      </div>
     </div>
   );
 }

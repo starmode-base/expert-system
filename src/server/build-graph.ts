@@ -33,7 +33,7 @@ export const queryTakeawayVectors = createServerFn({
   invariant(takeaways, "No takeaways");
 
   const vectors = takeaways.map((takeaway) => ({
-    id: takeaway.id,
+    id: takeaway.takeaway.document.id,
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
   }));
