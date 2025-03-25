@@ -92,6 +92,7 @@ export const documents = pgTable("documents", {
   // organizationId: text()
   //   .notNull()
   //   .references(() => organizations.id, { onDelete: "cascade" }),
+  source: text("source").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   pubDate: text("pubDate").notNull(),
@@ -106,6 +107,7 @@ export const takeaways = pgTable("takeaways", {
     .notNull()
     .references(() => documents.id, { onDelete: "cascade" }),
   takeaway: text("takeaway").notNull(),
+  concept: text("concept").notNull(),
   novelty: text("novelty").notNull(),
   importance: text("importance").notNull(),
   monetization: text("monetization").notNull(),

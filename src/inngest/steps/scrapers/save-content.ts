@@ -2,6 +2,7 @@ import { db, schema } from "~/postgres/db";
 
 export interface Article {
   pubDate: string;
+  source: string;
   title: string;
   description: string;
   link: string;
@@ -19,6 +20,7 @@ export async function saveContent(articles: Article[]) {
       articles.map((article) => ({
         userId,
         organizationId,
+        source: article.source,
         title: article.title,
         description: article.description,
         pubDate: article.pubDate,

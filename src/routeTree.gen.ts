@@ -11,9 +11,16 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as NewsFeedImport } from './routes/news-feed'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const NewsFeedRoute = NewsFeedImport.update({
+  id: '/news-feed',
+  path: '/news-feed',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
@@ -32,6 +39,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/news-feed': {
+      id: '/news-feed'
+      path: '/news-feed'
+      fullPath: '/news-feed'
+      preLoaderRoute: typeof NewsFeedImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -39,32 +53,37 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/news-feed': typeof NewsFeedRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/news-feed': typeof NewsFeedRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/news-feed': typeof NewsFeedRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/news-feed'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/news-feed'
+  id: '__root__' | '/' | '/news-feed'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NewsFeedRoute: typeof NewsFeedRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NewsFeedRoute: NewsFeedRoute,
 }
 
 export const routeTree = rootRoute
@@ -77,11 +96,15 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/",
+        "/news-feed"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/news-feed": {
+      "filePath": "news-feed.tsx"
     }
   }
 }

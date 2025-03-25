@@ -43,7 +43,7 @@ async function scrapeArticleText(url: string): Promise<string> {
   }
 }
 
-export async function scrapeScientificDaily(rssUrl: string): Promise<string[]> {
+export async function scrapeScienceDaily(rssUrl: string): Promise<string[]> {
   try {
     const res = await fetch(rssUrl);
     const xml = await res.text();
@@ -55,7 +55,7 @@ export async function scrapeScientificDaily(rssUrl: string): Promise<string[]> {
 
     const results: Article[] = [];
 
-    for (const item of items.slice(0, 5)) {
+    for (const item of items) {
       const pubDate = item.pubDate[0];
       const title = item.title[0];
       const description = item.description[0];
@@ -69,7 +69,15 @@ export async function scrapeScientificDaily(rssUrl: string): Promise<string[]> {
       const articleText = await scrapeArticleText(link);
       const tags = await getArticleTags(description);
 
-      results.push({ pubDate, title, description, link, articleText, tags });
+      results.push({
+        pubDate,
+        source: "ScienceDaily",
+        title,
+        description,
+        link,
+        articleText,
+        tags,
+      });
     }
 
     return await saveContent(results);
