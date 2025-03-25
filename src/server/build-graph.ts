@@ -37,7 +37,7 @@ export const queryTakeawayVectors = createServerFn({
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
   }));
-  console.log(vectors);
+
   return vectors;
 });
 
@@ -72,7 +72,6 @@ export function buildGraph(
       }
 
       const sim = cosineSimilarity(vector_i.vector, vector_j.vector);
-      console.log(sim);
 
       if (sim >= threshold) {
         links.push({
