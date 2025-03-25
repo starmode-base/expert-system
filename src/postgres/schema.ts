@@ -108,6 +108,9 @@ export const documents = pgTable("documents", {
   tags: text("tags").array().notNull(),
 });
 
+export type DocumentSelect = typeof documents.$inferSelect;
+export type DocumentInsert = typeof documents.$inferInsert;
+
 export const takeaways = pgTable("takeaways", {
   ...baseSchema,
   documentId: text()
@@ -119,6 +122,9 @@ export const takeaways = pgTable("takeaways", {
   importance: text("importance").notNull(),
   monetization: text("monetization").notNull(),
 });
+
+export type TakeawaySelect = typeof takeaways.$inferSelect;
+export type TakeawayInsert = typeof takeaways.$inferInsert;
 
 export const takeawayEmbeddings = pgTable(
   "takeaway_embeddings",

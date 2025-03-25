@@ -2,7 +2,7 @@ import fetch from "node-fetch";
 import { parseStringPromise } from "xml2js";
 import * as cheerio from "cheerio";
 import { invariant } from "@tanstack/react-router";
-import { Article, saveContent } from "./save-content";
+import { Document, saveContent } from "./save-content";
 import { getArticleTags } from "~/lib/ai-helpers/tag-article";
 
 // Define the output structure
@@ -53,7 +53,7 @@ export async function scrapeScienceDaily(rssUrl: string): Promise<string[]> {
 
     const items = parsed.rss.channel[0].item;
 
-    const results: Article[] = [];
+    const results: Document[] = [];
 
     for (const item of items) {
       const pubDate = item.pubDate[0];

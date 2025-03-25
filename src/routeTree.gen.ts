@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as NewsFeedImport } from './routes/news-feed'
+import { Route as KnowledgeGraphImport } from './routes/knowledge-graph'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
@@ -19,6 +20,12 @@ import { Route as IndexImport } from './routes/index'
 const NewsFeedRoute = NewsFeedImport.update({
   id: '/news-feed',
   path: '/news-feed',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const KnowledgeGraphRoute = KnowledgeGraphImport.update({
+  id: '/knowledge-graph',
+  path: '/knowledge-graph',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -39,6 +46,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/knowledge-graph': {
+      id: '/knowledge-graph'
+      path: '/knowledge-graph'
+      fullPath: '/knowledge-graph'
+      preLoaderRoute: typeof KnowledgeGraphImport
+      parentRoute: typeof rootRoute
+    }
     '/news-feed': {
       id: '/news-feed'
       path: '/news-feed'
@@ -53,36 +67,41 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/knowledge-graph': typeof KnowledgeGraphRoute
   '/news-feed': typeof NewsFeedRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/knowledge-graph': typeof KnowledgeGraphRoute
   '/news-feed': typeof NewsFeedRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/knowledge-graph': typeof KnowledgeGraphRoute
   '/news-feed': typeof NewsFeedRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/news-feed'
+  fullPaths: '/' | '/knowledge-graph' | '/news-feed'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/news-feed'
-  id: '__root__' | '/' | '/news-feed'
+  to: '/' | '/knowledge-graph' | '/news-feed'
+  id: '__root__' | '/' | '/knowledge-graph' | '/news-feed'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  KnowledgeGraphRoute: typeof KnowledgeGraphRoute
   NewsFeedRoute: typeof NewsFeedRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  KnowledgeGraphRoute: KnowledgeGraphRoute,
   NewsFeedRoute: NewsFeedRoute,
 }
 
@@ -97,11 +116,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/knowledge-graph",
         "/news-feed"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/knowledge-graph": {
+      "filePath": "knowledge-graph.tsx"
     },
     "/news-feed": {
       "filePath": "news-feed.tsx"
