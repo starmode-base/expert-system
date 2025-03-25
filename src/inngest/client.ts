@@ -19,5 +19,12 @@ export const inngest = new Inngest({
       }),
       user: userSchema,
     },
+
+    /**
+     * Scrapper
+     */
+    "app/scraper": {
+      user: userSchema,
+    },
   }),
 });

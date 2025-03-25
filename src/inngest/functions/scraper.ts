@@ -5,10 +5,11 @@ import { db, schema } from "~/postgres/db";
 import { invariant } from "@tanstack/react-router";
 import { generateEmbedding } from "~/postgres/generate-embedding";
 
-export const dailyScraper = inngest.createFunction(
-  { id: "daily.scraper" },
-  { cron: "TZ=America/Phoenix 0 7 * * *" },
-  async ({ step }) => {
+export const scraper = inngest.createFunction(
+  { id: "scraper" },
+  { event: "app/scraper" },
+  async ({ step, event }) => {
+    console.log("Scraper started: ", event.data);
     // Scrape and save content
     const documentIds = await step.run("science-daily-tech", async () => {
       // ######

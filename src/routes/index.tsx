@@ -1,36 +1,14 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@tanstack/react-start";
 import { useConnectionStateListener } from "ably/react";
 import { useState } from "react";
-import { z } from "zod";
-import { inngest } from "~/inngest/client";
+
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
-import { authMiddleware } from "~/middleware/auth-middleware";
+import { sendEventSF } from "~/server/inggest";
 import {
   createOrganizationSF,
   listOrganizationsSF,
 } from "~/server/organizations";
-
-/**
- * Aggregate server function for this route
- */
-const sendEventSF = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator(z.object({ animal: z.string() }))
-  .handler(async ({ context, data }) => {
-    await inngest.send({
-      name: "test/hello.world.expert",
-      data: {
-        animal: data.animal,
-      },
-      user: {
-        id: context.viewer.id,
-        email: context.viewer.email,
-      },
-    });
-
-    return context.viewer.email;
-  });
 
 /**
  * Route
