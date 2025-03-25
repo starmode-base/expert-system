@@ -85,7 +85,7 @@ function RouteComponent() {
         <h1 className="mb-4 text-2xl font-semibold">Knowledge Graph</h1>
         <KnowledgeGraph graphData={takeawayGraph} />
       </div>
-      <div className="w-1/3 overflow-y-auto border-r border-gray-200 p-4">
+      <div className="w-1/3 border-r border-gray-200">
         <DocumentContent selectedDoc={selectedDoc} />
       </div>
     </div>

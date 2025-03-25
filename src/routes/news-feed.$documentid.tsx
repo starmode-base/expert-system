@@ -22,7 +22,7 @@ function RouteComponent() {
   invariant(documents, "No documents");
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen" style={{ height: "calc(100vh - 48px)" }}>
       {/* Left Feed */}
       <div className="w-1/3 overflow-y-auto border-r border-gray-200 p-4">
         <h1 className="mb-4 text-2xl font-semibold">News Feed</h1>
@@ -49,7 +49,7 @@ function RouteComponent() {
       </div>
 
       {/* Right Detail View */}
-      <div className="flex w-2/3 flex-col">
+      <div className="flex h-full w-2/3 flex-col">
         <DocumentContent selectedDoc={selectedDoc} />
       </div>
     </div>
