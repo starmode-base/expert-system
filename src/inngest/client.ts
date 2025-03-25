@@ -21,9 +21,9 @@ export const inngest = new Inngest({
     },
 
     /**
-     * Daily task
+     * Scrapper
      */
-    "scraper/daily.scraper": {
+    "app/scraper": {
       user: userSchema,
     },
   }),

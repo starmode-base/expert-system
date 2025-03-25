@@ -1,5 +1,6 @@
 import { invariant } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { db } from "~/postgres/db";
 
 interface Vector {
@@ -67,7 +68,7 @@ export const queryConceptVectors = createServerFn({
     id: takeaway.takeaway.document.id,
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
-    tag: takeaway.takeaway.document.tags[0],
+    tag: takeaway.takeaway.document.tags[0] ?? "None",
   }));
 
   return vectors;
@@ -84,7 +85,7 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   return dotProduct / (magnitudeA * magnitudeB);
 }
 
-export function buildGraph(vectors: Vector[], threshold = 0.3): GraphData {
+export function buildGraph(vectors: Vector[], threshold = 0.35): GraphData {
   const nodes: Node[] = vectors.map(({ id, label, tag }) => ({
     id,
     label,
@@ -131,18 +132,30 @@ function amplifyGraph(graph: GraphData): GraphData {
   return { nodes, links };
 }
 
-// export const buildTakewayGraph = createServerFn({
-//   method: "GET",
-// }).handler(async () => {
-//   const vectors = await queryTakeawayVectors();
-//   const graph = buildGraph(vectors);
-//   const normalizedGraph = amplifyGraph(graph);
-//   return normalizedGraph;
-// });
-
 export async function buildTakewayGraph() {
   const vectors = await queryTakeawayVectors();
-  const graph = buildGraph(vectors);
+  const graph = buildGraph(vectors, 0);
   const normalizedGraph = amplifyGraph(graph);
   return normalizedGraph;
 }
+
+export async function buildConceptGraph() {
+  const vectors = await queryConceptVectors();
+  const graph = buildGraph(vectors, 0);
+  const normalizedGraph = amplifyGraph(graph);
+  return normalizedGraph;
+}
+
+export const loadGraphData = createServerFn({
+  method: "GET",
+})
+  .validator(z.string())
+  .handler(async ({ data: graphType }) => {
+    if (graphType === "topic") {
+      return await buildTakewayGraph();
+    } else if (graphType === "concept") {
+      return await buildConceptGraph();
+    }
+
+    return null;
+  });

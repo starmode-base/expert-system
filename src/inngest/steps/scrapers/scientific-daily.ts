@@ -4,6 +4,7 @@ import * as cheerio from "cheerio";
 import { invariant } from "@tanstack/react-router";
 import { Document, saveContent } from "./save-content";
 import { getArticleTags } from "~/lib/ai-helpers/tag-article";
+import { db } from "~/postgres/db";
 
 // Define the output structure
 interface RSSItem {
@@ -63,6 +64,14 @@ export async function scrapeScienceDaily(rssUrl: string): Promise<string[]> {
 
       if (!pubDate || !title || !description || !link) {
         console.log(`Missing data, skipping item:`, item);
+        continue;
+      }
+
+      const exsists = await db.query.documents.findFirst({
+        where: (documents, { eq }) => eq(documents.link, link),
+      });
+
+      if (exsists) {
         continue;
       }
 

@@ -1,4 +1,4 @@
 import { helloWorld } from "./hello-world";
-import { dailyScraper } from "./scraper-jobs";
+import { scraper } from "./scraper";
 
-export const inngestFunctions = [helloWorld, dailyScraper];
+export const inngestFunctions = [helloWorld, scraper];
