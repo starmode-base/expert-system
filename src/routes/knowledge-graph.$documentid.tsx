@@ -1,8 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { buildTakewayGraph } from "~/server/build-graph";
-import ForceGraph2D from "react-force-graph-2d";
-import { DocumentContent } from "./news-feed.$documentid";
+import ForceGraph2D, {
+  ForceGraphMethods,
+  LinkObject,
+  NodeObject,
+} from "react-force-graph-2d";
 import { queryDocument } from "~/server/queries";
+import { DocumentContent } from "~/components/document-content";
+import { useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/knowledge-graph/$documentid")({
   loader: async ({ params: { documentid } }) => {
@@ -21,27 +26,54 @@ interface GraphData {
 
 function KnowledgeGraph({ graphData }: { graphData: GraphData }) {
   console.log("graphData", graphData);
+  const fgRef =
+    useRef<
+      ForceGraphMethods<
+        NodeObject<{ id: string; label: string }>,
+        LinkObject<
+          { id: string; label: string },
+          { source: string; target: string; similarity: number }
+        >
+      >
+    >(undefined);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (fgRef.current) {
+        fgRef.current.zoomToFit(1000, 150);
+      }
+    }, 5); // 100ms delay
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [graphData]);
+
   const navigate = useNavigate();
 
   return (
-    <ForceGraph2D
-      graphData={graphData}
-      nodeLabel="label"
-      linkLabel={"similarity"}
-      nodeAutoColorBy="tag"
-      linkDirectionalParticles={1}
-      linkDirectionalParticleSpeed={(d) => d.similarity * 0.01}
-      linkDirectionalParticleWidth={(d) => d.similarity}
-      linkWidth={(d) => d.similarity * 1.75}
-      onNodeClick={async (node) => {
-        console.log("Clicked node:", node);
-        await navigate({
-          to: `/knowledge-graph/$documentid`,
-          params: { documentid: node.id },
-        });
-        // window.location.href = `/knowledge-graph/${node.id}`;
-      }}
-    />
+    <div className="h-full w-full">
+      <ForceGraph2D
+        d3VelocityDecay={0.5}
+        ref={fgRef}
+        graphData={graphData}
+        width={window.innerWidth * (2 / 3)}
+        height={window.innerHeight - 100}
+        nodeLabel="label"
+        linkLabel={"similarity"}
+        nodeAutoColorBy="tag"
+        linkDirectionalParticles={1}
+        linkDirectionalParticleSpeed={(d) => d.similarity * 0.01}
+        linkDirectionalParticleWidth={(d) => d.similarity * 2}
+        linkWidth={(d) => d.similarity * 1.75}
+        onNodeClick={async (node) => {
+          console.log("Clicked node:", node);
+          await navigate({
+            to: `/knowledge-graph/$documentid`,
+            params: { documentid: node.id },
+          });
+        }}
+      />
+    </div>
   );
 }
 
@@ -49,7 +81,7 @@ function RouteComponent() {
   const { takeawayGraph, selectedDoc } = Route.useLoaderData();
   return (
     <div className="flex h-screen">
-      <div className="w-2/3 overflow-y-auto border-r border-gray-200 p-4">
+      <div className="w-2/3 overflow-y-hidden border-r border-gray-200 p-4">
         <h1 className="mb-4 text-2xl font-semibold">Knowledge Graph</h1>
         <KnowledgeGraph graphData={takeawayGraph} />
       </div>
