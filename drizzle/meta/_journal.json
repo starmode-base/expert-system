@@ -43,6 +43,13 @@
       "when": 1742904512298,
       "tag": "0005_narrow_nekra",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1742907225353,
+      "tag": "0006_new_liz_osborn",
+      "breakpoints": true
     }
   ]
 }

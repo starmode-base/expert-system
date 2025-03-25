@@ -11,15 +11,40 @@ export interface Article {
 }
 
 export async function saveContent(articles: Article[]) {
-  const userId = "JfdOiPJhx9FnAarLLOKi6JOO";
-  const organizationId = "Org1";
+  // TODO - add user and org foreign keys
 
+  // Check if article already exists
+  const extistingArticles = await db.query.documents.findMany({
+    where: (documents, { inArray, and }) =>
+      and(
+        inArray(
+          documents.source,
+          articles.map((article) => article.source),
+        ),
+        inArray(
+          documents.title,
+          articles.map((article) => article.title),
+        ),
+      ),
+  });
+  // Filter out existing articles
+  const newArticles = articles.filter(
+    (article) =>
+      !extistingArticles.some(
+        (existingArticle) =>
+          existingArticle.title.toLowerCase() ===
+          article.title
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, ""),
+      ),
+  );
+
+  // Only save new articles
   const results = await db
     .insert(schema.documents)
     .values(
-      articles.map((article) => ({
-        userId,
-        organizationId,
+      newArticles.map((article) => ({
         source: article.source,
         title: article.title,
         description: article.description,

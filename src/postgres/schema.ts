@@ -1,5 +1,12 @@
 import { randomId } from "~/lib/random-id";
-import { pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  index,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  vector,
+} from "drizzle-orm/pg-core";
 
 /**
  * Recommended schema defaults
@@ -112,3 +119,37 @@ export const takeaways = pgTable("takeaways", {
   importance: text("importance").notNull(),
   monetization: text("monetization").notNull(),
 });
+
+export const takeawayEmbeddings = pgTable(
+  "takeaway_embeddings",
+  {
+    ...baseSchema,
+    takeawayId: text()
+      .notNull()
+      .references(() => takeaways.id, { onDelete: "cascade" }),
+    embedding: vector("embedding", { dimensions: 1536 }),
+  },
+  (table) => [
+    index("takeawayEmbeddingIndex").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops"),
+    ),
+  ],
+);
+
+export const conceptEmbeddings = pgTable(
+  "concept_embeddings",
+  {
+    ...baseSchema,
+    takeawayId: text()
+      .notNull()
+      .references(() => takeaways.id, { onDelete: "cascade" }),
+    embedding: vector("embedding", { dimensions: 1536 }),
+  },
+  (table) => [
+    index("conceptEmbeddingIndex").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops"),
+    ),
+  ],
+);
