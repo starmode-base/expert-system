@@ -1,6 +1,6 @@
 import { db, schema } from "~/postgres/db";
 
-export interface Article {
+export interface Document {
   pubDate: string;
   source: string;
   title: string;
@@ -10,29 +10,29 @@ export interface Article {
   tags: string[];
 }
 
-export async function saveContent(articles: Article[]) {
+export async function saveContent(document: Document[]) {
   // TODO - add user and org foreign keys
 
   // Check if article already exists
-  const extistingArticles = await db.query.documents.findMany({
+  const extistingDocument = await db.query.documents.findMany({
     where: (documents, { inArray, and }) =>
       and(
         inArray(
           documents.source,
-          articles.map((article) => article.source),
+          document.map((article) => article.source),
         ),
         inArray(
           documents.title,
-          articles.map((article) => article.title),
+          document.map((article) => article.title),
         ),
       ),
   });
   // Filter out existing articles
-  const newArticles = articles.filter(
+  const newDocument = document.filter(
     (article) =>
-      !extistingArticles.some(
-        (existingArticle) =>
-          existingArticle.title.toLowerCase() ===
+      !extistingDocument.some(
+        (existingDocument) =>
+          existingDocument.title.toLowerCase() ===
           article.title
             .toLowerCase()
             .normalize("NFD")
@@ -44,14 +44,14 @@ export async function saveContent(articles: Article[]) {
   const results = await db
     .insert(schema.documents)
     .values(
-      newArticles.map((article) => ({
-        source: article.source,
-        title: article.title,
-        description: article.description,
-        pubDate: article.pubDate,
-        link: article.link,
-        articleText: article.articleText,
-        tags: article.tags,
+      newDocument.map((document) => ({
+        source: document.source,
+        title: document.title,
+        description: document.description,
+        pubDate: document.pubDate,
+        link: document.link,
+        articleText: document.articleText,
+        tags: document.tags,
       })),
     )
     .returning({ id: schema.documents.id });

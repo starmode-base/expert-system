@@ -108,6 +108,9 @@ export const documents = pgTable("documents", {
   tags: text("tags").array().notNull(),
 });
 
+export type DocumentSelect = typeof documents.$inferSelect;
+export type DocumentInsert = typeof documents.$inferInsert;
+
 export const takeaways = pgTable("takeaways", {
   ...baseSchema,
   documentId: text()
@@ -120,6 +123,9 @@ export const takeaways = pgTable("takeaways", {
   monetization: text("monetization").notNull(),
 });
 
+export type TakeawaySelect = typeof takeaways.$inferSelect;
+export type TakeawayInsert = typeof takeaways.$inferInsert;
+
 export const takeawayEmbeddings = pgTable(
   "takeaway_embeddings",
   {
@@ -127,7 +133,7 @@ export const takeawayEmbeddings = pgTable(
     takeawayId: text()
       .notNull()
       .references(() => takeaways.id, { onDelete: "cascade" }),
-    embedding: vector("embedding", { dimensions: 1536 }),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
   },
   (table) => [
     index("takeawayEmbeddingIndex").using(
@@ -144,7 +150,7 @@ export const conceptEmbeddings = pgTable(
     takeawayId: text()
       .notNull()
       .references(() => takeaways.id, { onDelete: "cascade" }),
-    embedding: vector("embedding", { dimensions: 1536 }),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
   },
   (table) => [
     index("conceptEmbeddingIndex").using(

@@ -110,16 +110,28 @@ function RootDocument(props: React.PropsWithChildren) {
             </div>
           </SignedOut>
           <SignedIn>
-            <div className="flex gap-2 p-2">
+            <div className="flex gap-2 p-4">
               <UserButton />
               <Link
-                to="/"
+                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                to="/news-feed"
                 activeProps={{
                   className: "font-bold",
                 }}
                 activeOptions={{ exact: true }}
               >
-                Home
+                News Feed
+              </Link>
+
+              <Link
+                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                to="/knowledge-graph"
+                activeProps={{
+                  className: "font-bold",
+                }}
+                activeOptions={{ exact: true }}
+              >
+                Knowledge Graph
               </Link>
             </div>
             {props.children}
