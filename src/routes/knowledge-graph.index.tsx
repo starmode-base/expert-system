@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/news-feed/")({
+export const Route = createFileRoute("/knowledge-graph/")({
   beforeLoad: () => {
     return redirect({
-      to: "/news-feed/$documentid",
+      to: "/knowledge-graph/$documentid",
       params: { documentid: "none" },
     });
   },

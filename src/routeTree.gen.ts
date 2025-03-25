@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
+import { Route as KnowledgeGraphIndexImport } from './routes/knowledge-graph.index'
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
 import { Route as KnowledgeGraphDocumentidImport } from './routes/knowledge-graph.$documentid'
 
@@ -27,6 +28,12 @@ const IndexRoute = IndexImport.update({
 const NewsFeedIndexRoute = NewsFeedIndexImport.update({
   id: '/news-feed/',
   path: '/news-feed/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const KnowledgeGraphIndexRoute = KnowledgeGraphIndexImport.update({
+  id: '/knowledge-graph/',
+  path: '/knowledge-graph/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -67,6 +74,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsFeedDocumentidImport
       parentRoute: typeof rootRoute
     }
+    '/knowledge-graph/': {
+      id: '/knowledge-graph/'
+      path: '/knowledge-graph'
+      fullPath: '/knowledge-graph'
+      preLoaderRoute: typeof KnowledgeGraphIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/news-feed/': {
       id: '/news-feed/'
       path: '/news-feed'
@@ -83,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/knowledge-graph/$documentid': typeof KnowledgeGraphDocumentidRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
+  '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
 }
 
@@ -90,6 +105,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/knowledge-graph/$documentid': typeof KnowledgeGraphDocumentidRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
+  '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
 }
 
@@ -98,6 +114,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/knowledge-graph/$documentid': typeof KnowledgeGraphDocumentidRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
+  '/knowledge-graph/': typeof KnowledgeGraphIndexRoute
   '/news-feed/': typeof NewsFeedIndexRoute
 }
 
@@ -107,18 +124,21 @@ export interface FileRouteTypes {
     | '/'
     | '/knowledge-graph/$documentid'
     | '/news-feed/$documentid'
+    | '/knowledge-graph'
     | '/news-feed'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/knowledge-graph/$documentid'
     | '/news-feed/$documentid'
+    | '/knowledge-graph'
     | '/news-feed'
   id:
     | '__root__'
     | '/'
     | '/knowledge-graph/$documentid'
     | '/news-feed/$documentid'
+    | '/knowledge-graph/'
     | '/news-feed/'
   fileRoutesById: FileRoutesById
 }
@@ -127,6 +147,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   KnowledgeGraphDocumentidRoute: typeof KnowledgeGraphDocumentidRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
+  KnowledgeGraphIndexRoute: typeof KnowledgeGraphIndexRoute
   NewsFeedIndexRoute: typeof NewsFeedIndexRoute
 }
 
@@ -134,6 +155,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   KnowledgeGraphDocumentidRoute: KnowledgeGraphDocumentidRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
+  KnowledgeGraphIndexRoute: KnowledgeGraphIndexRoute,
   NewsFeedIndexRoute: NewsFeedIndexRoute,
 }
 
@@ -150,6 +172,7 @@ export const routeTree = rootRoute
         "/",
         "/knowledge-graph/$documentid",
         "/news-feed/$documentid",
+        "/knowledge-graph/",
         "/news-feed/"
       ]
     },
@@ -161,6 +184,9 @@ export const routeTree = rootRoute
     },
     "/news-feed/$documentid": {
       "filePath": "news-feed.$documentid.tsx"
+    },
+    "/knowledge-graph/": {
+      "filePath": "knowledge-graph.index.tsx"
     },
     "/news-feed/": {
       "filePath": "news-feed.index.tsx"

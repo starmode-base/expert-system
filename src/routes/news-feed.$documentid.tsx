@@ -2,10 +2,6 @@ import { createFileRoute, invariant, Link } from "@tanstack/react-router";
 import { DocumentContent } from "~/components/document-content";
 import { queryDocument, queryDocuments } from "~/server/queries";
 
-//  TODO: parameterize route
-// export const Route = createFileRoute("/news-feed/$documentid")({
-//     loader: async ({ params: { id: documentId } }) => {
-
 export const Route = createFileRoute("/news-feed/$documentid")({
   loader: async ({ params: { documentid } }) => {
     const documents = await queryDocuments();
@@ -26,26 +22,32 @@ function RouteComponent() {
       {/* Left Feed */}
       <div className="w-1/3 overflow-y-auto border-r border-gray-200 p-4">
         <h1 className="mb-4 text-2xl font-semibold">News Feed</h1>
-        {documents.map((document) => (
-          <Link
-            key={document.id}
-            to="/news-feed/$documentid"
-            params={{ documentid: document.id }}
-          >
-            <div
+        {documents
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime(),
+          )
+          .map((document) => (
+            <Link
               key={document.id}
-              className={`mb-4 cursor-pointer rounded p-4 transition-colors duration-200 ${
-                selectedDoc && selectedDoc.id === document.id
-                  ? "bg-gray-200"
-                  : "bg-white hover:bg-gray-100"
-              }`}
+              to="/news-feed/$documentid"
+              params={{ documentid: document.id }}
             >
-              <h2 className="text-xl font-bold">{document.title}</h2>
-              <p className="text-sm text-gray-600">{document.pubDate}</p>
-              <p className="mt-2 text-gray-800">{document.description}</p>
-            </div>
-          </Link>
-        ))}
+              <div
+                key={document.id}
+                className={`mb-4 cursor-pointer rounded p-4 transition-colors duration-200 ${
+                  selectedDoc && selectedDoc.id === document.id
+                    ? "bg-gray-200"
+                    : "bg-white hover:bg-gray-100"
+                }`}
+              >
+                <h2 className="text-xl font-bold">{document.title}</h2>
+                <p className="text-sm text-gray-600">{document.pubDate}</p>
+                <p className="mt-2 text-gray-800">{document.description}</p>
+              </div>
+            </Link>
+          ))}
       </div>
 
       {/* Right Detail View */}
