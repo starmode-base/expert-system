@@ -56,7 +56,7 @@ function KnowledgeGraph({ graphData }: { graphData: GraphData }) {
         d3VelocityDecay={0.5}
         ref={fgRef}
         graphData={graphData}
-        width={window.innerWidth * (2 / 3)}
+        width={window.innerWidth * (1 / 2)}
         height={window.innerHeight - 100}
         nodeLabel="label"
         linkLabel={"similarity"}
@@ -80,12 +80,12 @@ function KnowledgeGraph({ graphData }: { graphData: GraphData }) {
 function RouteComponent() {
   const { takeawayGraph, selectedDoc } = Route.useLoaderData();
   return (
-    <div className="flex h-screen">
-      <div className="w-2/3 overflow-y-hidden border-r border-gray-200 p-4">
+    <div className="flex h-screen" style={{ height: "calc(100vh - 48px)" }}>
+      <div className="w-1/2 overflow-y-hidden border-r border-gray-200 p-4">
         <h1 className="mb-4 text-2xl font-semibold">Knowledge Graph</h1>
         <KnowledgeGraph graphData={takeawayGraph} />
       </div>
-      <div className="w-1/3 border-r border-gray-200">
+      <div className="w-1/2 border-r border-gray-200">
         <DocumentContent selectedDoc={selectedDoc} />
       </div>
     </div>
