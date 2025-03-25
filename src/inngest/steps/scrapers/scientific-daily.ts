@@ -55,7 +55,7 @@ export async function scrapeScientificDaily(rssUrl: string): Promise<string[]> {
 
     const results: Article[] = [];
 
-    for (const item of items.slice(0, 5)) {
+    for (const item of items) {
       const pubDate = item.pubDate[0];
       const title = item.title[0];
       const description = item.description[0];
