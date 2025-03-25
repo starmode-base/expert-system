@@ -13,6 +13,11 @@ const schema = z.object({
     description:
       "Explain the most novel and important insight from the article.",
   }),
+  concept: z.string({
+    description: `Analyze the following article and extract its core abstract concept.
+    Your output should distill the article's key insight into a high-level, general idea that can be applied to various contexts.
+    Please illustrate this concept with one or more analogies or metaphors to ensure clarity and tranferability.`,
+  }),
   novelty: z.string({
     description: "Score the novelty of the article insight 0-10",
   }),
@@ -35,8 +40,9 @@ export async function getTakeaways(articleText: string) {
         content: `Describe the most novel and important insight from the article in 10-15 sentences.
         - Be very concise but thorough. No fluff.
         - Be factual and accurate.
-        - Do not embelish or overdramatize.
+        - Do not embelish or overdramatize. Don't use promotional words like revolutionary, or groundbreaking.
         - Get to the core insight of the content.
+        - Dont start with "The primary insight of the article"... or other such fluff.
 
         Article Text:
         ${articleText}`,

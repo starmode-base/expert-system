@@ -1,4 +1,4 @@
-import { scrapeScientificDaily } from "../steps/scrapers/scientific-daily";
+import { scrapeScienceDaily } from "../steps/scrapers/scientific-daily";
 import { inngest } from "../client";
 import { getTakeaways } from "~/lib/ai-helpers/get-takeaways";
 import { db, schema } from "~/postgres/db";
@@ -13,7 +13,7 @@ export const dailyScraper = inngest.createFunction(
       // ######
       console.log("Scraping Science Daily");
 
-      return scrapeScientificDaily(
+      return scrapeScienceDaily(
         "https://www.sciencedaily.com/rss/top/technology.xml",
       );
     });

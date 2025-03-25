@@ -50,12 +50,16 @@ function RouteComponent() {
             {/* Top: Takeaways */}
             <div className="h-1/3 flex-1 overflow-y-auto border-b border-gray-200 p-4">
               <h2 className="mb-4 text-2xl font-semibold">Takeaways</h2>
+
               {selectedDoc.takeaways.map((takeaway) => (
                 <div
                   key={takeaway.id}
                   className="mb-4 rounded bg-gray-50 p-4 shadow-sm"
                 >
                   <p className="font-medium">{takeaway.takeaway}</p>
+                  <hr className="my-4 border-gray-300" />
+                  <p className="font-medium">{takeaway.concept}</p>
+
                   <div className="mt-2 flex space-x-4">
                     <p className="text-sm text-gray-600">
                       Monetization: {takeaway.monetization}
@@ -73,7 +77,9 @@ function RouteComponent() {
 
             {/* Bottom: Article Text */}
             <div className="h-2/3 flex-1 overflow-y-auto p-4">
-              <h2 className="mb-4 text-2xl font-semibold">Article</h2>
+              <h2 className="mb-4 text-2xl font-semibold">
+                {selectedDoc.title}
+              </h2>
               <p className="whitespace-pre-wrap text-gray-800">
                 {selectedDoc.articleText}
               </p>
