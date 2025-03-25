@@ -2,6 +2,10 @@ import { createFileRoute, invariant } from "@tanstack/react-router";
 import { useState } from "react";
 import { queryDocuments } from "~/postgres/queries";
 
+//  TODO: parameterize route
+// export const Route = createFileRoute("/news-feed")({
+//     loader: async ({ params: { id: documentId } }) => {
+
 export const Route = createFileRoute("/news-feed")({
   loader: async () => {
     const documents = await queryDocuments();
