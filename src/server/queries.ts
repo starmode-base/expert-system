@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { db } from "./db";
+import { db } from "../postgres/db";
 
 export const queryDocuments = createServerFn({
   method: "GET",

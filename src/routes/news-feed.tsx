@@ -1,6 +1,6 @@
 import { createFileRoute, invariant } from "@tanstack/react-router";
 import { useState } from "react";
-import { queryDocuments } from "~/postgres/queries";
+import { queryDocuments } from "~/server/queries";
 
 //  TODO: parameterize route
 // export const Route = createFileRoute("/news-feed")({
