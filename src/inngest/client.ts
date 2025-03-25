@@ -19,12 +19,5 @@ export const inngest = new Inngest({
       }),
       user: userSchema,
     },
-
-    /**
-     * Daily task
-     */
-    "scraper/daily.scraper": {
-      user: userSchema,
-    },
   }),
 });
