@@ -50,6 +50,13 @@
       "when": 1742907225353,
       "tag": "0006_new_liz_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1742933180770,
+      "tag": "0007_friendly_amazoness",
+      "breakpoints": true
     }
   ]
 }
