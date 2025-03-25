@@ -42,14 +42,14 @@ export const queryTakeawayVectors = createServerFn({
 });
 
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
-  const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+  if (vecA.length !== vecB.length) {
+    throw new Error("Both vectors must have the same length");
+  }
+  // (vecB[i] ?? 0) is for typing. vecB[i]
+  const dotProduct = vecA.reduce((sum, a, i) => sum + a * (vecB[i] ?? 0), 0);
   const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
   const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
   return dotProduct / (magnitudeA * magnitudeB);
-}
-
-function computeZScore(value: number, mean: number, std: number): number {
-  return std !== 0 ? value / std : 0;
 }
 
 export function buildGraph(
@@ -61,16 +61,23 @@ export function buildGraph(
 
   for (let i = 0; i < vectors.length; i++) {
     for (let j = i + 1; j < vectors.length; j++) {
-      invariant(vectors[i]?.vector, "No vectors");
-      invariant(vectors[j]?.vector, "No vectors");
+      const vector_i = vectors[i];
+      const vector_j = vectors[j];
+      invariant(vector_i, "No vectors");
+      invariant(vector_j, "No vectors");
 
-      const sim = cosineSimilarity(vectors[i].vector, vectors[j].vector);
+      // Skip self-loops
+      if (vector_i.id === vector_j.id) {
+        continue;
+      }
+
+      const sim = cosineSimilarity(vector_i.vector, vector_j.vector);
       console.log(sim);
 
       if (sim >= threshold) {
         links.push({
-          source: vectors[i].id,
-          target: vectors[j].id,
+          source: vector_i.id,
+          target: vector_j.id,
           similarity: sim,
         });
       }
@@ -80,7 +87,7 @@ export function buildGraph(
   return { nodes, links };
 }
 
-function normalizeGraph(graph: GraphData): GraphData {
+function amplifyGraph(graph: GraphData): GraphData {
   // Extract similarity values to compute the mean and standard deviation
   const { nodes, links: rawEdges } = graph;
   // Normalize each similarity with its z-score
@@ -97,6 +104,6 @@ export const buildTakewayGraph = createServerFn({
 }).handler(async () => {
   const vectors = await queryTakeawayVectors();
   const graph = buildGraph(vectors);
-  const normalizedGraph = normalizeGraph(graph);
+  const normalizedGraph = amplifyGraph(graph);
   return normalizedGraph;
 });
