@@ -28,7 +28,7 @@ function KnowledgeGraph({ graphData }: { graphData: GraphData }) {
       graphData={graphData}
       nodeLabel="label"
       linkLabel={"similarity"}
-      // nodeAutoColorBy="id"
+      nodeAutoColorBy="tag"
       linkDirectionalParticles={1}
       linkDirectionalParticleSpeed={(d) => d.similarity * 0.01}
       linkDirectionalParticleWidth={(d) => d.similarity}

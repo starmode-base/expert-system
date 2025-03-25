@@ -2,9 +2,16 @@ import { invariant } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "~/postgres/db";
 
+interface Vector {
+  id: string;
+  vector: number[];
+  label: string;
+  tag: string;
+}
 interface Node {
   id: string;
   label: string;
+  tag: string;
 }
 
 interface Edge {
@@ -36,6 +43,31 @@ export const queryTakeawayVectors = createServerFn({
     id: takeaway.takeaway.document.id,
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
+    tag: takeaway.takeaway.document.tags[0] ?? "None",
+  }));
+
+  return vectors;
+});
+
+export const queryConceptVectors = createServerFn({
+  method: "GET",
+}).handler(async () => {
+  const takeaways = await db.query.conceptEmbeddings.findMany({
+    with: {
+      takeaway: {
+        with: {
+          document: true,
+        },
+      },
+    },
+  });
+  invariant(takeaways, "No takeaways");
+
+  const vectors = takeaways.map((takeaway) => ({
+    id: takeaway.takeaway.document.id,
+    vector: takeaway.embedding,
+    label: takeaway.takeaway.document.title,
+    tag: takeaway.takeaway.document.tags[0],
   }));
 
   return vectors;
@@ -52,11 +84,12 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   return dotProduct / (magnitudeA * magnitudeB);
 }
 
-export function buildGraph(
-  vectors: { id: string; vector: number[]; label: string }[],
-  threshold = 0.3,
-): GraphData {
-  const nodes: Node[] = vectors.map(({ id, label }) => ({ id, label }));
+export function buildGraph(vectors: Vector[], threshold = 0.3): GraphData {
+  const nodes: Node[] = vectors.map(({ id, label, tag }) => ({
+    id,
+    label,
+    tag,
+  }));
   const links: Edge[] = [];
 
   for (let i = 0; i < vectors.length; i++) {
@@ -98,11 +131,18 @@ function amplifyGraph(graph: GraphData): GraphData {
   return { nodes, links };
 }
 
-export const buildTakewayGraph = createServerFn({
-  method: "GET",
-}).handler(async () => {
+// export const buildTakewayGraph = createServerFn({
+//   method: "GET",
+// }).handler(async () => {
+//   const vectors = await queryTakeawayVectors();
+//   const graph = buildGraph(vectors);
+//   const normalizedGraph = amplifyGraph(graph);
+//   return normalizedGraph;
+// });
+
+export async function buildTakewayGraph() {
   const vectors = await queryTakeawayVectors();
   const graph = buildGraph(vectors);
   const normalizedGraph = amplifyGraph(graph);
   return normalizedGraph;
-});
+}
