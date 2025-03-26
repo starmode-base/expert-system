@@ -1,9 +1,13 @@
-import { scrapeScienceDaily } from "../steps/scrapers/scientific-daily";
+import {
+  extractRssItems,
+  scrapeLink,
+} from "../steps/scrapers/scientific-daily";
 import { inngest } from "../client";
 import { getTakeaways } from "~/lib/ai-helpers/get-takeaways";
 import { db, schema } from "~/postgres/db";
 import { invariant } from "@tanstack/react-router";
 import { generateEmbedding } from "~/postgres/generate-embedding";
+import { publishNotifyUI } from "~/lib/ably";
 
 export const scraper = inngest.createFunction(
   { id: "scraper" },
@@ -11,18 +15,29 @@ export const scraper = inngest.createFunction(
   async ({ step, event }) => {
     console.log("Scraper started: ", event.data);
     // Scrape and save content
-    const documentIds = await step.run("science-daily-tech", async () => {
+    const items = await step.run("get-rss-feed", async () => {
       // ######
-      console.log("Scraping Science Daily");
-
-      return scrapeScienceDaily(
+      return extractRssItems(
         "https://www.sciencedaily.com/rss/top/technology.xml",
       );
     });
 
+    const documentIds = await Promise.all(
+      items.map(async (item) => {
+        return await step.run("scrape-link", async () => {
+          return scrapeLink(item);
+        });
+      }),
+    );
+
     // Generate takeaways
     await Promise.all(
       documentIds.map(async (documentId) => {
+        // If scrapeLink fails, documentId will be undefined
+        if (!documentId) {
+          return;
+        }
+
         const takeaways = await step.run(
           `generate-takeaways-${documentId}`,
           async () => {
@@ -69,6 +84,16 @@ export const scraper = inngest.createFunction(
             embedding: conceptEmbedding,
           });
         });
+
+        /**
+         * Step 3: Publish the bedtime story to the Ably channel
+         */
+        await step.run(
+          "publish-invalidate",
+          publishNotifyUI,
+          event.user.id,
+          "Complete",
+        );
       }),
     );
   },

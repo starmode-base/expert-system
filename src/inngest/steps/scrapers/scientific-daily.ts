@@ -8,11 +8,12 @@ import { db } from "~/postgres/db";
 
 // Define the output structure
 interface RSSItem {
-  title: string[];
-  link: string[];
-  description: string[];
-  pubDate: string[];
-  guid?: string[];
+  title: string;
+  source: string;
+  link: string;
+  description: string;
+  pubDate: string;
+  guid?: string;
 }
 
 interface RSSChannel {
@@ -44,7 +45,8 @@ async function scrapeArticleText(url: string): Promise<string> {
   }
 }
 
-export async function scrapeScienceDaily(rssUrl: string): Promise<string[]> {
+// Function to extract and filter valid RSS items
+export async function extractRssItems(rssUrl: string): Promise<RSSItem[]> {
   try {
     const res = await fetch(rssUrl);
     const xml = await res.text();
@@ -54,7 +56,7 @@ export async function scrapeScienceDaily(rssUrl: string): Promise<string[]> {
 
     const items = parsed.rss.channel[0].item;
 
-    const results: Document[] = [];
+    const rssItems: RSSItem[] = [];
 
     for (const item of items) {
       const pubDate = item.pubDate[0];
@@ -75,23 +77,93 @@ export async function scrapeScienceDaily(rssUrl: string): Promise<string[]> {
         continue;
       }
 
-      const articleText = await scrapeArticleText(link);
-      const tags = await getArticleTags(description);
-
-      results.push({
+      rssItems.push({
         pubDate,
         source: "ScienceDaily",
         title,
         description,
         link,
-        articleText,
-        tags,
       });
     }
 
-    return await saveContent(results);
+    return rssItems;
   } catch (err) {
-    console.error("Failed to parse RSS feed:", err);
+    console.error("Failed to extract RSS items:", err);
     return [];
   }
 }
+
+// Function to scrape article text and tags concurrently for each RSS item
+export async function scrapeLink(item: RSSItem): Promise<string | undefined> {
+  try {
+    const articleText = await scrapeArticleText(item.link);
+    const tags = await getArticleTags(item.description);
+
+    const document: Document = {
+      pubDate: item.pubDate,
+      source: "ScienceDaily",
+      title: item.title,
+      description: item.description,
+      link: item.link,
+      articleText,
+      tags,
+    };
+
+    return await saveContent(document);
+  } catch (err) {
+    console.error("Failed to scrape links:", err);
+    return;
+  }
+}
+
+// export async function scrapeScienceDaily(rssUrl: string): Promise<string[]> {
+//   try {
+//     const res = await fetch(rssUrl);
+//     const xml = await res.text();
+
+//     const parsed = (await parseStringPromise(xml)) as RSSFeed;
+//     invariant(parsed.rss.channel[0], "Invalid RSS feed");
+
+//     const items = parsed.rss.channel[0].item;
+
+//     const results: Document[] = [];
+
+//     for (const item of items) {
+//       const pubDate = item.pubDate[0];
+//       const title = item.title[0];
+//       const description = item.description[0];
+//       const link = item.link[0];
+
+//       if (!pubDate || !title || !description || !link) {
+//         console.log(`Missing data, skipping item:`, item);
+//         continue;
+//       }
+
+//       const exsists = await db.query.documents.findFirst({
+//         where: (documents, { eq }) => eq(documents.link, link),
+//       });
+
+//       if (exsists) {
+//         continue;
+//       }
+
+//       const articleText = await scrapeArticleText(link);
+//       const tags = await getArticleTags(description);
+
+//       results.push({
+//         pubDate,
+//         source: "ScienceDaily",
+//         title,
+//         description,
+//         link,
+//         articleText,
+//         tags,
+//       });
+//     }
+
+//     return await saveContent(results);
+//   } catch (err) {
+//     console.error("Failed to parse RSS feed:", err);
+//     return [];
+//   }
+// }
