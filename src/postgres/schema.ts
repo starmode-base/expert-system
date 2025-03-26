@@ -159,3 +159,15 @@ export const conceptEmbeddings = pgTable(
     ),
   ],
 );
+
+export const stocks = pgTable("stocks", {
+  ...baseSchema,
+  symbol: text("symbol").notNull(),
+  name: text("name").notNull(),
+  sector: text("sector").notNull(),
+  subIndustry: text("subIndustry").notNull(),
+  HQLocation: text("HQLocation").notNull(),
+  dateAdded: text("dateAdded").notNull(),
+  cik: text("cik").notNull(),
+  founded: text("founded").notNull(),
+});
