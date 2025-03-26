@@ -121,10 +121,25 @@ export const takeaways = pgTable("takeaways", {
   novelty: text("novelty").notNull(),
   importance: text("importance").notNull(),
   monetization: text("monetization").notNull(),
+  // categoryId: text().notNull(), // TODO - add category foreign key
 });
 
 export type TakeawaySelect = typeof takeaways.$inferSelect;
 export type TakeawayInsert = typeof takeaways.$inferInsert;
+
+// TODO - add tag junction table
+// export const takeawayTags = pgTable(
+//   "takeaway_tags",
+//   {
+//     takeawayId: text()
+//       .notNull()
+//       .references(() => takeaways.id, { onDelete: "cascade" }),
+//     tagId: text()
+//       .notNull()
+//       .references(() => tags.id, { onDelete: "cascade" }),
+//   },
+//   (table) => [primaryKey({ columns: [table.takeawayId, table.tagId] })],
+// );
 
 export const takeawayEmbeddings = pgTable(
   "takeaway_embeddings",
@@ -170,4 +185,18 @@ export const stocks = pgTable("stocks", {
   dateAdded: text("dateAdded").notNull(),
   cik: text("cik").notNull(),
   founded: text("founded").notNull(),
+});
+
+export const categories = pgTable("categories", {
+  ...baseSchema,
+  name: text().notNull(),
+});
+
+export const tags = pgTable("tags", {
+  ...baseSchema,
+  // Foreign key to categories
+  categoryId: text()
+    .references(() => categories.id, { onDelete: "cascade" })
+    .notNull(),
+  name: text().notNull(),
 });
