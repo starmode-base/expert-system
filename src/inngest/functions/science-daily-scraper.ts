@@ -9,7 +9,7 @@ import { invariant } from "@tanstack/react-router";
 import { generateEmbedding } from "~/postgres/generate-embedding";
 import { publishNotifyUI } from "~/lib/ably";
 
-export const scraper = inngest.createFunction(
+export const scienceDailyScraper = inngest.createFunction(
   { id: "scraper" },
   { event: "app/scraper" },
   async ({ step, event }) => {
