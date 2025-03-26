@@ -1,4 +1,5 @@
 // lib/fetchEarningsTranscript.ts
+import { NonRetriableError } from "inngest";
 import { ensureEnv } from "./env";
 
 const API_BASE_URL = "https://api.api-ninjas.com/v1/earningstranscript";
@@ -38,10 +39,18 @@ export async function fetchEarningsTranscript({
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    throw new NonRetriableError(
+      `Failed to fetch ${ticker} transcript: ${response.statusText}`,
+    );
   }
 
   const data = await response.json();
 
-  return data as EarningsTranscriptResponse;
+  const typedData = data as EarningsTranscriptResponse;
+
+  if (!typedData.date || !typedData.transcript) {
+    throw new NonRetriableError(`Failed to fetch ${ticker} transcript`);
+  }
+
+  return typedData;
 }

@@ -26,5 +26,12 @@ export const inngest = new Inngest({
     "app/scraper": {
       user: userSchema,
     },
+
+    /**
+     * Earnings Calls
+     */
+    "scraper/earnings-calls": {
+      user: userSchema,
+    },
   }),
 });

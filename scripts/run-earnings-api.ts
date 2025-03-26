@@ -1,7 +1,7 @@
 import { fetchEarningsTranscript } from "~/lib/earnings-transcripts";
 
 const result = await fetchEarningsTranscript({
-  ticker: "AAPL",
+  ticker: "AES",
   year: 2024,
   quarter: 1,
 });
