@@ -2,7 +2,7 @@ import { db } from "~/postgres/db";
 import { inngest } from "../client";
 import { fetchEarningsTranscript } from "~/lib/earnings-transcripts";
 import { saveContent } from "../steps/scrapers/save-content";
-import { and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { publishNotifyUI } from "~/lib/ably";
 
 async function transcriptExsists({
@@ -36,15 +36,36 @@ export const earningsCallsScraper = inngest.createFunction(
 
     // get tickers
     const symbols = await step.run("get-ticker-symbols", async () => {
-      return db.query.stocks.findMany({
+      const topTechStockSymbols: string[] = [
+        "AAPL", // Apple Inc.
+        "MSFT", // Microsoft Corporation
+        "GOOGL", // Alphabet Inc. (Class A)
+        "AMZN", // Amazon.com, Inc.
+        "NVDA", // NVIDIA Corporation
+        "META", // Meta Platforms, Inc.
+        "TSLA", // Tesla, Inc.
+        "AVGO", // Broadcom Inc.
+        "CRM", // Salesforce, Inc.
+        "AMD", // Advanced Micro Devices, Inc.
+      ];
+
+      const symbols = await db.query.stocks.findMany({
         columns: {
           symbol: true,
           name: true,
         },
+
         // TODO: Temporarily use random symbols
+        where: (stocks, { or, inArray }) =>
+          or(
+            inArray(stocks.symbol, topTechStockSymbols),
+            eq(stocks.symbol, "Z"),
+          ),
         orderBy: (stocks, { sql }) => sql`RANDOM()`,
-        limit: 5,
+        limit: 3,
       });
+
+      return symbols;
     });
 
     const documentIds = await Promise.all(
