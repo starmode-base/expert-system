@@ -153,37 +153,31 @@ const taxonomyData = [
   },
 ];
 
-//--------------------------------------------------
-// 3. Data Insertion Script
-//--------------------------------------------------
+// #####################
 
-export async function seedCategoriesAndTags() {
-  for (const entry of taxonomyData) {
-    // Insert category
-    const [insertedCategory] = await db
-      .insert(schema.categories)
-      .values({ name: entry.category })
-      .returning({ id: schema.categories.id, name: schema.categories.name });
+export const uploadCategoriesSF = createServerFn({ method: "POST" }).handler(
+  async () => {
+    for (const entry of taxonomyData) {
+      // Insert category
+      const [insertedCategory] = await db
+        .insert(schema.categories)
+        .values({ name: entry.category })
+        .returning({ id: schema.categories.id, name: schema.categories.name });
 
-    invariant(insertedCategory, "Failed to create category");
+      invariant(insertedCategory, "Failed to create category");
 
-    // Insert each tag (linked to the newly inserted category)
-    for (const tagName of entry.tags) {
-      await db.insert(schema.tags).values({
-        categoryId: insertedCategory.id,
-        name: tagName,
-      });
+      // Insert each tag (linked to the newly inserted category)
+      for (const tagName of entry.tags) {
+        await db.insert(schema.tags).values({
+          categoryId: insertedCategory.id,
+          name: tagName,
+        });
+      }
     }
-  }
 
-  console.log("Seeded categories and tags successfully.");
-}
-
-// ##################
-// ##################
-// Stock Data
-// ##################
-// ##################
+    console.log("Seeded categories and tags successfully.");
+  },
+);
 
 interface Constituent {
   symbol: string;
@@ -196,42 +190,29 @@ interface Constituent {
   founded: string; // or `number` if you parse it
 }
 
-async function uploadStockData() {
-  // Read the CSV file
-  const csvFilePath = path.resolve(__dirname, "../data/constituents.csv");
-  const csvContent = fs.readFileSync(csvFilePath, "utf-8");
-
-  // Parse the CSV content
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const records: Constituent[] = parse(csvContent, {
-    columns: true,
-    skip_empty_lines: true,
-  });
-
-  // Output the result as a TypeScript object
-  console.log(
-    "const constituents: Constituent[] = ",
-    JSON.stringify(records, null, 2),
-  );
-
-  const result = await db.insert(schema.stocks).values(records).returning({
-    id: schema.stocks.id,
-    symbol: schema.stocks.symbol,
-  });
-
-  return result;
-}
-
-// #####################
-
-export const uploadCategoriesSF = createServerFn({ method: "POST" }).handler(
-  async () => {
-    await seedCategoriesAndTags();
-  },
-);
-
 export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
   async () => {
-    await uploadStockData();
+    const csvFilePath = path.resolve(process.cwd(), "data/constituents.csv");
+    const csvContent = fs.readFileSync(csvFilePath, "utf-8");
+
+    // Parse the CSV content
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const records: Constituent[] = parse(csvContent, {
+      columns: true,
+      skip_empty_lines: true,
+    });
+
+    // Output the result as a TypeScript object
+    console.log(
+      "const constituents: Constituent[] = ",
+      JSON.stringify(records, null, 2),
+    );
+
+    const result = await db.insert(schema.stocks).values(records).returning({
+      id: schema.stocks.id,
+      symbol: schema.stocks.symbol,
+    });
+
+    return result;
   },
 );

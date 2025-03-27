@@ -41,11 +41,14 @@ export const earningsCallsScraper = inngest.createFunction(
           symbol: true,
           name: true,
         },
+        // TODO: Temporarily use random symbols
+        orderBy: (stocks, { sql }) => sql`RANDOM()`,
+        limit: 5,
       });
     });
 
     const documentIds = await Promise.all(
-      symbols.slice(0, 5).map(async (symbol) => {
+      symbols.map(async (symbol) => {
         return await step.run(
           `fetch-earnings-transcript-${symbol.symbol}`,
           async () => {

@@ -104,7 +104,7 @@ function KnowledgeGraph({
           graphData={graph}
           width={window.innerWidth * 0.5}
           height={window.innerHeight - 150}
-          nodeLabel="category"
+          nodeLabel="label"
           linkLabel={"similarity"}
           nodeAutoColorBy="category"
           linkDirectionalParticles={1}
