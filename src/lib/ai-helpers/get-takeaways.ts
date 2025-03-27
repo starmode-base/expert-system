@@ -11,21 +11,22 @@ const client = new OpenAI();
 const schema = z.object({
   takeaway: z.string({
     description:
-      "Explain the most novel and important insight from the document. Prioritize truths and facts over emotions and opinions.",
+      "Explain the most novel and important takeaway from the document in 10-15 sentences. Prioritize truths and facts over emotions and opinions.",
   }),
   concept: z.string({
-    description: `Analyze the following article and extract its core abstract concept.
-    Your output should distill the article's key insight into a high-level, general idea that can be applied to various contexts.
-    Please illustrate this concept with one or more analogies or metaphors to ensure clarity and tranferability.`,
+    description: `Analyze the article's key takeaway and articulate its core generalized concept in 4-8 sentences.
+    This should be an articulation of a high-level, general idea that can be applied to various contexts.
+    You can use analogies or metaphors to ensure clarity and tranferability.`,
   }),
   novelty: z.string({
-    description: "Score the novelty of the article insight 0-10",
+    description: "Score the novelty of the article takeaway 0-10",
   }),
   importance: z.string({
-    description: "Score the importance of the article insight 0-10",
+    description: "Score the importance of the article takeaway 0-10",
   }),
   monetization: z.string({
-    description: "Score the monetization potential of the article insight 0-10",
+    description:
+      "Score the monetization potential of the article takeaway 0-10",
   }),
 });
 const responseFormat = zodResponseFormat(schema, "response");
@@ -41,12 +42,12 @@ export async function getTakeaways(
     messages: [
       {
         role: "user",
-        content: `Describe the most novel and important insight from the article in 10-15 sentences.
+        content: `
+        Instructions
         - Be very concise but thorough. No fluff.
         - Be factual and accurate.
         - Do not embelish or overdramatize. Don't use promotional words like revolutionary, or groundbreaking.
-        - Get to the core insight of the content.
-        - Dont start with "The primary insight of the article"... or other such fluff.
+        - Dont start with "The primary takeaway of the article"... or other such fluff.
 
         Specific Instructions:
         ${takeawayInstructions?.trim() ?? ""}

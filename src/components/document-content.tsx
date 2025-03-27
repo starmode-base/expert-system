@@ -36,13 +36,15 @@ export function DocumentContent({
                   key={takeaway.id}
                   className="mb-4 rounded bg-gray-50 p-4 shadow-sm"
                 >
-                  <p className="font-medium">
-                    <span className="text-gray-600">Takeaway: </span>
+                  <p>
+                    <span className="font-medium text-gray-600">
+                      Takeaway:{" "}
+                    </span>
                     {takeaway.takeaway}
                   </p>
                   <hr className="my-4 border-gray-300" />
-                  <p className="font-medium">
-                    <span className="text-gray-600">Concept: </span>
+                  <p>
+                    <span className="font-medium text-gray-600">Concept: </span>
                     {takeaway.concept}
                   </p>
                   <div className="mt-2 flex space-x-4">
@@ -78,9 +80,9 @@ export function DocumentContent({
                 }}
                 className="mb-2 w-full rounded border border-gray-300 px-3 py-2"
               >
+                <option value="o3-mini">o3-mini ($4.40)</option>
                 <option value="gpt-4o">gpt-4o ($10)</option>
                 <option value="gpt-4o-mini">gpt-4o-mini ($0.60)</option>
-                <option value="o3-mini">o3-mini ($4.40)</option>
                 <option value="gpt-4.5-preview">gpt-4.5-preview ($150)</option>
               </select>
 

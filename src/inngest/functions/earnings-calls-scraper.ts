@@ -53,7 +53,7 @@ export const earningsCallsScraper = inngest.createFunction(
           `fetch-earnings-transcript-${symbol.symbol}`,
           async () => {
             const year = 2024;
-            const quarter = 1;
+            const quarter = 4;
 
             const result = await fetchEarningsTranscript({
               ticker: symbol.symbol,
@@ -102,7 +102,12 @@ export const earningsCallsScraper = inngest.createFunction(
 
         await step.sendEvent("generate-takeaways", {
           name: "app/generate-takeaways",
-          data: { documentId },
+          data: {
+            documentId,
+            takeawayPrompt:
+              "Focus on articulating the single most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Do not focus on financial performance of the company unless it reflects any of the afore mentioned themes.",
+            model: "o3-mini",
+          },
           user: event.user,
         });
       }),
