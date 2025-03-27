@@ -1,10 +1,17 @@
-import { DocumentSelectWithTakeaways } from "~/server/queries";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { sendEventGentateTakeawaysSF } from "~/server/inggest";
+import { Document } from "~/server/queries";
 
 export function DocumentContent({
   selectedDoc,
 }: {
-  selectedDoc: DocumentSelectWithTakeaways | null;
+  selectedDoc: Document | null;
 }) {
+  const [takeawayPrompt, setTakeawayPrompt] = useState("");
+  const [model, setModel] = useState("gpt-4o");
+  const sendEventScienceDailyScraper = useServerFn(sendEventGentateTakeawaysSF);
+
   return (
     <div className="flex h-full flex-col">
       {selectedDoc ? (
@@ -12,6 +19,7 @@ export function DocumentContent({
           {/* Top: Takeaways */}
           <div className="flex h-1/2 flex-col border-b border-gray-200 p-4">
             <h2 className="mb-2 text-2xl font-semibold">{selectedDoc.title}</h2>
+
             <div className="h-full flex-1 overflow-y-auto">
               {/* <div className="mb-4 flex flex-wrap">
                 {selectedDoc.tags.map((tag) => (
@@ -28,16 +36,21 @@ export function DocumentContent({
                   key={takeaway.id}
                   className="mb-4 rounded bg-gray-50 p-4 shadow-sm"
                 >
-                  <p className="font-medium">
-                    <span className="text-gray-600">Takeaway: </span>
+                  <p>
+                    <span className="font-medium text-gray-600">
+                      Takeaway:{" "}
+                    </span>
                     {takeaway.takeaway}
                   </p>
                   <hr className="my-4 border-gray-300" />
-                  <p className="font-medium">
-                    <span className="text-gray-600">Concept: </span>
+                  <p>
+                    <span className="font-medium text-gray-600">Concept: </span>
                     {takeaway.concept}
                   </p>
                   <div className="mt-2 flex space-x-4">
+                    <p className="text-sm text-gray-600">
+                      Category: {takeaway.category}
+                    </p>
                     <p className="text-sm text-gray-600">
                       Monetization: {takeaway.monetization}
                     </p>
@@ -50,6 +63,43 @@ export function DocumentContent({
                   </div>
                 </div>
               ))}
+              <input
+                type="text"
+                value={takeawayPrompt}
+                onChange={(e) => {
+                  setTakeawayPrompt(e.target.value);
+                }}
+                className="mb-2 w-full rounded border border-gray-300 px-3 py-2"
+                placeholder="Enter a prompt"
+              />
+              {/* add dropdown for model  */}
+              <select
+                value={model}
+                onChange={(e) => {
+                  setModel(e.target.value);
+                }}
+                className="mb-2 w-full rounded border border-gray-300 px-3 py-2"
+              >
+                <option value="o3-mini">o3-mini ($4.40)</option>
+                <option value="gpt-4o">gpt-4o ($10)</option>
+                <option value="gpt-4o-mini">gpt-4o-mini ($0.60)</option>
+                <option value="gpt-4.5-preview">gpt-4.5-preview ($150)</option>
+              </select>
+
+              <button
+                onClick={async () => {
+                  await sendEventScienceDailyScraper({
+                    data: {
+                      documentId: selectedDoc.id,
+                      takeawayPrompt,
+                      model,
+                    },
+                  });
+                }}
+                className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-2 py-1 text-white"
+              >
+                Generate Takeaways
+              </button>
             </div>
           </div>
 

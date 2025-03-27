@@ -7,7 +7,7 @@ export const Route = createFileRoute("/news-feed/$documentid")({
   loader: async ({ params: { documentid } }) => {
     const { viewerId } = await listOrganizationsSF();
     const documents = await queryDocuments();
-    const selectedDoc = (await queryDocument({ data: documentid })) ?? null;
+    const selectedDoc = await queryDocument({ data: documentid });
 
     return { viewerId, documents, selectedDoc };
   },

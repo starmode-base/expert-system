@@ -35,7 +35,11 @@ export const inngest = new Inngest({
     },
 
     "app/generate-takeaways": {
-      data: z.object({ documentId: z.string() }),
+      data: z.object({
+        documentId: z.string(),
+        takeawayPrompt: z.string().optional(),
+        model: z.string().optional(),
+      }),
       user: userSchema,
     },
   }),

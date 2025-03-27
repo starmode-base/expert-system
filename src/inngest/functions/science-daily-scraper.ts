@@ -35,7 +35,12 @@ export const scienceDailyScraper = inngest.createFunction(
 
         await step.sendEvent("generate-takeaways", {
           name: "app/generate-takeaways",
-          data: { documentId },
+          data: {
+            documentId,
+            takeawayPrompt:
+              "Focus on takeaway on its potential for real impact to peoples lives. ",
+            model: "o3-mini",
+          },
           user: event.user,
         });
       }),

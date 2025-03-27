@@ -2,7 +2,7 @@ import { db } from "~/postgres/db";
 import { inngest } from "../client";
 import { fetchEarningsTranscript } from "~/lib/earnings-transcripts";
 import { saveContent } from "../steps/scrapers/save-content";
-import { and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { publishNotifyUI } from "~/lib/ably";
 
 async function transcriptExsists({
@@ -36,15 +36,36 @@ export const earningsCallsScraper = inngest.createFunction(
 
     // get tickers
     const symbols = await step.run("get-ticker-symbols", async () => {
-      return db.query.stocks.findMany({
+      const topTechStockSymbols: string[] = [
+        "AAPL", // Apple Inc.
+        "MSFT", // Microsoft Corporation
+        "GOOGL", // Alphabet Inc. (Class A)
+        "AMZN", // Amazon.com, Inc.
+        "NVDA", // NVIDIA Corporation
+        "META", // Meta Platforms, Inc.
+        "TSLA", // Tesla, Inc.
+        "AVGO", // Broadcom Inc.
+        "CRM", // Salesforce, Inc.
+        "AMD", // Advanced Micro Devices, Inc.
+      ];
+
+      const symbols = await db.query.stocks.findMany({
         columns: {
           symbol: true,
           name: true,
         },
+
         // TODO: Temporarily use random symbols
+        where: (stocks, { or, inArray }) =>
+          or(
+            inArray(stocks.symbol, topTechStockSymbols),
+            eq(stocks.symbol, "Z"),
+          ),
         orderBy: (stocks, { sql }) => sql`RANDOM()`,
-        limit: 5,
+        limit: 3,
       });
+
+      return symbols;
     });
 
     const documentIds = await Promise.all(
@@ -53,7 +74,7 @@ export const earningsCallsScraper = inngest.createFunction(
           `fetch-earnings-transcript-${symbol.symbol}`,
           async () => {
             const year = 2024;
-            const quarter = 1;
+            const quarter = 4;
 
             const result = await fetchEarningsTranscript({
               ticker: symbol.symbol,
@@ -102,7 +123,12 @@ export const earningsCallsScraper = inngest.createFunction(
 
         await step.sendEvent("generate-takeaways", {
           name: "app/generate-takeaways",
-          data: { documentId },
+          data: {
+            documentId,
+            takeawayPrompt:
+              "Focus on articulating the single most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Do not focus on financial performance of the company unless it reflects any of the afore mentioned themes.",
+            model: "o3-mini",
+          },
           user: event.user,
         });
       }),

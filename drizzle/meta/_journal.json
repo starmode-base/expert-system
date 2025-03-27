@@ -64,6 +64,13 @@
       "when": 1743050596789,
       "tag": "0008_amusing_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1743089608424,
+      "tag": "0009_outgoing_shocker",
+      "breakpoints": true
     }
   ]
 }
