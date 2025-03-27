@@ -26,8 +26,12 @@ export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
 );
 
 interface GraphData {
-  nodes: { id: string; label: string }[];
-  links: { source: string; target: string; similarity: number }[];
+  nodes: { id: string; label: string; category: string }[];
+  links: {
+    source: string;
+    target: string;
+    similarity: number;
+  }[];
 }
 
 function KnowledgeGraph({
@@ -100,9 +104,9 @@ function KnowledgeGraph({
           graphData={graph}
           width={window.innerWidth * 0.5}
           height={window.innerHeight - 150}
-          nodeLabel="label"
+          nodeLabel="category"
           linkLabel={"similarity"}
-          nodeAutoColorBy="tag"
+          nodeAutoColorBy="category"
           linkDirectionalParticles={1}
           linkDirectionalParticleSpeed={(d) => d.similarity * 0.01}
           linkDirectionalParticleWidth={(d) => d.similarity * 2}
