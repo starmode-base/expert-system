@@ -2,7 +2,7 @@ import { db } from "~/postgres/db";
 import { inngest } from "../client";
 import { fetchEarningsTranscript } from "~/lib/earnings-transcripts";
 import { saveContent } from "../steps/scrapers/save-content";
-import { and, eq } from "drizzle-orm";
+import { and } from "drizzle-orm";
 import { publishNotifyUI } from "~/lib/ably";
 
 async function transcriptExsists({
@@ -36,18 +36,18 @@ export const earningsCallsScraper = inngest.createFunction(
 
     // get tickers
     const symbols = await step.run("get-ticker-symbols", async () => {
-      const topTechStockSymbols: string[] = [
-        "AAPL", // Apple Inc.
-        "MSFT", // Microsoft Corporation
-        "GOOGL", // Alphabet Inc. (Class A)
-        "AMZN", // Amazon.com, Inc.
-        "NVDA", // NVIDIA Corporation
-        "META", // Meta Platforms, Inc.
-        "TSLA", // Tesla, Inc.
-        "AVGO", // Broadcom Inc.
-        "CRM", // Salesforce, Inc.
-        "AMD", // Advanced Micro Devices, Inc.
-      ];
+      //   const topTechStockSymbols: string[] = [
+      //     "AAPL", // Apple Inc.
+      //     "MSFT", // Microsoft Corporation
+      //     "GOOGL", // Alphabet Inc. (Class A)
+      //     "AMZN", // Amazon.com, Inc.
+      //     "NVDA", // NVIDIA Corporation
+      //     "META", // Meta Platforms, Inc.
+      //     "TSLA", // Tesla, Inc.
+      //     "AVGO", // Broadcom Inc.
+      //     "CRM", // Salesforce, Inc.
+      //     "AMD", // Advanced Micro Devices, Inc.
+      //   ];
 
       const symbols = await db.query.stockSymbols.findMany({
         columns: {
@@ -55,14 +55,8 @@ export const earningsCallsScraper = inngest.createFunction(
           name: true,
         },
 
-        // TODO: Temporarily use random symbols
-        where: (stockSymbols, { or, inArray }) =>
-          or(
-            inArray(stockSymbols.symbol, topTechStockSymbols),
-            eq(stockSymbols.symbol, "Z"),
-          ),
         orderBy: (stocks, { sql }) => sql`RANDOM()`,
-        limit: 3,
+        limit: 10,
       });
 
       return symbols;
