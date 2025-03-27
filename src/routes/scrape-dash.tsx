@@ -3,7 +3,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { useConnectionStateListener } from "ably/react";
 import { useState } from "react";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
-import { uploadCategoriesSF, uploadStockDataSF } from "~/server/data-loads";
 import {
   sendEventEarningsCallscraperSF,
   sendEventScienceDailyScraperSF,
@@ -53,8 +52,8 @@ function RouteComponent() {
   const sendEventEarningsCallscraper = useServerFn(
     sendEventEarningsCallscraperSF,
   );
-  const uploadCategories = useServerFn(uploadCategoriesSF);
-  const uploadStockData = useServerFn(uploadStockDataSF);
+  // const uploadCategories = useServerFn(uploadCategoriesSF);
+  // const uploadStockData = useServerFn(uploadStockDataSF);
 
   return (
     <div className="flex h-screen" style={{ height: "calc(100vh - 48px)" }}>
@@ -83,7 +82,8 @@ function RouteComponent() {
             </button>
 
             {/* One time uploads. Remove or hide buttons once data is uploaded */}
-            <button
+            {/* WARNING: This will polute categories data! */}
+            {/* <button
               onClick={async () => {
                 await uploadCategories();
               }}
@@ -99,7 +99,7 @@ function RouteComponent() {
               className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
             >
               Upload Stocks
-            </button>
+            </button> */}
           </div>
         </div>
 
