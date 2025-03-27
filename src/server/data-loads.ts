@@ -6,7 +6,6 @@ import { parse } from "csv-parse/sync";
 import { db, schema } from "~/postgres/db";
 
 import { invariant } from "@tanstack/react-router";
-import { fileURLToPath } from "url";
 
 // ##################
 // ##################
@@ -193,13 +192,7 @@ interface Constituent {
 
 export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
   async () => {
-    // If using ES modules:
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-
-    // Use relative path from this file
-    const csvFilePath = path.resolve(__dirname, "../data/constituents.csv");
-
+    const csvFilePath = path.join(process.cwd(), "data/constituents.csv");
     const csvContent = fs.readFileSync(csvFilePath, "utf-8");
 
     // Parse the CSV content
