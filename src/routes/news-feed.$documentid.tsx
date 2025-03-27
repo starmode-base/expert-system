@@ -4,7 +4,7 @@ import { useConnectionStateListener } from "ably/react";
 import { useState } from "react";
 import { DocumentContent } from "~/components/document-content";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
-import { sendEventScraperSF } from "~/server/inggest";
+import { sendEventScienceDailyScraperSF } from "~/server/inggest";
 import { listOrganizationsSF } from "~/server/organizations";
 import { queryDocument, queryDocuments } from "~/server/queries";
 
@@ -36,7 +36,7 @@ function RouteComponentProvider() {
 function RouteComponent() {
   const { viewerId, documents, selectedDoc } = Route.useLoaderData();
   const [loading, setLoading] = useState(false);
-  const sendEventScraper = useServerFn(sendEventScraperSF);
+  const sendEventScraper = useServerFn(sendEventScienceDailyScraperSF);
 
   // https://ably.com/docs/getting-started/react#useConnectionStateListener
   useConnectionStateListener("connected", (stateChange) => {

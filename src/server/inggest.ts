@@ -24,12 +24,12 @@ export const sendEventSF = createServerFn({ method: "POST" })
     return context.viewer.email;
   });
 
-export const sendEventScraperSF = createServerFn({ method: "POST" })
+export const sendEventScienceDailyScraperSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   //   .validator()
   .handler(async ({ context }) => {
     await inngest.send({
-      name: "app/scraper",
+      name: "scraper/daily-science",
       user: {
         id: context.viewer.id,
         email: context.viewer.email,

@@ -5,8 +5,8 @@ import {
 import { inngest } from "../client";
 
 export const scienceDailyScraper = inngest.createFunction(
-  { id: "scraper" },
-  { event: "app/scraper" },
+  { id: "scraper.daily-science" },
+  { event: "scraper/daily-science" },
   async ({ step, event }) => {
     console.log("Scraper started: ", event.user);
     // Scrape and save content
