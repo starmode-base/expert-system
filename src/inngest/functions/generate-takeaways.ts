@@ -69,6 +69,11 @@ export const generateTakeaways = inngest.createFunction(
             documentId: event.data.documentId,
             ...takeawaysInsert,
           })
+          // Allows generalization for new takeaways and updating existing takeaways
+          .onConflictDoUpdate({
+            target: schema.takeaways.documentId,
+            set: takeawaysInsert,
+          })
           .returning({ id: schema.takeaways.id });
         invariant(result, "Failed to create takeaways");
 
@@ -82,17 +87,29 @@ export const generateTakeaways = inngest.createFunction(
 
       const takeawayEmbedding = await generateEmbedding(takeaways.takeaway);
 
-      await db.insert(schema.takeawayEmbeddings).values({
-        takeawayId: takeawayId.id,
-        embedding: takeawayEmbedding,
-      });
+      await db
+        .insert(schema.takeawayEmbeddings)
+        .values({
+          takeawayId: takeawayId.id,
+          embedding: takeawayEmbedding,
+        })
+        .onConflictDoUpdate({
+          target: schema.takeawayEmbeddings.takeawayId,
+          set: { embedding: takeawayEmbedding },
+        });
 
       const conceptEmbedding = await generateEmbedding(takeaways.concept);
 
-      await db.insert(schema.conceptEmbeddings).values({
-        takeawayId: takeawayId.id,
-        embedding: conceptEmbedding,
-      });
+      await db
+        .insert(schema.conceptEmbeddings)
+        .values({
+          takeawayId: takeawayId.id,
+          embedding: conceptEmbedding,
+        })
+        .onConflictDoUpdate({
+          target: schema.conceptEmbeddings.takeawayId,
+          set: { embedding: conceptEmbedding },
+        });
     });
   },
 );

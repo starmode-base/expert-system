@@ -1,9 +1,9 @@
-import { DocumentSelectWithTakeaways } from "~/server/queries";
+import { Document } from "~/server/queries";
 
 export function DocumentContent({
   selectedDoc,
 }: {
-  selectedDoc: DocumentSelectWithTakeaways | null;
+  selectedDoc: Document | null;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -38,6 +38,9 @@ export function DocumentContent({
                     {takeaway.concept}
                   </p>
                   <div className="mt-2 flex space-x-4">
+                    <p className="text-sm text-gray-600">
+                      Category: {takeaway.category}
+                    </p>
                     <p className="text-sm text-gray-600">
                       Monetization: {takeaway.monetization}
                     </p>

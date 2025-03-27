@@ -192,6 +192,9 @@ export const categories = pgTable("categories", {
   name: text().notNull(),
 });
 
+export type CategorySelect = typeof categories.$inferSelect;
+export type CategoryInsert = typeof categories.$inferInsert;
+
 export const tags = pgTable("tags", {
   ...baseSchema,
   // Foreign key to categories

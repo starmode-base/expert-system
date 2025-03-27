@@ -1,12 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db, schema } from "../postgres/db";
-import { DocumentSelect, TakeawaySelect } from "~/postgres/schema";
+
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-
-export type DocumentSelectWithTakeaways = DocumentSelect & {
-  takeaways: TakeawaySelect[];
-};
 
 export const queryDocuments = createServerFn({
   method: "GET",
@@ -19,6 +15,25 @@ export const queryDocuments = createServerFn({
   return documents;
 });
 
+export interface Document {
+  id: string;
+  title: string;
+  description: string;
+  pubDate: string;
+  link: string;
+  source: string;
+  articleText: string;
+  takeaways: {
+    id: string;
+    takeaway: string;
+    concept: string;
+    novelty: string;
+    importance: string;
+    monetization: string;
+    category: string | undefined;
+  }[];
+}
+
 export const queryDocument = createServerFn({
   method: "GET",
 })
@@ -27,9 +42,36 @@ export const queryDocument = createServerFn({
     const document = await db.query.documents.findFirst({
       where: eq(schema.documents.id, documentId),
       with: {
-        takeaways: true,
+        takeaways: {
+          with: {
+            category: true,
+          },
+        },
       },
     });
 
-    return document;
+    if (!document) {
+      return null;
+    }
+
+    const flatDc = {
+      id: document.id,
+      title: document.title,
+      description: document.description,
+      pubDate: document.pubDate,
+      link: document.link,
+      source: document.source,
+      articleText: document.articleText,
+      takeaways: document.takeaways.map((takeaway) => ({
+        id: takeaway.id,
+        takeaway: takeaway.takeaway,
+        concept: takeaway.concept,
+        novelty: takeaway.novelty,
+        importance: takeaway.importance,
+        monetization: takeaway.monetization,
+        category: takeaway.category?.name,
+      })),
+    };
+
+    return flatDc;
   });
