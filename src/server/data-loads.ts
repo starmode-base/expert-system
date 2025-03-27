@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import fs from "fs";
-import path from "path";
+// import path from "path";
 import { parse } from "csv-parse/sync";
 import { db, schema } from "~/postgres/db";
 
@@ -192,10 +192,12 @@ interface Constituent {
 
 export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
   async () => {
-    const csvFilePath = path.join(
-      process.cwd(),
-      "public/data/constituents.csv",
-    );
+    // const csvFilePath = path.join(
+    //   process.cwd(),
+    //   "public/data/constituents.csv",
+    // );
+
+    const csvFilePath = "public/data/constituents.csv";
     const csvContent = fs.readFileSync(csvFilePath, "utf-8");
 
     // Parse the CSV content
