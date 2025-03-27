@@ -169,5 +169,5 @@ export async function seedCategoriesAndTags() {
   console.log("Seeded categories and tags successfully.");
 }
 
-// Execute
-await seedCategoriesAndTags();
+// // Execute
+// await seedCategoriesAndTags();

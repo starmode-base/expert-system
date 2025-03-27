@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { seedCategoriesAndTags } from "scripts/upload-categories-tags";
+import { uploadStockData } from "scripts/upload-stock-data";
 import { z } from "zod";
 import { inngest } from "~/inngest/client";
 import { authMiddleware } from "~/middleware/auth-middleware";
@@ -53,3 +55,15 @@ export const sendEventEarningsCallscraperSF = createServerFn({ method: "POST" })
 
     return context.viewer.email;
   });
+
+export const uploadCategoriesSF = createServerFn({ method: "POST" }).handler(
+  async () => {
+    await seedCategoriesAndTags();
+  },
+);
+
+export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
+  async () => {
+    await uploadStockData();
+  },
+);

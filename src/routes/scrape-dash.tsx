@@ -6,6 +6,8 @@ import { PubSubProvider, useNotifyUI } from "~/lib/ably";
 import {
   sendEventEarningsCallscraperSF,
   sendEventScienceDailyScraperSF,
+  uploadCategoriesSF,
+  uploadStockDataSF,
 } from "~/server/inggest";
 import { listOrganizationsSF } from "~/server/organizations";
 
@@ -49,10 +51,11 @@ function RouteComponent() {
   const sendEventScienceDailyScraper = useServerFn(
     sendEventScienceDailyScraperSF,
   );
-
   const sendEventEarningsCallscraper = useServerFn(
     sendEventEarningsCallscraperSF,
   );
+  const uploadCategories = useServerFn(uploadCategoriesSF);
+  const uploadStockData = useServerFn(uploadStockDataSF);
 
   return (
     <div className="flex h-screen" style={{ height: "calc(100vh - 48px)" }}>
@@ -78,6 +81,25 @@ function RouteComponent() {
               className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
             >
               Scrape Earnings Call
+            </button>
+
+            {/* One time uploads. Remove or hide buttons once data is uploaded */}
+            <button
+              onClick={async () => {
+                await uploadCategories();
+              }}
+              className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
+            >
+              Upload Categories
+            </button>
+
+            <button
+              onClick={async () => {
+                await uploadStockData();
+              }}
+              className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
+            >
+              Upload Stocks
             </button>
           </div>
         </div>
