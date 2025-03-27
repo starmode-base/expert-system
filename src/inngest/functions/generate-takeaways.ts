@@ -5,6 +5,7 @@ import { getTakeaways } from "~/lib/ai-helpers/get-takeaways";
 // import { getArticleTags } from "~/lib/ai-helpers/tag-article";
 import { generateEmbedding } from "~/postgres/generate-embedding";
 import { getCategory } from "~/lib/ai-helpers/get-category";
+import { eq } from "drizzle-orm";
 
 export const generateTakeaways = inngest.createFunction(
   { id: "app/generate-takeaways" },
@@ -34,7 +35,11 @@ export const generateTakeaways = inngest.createFunction(
           `Generating takeaways for document ${event.data.documentId}`,
         );
 
-        return await getTakeaways(articleText.articleText);
+        return await getTakeaways(
+          articleText.articleText,
+          event.data.takeawayPrompt,
+          event.data.model,
+        );
       },
     );
 
@@ -63,16 +68,18 @@ export const generateTakeaways = inngest.createFunction(
           ...takeaways,
           categoryId: category.categoryId,
         };
+
+        // Delete existing takeaways
+        await db
+          .delete(schema.takeaways)
+          .where(eq(schema.takeaways.documentId, event.data.documentId));
+
+        // Insert new takeaways
         const [result] = await db
           .insert(schema.takeaways)
           .values({
             documentId: event.data.documentId,
             ...takeawaysInsert,
-          })
-          // Allows generalization for new takeaways and updating existing takeaways
-          .onConflictDoUpdate({
-            target: schema.takeaways.documentId,
-            set: takeawaysInsert,
           })
           .returning({ id: schema.takeaways.id });
         invariant(result, "Failed to create takeaways");

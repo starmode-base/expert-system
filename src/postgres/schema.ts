@@ -147,6 +147,7 @@ export const takeawayEmbeddings = pgTable(
     ...baseSchema,
     takeawayId: text()
       .notNull()
+      .unique()
       .references(() => takeaways.id, { onDelete: "cascade" }),
     embedding: vector("embedding", { dimensions: 1536 }).notNull(),
   },
@@ -164,6 +165,7 @@ export const conceptEmbeddings = pgTable(
     ...baseSchema,
     takeawayId: text()
       .notNull()
+      .unique()
       .references(() => takeaways.id, { onDelete: "cascade" }),
     embedding: vector("embedding", { dimensions: 1536 }).notNull(),
   },

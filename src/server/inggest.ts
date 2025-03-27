@@ -53,3 +53,25 @@ export const sendEventEarningsCallscraperSF = createServerFn({ method: "POST" })
 
     return context.viewer.email;
   });
+
+export const sendEventGentateTakeawaysSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    z.object({
+      documentId: z.string(),
+      takeawayPrompt: z.string().optional(),
+      model: z.string().optional(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await inngest.send({
+      name: "app/generate-takeaways",
+      data,
+      user: {
+        id: context.viewer.id,
+        email: context.viewer.email,
+      },
+    });
+
+    return context.viewer.email;
+  });

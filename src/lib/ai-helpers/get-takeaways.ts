@@ -11,7 +11,7 @@ const client = new OpenAI();
 const schema = z.object({
   takeaway: z.string({
     description:
-      "Explain the most novel and important insight from the article.",
+      "Explain the most novel and important insight from the document. Prioritize truths and facts over emotions and opinions.",
   }),
   concept: z.string({
     description: `Analyze the following article and extract its core abstract concept.
@@ -30,9 +30,13 @@ const schema = z.object({
 });
 const responseFormat = zodResponseFormat(schema, "response");
 
-export async function getTakeaways(articleText: string) {
+export async function getTakeaways(
+  articleText: string,
+  takeawayInstructions?: string,
+  model = "gpt-4o",
+) {
   const completion = await client.beta.chat.completions.parse({
-    model: "gpt-4o",
+    model,
     response_format: responseFormat,
     messages: [
       {
@@ -43,6 +47,9 @@ export async function getTakeaways(articleText: string) {
         - Do not embelish or overdramatize. Don't use promotional words like revolutionary, or groundbreaking.
         - Get to the core insight of the content.
         - Dont start with "The primary insight of the article"... or other such fluff.
+
+        Specific Instructions:
+        ${takeawayInstructions?.trim() ?? ""}
 
         Article Text:
         ${articleText}`,
