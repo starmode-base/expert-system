@@ -105,7 +105,6 @@ export const documents = pgTable("documents", {
   pubDate: text("pubDate").notNull(),
   link: text("link").notNull(),
   articleText: text("articleText").notNull(),
-  tags: text("tags").array().notNull(),
 });
 
 export type DocumentSelect = typeof documents.$inferSelect;
@@ -121,10 +120,26 @@ export const takeaways = pgTable("takeaways", {
   novelty: text("novelty").notNull(),
   importance: text("importance").notNull(),
   monetization: text("monetization").notNull(),
+  // remove value on delete
+  categoryId: text().references(() => categories.id, { onDelete: "set null" }),
 });
 
 export type TakeawaySelect = typeof takeaways.$inferSelect;
 export type TakeawayInsert = typeof takeaways.$inferInsert;
+
+// TODO - add tag junction table
+// export const takeawayTags = pgTable(
+//   "takeaway_tags",
+//   {
+//     takeawayId: text()
+//       .notNull()
+//       .references(() => takeaways.id, { onDelete: "cascade" }),
+//     tagId: text()
+//       .notNull()
+//       .references(() => tags.id, { onDelete: "cascade" }),
+//   },
+//   (table) => [primaryKey({ columns: [table.takeawayId, table.tagId] })],
+// );
 
 export const takeawayEmbeddings = pgTable(
   "takeaway_embeddings",
@@ -159,3 +174,29 @@ export const conceptEmbeddings = pgTable(
     ),
   ],
 );
+
+export const stocks = pgTable("stocks", {
+  ...baseSchema,
+  symbol: text("symbol").notNull(),
+  name: text("name").notNull(),
+  sector: text("sector").notNull(),
+  subIndustry: text("subIndustry").notNull(),
+  HQLocation: text("HQLocation").notNull(),
+  dateAdded: text("dateAdded").notNull(),
+  cik: text("cik").notNull(),
+  founded: text("founded").notNull(),
+});
+
+export const categories = pgTable("categories", {
+  ...baseSchema,
+  name: text().notNull(),
+});
+
+export const tags = pgTable("tags", {
+  ...baseSchema,
+  // Foreign key to categories
+  categoryId: text()
+    .references(() => categories.id, { onDelete: "cascade" })
+    .notNull(),
+  name: text().notNull(),
+});

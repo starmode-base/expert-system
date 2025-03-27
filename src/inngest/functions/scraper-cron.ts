@@ -5,7 +5,7 @@ export const dailyScraper = inngest.createFunction(
   { cron: "TZ=America/Phoenix 0 7 * * *" },
   async ({ step }) => {
     await step.sendEvent("test/scraper", {
-      name: "app/scraper",
+      name: "scraper/daily-science",
       user: {
         id: "spencer",
         email: "K5o6w@example.com",

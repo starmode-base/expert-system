@@ -3,7 +3,6 @@ import { parseStringPromise } from "xml2js";
 import * as cheerio from "cheerio";
 import { invariant } from "@tanstack/react-router";
 import { Document, saveContent } from "./save-content";
-import { getArticleTags } from "~/lib/ai-helpers/tag-article";
 import { db } from "~/postgres/db";
 
 // Define the output structure
@@ -97,7 +96,6 @@ export async function extractRssItems(rssUrl: string): Promise<RSSItem[]> {
 export async function scrapeLink(item: RSSItem): Promise<string | undefined> {
   try {
     const articleText = await scrapeArticleText(item.link);
-    const tags = await getArticleTags(item.description);
 
     const document: Document = {
       pubDate: item.pubDate,
@@ -106,7 +104,6 @@ export async function scrapeLink(item: RSSItem): Promise<string | undefined> {
       description: item.description,
       link: item.link,
       articleText,
-      tags,
     };
 
     return await saveContent(document);
@@ -115,55 +112,3 @@ export async function scrapeLink(item: RSSItem): Promise<string | undefined> {
     return;
   }
 }
-
-// export async function scrapeScienceDaily(rssUrl: string): Promise<string[]> {
-//   try {
-//     const res = await fetch(rssUrl);
-//     const xml = await res.text();
-
-//     const parsed = (await parseStringPromise(xml)) as RSSFeed;
-//     invariant(parsed.rss.channel[0], "Invalid RSS feed");
-
-//     const items = parsed.rss.channel[0].item;
-
-//     const results: Document[] = [];
-
-//     for (const item of items) {
-//       const pubDate = item.pubDate[0];
-//       const title = item.title[0];
-//       const description = item.description[0];
-//       const link = item.link[0];
-
-//       if (!pubDate || !title || !description || !link) {
-//         console.log(`Missing data, skipping item:`, item);
-//         continue;
-//       }
-
-//       const exsists = await db.query.documents.findFirst({
-//         where: (documents, { eq }) => eq(documents.link, link),
-//       });
-
-//       if (exsists) {
-//         continue;
-//       }
-
-//       const articleText = await scrapeArticleText(link);
-//       const tags = await getArticleTags(description);
-
-//       results.push({
-//         pubDate,
-//         source: "ScienceDaily",
-//         title,
-//         description,
-//         link,
-//         articleText,
-//         tags,
-//       });
-//     }
-
-//     return await saveContent(results);
-//   } catch (err) {
-//     console.error("Failed to parse RSS feed:", err);
-//     return [];
-//   }
-// }

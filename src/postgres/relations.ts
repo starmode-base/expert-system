@@ -7,6 +7,8 @@ import {
   accounts,
   organizations,
   documents,
+  categories,
+  tags,
   organizationMembers,
 } from "./schema";
 
@@ -26,6 +28,10 @@ export const takeawaysRelations = relations(takeaways, ({ one, many }) => ({
   document: one(documents, {
     fields: [takeaways.documentId],
     references: [documents.id],
+  }),
+  category: one(categories, {
+    fields: [takeaways.categoryId],
+    references: [categories.id],
   }),
 }));
 
@@ -62,6 +68,18 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
 
 export const documentsRelations = relations(documents, ({ many }) => ({
   takeaways: many(takeaways),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  takeaways: many(takeaways),
+  tags: many(tags),
+}));
+
+export const tagsRelations = relations(tags, ({ one }) => ({
+  category: one(categories, {
+    fields: [tags.categoryId],
+    references: [categories.id],
+  }),
 }));
 
 export const organizationMembersRelations = relations(

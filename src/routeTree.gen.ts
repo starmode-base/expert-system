@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TemplateImport } from './routes/template'
+import { Route as ScrapeDashImport } from './routes/scrape-dash'
 import { Route as IndexImport } from './routes/index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
 import { Route as KnowledgeGraphIndexImport } from './routes/knowledge-graph.index'
@@ -23,6 +24,12 @@ import { Route as KnowledgeGraphGraphTypeDocumentidImport } from './routes/knowl
 const TemplateRoute = TemplateImport.update({
   id: '/template',
   path: '/template',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ScrapeDashRoute = ScrapeDashImport.update({
+  id: '/scrape-dash',
+  path: '/scrape-dash',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -68,6 +75,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/scrape-dash': {
+      id: '/scrape-dash'
+      path: '/scrape-dash'
+      fullPath: '/scrape-dash'
+      preLoaderRoute: typeof ScrapeDashImport
+      parentRoute: typeof rootRoute
+    }
     '/template': {
       id: '/template'
       path: '/template'
@@ -110,6 +124,7 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/scrape-dash': typeof ScrapeDashRoute
   '/template': typeof TemplateRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/knowledge-graph': typeof KnowledgeGraphIndexRoute
@@ -119,6 +134,7 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/scrape-dash': typeof ScrapeDashRoute
   '/template': typeof TemplateRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/knowledge-graph': typeof KnowledgeGraphIndexRoute
@@ -129,6 +145,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/scrape-dash': typeof ScrapeDashRoute
   '/template': typeof TemplateRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/knowledge-graph/': typeof KnowledgeGraphIndexRoute
@@ -140,6 +157,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/scrape-dash'
     | '/template'
     | '/news-feed/$documentid'
     | '/knowledge-graph'
@@ -148,6 +166,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/scrape-dash'
     | '/template'
     | '/news-feed/$documentid'
     | '/knowledge-graph'
@@ -156,6 +175,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/scrape-dash'
     | '/template'
     | '/news-feed/$documentid'
     | '/knowledge-graph/'
@@ -166,6 +186,7 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ScrapeDashRoute: typeof ScrapeDashRoute
   TemplateRoute: typeof TemplateRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
   KnowledgeGraphIndexRoute: typeof KnowledgeGraphIndexRoute
@@ -175,6 +196,7 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ScrapeDashRoute: ScrapeDashRoute,
   TemplateRoute: TemplateRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
   KnowledgeGraphIndexRoute: KnowledgeGraphIndexRoute,
@@ -194,6 +216,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/scrape-dash",
         "/template",
         "/news-feed/$documentid",
         "/knowledge-graph/",
@@ -203,6 +226,9 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/scrape-dash": {
+      "filePath": "scrape-dash.tsx"
     },
     "/template": {
       "filePath": "template.tsx"

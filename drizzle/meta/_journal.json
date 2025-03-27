@@ -57,6 +57,13 @@
       "when": 1742933180770,
       "tag": "0007_friendly_amazoness",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1743050596789,
+      "tag": "0008_amusing_the_hand",
+      "breakpoints": true
     }
   ]
 }

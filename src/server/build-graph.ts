@@ -7,12 +7,12 @@ interface Vector {
   id: string;
   vector: number[];
   label: string;
-  tag: string;
+  category: string;
 }
 interface Node {
   id: string;
   label: string;
-  tag: string;
+  category: string;
 }
 
 interface Edge {
@@ -34,6 +34,7 @@ export const queryTakeawayVectors = createServerFn({
       takeaway: {
         with: {
           document: true,
+          category: true,
         },
       },
     },
@@ -44,7 +45,7 @@ export const queryTakeawayVectors = createServerFn({
     id: takeaway.takeaway.document.id,
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
-    tag: takeaway.takeaway.document.tags[0] ?? "None",
+    category: takeaway.takeaway.category?.name ?? "None",
   }));
 
   return vectors;
@@ -58,6 +59,7 @@ export const queryConceptVectors = createServerFn({
       takeaway: {
         with: {
           document: true,
+          category: true,
         },
       },
     },
@@ -68,7 +70,7 @@ export const queryConceptVectors = createServerFn({
     id: takeaway.takeaway.document.id,
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
-    tag: takeaway.takeaway.document.tags[0] ?? "None",
+    category: takeaway.takeaway.category?.name ?? "None",
   }));
 
   return vectors;
@@ -86,10 +88,10 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 }
 
 export function buildGraph(vectors: Vector[], threshold = 0.35): GraphData {
-  const nodes: Node[] = vectors.map(({ id, label, tag }) => ({
+  const nodes: Node[] = vectors.map(({ id, label, category }) => ({
     id,
     label,
-    tag,
+    category,
   }));
   const links: Edge[] = [];
 

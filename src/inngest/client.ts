@@ -21,9 +21,21 @@ export const inngest = new Inngest({
     },
 
     /**
-     * Scrapper
+     * Daily Science Scrapper
      */
-    "app/scraper": {
+    "scraper/daily-science": {
+      user: userSchema,
+    },
+
+    /**
+     * Earnings Calls
+     */
+    "scraper/earnings-calls": {
+      user: userSchema,
+    },
+
+    "app/generate-takeaways": {
+      data: z.object({ documentId: z.string() }),
       user: userSchema,
     },
   }),
