@@ -3,11 +3,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { useConnectionStateListener } from "ably/react";
 import { useState } from "react";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
+import { uploadCategoriesSF, uploadStockDataSF } from "~/server/data-loads";
 import {
   sendEventEarningsCallscraperSF,
   sendEventScienceDailyScraperSF,
-  uploadCategoriesSF,
-  uploadStockDataSF,
 } from "~/server/inggest";
 import { listOrganizationsSF } from "~/server/organizations";
 
