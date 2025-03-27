@@ -2,6 +2,30 @@ import { db } from "~/postgres/db";
 import { inngest } from "../client";
 import { fetchEarningsTranscript } from "~/lib/earnings-transcripts";
 import { saveContent } from "../steps/scrapers/save-content";
+import { and } from "drizzle-orm";
+import { publishNotifyUI } from "~/lib/ably";
+
+async function transcriptExsists({
+  source,
+  title,
+}: {
+  source: string;
+  title: string;
+}) {
+  // check if transcript exists before saveing
+  const transcript = await db.query.documents.findFirst({
+    where: (documents, { eq }) =>
+      and(eq(documents.title, title), eq(documents.source, source)),
+    columns: { id: true },
+  });
+
+  // if transcript exists, skip
+  if (transcript?.id) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 export const earningsCallsScraper = inngest.createFunction(
   { id: "scraper.earnings-calls" },
@@ -21,7 +45,7 @@ export const earningsCallsScraper = inngest.createFunction(
     });
 
     const documentIds = await Promise.all(
-      symbols.slice(0, 10).map(async (symbol) => {
+      symbols.slice(0, 5).map(async (symbol) => {
         return await step.run(
           `fetch-earnings-transcript-${symbol.symbol}`,
           async () => {
@@ -55,6 +79,11 @@ export const earningsCallsScraper = inngest.createFunction(
               tags: [], // TODO - add tags
             };
 
+            if (await transcriptExsists(document)) {
+              console.log("Transcript already exists");
+              return;
+            }
+
             return await saveContent(document);
           },
         );
@@ -75,65 +104,16 @@ export const earningsCallsScraper = inngest.createFunction(
         });
       }),
     );
+
+    /**
+     * Step 3: Publish to the Ably channel
+     * NOTE: Scrape is complete but not all takeaways have been generated
+     */
+    await step.run(
+      "publish-invalidate",
+      publishNotifyUI,
+      event.user.id,
+      "Complete",
+    );
   },
 );
-
-// // Generate takeaways
-// await Promise.all(
-//   documentIds.map(async (documentId) => {
-//     // If scrapeLink fails, documentId will be undefined
-//     if (!documentId) {
-//       return;
-//     }
-
-//     const takeaways = await step.run(
-//       `generate-takeaways-${documentId}`,
-//       async () => {
-//         const articleText = await db.query.documents.findFirst({
-//           where: (documents, { eq }) => eq(documents.id, documentId),
-//           columns: { articleText: true },
-//         });
-
-//         invariant(articleText?.articleText, "No article text");
-
-//         // ######
-//         console.log(`Generating takeaways for document ${documentId}`);
-
-//         const takeaways = await getTakeaways(articleText.articleText);
-
-//         const [result] = await db
-//           .insert(schema.takeaways)
-//           .values({
-//             documentId,
-//             ...takeaways,
-//           })
-//           .returning();
-//         invariant(result, "Failed to create takeaways");
-
-//         return result;
-//       },
-//     );
-
-//     await step.run("save-embedding-${documentId}", async () => {
-//       // ######
-//       console.log(`Saving embedding for document ${documentId}`);
-
-//       const takeawayEmbedding = await generateEmbedding(takeaways.takeaway);
-
-//       await db.insert(schema.takeawayEmbeddings).values({
-//         takeawayId: takeaways.id,
-//         embedding: takeawayEmbedding,
-//       });
-
-//       const conceptEmbedding = await generateEmbedding(takeaways.concept);
-
-//       await db.insert(schema.conceptEmbeddings).values({
-//         takeawayId: takeaways.id,
-//         embedding: conceptEmbedding,
-//       });
-//     });
-//   }),
-// );
-
-//   },
-// );

@@ -38,3 +38,18 @@ export const sendEventScienceDailyScraperSF = createServerFn({ method: "POST" })
 
     return context.viewer.email;
   });
+
+export const sendEventEarningsCallscraperSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  //   .validator()
+  .handler(async ({ context }) => {
+    await inngest.send({
+      name: "scraper/earnings-calls",
+      user: {
+        id: context.viewer.id,
+        email: context.viewer.email,
+      },
+    });
+
+    return context.viewer.email;
+  });
