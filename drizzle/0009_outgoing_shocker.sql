@@ -1,0 +1,2 @@
+ALTER TABLE "concept_embeddings" ADD CONSTRAINT "concept_embeddings_takeawayId_unique" UNIQUE("takeaway_id");--> statement-breakpoint
+ALTER TABLE "takeaway_embeddings" ADD CONSTRAINT "takeaway_embeddings_takeawayId_unique" UNIQUE("takeaway_id");
