@@ -33,5 +33,10 @@ export const inngest = new Inngest({
     "scraper/earnings-calls": {
       user: userSchema,
     },
+
+    "app/generate-takeaways": {
+      data: z.object({ documentId: z.string() }),
+      user: userSchema,
+    },
   }),
 });

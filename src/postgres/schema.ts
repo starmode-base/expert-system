@@ -120,7 +120,8 @@ export const takeaways = pgTable("takeaways", {
   novelty: text("novelty").notNull(),
   importance: text("importance").notNull(),
   monetization: text("monetization").notNull(),
-  // categoryId: text().notNull(), // TODO - add category foreign key
+  // remove value on delete
+  categoryId: text().references(() => categories.id, { onDelete: "set null" }),
 });
 
 export type TakeawaySelect = typeof takeaways.$inferSelect;
