@@ -1,7 +1,7 @@
 {
   "functions": {
     "src/server/data-loads.ts": {
-      "includeFiles": "data/*.csv"
+      "includeFiles": "public/data/*.csv"
     }
   }
 }

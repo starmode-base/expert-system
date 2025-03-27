@@ -192,7 +192,10 @@ interface Constituent {
 
 export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
   async () => {
-    const csvFilePath = path.join(process.cwd(), "data/constituents.csv");
+    const csvFilePath = path.join(
+      process.cwd(),
+      "public/data/constituents.csv",
+    );
     const csvContent = fs.readFileSync(csvFilePath, "utf-8");
 
     // Parse the CSV content
