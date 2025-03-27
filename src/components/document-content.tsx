@@ -13,7 +13,7 @@ export function DocumentContent({
           <div className="flex h-1/2 flex-col border-b border-gray-200 p-4">
             <h2 className="mb-2 text-2xl font-semibold">{selectedDoc.title}</h2>
             <div className="h-full flex-1 overflow-y-auto">
-              <div className="mb-4 flex flex-wrap">
+              {/* <div className="mb-4 flex flex-wrap">
                 {selectedDoc.tags.map((tag) => (
                   <div
                     key={tag}
@@ -22,7 +22,7 @@ export function DocumentContent({
                     <p className="font-medium">{tag}</p>
                   </div>
                 ))}
-              </div>
+              </div> */}
               {selectedDoc.takeaways.map((takeaway) => (
                 <div
                   key={takeaway.id}

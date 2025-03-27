@@ -3,7 +3,6 @@ import { parseStringPromise } from "xml2js";
 import * as cheerio from "cheerio";
 import { invariant } from "@tanstack/react-router";
 import { Document, saveContent } from "./save-content";
-import { getArticleTags } from "~/lib/ai-helpers/tag-article";
 import { db } from "~/postgres/db";
 
 // Define the output structure
@@ -97,7 +96,6 @@ export async function extractRssItems(rssUrl: string): Promise<RSSItem[]> {
 export async function scrapeLink(item: RSSItem): Promise<string | undefined> {
   try {
     const articleText = await scrapeArticleText(item.link);
-    const tags = await getArticleTags(item.description);
 
     const document: Document = {
       pubDate: item.pubDate,
@@ -106,7 +104,6 @@ export async function scrapeLink(item: RSSItem): Promise<string | undefined> {
       description: item.description,
       link: item.link,
       articleText,
-      tags,
     };
 
     return await saveContent(document);

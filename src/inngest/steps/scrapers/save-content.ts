@@ -8,7 +8,6 @@ export interface Document {
   description: string;
   link: string;
   articleText: string;
-  tags: string[];
 }
 
 export async function saveContent(document: Document) {
@@ -24,7 +23,6 @@ export async function saveContent(document: Document) {
       pubDate: document.pubDate,
       link: document.link,
       articleText: document.articleText,
-      tags: document.tags,
     })
     .returning({ id: schema.documents.id });
 

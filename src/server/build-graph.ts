@@ -44,7 +44,7 @@ export const queryTakeawayVectors = createServerFn({
     id: takeaway.takeaway.document.id,
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
-    tag: takeaway.takeaway.document.tags[0] ?? "None",
+    tag: "None", // takeaway.takeaway.document.tags[0] ?? "None", // TODO
   }));
 
   return vectors;
@@ -68,7 +68,7 @@ export const queryConceptVectors = createServerFn({
     id: takeaway.takeaway.document.id,
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
-    tag: takeaway.takeaway.document.tags[0] ?? "None",
+    tag: "None", // takeaway.takeaway.document.tags[0] ?? "None", // TODO
   }));
 
   return vectors;

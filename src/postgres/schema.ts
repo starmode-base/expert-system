@@ -105,7 +105,6 @@ export const documents = pgTable("documents", {
   pubDate: text("pubDate").notNull(),
   link: text("link").notNull(),
   articleText: text("articleText").notNull(),
-  tags: text("tags").array().notNull(),
 });
 
 export type DocumentSelect = typeof documents.$inferSelect;
