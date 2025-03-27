@@ -49,17 +49,17 @@ export const earningsCallsScraper = inngest.createFunction(
         "AMD", // Advanced Micro Devices, Inc.
       ];
 
-      const symbols = await db.query.stocks.findMany({
+      const symbols = await db.query.stockSymbols.findMany({
         columns: {
           symbol: true,
           name: true,
         },
 
         // TODO: Temporarily use random symbols
-        where: (stocks, { or, inArray }) =>
+        where: (stockSymbols, { or, inArray }) =>
           or(
-            inArray(stocks.symbol, topTechStockSymbols),
-            eq(stocks.symbol, "Z"),
+            inArray(stockSymbols.symbol, topTechStockSymbols),
+            eq(stockSymbols.symbol, "Z"),
           ),
         orderBy: (stocks, { sql }) => sql`RANDOM()`,
         limit: 3,

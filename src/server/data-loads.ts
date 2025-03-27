@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import fetch from "node-fetch";
 
-import fs from "fs";
-// import path from "path";
 import { parse } from "csv-parse/sync";
 import { db, schema } from "~/postgres/db";
 
@@ -179,44 +178,68 @@ export const uploadCategoriesSF = createServerFn({ method: "POST" }).handler(
   },
 );
 
-interface Constituent {
-  symbol: string;
-  name: string;
-  sector: string;
-  subIndustry: string;
-  HQLocation: string;
-  dateAdded: string; // or `Date` if you plan to parse it
-  cik: string;
-  founded: string; // or `number` if you parse it
+//  ####################
+// ####################
+
+// Define the URL for the NASDAQ listings CSV
+const NASDAQ_LISTINGS_URL = "https://datahub.io/core/nasdaq-listings/r/0.csv";
+
+// Define the structure of the NASDAQ listing
+interface NasdaqListing {
+  Symbol: string;
+  "Security Name": string;
 }
 
-export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
-  async () => {
-    // const csvFilePath = path.join(
-    //   process.cwd(),
-    //   "public/data/constituents.csv",
-    // );
+/**
+ * Fetches and parses the NASDAQ listings from DataHub.io.
+ * @returns A promise that resolves to an array of NasdaqListing objects.
+ */
+async function fetchNasdaqListings() {
+  try {
+    // Fetch the CSV data from the URL
+    const response = await fetch(NASDAQ_LISTINGS_URL);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch data: ${response.statusText}`);
+    }
 
-    const csvFilePath = "public/data/constituents.csv";
-    const csvContent = fs.readFileSync(csvFilePath, "utf-8");
+    // Read the response body as text
+    const csvData = await response.text();
 
-    // Parse the CSV content
+    // Parse the CSV data into JSON
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const records: Constituent[] = parse(csvContent, {
+    const records: NasdaqListing[] = parse(csvData, {
       columns: true,
       skip_empty_lines: true,
     });
 
-    // Output the result as a TypeScript object
-    console.log(
-      "const constituents: Constituent[] = ",
-      JSON.stringify(records, null, 2),
-    );
-
-    const result = await db.insert(schema.stocks).values(records).returning({
-      id: schema.stocks.id,
-      symbol: schema.stocks.symbol,
+    const recordsInsert = records.map((record) => {
+      return {
+        symbol: record.Symbol,
+        name: record["Security Name"],
+      };
     });
+
+    return recordsInsert;
+  } catch (error) {
+    console.error("Error fetching NASDAQ listings:", error);
+    throw error;
+  }
+}
+
+export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
+  async () => {
+    const records = await fetchNasdaqListings();
+
+    // Output the result as a TypeScript object
+    console.log("const constituents: Constituent[] = ", records.length);
+
+    const result = await db
+      .insert(schema.stockSymbols)
+      .values(records)
+      .returning({
+        id: schema.stockSymbols.id,
+        symbol: schema.stockSymbols.symbol,
+      });
 
     return result;
   },
