@@ -10,8 +10,9 @@ import ForceGraph2D, {
 } from "react-force-graph-2d";
 import { queryDocument } from "~/server/queries";
 import { DocumentContent } from "~/components/document-content";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { loadGraphData } from "~/server/build-graph";
+import { FilterBar, FilterParams } from "~/components/filter-bar";
 
 export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
   {
@@ -42,14 +43,32 @@ function KnowledgeGraph({
   graphData: GraphData;
 }) {
   const [similarityMultiplier, setSimilarityMultiplier] = useState(0.3); // slider state
-  const filteredLinks = graphData.links.filter(
-    (link) => link.similarity >= similarityMultiplier,
+  const [filters, setFilters] = useState<FilterParams>({
+    sources: [],
+    categories: [],
+    startDate: null,
+    endDate: null,
+  });
+
+  useEffect(() => {
+    console.log("filters", filters);
+  }, [filters]);
+
+  // Memoize filtered links to recompute only when necessary.
+  const filteredLinks = useMemo(
+    () =>
+      graphData.links.filter((link) => link.similarity >= similarityMultiplier),
+    [graphData.links, similarityMultiplier],
   );
 
-  const graph = {
-    nodes: graphData.nodes,
-    links: filteredLinks,
-  };
+  // Also memoize the overall graph data object.
+  const graph = useMemo(
+    () => ({
+      nodes: graphData.nodes,
+      links: filteredLinks,
+    }),
+    [graphData.nodes, filteredLinks],
+  );
 
   const fgRef =
     useRef<
@@ -95,6 +114,12 @@ function KnowledgeGraph({
           {similarityMultiplier.toFixed(2)}
         </span>
       </div>
+      <FilterBar
+        availableSources={["Source A", "Source B", "Source C"]}
+        availableCategories={["Category X", "Category Y", "Category Z"]}
+        filters={filters}
+        setFilters={setFilters}
+      />
 
       {/* Graph */}
       <div className="flex-1">
