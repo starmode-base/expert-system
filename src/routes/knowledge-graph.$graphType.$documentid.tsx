@@ -97,6 +97,14 @@ function KnowledgeGraph({
   return (
     <div className="flex h-full w-full flex-col">
       {/* Slider */}
+
+      <FilterBar
+        availableSources={["Source A", "Source B", "Source C"]}
+        availableCategories={["Category X", "Category Y", "Category Z"]}
+        filters={filters}
+        setFilters={setFilters}
+      />
+
       <div className="flex items-center gap-2 bg-gray-50 px-4 py-2">
         <label className="text-sm font-medium">Similarity Threshold:</label>
         <input
@@ -114,12 +122,6 @@ function KnowledgeGraph({
           {similarityMultiplier.toFixed(2)}
         </span>
       </div>
-      <FilterBar
-        availableSources={["Source A", "Source B", "Source C"]}
-        availableCategories={["Category X", "Category Y", "Category Z"]}
-        filters={filters}
-        setFilters={setFilters}
-      />
 
       {/* Graph */}
       <div className="flex-1">
