@@ -54,7 +54,7 @@ export const FilterBar = ({
     date ? (date.toISOString().split("T")[0] ?? "") : "";
 
   return (
-    <div className="flex flex-wrap items-start gap-6 rounded bg-gray-50 px-4 py-3 shadow-sm">
+    <div className="flex flex-wrap items-start gap-6 bg-gray-50 px-4 py-3">
       {/* Source Filter */}
       <div>
         <label className="mb-1 block text-sm font-semibold">Sources</label>
