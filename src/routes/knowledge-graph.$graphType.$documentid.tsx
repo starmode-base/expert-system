@@ -8,10 +8,10 @@ import ForceGraph2D, {
   LinkObject,
   NodeObject,
 } from "react-force-graph-2d";
-import { queryDocument } from "~/server/queries";
+import { getFilterValues, queryDocument } from "~/server/queries";
 import { DocumentContent } from "~/components/document-content";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { GraphData, loadGraphData } from "~/server/build-graph";
+import { useEffect, useRef, useState } from "react";
+import { Edge, GraphData, loadGraphData, Node } from "~/server/build-graph";
 import { FilterBar, FilterParams } from "~/components/filter-bar";
 
 export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
@@ -19,8 +19,10 @@ export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
     loader: async ({ params: { graphType, documentid } }) => {
       const graphData = await loadGraphData({ data: graphType });
       const selectedDoc = (await queryDocument({ data: documentid })) ?? null;
+      const { sources, categories } = await getFilterValues();
+      console.log({ graphData });
 
-      return { graphType, graphData, selectedDoc };
+      return { graphType, graphData, selectedDoc, sources, categories };
     },
     component: RouteComponent,
   },
@@ -29,48 +31,72 @@ export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
 function KnowledgeGraph({
   graphType,
   graphData,
+  sources,
+  categories,
 }: {
   graphType: string;
   graphData: GraphData;
+  sources: string[];
+  categories: string[];
 }) {
-  const [similarityMultiplier, setSimilarityMultiplier] = useState(0.3); // slider state
+  const fgRef =
+    useRef<ForceGraphMethods<NodeObject<Node>, LinkObject<Edge>>>(undefined);
+  const [similarityThreshold, setSimilarityThreshold] = useState(0.3); // slider state
   const [filters, setFilters] = useState<FilterParams>({
-    sources: [],
-    categories: [],
+    sources,
+    categories,
     startDate: null,
     endDate: null,
   });
+  const [filteredLinks, setFilteredLinks] = useState(graphData.links);
+  const [filteredNodes, setFilteredNodes] = useState<Node[]>(graphData.nodes);
+  const [filteredGraphData, setFilteredGraphData] = useState(graphData);
+
+  useEffect(() => {
+    const filteredNodeTemp = graphData.nodes.filter(
+      (node) =>
+        filters.sources.includes(node.source) &&
+        filters.categories.includes(node.category),
+    );
+    setFilteredNodes(filteredNodeTemp);
+  }, [graphData.nodes, filters.categories, filters.sources]);
+
+  // Define a type guard for objects with an id property
+  // Initially, when the component mounts, the types or values might align just fine (or the links might be structured differently). But when you update similarityThreshold, the effect runs again and the check fails because of a type mismatch between link.target (as an object) and the expected id (a primitive).
+  // https://chatgpt.com/share/67e80e7f-5980-8010-a4df-f8350304caa3
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function isTargetObject(target: any): target is { id: string | number } {
+    const isObjectWithId = (target &&
+      typeof target === "object" &&
+      "id" in target) as boolean;
+    return isObjectWithId;
+  }
+
+  // Filtering logic for links
+  useEffect(() => {
+    const filteredNodesIds = filteredNodes.map((node) => node.id);
+
+    const filteredLinkTemp = graphData.links.filter((link) => {
+      const targetId = isTargetObject(link.target)
+        ? (link.target.id as string)
+        : link.target;
+      return (
+        link.similarity >= similarityThreshold &&
+        filteredNodesIds.includes(targetId)
+      );
+    });
+    setFilteredLinks(filteredLinkTemp);
+  }, [graphData.links, filteredNodes, similarityThreshold]);
+
+  useEffect(() => {
+    setFilteredGraphData({ nodes: filteredNodes, links: filteredLinks });
+  }, [filteredNodes, filteredLinks]);
 
   useEffect(() => {
     console.log("filters", filters);
-  }, [filters]);
-
-  // Memoize filtered links to recompute only when necessary.
-  const filteredLinks = useMemo(
-    () =>
-      graphData.links.filter((link) => link.similarity >= similarityMultiplier),
-    [graphData.links, similarityMultiplier],
-  );
-
-  // Also memoize the overall graph data object.
-  const graph = useMemo(
-    () => ({
-      nodes: graphData.nodes,
-      links: filteredLinks,
-    }),
-    [graphData.nodes, filteredLinks],
-  );
-
-  const fgRef =
-    useRef<
-      ForceGraphMethods<
-        NodeObject<{ id: string; label: string }>,
-        LinkObject<
-          { id: string; label: string },
-          { source: string; target: string; similarity: number }
-        >
-      >
-    >(undefined);
+    console.log("Links", filteredLinks);
+    console.log("Nodes", filteredNodes);
+  }, [filteredLinks, filteredNodes, filters, graphData.links, graphData.nodes]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -97,8 +123,8 @@ function KnowledgeGraph({
   return (
     <div className="flex h-full w-full flex-col">
       <FilterBar
-        availableSources={["Source A", "Source B", "Source C"]}
-        availableCategories={["Category X", "Category Y", "Category Z"]}
+        availableSources={sources}
+        availableCategories={categories}
         filters={filters}
         setFilters={setFilters}
       />
@@ -110,14 +136,14 @@ function KnowledgeGraph({
           min={0}
           max={3}
           step={0.05}
-          value={similarityMultiplier}
+          value={similarityThreshold}
           onChange={(e) => {
-            setSimilarityMultiplier(parseFloat(e.target.value));
+            setSimilarityThreshold(parseFloat(e.target.value));
           }}
           className="w-64"
         />
         <span className="w-12 text-right text-sm">
-          {similarityMultiplier.toFixed(2)}
+          {similarityThreshold.toFixed(2)}
         </span>
       </div>
 
@@ -126,7 +152,7 @@ function KnowledgeGraph({
         <ForceGraph2D
           d3VelocityDecay={0.5}
           ref={fgRef}
-          graphData={graph}
+          graphData={filteredGraphData}
           width={window.innerWidth * 0.5}
           height={window.innerHeight - 150}
           nodeLabel="label"
@@ -147,7 +173,8 @@ function KnowledgeGraph({
 }
 
 function RouteComponent() {
-  const { graphType, graphData, selectedDoc } = Route.useLoaderData();
+  const { graphType, graphData, selectedDoc, sources, categories } =
+    Route.useLoaderData();
 
   // TODO: Mikael how do i clean this up?
   const navigate = useNavigate();
@@ -193,7 +220,12 @@ function RouteComponent() {
           </button>
         </div>
 
-        <KnowledgeGraph graphType={graphType} graphData={graphData} />
+        <KnowledgeGraph
+          graphType={graphType}
+          graphData={graphData}
+          sources={sources}
+          categories={categories}
+        />
       </div>
       <div className="w-1/2 border-r border-gray-200">
         <DocumentContent selectedDoc={selectedDoc} />

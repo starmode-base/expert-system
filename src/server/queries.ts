@@ -75,3 +75,19 @@ export const queryDocument = createServerFn({
 
     return flatDc;
   });
+
+export const getFilterValues = createServerFn({
+  method: "GET",
+}).handler(async () => {
+  const categories = await db.query.categories.findMany();
+  const documentSources = await db.query.documents.findMany({
+    columns: { source: true },
+  });
+
+  return {
+    categories: categories.map((category) => category.name),
+    sources: Array.from(
+      new Set(documentSources.map((source) => source.source)),
+    ),
+  };
+});

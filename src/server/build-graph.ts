@@ -9,15 +9,17 @@ interface Vector {
   vector: number[];
   label: string;
   category: string;
+  source: string;
 }
 export interface Node {
   id: string;
   documentId: string;
   label: string;
   category: string;
+  source: string;
 }
 
-interface Edge {
+export interface Edge {
   source: string;
   target: string;
   similarity: number;
@@ -49,6 +51,7 @@ export const queryTakeawayVectors = createServerFn({
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
     category: takeaway.takeaway.category?.name ?? "None",
+    source: takeaway.takeaway.document.source,
   }));
 
   return vectors;
@@ -75,6 +78,7 @@ export const queryConceptVectors = createServerFn({
     documentId: takeaway.takeaway.document.id,
     label: takeaway.takeaway.document.title,
     category: takeaway.takeaway.category?.name ?? "None",
+    source: takeaway.takeaway.document.source,
   }));
 
   return vectors;
@@ -92,12 +96,15 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 }
 
 export function buildGraph(vectors: Vector[], threshold = 0.35): GraphData {
-  const nodes: Node[] = vectors.map(({ id, documentId, label, category }) => ({
-    id,
-    documentId,
-    label,
-    category,
-  }));
+  const nodes: Node[] = vectors.map(
+    ({ id, documentId, label, category, source }) => ({
+      id,
+      documentId,
+      label,
+      category,
+      source,
+    }),
+  );
   const links: Edge[] = [];
 
   for (let i = 0; i < vectors.length; i++) {
@@ -130,8 +137,8 @@ export function buildGraph(vectors: Vector[], threshold = 0.35): GraphData {
 function amplifyGraph(graph: GraphData): GraphData {
   // Extract similarity values to compute the mean and standard deviation
   const { nodes, links: rawEdges } = graph;
-  // Normalize each similarity with its z-score
-  const links: Edge[] = rawEdges.map((edge) => ({
+  // amplify similarity
+  const links = rawEdges.map((edge) => ({
     ...edge,
     similarity: Math.pow(edge.similarity, 3) * 10,
   }));
