@@ -49,6 +49,7 @@ export async function getTakeaways(
         role: "user",
         content: `
         Create a list of the 1-3 most novel and important takeaways from the text below.
+        Each takeaway should stand alone and not reference other takeaways.
 
         Instructions
         - Be very concise but thorough. No fluff.

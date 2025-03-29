@@ -5,12 +5,14 @@ import { db } from "~/postgres/db";
 
 interface Vector {
   id: string;
+  documentId: string;
   vector: number[];
   label: string;
   category: string;
 }
-interface Node {
+export interface Node {
   id: string;
+  documentId: string;
   label: string;
   category: string;
 }
@@ -42,7 +44,8 @@ export const queryTakeawayVectors = createServerFn({
   invariant(takeaways, "No takeaways");
 
   const vectors = takeaways.map((takeaway) => ({
-    id: takeaway.takeaway.document.id,
+    id: takeaway.takeaway.id,
+    documentId: takeaway.takeaway.document.id,
     vector: takeaway.embedding,
     label: takeaway.takeaway.document.title,
     category: takeaway.takeaway.category?.name ?? "None",
@@ -67,8 +70,9 @@ export const queryConceptVectors = createServerFn({
   invariant(takeaways, "No takeaways");
 
   const vectors = takeaways.map((takeaway) => ({
-    id: takeaway.takeaway.document.id,
+    id: takeaway.takeaway.id,
     vector: takeaway.embedding,
+    documentId: takeaway.takeaway.document.id,
     label: takeaway.takeaway.document.title,
     category: takeaway.takeaway.category?.name ?? "None",
   }));
@@ -88,8 +92,9 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 }
 
 export function buildGraph(vectors: Vector[], threshold = 0.35): GraphData {
-  const nodes: Node[] = vectors.map(({ id, label, category }) => ({
+  const nodes: Node[] = vectors.map(({ id, documentId, label, category }) => ({
     id,
+    documentId,
     label,
     category,
   }));

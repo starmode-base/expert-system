@@ -11,7 +11,7 @@ import ForceGraph2D, {
 import { queryDocument } from "~/server/queries";
 import { DocumentContent } from "~/components/document-content";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { loadGraphData } from "~/server/build-graph";
+import { GraphData, loadGraphData } from "~/server/build-graph";
 import { FilterBar, FilterParams } from "~/components/filter-bar";
 
 export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
@@ -25,15 +25,6 @@ export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
     component: RouteComponent,
   },
 );
-
-interface GraphData {
-  nodes: { id: string; label: string; category: string }[];
-  links: {
-    source: string;
-    target: string;
-    similarity: number;
-  }[];
-}
 
 function KnowledgeGraph({
   graphType,
@@ -94,6 +85,15 @@ function KnowledgeGraph({
 
   const navigate = useNavigate();
 
+  const mapNodeIdToDocument = async (nodeId: string) => {
+    const takeaway = graphData.nodes.find((node) => node.id === nodeId);
+
+    await navigate({
+      to: "/knowledge-graph/$graphType/$documentid",
+      params: { graphType, documentid: takeaway?.documentId ?? "" },
+    });
+  };
+
   return (
     <div className="flex h-full w-full flex-col">
       <FilterBar
@@ -138,10 +138,7 @@ function KnowledgeGraph({
           linkWidth={(d) => d.similarity * 1.75}
           onNodeClick={async (node) => {
             console.log("Clicked node:", node);
-            await navigate({
-              to: `/knowledge-graph/$graphType/$documentid`,
-              params: { graphType, documentid: node.id },
-            });
+            await mapNodeIdToDocument(node.id);
           }}
         />
       </div>
