@@ -19,7 +19,7 @@ export interface Document {
   id: string;
   title: string;
   description: string;
-  pubDate: string;
+  publicationDate: Date;
   link: string;
   source: string;
   articleText: string;
@@ -58,7 +58,7 @@ export const queryDocument = createServerFn({
       id: document.id,
       title: document.title,
       description: document.description,
-      pubDate: document.pubDate,
+      publicationDate: document.publicationDate,
       link: document.link,
       source: document.source,
       articleText: document.articleText,

@@ -84,14 +84,15 @@ export const earningsCallsScraper = inngest.createFunction(
               return;
             }
 
-            console.log("result", result.date);
+            const publicationDate = new Date(result.date);
+            console.log("Date", publicationDate);
 
             const document = {
               source: "Earnings Calls",
               title: `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`,
               //   TODO - add earning results from Earnings Calendar API
               description: `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`,
-              pubDate: result.date,
+              publicationDate,
               link: "",
               articleText: result.transcript,
               tags: [], // TODO - add tags

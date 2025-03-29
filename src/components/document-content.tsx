@@ -1,13 +1,14 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { sendEventGentateTakeawaysSF } from "~/server/inggest";
+import { sendEventGenerateTakeawaysSF } from "~/server/inggest";
 import { Document } from "~/server/queries";
 
 export function TakeawaysSection({ selectedDoc }: { selectedDoc: Document }) {
   const [takeawayPrompt, setTakeawayPrompt] = useState("");
   const [model, setModel] = useState("gpt-4o");
-  const sendEventScienceDailyScraper = useServerFn(sendEventGentateTakeawaysSF);
+  const sendEventGenerateTakeaways = useServerFn(sendEventGenerateTakeawaysSF);
 
+  console.log(selectedDoc.publicationDate);
   return (
     <div className="flex h-full max-h-[calc(100vh-200px)] flex-col overflow-y-auto p-4">
       <div className="mb-4 flex flex-wrap">
@@ -68,7 +69,7 @@ export function TakeawaysSection({ selectedDoc }: { selectedDoc: Document }) {
 
       <button
         onClick={async () => {
-          await sendEventScienceDailyScraper({
+          await sendEventGenerateTakeaways({
             data: {
               documentId: selectedDoc.id,
               takeawayPrompt,
@@ -91,7 +92,9 @@ export function ArticleSection({ selectedDoc }: { selectedDoc: Document }) {
         <h2 className="text-2xl font-semibold">{selectedDoc.title}</h2>
       </div>
       <div className="overflow-y-scroll">
-        <p className="mb-4 text-sm text-gray-600">{selectedDoc.pubDate}</p>
+        <p className="mb-4 text-sm text-gray-600">
+          {selectedDoc.publicationDate.toLocaleString()}
+        </p>
         <p className="whitespace-pre-wrap text-gray-800">
           {selectedDoc.articleText}
         </p>

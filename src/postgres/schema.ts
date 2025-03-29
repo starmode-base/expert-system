@@ -99,12 +99,12 @@ export const documents = pgTable("documents", {
   // organizationId: text()
   //   .notNull()
   //   .references(() => organizations.id, { onDelete: "cascade" }),
-  source: text("source").notNull(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  pubDate: text("pubDate").notNull(),
-  link: text("link").notNull(),
-  articleText: text("articleText").notNull(),
+  source: text().notNull(),
+  title: text().notNull(),
+  description: text().notNull(),
+  publicationDate: timestamp().notNull(),
+  link: text().notNull(),
+  articleText: text().notNull(),
 });
 
 export type DocumentSelect = typeof documents.$inferSelect;
@@ -115,6 +115,7 @@ export const takeaways = pgTable("takeaways", {
   documentId: text()
     .notNull()
     .references(() => documents.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
   takeaway: text("takeaway").notNull(),
   concept: text("concept").notNull(),
   novelty: text("novelty").notNull(),

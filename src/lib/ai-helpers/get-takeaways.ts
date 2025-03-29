@@ -49,6 +49,7 @@ export async function getTakeaways(
         role: "user",
         content: `
         Create a list of the 1-3 most novel and important takeaways from the text below.
+        Each takeaway should be completely distinct from other takeaways. Make them unique and unrelated.
         Each takeaway should stand alone and not reference other takeaways.
 
         Instructions
@@ -68,5 +69,29 @@ export async function getTakeaways(
 
   invariant(completion.choices[0]?.message.parsed, "No content");
 
-  return completion.choices[0].message.parsed.takeaways;
+  const takeaways = completion.choices[0].message.parsed.takeaways;
+
+  const takeawaysReturn = await Promise.all(
+    takeaways.map(async (takeaway) => {
+      const title = await getTakeawayTitle(takeaway.takeaway);
+      return { ...takeaway, title };
+    }),
+  );
+
+  return takeawaysReturn;
+}
+
+async function getTakeawayTitle(takeaway: string) {
+  const completion = await client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "user",
+        content: `Generate a title for the following text: ${takeaway}`,
+      },
+    ],
+  });
+
+  invariant(completion.choices[0]?.message.content, "No content");
+  return completion.choices[0].message.content;
 }

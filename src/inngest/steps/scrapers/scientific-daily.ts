@@ -57,7 +57,7 @@ export async function extractRssItems(rssUrl: string): Promise<RSSItem[]> {
 
     const rssItems: RSSItem[] = [];
 
-    for (const item of items) {
+    for (const item of items.slice(0, 2)) {
       const pubDate = item.pubDate[0];
       const title = item.title[0];
       const description = item.description[0];
@@ -97,8 +97,10 @@ export async function scrapeLink(item: RSSItem): Promise<string | undefined> {
   try {
     const articleText = await scrapeArticleText(item.link);
 
+    const publicationDate = new Date(item.pubDate);
+
     const document: Document = {
-      pubDate: item.pubDate,
+      publicationDate,
       source: "ScienceDaily",
       title: item.title,
       description: item.description,
