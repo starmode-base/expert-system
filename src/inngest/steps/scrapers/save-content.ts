@@ -2,7 +2,7 @@ import { invariant } from "@tanstack/react-router";
 import { db, schema } from "~/postgres/db";
 
 export interface Document {
-  pubDate: string;
+  publicationDate: Date;
   source: string;
   title: string;
   description: string;
@@ -20,7 +20,7 @@ export async function saveContent(document: Document) {
       source: document.source,
       title: document.title,
       description: document.description,
-      pubDate: document.pubDate,
+      publicationDate: document.publicationDate,
       link: document.link,
       articleText: document.articleText,
     })

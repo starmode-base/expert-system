@@ -54,7 +54,7 @@ export const sendEventEarningsCallscraperSF = createServerFn({ method: "POST" })
     return context.viewer.email;
   });
 
-export const sendEventGentateTakeawaysSF = createServerFn({ method: "POST" })
+export const sendEventGenerateTakeawaysSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(
     z.object({

@@ -97,8 +97,10 @@ export async function scrapeLink(item: RSSItem): Promise<string | undefined> {
   try {
     const articleText = await scrapeArticleText(item.link);
 
+    const publicationDate = new Date(item.pubDate);
+
     const document: Document = {
-      pubDate: item.pubDate,
+      publicationDate,
       source: "ScienceDaily",
       title: item.title,
       description: item.description,

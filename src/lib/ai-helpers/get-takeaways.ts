@@ -9,26 +9,31 @@ const client = new OpenAI();
  * JSON schema for OpenAI structured output
  */
 const schema = z.object({
-  takeaway: z.string({
-    description:
-      "Explain the most novel and important takeaway from the document in 10-15 sentences. Prioritize truths and facts over emotions and opinions.",
-  }),
-  concept: z.string({
-    description: `Analyze the article's key takeaway and articulate its core generalized concept in 4-8 sentences.
-    This should be an articulation of a high-level, general idea that can be applied to various contexts.
-    You can use analogies or metaphors to ensure clarity and tranferability.`,
-  }),
-  novelty: z.string({
-    description: "Score the novelty of the article takeaway 0-10",
-  }),
-  importance: z.string({
-    description: "Score the importance of the article takeaway 0-10",
-  }),
-  monetization: z.string({
-    description:
-      "Score the monetization potential of the article takeaway 0-10",
-  }),
+  takeaways: z.array(
+    z.object({
+      takeaway: z.string({
+        description:
+          "Explain the most novel and important takeaway from the document in 10-15 sentences. Prioritize truths and facts over emotions and opinions.",
+      }),
+      concept: z.string({
+        description: `Analyze the article's key takeaway and articulate its core generalized concept in 4-8 sentences.
+      This should be an articulation of a high-level, general idea that can be applied to various contexts.
+      You can use analogies or metaphors to ensure clarity and tranferability.`,
+      }),
+      novelty: z.string({
+        description: "Score the novelty of the article takeaway 0-10",
+      }),
+      importance: z.string({
+        description: "Score the importance of the article takeaway 0-10",
+      }),
+      monetization: z.string({
+        description:
+          "Score the monetization potential of the article takeaway 0-10",
+      }),
+    }),
+  ),
 });
+
 const responseFormat = zodResponseFormat(schema, "response");
 
 export async function getTakeaways(
@@ -43,7 +48,12 @@ export async function getTakeaways(
       {
         role: "user",
         content: `
+        Create a list of the 1-3 most novel and important takeaways from the text below.
+        Each takeaway should be completely distinct from other takeaways. Make them unique and unrelated.
+        Each takeaway should stand alone and not reference other takeaways.
+
         Instructions
+        - Make the takeaway a stand alone thought. The reader should not have any other context about the provided Text.
         - Be very concise but thorough. No fluff.
         - Be factual and accurate.
         - Do not embelish or overdramatize. Don't use promotional words like revolutionary, or groundbreaking.
@@ -52,7 +62,7 @@ export async function getTakeaways(
         Specific Instructions:
         ${takeawayInstructions?.trim() ?? ""}
 
-        Article Text:
+        Text:
         ${articleText}`,
       },
     ],
@@ -60,5 +70,38 @@ export async function getTakeaways(
 
   invariant(completion.choices[0]?.message.parsed, "No content");
 
-  return completion.choices[0].message.parsed;
+  const takeaways = completion.choices[0].message.parsed.takeaways;
+
+  const takeawaysReturn = await Promise.all(
+    takeaways.map(async (takeaway) => {
+      const title = await getTakeawayTitle(takeaway.takeaway);
+      return { ...takeaway, title };
+    }),
+  );
+
+  return takeawaysReturn;
+}
+
+async function getTakeawayTitle(takeaway: string) {
+  const completion = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "user",
+        content: `Summarize the key takeaway from the following text into a title
+  -
+  -Include only the title.
+  -No other text.
+  -dont use quotes or colons
+  Example:
+Advancements in Flexible Electronics Through Ultrafine Metal-Coated Elastomer Films
+
+  Text:
+        ${takeaway}`,
+      },
+    ],
+  });
+
+  invariant(completion.choices[0]?.message.content, "No content");
+  return completion.choices[0].message.content;
 }

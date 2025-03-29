@@ -36,18 +36,18 @@ export const earningsCallsScraper = inngest.createFunction(
 
     // get tickers
     const symbols = await step.run("get-ticker-symbols", async () => {
-      //   const topTechStockSymbols: string[] = [
-      //     "AAPL", // Apple Inc.
-      //     "MSFT", // Microsoft Corporation
-      //     "GOOGL", // Alphabet Inc. (Class A)
-      //     "AMZN", // Amazon.com, Inc.
-      //     "NVDA", // NVIDIA Corporation
-      //     "META", // Meta Platforms, Inc.
-      //     "TSLA", // Tesla, Inc.
-      //     "AVGO", // Broadcom Inc.
-      //     "CRM", // Salesforce, Inc.
-      //     "AMD", // Advanced Micro Devices, Inc.
-      //   ];
+      const topTechStockSymbols: { symbol: string; name: string }[] = [
+        { symbol: "AAPL", name: "Apple Inc." },
+        { symbol: "MSFT", name: "Microsoft Corporation" },
+        { symbol: "GOOGL", name: "Alphabet Inc. (Class A)" },
+        { symbol: "AMZN", name: "Amazon.com, Inc." },
+        { symbol: "NVDA", name: "NVIDIA Corporation" },
+        { symbol: "META", name: "Meta Platforms, Inc." },
+        { symbol: "TSLA", name: "Tesla, Inc." },
+        { symbol: "AVGO", name: "Broadcom Inc." },
+        { symbol: "CRM", name: "Salesforce, Inc." },
+        { symbol: "AMD", name: "Advanced Micro Devices, Inc." },
+      ];
 
       const symbols = await db.query.stockSymbols.findMany({
         columns: {
@@ -59,7 +59,7 @@ export const earningsCallsScraper = inngest.createFunction(
         limit: 10,
       });
 
-      return symbols;
+      return [...topTechStockSymbols, ...symbols].slice(0, 20);
     });
 
     const documentIds = await Promise.all(
@@ -84,14 +84,15 @@ export const earningsCallsScraper = inngest.createFunction(
               return;
             }
 
-            console.log("result", result.date);
+            const publicationDate = new Date(result.date);
+            console.log("Date", publicationDate);
 
             const document = {
               source: "Earnings Calls",
               title: `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`,
               //   TODO - add earning results from Earnings Calendar API
               description: `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`,
-              pubDate: result.date,
+              publicationDate,
               link: "",
               articleText: result.transcript,
               tags: [], // TODO - add tags

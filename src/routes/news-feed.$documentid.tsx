@@ -30,7 +30,7 @@ function RouteComponent() {
             .slice()
             .sort(
               (a, b) =>
-                new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime(),
+                b.publicationDate.getTime() - a.publicationDate.getTime(),
             )
             .map((document) => (
               <Link
@@ -47,7 +47,9 @@ function RouteComponent() {
                   }`}
                 >
                   <h2 className="text-xl font-bold">{document.title}</h2>
-                  <p className="text-sm text-gray-600">{document.pubDate}</p>
+                  <p className="text-sm text-gray-600">
+                    {document.publicationDate.toLocaleDateString()}
+                  </p>
                   <p className="mt-2 text-gray-800">{document.description}</p>
                 </div>
               </Link>
