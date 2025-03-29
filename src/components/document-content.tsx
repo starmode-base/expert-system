@@ -27,6 +27,10 @@ export function TakeawaysSection({ selectedDoc }: { selectedDoc: Document }) {
           key={takeaway.id}
           className="mb-4 rounded bg-gray-50 p-4 shadow-sm"
         >
+          <p className="font-lg font-semibold text-gray-800">
+            {takeaway.title}
+          </p>
+          <p className="font-medium">{takeaway.category}</p>
           <p>
             <span className="font-medium text-gray-600">Takeaway: </span>
             {takeaway.takeaway}

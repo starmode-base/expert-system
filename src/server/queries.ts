@@ -25,6 +25,7 @@ export interface Document {
   articleText: string;
   takeaways: {
     id: string;
+    title: string;
     takeaway: string;
     concept: string;
     novelty: string;
@@ -64,6 +65,7 @@ export const queryDocument = createServerFn({
       articleText: document.articleText,
       takeaways: document.takeaways.map((takeaway) => ({
         id: takeaway.id,
+        title: takeaway.title,
         takeaway: takeaway.takeaway,
         concept: takeaway.concept,
         novelty: takeaway.novelty,

@@ -57,7 +57,7 @@ export async function extractRssItems(rssUrl: string): Promise<RSSItem[]> {
 
     const rssItems: RSSItem[] = [];
 
-    for (const item of items.slice(0, 2)) {
+    for (const item of items) {
       const pubDate = item.pubDate[0];
       const title = item.title[0];
       const description = item.description[0];

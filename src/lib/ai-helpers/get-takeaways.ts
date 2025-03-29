@@ -83,11 +83,20 @@ export async function getTakeaways(
 
 async function getTakeawayTitle(takeaway: string) {
   const completion = await client.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     messages: [
       {
         role: "user",
-        content: `Generate a title for the following text: ${takeaway}`,
+        content: `Summarize the key takeaway from the following text into a title
+  -
+  -Include only the title.
+  -No other text.
+  -dont use quotes or colons
+  Example:
+Advancements in Flexible Electronics Through Ultrafine Metal-Coated Elastomer Films
+
+  Text:
+        ${takeaway}`,
       },
     ],
   });
