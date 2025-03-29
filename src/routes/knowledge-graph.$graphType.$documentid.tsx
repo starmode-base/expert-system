@@ -67,7 +67,7 @@ function KnowledgeGraph({
   // Initially, when the component mounts, the types or values might align just fine (or the links might be structured differently). But when you update similarityThreshold, the effect runs again and the check fails because of a type mismatch between link.target (as an object) and the expected id (a primitive).
   // https://chatgpt.com/share/67e80e7f-5980-8010-a4df-f8350304caa3
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function isTargetObject(target: any): target is { id: string | number } {
+  function isObject(target: any): target is { id: string | number } {
     const isObjectWithId = (target &&
       typeof target === "object" &&
       "id" in target) as boolean;
@@ -79,12 +79,17 @@ function KnowledgeGraph({
     const filteredNodesIds = filteredNodes.map((node) => node.id);
 
     const filteredLinkTemp = graphData.links.filter((link) => {
-      const targetId = isTargetObject(link.target)
+      const targetId = isObject(link.target)
         ? (link.target.id as string)
         : link.target;
+      const sourceId = isObject(link.source)
+        ? (link.source.id as string)
+        : link.source;
+
       return (
         link.similarity >= similarityThreshold &&
-        filteredNodesIds.includes(targetId)
+        filteredNodesIds.includes(targetId) &&
+        filteredNodesIds.includes(sourceId)
       );
     });
     setFilteredLinks(filteredLinkTemp);

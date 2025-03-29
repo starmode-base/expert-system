@@ -53,6 +53,7 @@ export async function getTakeaways(
         Each takeaway should stand alone and not reference other takeaways.
 
         Instructions
+        - Make the takeaway a stand alone thought. The reader should not have any other context about the provided Text.
         - Be very concise but thorough. No fluff.
         - Be factual and accurate.
         - Do not embelish or overdramatize. Don't use promotional words like revolutionary, or groundbreaking.
