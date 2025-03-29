@@ -59,10 +59,7 @@ export const earningsCallsScraper = inngest.createFunction(
         limit: 10,
       });
 
-      return [...topTechStockSymbols, ...symbols, ...topTechStockSymbols].slice(
-        0,
-        20,
-      );
+      return [...topTechStockSymbols, ...symbols].slice(0, 20);
     });
 
     const documentIds = await Promise.all(

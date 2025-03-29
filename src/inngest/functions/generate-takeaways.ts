@@ -64,12 +64,20 @@ export const generateTakeaways = inngest.createFunction(
         );
       }),
     );
-    // const tags = await getArticleTags(takeaways.takeaway);
+
+    /**
+     * Step 3: Delete existing takeaways
+     */
+    await step.run(`delete-takeaways-${event.data.documentId}`, async () => {
+      // Delete existing takeaways
+      await db
+        .delete(schema.takeaways)
+        .where(eq(schema.takeaways.documentId, event.data.documentId));
+    });
 
     /**
      * Step 3: Save takeaways
      */
-
     const takeawaysWrites = await Promise.all(
       takeawaysInserts.map(async (takeawaysInsert) => {
         return await step.run(
@@ -79,11 +87,6 @@ export const generateTakeaways = inngest.createFunction(
             console.log(
               `Saving takeaways for document ${event.data.documentId}`,
             );
-
-            // Delete existing takeaways
-            await db
-              .delete(schema.takeaways)
-              .where(eq(schema.takeaways.documentId, event.data.documentId));
 
             // Insert new takeaways
             const [result] = await db
@@ -103,9 +106,9 @@ export const generateTakeaways = inngest.createFunction(
 
     await Promise.all(
       takeawaysWrites.map(async (takeawaysWrite) => {
-        await step.run("save-embedding-${documentId}", async () => {
+        await step.run(`save-embedding-${takeawaysWrite.id}`, async () => {
           // ######
-          console.log(`Saving embedding for document ${event.data.documentId}`);
+          console.log(`Saving embedding for document ${takeawaysWrite.id}`);
 
           const takeawayEmbedding = await generateEmbedding(
             takeawaysWrite.takeaway,
