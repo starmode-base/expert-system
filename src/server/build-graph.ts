@@ -10,6 +10,7 @@ interface Vector {
   label: string;
   category: string;
   source: string;
+  publicationDate: Date;
 }
 export interface Node {
   id: string;
@@ -17,6 +18,7 @@ export interface Node {
   label: string;
   category: string;
   source: string;
+  publicationDate: Date;
 }
 
 export interface Edge {
@@ -52,6 +54,7 @@ export const queryTakeawayVectors = createServerFn({
     label: takeaway.takeaway.document.title,
     category: takeaway.takeaway.category?.name ?? "None",
     source: takeaway.takeaway.document.source,
+    publicationDate: takeaway.takeaway.document.publicationDate,
   }));
 
   return vectors;
@@ -79,6 +82,7 @@ export const queryConceptVectors = createServerFn({
     label: takeaway.takeaway.document.title,
     category: takeaway.takeaway.category?.name ?? "None",
     source: takeaway.takeaway.document.source,
+    publicationDate: takeaway.takeaway.document.publicationDate,
   }));
 
   return vectors;
@@ -97,12 +101,13 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 
 export function buildGraph(vectors: Vector[], threshold = 0.35): GraphData {
   const nodes: Node[] = vectors.map(
-    ({ id, documentId, label, category, source }) => ({
+    ({ id, documentId, label, category, source, publicationDate }) => ({
       id,
       documentId,
       label,
       category,
       source,
+      publicationDate,
     }),
   );
   const links: Edge[] = [];

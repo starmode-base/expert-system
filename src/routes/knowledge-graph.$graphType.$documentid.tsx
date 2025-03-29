@@ -41,6 +41,7 @@ function KnowledgeGraph({
 }) {
   const fgRef =
     useRef<ForceGraphMethods<NodeObject<Node>, LinkObject<Edge>>>(undefined);
+
   const [similarityThreshold, setSimilarityThreshold] = useState(0.3); // slider state
   const [filters, setFilters] = useState<FilterParams>({
     sources,
@@ -56,10 +57,11 @@ function KnowledgeGraph({
     const filteredNodeTemp = graphData.nodes.filter(
       (node) =>
         filters.sources.includes(node.source) &&
-        filters.categories.includes(node.category),
+        filters.categories.includes(node.category) &&
+        (!filters.startDate || node.publicationDate >= filters.startDate),
     );
     setFilteredNodes(filteredNodeTemp);
-  }, [graphData.nodes, filters.categories, filters.sources]);
+  }, [graphData.nodes, filters.categories, filters.sources, filters.startDate]);
 
   // Define a type guard for objects with an id property
   // Initially, when the component mounts, the types or values might align just fine (or the links might be structured differently). But when you update similarityThreshold, the effect runs again and the check fails because of a type mismatch between link.target (as an object) and the expected id (a primitive).
@@ -92,18 +94,20 @@ function KnowledgeGraph({
     setFilteredGraphData({ nodes: filteredNodes, links: filteredLinks });
   }, [filteredNodes, filteredLinks]);
 
-  useEffect(() => {
-    console.log("filters", filters);
-    console.log("Links", filteredLinks);
-    console.log("Nodes", filteredNodes);
-  }, [filteredLinks, filteredNodes, filters, graphData.links, graphData.nodes]);
+  //  For debugging
+  // useEffect(() => {
+  //   console.log("filters", filters);
+  //   console.log("Links", filteredLinks);
+  //   console.log("Nodes", filteredNodes);
+  // }, [filteredLinks, filteredNodes, filters, graphData.links, graphData.nodes]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (fgRef.current) {
         fgRef.current.zoomToFit(1000, 150);
       }
-    }, 5); // 100ms delay
+      // If there is a bug wil rerendering the graph, increase the timeout
+    }, 20); // 100ms delay
     return () => {
       clearTimeout(timeout);
     };
