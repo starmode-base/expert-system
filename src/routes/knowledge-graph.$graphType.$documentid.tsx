@@ -13,16 +13,25 @@ import { DocumentContent } from "~/components/document-content";
 import { useEffect, useRef, useState } from "react";
 import { Edge, GraphData, loadGraphData, Node } from "~/server/build-graph";
 import { FilterBar, FilterParams } from "~/components/filter-bar";
+import { getInsightsSF } from "~/server/insights-studio-SFs";
 
 export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
   {
     loader: async ({ params: { graphType, documentid } }) => {
       const graphData = await loadGraphData({ data: graphType });
       const selectedDoc = (await queryDocument({ data: documentid })) ?? null;
+      const insights = await getInsightsSF();
       const { sources, categories } = await getFilterValues();
-      console.log({ graphData });
+      console.log({ insights });
 
-      return { graphType, graphData, selectedDoc, sources, categories };
+      return {
+        graphType,
+        graphData,
+        selectedDoc,
+        sources,
+        categories,
+        insights,
+      };
     },
     component: RouteComponent,
   },
@@ -182,7 +191,7 @@ function KnowledgeGraph({
 }
 
 function RouteComponent() {
-  const { graphType, graphData, selectedDoc, sources, categories } =
+  const { graphType, graphData, selectedDoc, sources, categories, insights } =
     Route.useLoaderData();
 
   // TODO: Mikael how do i clean this up?
@@ -237,7 +246,7 @@ function RouteComponent() {
         />
       </div>
       <div className="w-1/2 border-r border-gray-200">
-        <DocumentContent selectedDoc={selectedDoc} />
+        <DocumentContent selectedDoc={selectedDoc} insights={insights} />
       </div>
     </div>
   );

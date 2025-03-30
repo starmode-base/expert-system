@@ -229,3 +229,6 @@ export const insightTakeaways = pgTable(
   },
   (table) => [primaryKey({ columns: [table.insightId, table.takeawayId] })],
 );
+
+export type InsightTakeawaySelect = typeof insightTakeaways.$inferSelect;
+export type InsightTakeawayInsert = typeof insightTakeaways.$inferInsert;

@@ -6,6 +6,7 @@ import { InsightList } from "~/components/insight-studio/insights-list";
 import { Takeaways } from "~/components/insight-studio/takeaways";
 import {
   getInsightsSF,
+  getInsightTakeawaysSF,
   updateInsightTitleSF,
 } from "~/server/insights-studio-SFs";
 
@@ -14,8 +15,11 @@ export const Route = createFileRoute("/insight-studio/$insightId")({
     const insights = await getInsightsSF();
     const selectedInsight =
       insights.find((insight) => insight.id === insightId) ?? null;
+    const insightTakeaways = await getInsightTakeawaysSF({
+      data: { insightId },
+    });
 
-    return { selectedInsight, insights };
+    return { selectedInsight, insights, insightTakeaways };
   },
   component: RouteComponent,
 });
@@ -23,7 +27,7 @@ export const Route = createFileRoute("/insight-studio/$insightId")({
 // RouteComponent.tsx
 
 export function RouteComponent() {
-  const { insights, selectedInsight } = Route.useLoaderData();
+  const { insights, selectedInsight, insightTakeaways } = Route.useLoaderData();
   const router = useRouter();
   const updateInsightTitle = useServerFn(updateInsightTitleSF);
   const [activeTab, setActiveTab] = useState<"insight" | "takeaways">(
@@ -89,7 +93,7 @@ export function RouteComponent() {
             {activeTab === "insight" ? (
               <Insight insight={selectedInsight} />
             ) : (
-              <Takeaways takeaways={[]} />
+              <Takeaways insightTakeaways={insightTakeaways} />
             )}
           </div>
         </div>

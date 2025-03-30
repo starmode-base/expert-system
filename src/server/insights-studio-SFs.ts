@@ -59,3 +59,30 @@ export const removeTakeawayFromInsightSF = createServerFn({ method: "POST" })
         ),
       );
   });
+
+export interface InsightTakeaway {
+  insightId: string;
+  takeawayId: string;
+  takeaway: {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    title: string;
+    documentId: string;
+    takeaway: string;
+    concept: string;
+    novelty: string;
+    importance: string;
+    monetization: string;
+    categoryId: string | null;
+  };
+}
+export const getInsightTakeawaysSF = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .validator(z.object({ insightId: z.string() }))
+  .handler(async ({ data: { insightId } }) => {
+    return await db.query.insightTakeaways.findMany({
+      with: { takeaway: true },
+      where: eq(schema.insightTakeaways.insightId, insightId),
+    });
+  });

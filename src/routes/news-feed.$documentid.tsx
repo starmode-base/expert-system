@@ -1,22 +1,26 @@
 import { createFileRoute, invariant, Link } from "@tanstack/react-router";
 import { DocumentContent } from "~/components/document-content";
+import { getInsightsSF } from "~/server/insights-studio-SFs";
 import { listOrganizationsSF } from "~/server/organizations";
 import { queryDocument, queryDocuments } from "~/server/queries";
 
 export const Route = createFileRoute("/news-feed/$documentid")({
   loader: async ({ params: { documentid } }) => {
     const { viewerId } = await listOrganizationsSF();
+    console.log({ viewerId });
     const documents = await queryDocuments();
+    const insights = await getInsightsSF();
+
     const selectedDoc = await queryDocument({ data: documentid });
 
-    return { viewerId, documents, selectedDoc };
+    return { documents, selectedDoc, insights };
   },
 
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { documents, selectedDoc } = Route.useLoaderData();
+  const { documents, selectedDoc, insights } = Route.useLoaderData();
   invariant(documents, "No documents");
 
   return (
@@ -59,7 +63,7 @@ function RouteComponent() {
 
       {/* Right Detail View */}
       <div className="flex h-full w-2/3 flex-col">
-        <DocumentContent selectedDoc={selectedDoc} />
+        <DocumentContent selectedDoc={selectedDoc} insights={insights} />
       </div>
     </div>
   );

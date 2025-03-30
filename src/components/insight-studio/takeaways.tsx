@@ -1,12 +1,20 @@
-// Takeaways (Takeaways Tab Component)
-export function Takeaways({ takeaways }: { takeaways: string[] }) {
-  if (takeaways.length === 0)
-    return <p className="text-gray-700">No takeaways</p>;
+import { InsightTakeaway } from "~/server/insights-studio-SFs";
 
+// Takeaways (Takeaways Tab Component)
+export function Takeaways({
+  insightTakeaways,
+}: {
+  insightTakeaways: InsightTakeaway[];
+}) {
+  if (insightTakeaways.length === 0) {
+    return <p>No takeaways yet</p>;
+  }
   return (
     <ul>
-      {takeaways.map((takeaway) => (
-        <li key={takeaway}>{takeaway}</li>
+      {insightTakeaways.map((takeaway) => (
+        <li key={takeaway.takeawayId}>
+          <p>{takeaway.takeaway.takeaway}</p>
+        </li>
       ))}
     </ul>
   );

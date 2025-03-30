@@ -1,16 +1,40 @@
 import { relations } from "drizzle-orm/relations";
 import {
-  takeaways,
-  conceptEmbeddings,
-  takeawayEmbeddings,
   users,
   accounts,
   organizations,
-  documents,
+  takeaways,
+  conceptEmbeddings,
   categories,
   tags,
+  takeawayEmbeddings,
+  documents,
+  insights,
+  insightTakeaways,
   organizationMembers,
 } from "./schema";
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [accounts.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  accounts: many(accounts),
+  insights: many(insights),
+  organizationMembers: many(organizationMembers),
+}));
+
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  accounts: many(accounts),
+  organizationMembers: many(organizationMembers),
+}));
 
 export const conceptEmbeddingsRelations = relations(
   conceptEmbeddings,
@@ -33,6 +57,19 @@ export const takeawaysRelations = relations(takeaways, ({ one, many }) => ({
     fields: [takeaways.categoryId],
     references: [categories.id],
   }),
+  insightTakeaways: many(insightTakeaways),
+}));
+
+export const tagsRelations = relations(tags, ({ one }) => ({
+  category: one(categories, {
+    fields: [tags.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  tags: many(tags),
+  takeaways: many(takeaways),
 }));
 
 export const takeawayEmbeddingsRelations = relations(
@@ -45,42 +82,31 @@ export const takeawayEmbeddingsRelations = relations(
   }),
 );
 
-export const accountsRelations = relations(accounts, ({ one }) => ({
-  user: one(users, {
-    fields: [accounts.userId],
-    references: [users.id],
-  }),
-  organization: one(organizations, {
-    fields: [accounts.organizationId],
-    references: [organizations.id],
-  }),
-}));
-
-export const usersRelations = relations(users, ({ many }) => ({
-  accounts: many(accounts),
-  organizationMembers: many(organizationMembers),
-}));
-
-export const organizationsRelations = relations(organizations, ({ many }) => ({
-  accounts: many(accounts),
-  organizationMembers: many(organizationMembers),
-}));
-
 export const documentsRelations = relations(documents, ({ many }) => ({
   takeaways: many(takeaways),
 }));
 
-export const categoriesRelations = relations(categories, ({ many }) => ({
-  takeaways: many(takeaways),
-  tags: many(tags),
+export const insightsRelations = relations(insights, ({ one, many }) => ({
+  user: one(users, {
+    fields: [insights.userId],
+    references: [users.id],
+  }),
+  insightTakeaways: many(insightTakeaways),
 }));
 
-export const tagsRelations = relations(tags, ({ one }) => ({
-  category: one(categories, {
-    fields: [tags.categoryId],
-    references: [categories.id],
+export const insightTakeawaysRelations = relations(
+  insightTakeaways,
+  ({ one }) => ({
+    insight: one(insights, {
+      fields: [insightTakeaways.insightId],
+      references: [insights.id],
+    }),
+    takeaway: one(takeaways, {
+      fields: [insightTakeaways.takeawayId],
+      references: [takeaways.id],
+    }),
   }),
-}));
+);
 
 export const organizationMembersRelations = relations(
   organizationMembers,
