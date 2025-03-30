@@ -51,7 +51,7 @@ export const queryTakeawayVectors = createServerFn({
     id: takeaway.takeaway.id,
     documentId: takeaway.takeaway.document.id,
     vector: takeaway.embedding,
-    label: takeaway.takeaway.document.title,
+    label: takeaway.takeaway.title,
     category: takeaway.takeaway.category?.name ?? "None",
     source: takeaway.takeaway.document.source,
     publicationDate: takeaway.takeaway.document.publicationDate,
@@ -79,7 +79,7 @@ export const queryConceptVectors = createServerFn({
     id: takeaway.takeaway.id,
     vector: takeaway.embedding,
     documentId: takeaway.takeaway.document.id,
-    label: takeaway.takeaway.document.title,
+    label: takeaway.takeaway.title,
     category: takeaway.takeaway.category?.name ?? "None",
     source: takeaway.takeaway.document.source,
     publicationDate: takeaway.takeaway.document.publicationDate,
@@ -145,7 +145,7 @@ function amplifyGraph(graph: GraphData): GraphData {
   // amplify similarity
   const links = rawEdges.map((edge) => ({
     ...edge,
-    similarity: Math.pow(edge.similarity, 3) * 10,
+    similarity: Math.pow(edge.similarity, 4) * 10,
   }));
 
   return { nodes, links };

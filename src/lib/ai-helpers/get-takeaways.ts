@@ -50,6 +50,7 @@ export async function getTakeaways(
         content: `
         Create a list of the 1-3 most novel and important takeaways from the text below.
         Each takeaway should be completely distinct from other takeaways. Make them unique and unrelated.
+        It is better to have less takeaways, if they are not unique and unrelated.
         Each takeaway should stand alone and not reference other takeaways.
 
         Instructions

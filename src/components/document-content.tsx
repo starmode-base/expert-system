@@ -27,24 +27,28 @@ export function TakeawaysSection({ selectedDoc }: { selectedDoc: Document }) {
           key={takeaway.id}
           className="mb-4 rounded bg-gray-50 p-4 shadow-sm"
         >
-          <p className="font-lg font-semibold text-gray-800">
+          <h2 className="font-lg font-semibold text-gray-800">
             {takeaway.title}
-          </p>
-          <p className="font-medium">{takeaway.category}</p>
-          <p>
-            <span className="font-medium text-gray-600">Takeaway: </span>
-            {takeaway.takeaway}
-          </p>
-          <hr className="my-4 border-gray-300" />
-          <p>
-            <span className="font-medium text-gray-600">Concept: </span>
-            {takeaway.concept}
-          </p>
+          </h2>
+
+          <p className="py-2 font-medium">{takeaway.category}</p>
           <div className="mt-2 flex space-x-4 text-sm text-gray-600">
             <p>Monetization: {takeaway.monetization}</p>
             <p>Importance: {takeaway.importance}</p>
             <p>Novelty: {takeaway.novelty}</p>
           </div>
+
+          <p className="py-2">
+            <span className="font-medium text-gray-600 underline">
+              Concept:{" "}
+            </span>
+            {takeaway.concept}
+          </p>
+          <p className="py-2">
+            <span className="font-medium text-gray-600">Takeaway: </span>
+            {takeaway.takeaway}
+          </p>
+          <hr className="my-4 border-gray-300" />
         </div>
       ))}
 

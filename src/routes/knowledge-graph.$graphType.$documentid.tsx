@@ -42,7 +42,7 @@ function KnowledgeGraph({
   const fgRef =
     useRef<ForceGraphMethods<NodeObject<Node>, LinkObject<Edge>>>(undefined);
 
-  const [similarityThreshold, setSimilarityThreshold] = useState(0.3); // slider state
+  const [similarityThreshold, setSimilarityThreshold] = useState(0.4); // slider state
   const [filters, setFilters] = useState<FilterParams>({
     sources,
     categories,
@@ -169,8 +169,8 @@ function KnowledgeGraph({
           nodeAutoColorBy="category"
           linkDirectionalParticles={1}
           linkDirectionalParticleSpeed={(d) => d.similarity * 0.01}
-          linkDirectionalParticleWidth={(d) => d.similarity * 2}
-          linkWidth={(d) => d.similarity * 1.75}
+          linkDirectionalParticleWidth={(d) => d.similarity * 1.5}
+          linkWidth={(d) => d.similarity * 1.5}
           onNodeClick={async (node) => {
             console.log("Clicked node:", node);
             await mapNodeIdToDocument(node.id);
