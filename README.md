@@ -2,12 +2,6 @@
 
 Production deployment: https://sworks.starmode.app/
 
-## Objective
-
-1. Connect to Plaid and download transactions
-2. Map transactions to a hardcoded chart of accounts
-3. Use it for monthly personal/SMB expense overview
-
 ## Contributing
 
 ### Prerequisites
