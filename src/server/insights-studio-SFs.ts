@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
@@ -37,4 +37,25 @@ export const updateInsightTitleSF = createServerFn({ method: "POST" })
       .update(schema.insights)
       .set({ title })
       .where(eq(schema.insights.id, id));
+  });
+
+export const addTakeawayToInsightSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ insightId: z.string(), takeawayId: z.string() }))
+  .handler(async ({ data: { insightId, takeawayId } }) => {
+    await db.insert(schema.insightTakeaways).values({ insightId, takeawayId });
+  });
+
+export const removeTakeawayFromInsightSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ insightId: z.string(), takeawayId: z.string() }))
+  .handler(async ({ data: { insightId, takeawayId } }) => {
+    await db
+      .delete(schema.insightTakeaways)
+      .where(
+        and(
+          eq(schema.insightTakeaways.insightId, insightId),
+          eq(schema.insightTakeaways.takeawayId, takeawayId),
+        ),
+      );
   });
