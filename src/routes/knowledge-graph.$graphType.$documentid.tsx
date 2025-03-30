@@ -120,7 +120,7 @@ function KnowledgeGraph({
 
   const navigate = useNavigate();
 
-  const mapNodeIdToDocument = async (nodeId: string) => {
+  const linkToDocument = async (nodeId: string) => {
     const takeaway = graphData.nodes.find((node) => node.id === nodeId);
 
     await navigate({
@@ -173,7 +173,7 @@ function KnowledgeGraph({
           linkWidth={(d) => d.similarity * 1.5}
           onNodeClick={async (node) => {
             console.log("Clicked node:", node);
-            await mapNodeIdToDocument(node.id);
+            await linkToDocument(node.id);
           }}
         />
       </div>
