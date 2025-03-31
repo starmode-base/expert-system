@@ -8,8 +8,9 @@ const client = new OpenAI();
 const schema = z.object({
   concept: z.string({
     description: `Analyze this key takeaway and articulate its core generalized concept in 4-8 sentences.
-      This should be an articulation of a high-level, general idea that can be applied to various contexts.
-      You can use analogies or metaphors to ensure clarity and tranferability.`,
+    - The concept will be read before the takeaway. Do not repeat the takeaway or findings in it.
+    - This concept should be an articulation of a high-level, general idea that can be applied to various contexts.
+    - You can use analogies or metaphors to ensure clarity and tranferability.`,
   }),
   novelty: z.string({
     description: `
@@ -54,10 +55,9 @@ export async function getConcept(takeaway: string) {
         content: `
 
         Instructions
-        - Make the takeaway a stand alone thought.
+        - The concept should articulate higher level ideas that can be applied to various contexts.
         - Be very concise but thorough. No fluff.
         - Be imaginative about the high level implications of the takeaway when creating the concpts.
-        - Do not embelish or overdramatize. Don't use promotional words like revolutionary, or groundbreaking.
         - Do NOT start with "The primary concept of the article"... or other such fluff.
 
         Takeaway:
