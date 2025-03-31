@@ -74,16 +74,17 @@ async function getTakeawayTitle(takeaway: string) {
     messages: [
       {
         role: "user",
-        content: `Summarize the key takeaway from the following text into a title
-  -
-  -Include only the title.
-  -No other text.
-  -dont use quotes or colons
-  Example:
-Advancements in Flexible Electronics Through Ultrafine Metal-Coated Elastomer Films
+        content: `
 
   Text:
-        ${takeaway}`,
+        ${takeaway}
+
+Create a one line summary that distills the main takeaway of this excerpt.
+  - return in title case
+  - No other text.
+  - dont use quotes or colons
+  - Dont use hyperbolic language
+`,
       },
     ],
   });
