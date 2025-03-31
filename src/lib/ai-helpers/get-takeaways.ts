@@ -12,8 +12,11 @@ const schema = z.object({
   takeaways: z.array(
     z.object({
       takeaway: z.string({
-        description:
-          "Explain the most novel and important takeaway from the document in 10-15 sentences. Prioritize truths and facts over emotions and opinions.",
+        description: `Explain the most novel and important takeaway from the document in 10-15 sentences.
+          - Prioritize truths and facts over emotions and opinions.
+          - The takeaway should be very specific and not a generalization or broad summary.
+          - Each takeaway should be completely distinct from other takeaways. Make them unique and unrelated.
+          - Each takeaway should stand alone and not reference other takeaways.`,
       }),
     }),
   ),
@@ -24,7 +27,7 @@ const responseFormat = zodResponseFormat(schema, "response");
 export async function getTakeaways(
   articleText: string,
   takeawayInstructions?: string,
-  model = "gpt-4o",
+  model = "o3-mini",
 ) {
   const completion = await client.beta.chat.completions.parse({
     model,
@@ -34,9 +37,7 @@ export async function getTakeaways(
         role: "user",
         content: `
         Create a list of the 1-3 most novel and important takeaways from the text below.
-        Each takeaway should be completely distinct from other takeaways. Make them unique and unrelated.
         It is better to have less takeaways, if they are not unique and unrelated.
-        Each takeaway should stand alone and not reference other takeaways.
 
         Instructions
         - Make the takeaway a stand alone thought. The reader should not have any other context about the provided Text.
