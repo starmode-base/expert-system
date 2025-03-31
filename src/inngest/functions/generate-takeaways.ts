@@ -59,9 +59,6 @@ export const generateTakeaways = inngest.createFunction(
             return {
               ...takeaway,
               concept: concept.concept,
-              noveltyScore: concept.noveltyScore,
-              importanceScore: concept.importanceScore,
-              monetizationScore: concept.monetizationScore,
             };
           },
         );

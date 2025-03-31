@@ -3,7 +3,6 @@ import {
   index,
   pgTable,
   primaryKey,
-  integer,
   text,
   timestamp,
   vector,
@@ -119,9 +118,6 @@ export const takeaways = pgTable("takeaways", {
   title: text().notNull(),
   takeaway: text().notNull(),
   concept: text().notNull(),
-  noveltyScore: integer().notNull(),
-  importanceScore: integer().notNull(),
-  monetizationScore: integer().notNull(),
   // remove value on delete
   categoryId: text().references(() => categories.id, { onDelete: "set null" }),
 });

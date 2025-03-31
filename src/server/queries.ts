@@ -31,9 +31,6 @@ export interface Takeaway {
   title: string;
   takeaway: string;
   concept: string;
-  noveltyScore: number;
-  importanceScore: number;
-  monetizationScore: number;
   category: string | undefined;
 }
 
@@ -70,9 +67,6 @@ export const queryDocument = createServerFn({
         title: takeaway.title,
         takeaway: takeaway.takeaway,
         concept: takeaway.concept,
-        noveltyScore: takeaway.noveltyScore,
-        importanceScore: takeaway.importanceScore,
-        monetizationScore: takeaway.monetizationScore,
         category: takeaway.category?.name,
       })),
     };

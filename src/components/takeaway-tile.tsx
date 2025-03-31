@@ -64,21 +64,6 @@ export function TakeawayTile({
       {insightSelectionOpen ? dropDown() : null}
 
       <div className="mt-4 flex flex-col space-y-1 text-sm text-gray-700">
-        <div className="flex flex-wrap gap-x-4">
-          <p>
-            <span className="font-medium text-gray-500">Monetization:</span>{" "}
-            {takeaway.monetizationScore}
-          </p>
-          <p>
-            <span className="font-medium text-gray-500">Importance:</span>{" "}
-            {takeaway.importanceScore}
-          </p>
-          <p>
-            <span className="font-medium text-gray-500">Novelty:</span>{" "}
-            {takeaway.noveltyScore}
-          </p>
-        </div>
-
         <p className="pt-2">
           <span className="font-medium text-gray-500">Concept:</span>{" "}
           {takeaway.concept}
