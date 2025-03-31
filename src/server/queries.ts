@@ -23,16 +23,18 @@ export interface Document {
   link: string;
   source: string;
   articleText: string;
-  takeaways: {
-    id: string;
-    title: string;
-    takeaway: string;
-    concept: string;
-    novelty: string;
-    importance: string;
-    monetization: string;
-    category: string | undefined;
-  }[];
+  takeaways: Takeaway[];
+}
+
+export interface Takeaway {
+  id: string;
+  title: string;
+  takeaway: string;
+  concept: string;
+  novelty: string;
+  importance: string;
+  monetization: string;
+  category: string | undefined;
 }
 
 export const queryDocument = createServerFn({
