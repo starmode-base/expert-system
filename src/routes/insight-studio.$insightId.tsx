@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Insight } from "~/components/insight-studio/insight";
 import { InsightList } from "~/components/insight-studio/insights-list";
-import { Takeaways } from "~/components/insight-studio/takeaways";
+import { InsightTakeaways } from "~/components/insight-studio/insightTakeaways";
 import {
   getInsightsSF,
   getInsightTakeawaysSF,
@@ -35,7 +35,7 @@ export function RouteComponent() {
   );
 
   return (
-    <div className="flex h-screen gap-4 p-2">
+    <div className="flex h-screen overflow-hidden p-2">
       {/* Left Pane */}
       <InsightList insights={insights} />
 
@@ -93,7 +93,7 @@ export function RouteComponent() {
             {activeTab === "insight" ? (
               <Insight insight={selectedInsight} />
             ) : (
-              <Takeaways insightTakeaways={insightTakeaways} />
+              <InsightTakeaways insightTakeaways={insightTakeaways} />
             )}
           </div>
         </div>

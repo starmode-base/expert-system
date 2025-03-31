@@ -77,12 +77,35 @@ export interface InsightTakeaway {
     categoryId: string | null;
   };
 }
+
+export interface Takeaway {
+  id: string;
+  title: string;
+  takeaway: string;
+  concept: string;
+  novelty: string;
+  importance: string;
+  monetization: string;
+  category: string | undefined;
+}
+
 export const getInsightTakeawaysSF = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator(z.object({ insightId: z.string() }))
   .handler(async ({ data: { insightId } }) => {
-    return await db.query.insightTakeaways.findMany({
-      with: { takeaway: true },
+    const takeaways = await db.query.insightTakeaways.findMany({
+      with: { takeaway: { with: { category: true } } },
       where: eq(schema.insightTakeaways.insightId, insightId),
     });
+
+    return takeaways.map((takeaway) => ({
+      id: takeaway.takeaway.id,
+      title: takeaway.takeaway.title,
+      takeaway: takeaway.takeaway.takeaway,
+      concept: takeaway.takeaway.concept,
+      novelty: takeaway.takeaway.novelty,
+      importance: takeaway.takeaway.importance,
+      monetization: takeaway.takeaway.monetization,
+      category: takeaway.takeaway.category?.name,
+    }));
   });
