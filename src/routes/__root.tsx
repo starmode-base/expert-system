@@ -30,7 +30,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "STΛR MODΞ 🦨",
+        title: "ΞXPERT-SYSTEM 🦨",
       },
       {
         name: "description",
@@ -132,6 +132,17 @@ function RootDocument(props: React.PropsWithChildren) {
                 activeOptions={{ exact: true }}
               >
                 Knowledge Graph
+              </Link>
+
+              <Link
+                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                to="/insight-studio"
+                activeProps={{
+                  className: "font-bold",
+                }}
+                activeOptions={{ exact: true }}
+              >
+                Insight Studio
               </Link>
             </div>
             {props.children}
