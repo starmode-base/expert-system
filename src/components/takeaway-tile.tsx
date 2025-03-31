@@ -67,15 +67,15 @@ export function TakeawayTile({
         <div className="flex flex-wrap gap-x-4">
           <p>
             <span className="font-medium text-gray-500">Monetization:</span>{" "}
-            {takeaway.monetization}
+            {takeaway.monetizationScore}
           </p>
           <p>
             <span className="font-medium text-gray-500">Importance:</span>{" "}
-            {takeaway.importance}
+            {takeaway.importanceScore}
           </p>
           <p>
             <span className="font-medium text-gray-500">Novelty:</span>{" "}
-            {takeaway.novelty}
+            {takeaway.noveltyScore}
           </p>
         </div>
 
