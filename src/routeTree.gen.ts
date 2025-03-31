@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TemplateImport } from './routes/template'
+import { Route as SearchImport } from './routes/search'
 import { Route as ScrapeDashImport } from './routes/scrape-dash'
 import { Route as IndexImport } from './routes/index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
@@ -26,6 +27,12 @@ import { Route as KnowledgeGraphGraphTypeDocumentidImport } from './routes/knowl
 const TemplateRoute = TemplateImport.update({
   id: '/template',
   path: '/template',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SearchRoute = SearchImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -96,6 +103,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScrapeDashImport
       parentRoute: typeof rootRoute
     }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchImport
+      parentRoute: typeof rootRoute
+    }
     '/template': {
       id: '/template'
       path: '/template'
@@ -153,6 +167,7 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/scrape-dash': typeof ScrapeDashRoute
+  '/search': typeof SearchRoute
   '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -165,6 +180,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/scrape-dash': typeof ScrapeDashRoute
+  '/search': typeof SearchRoute
   '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -178,6 +194,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/scrape-dash': typeof ScrapeDashRoute
+  '/search': typeof SearchRoute
   '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -192,6 +209,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/scrape-dash'
+    | '/search'
     | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
@@ -203,6 +221,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/scrape-dash'
+    | '/search'
     | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
@@ -214,6 +233,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/scrape-dash'
+    | '/search'
     | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
@@ -227,6 +247,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ScrapeDashRoute: typeof ScrapeDashRoute
+  SearchRoute: typeof SearchRoute
   TemplateRoute: typeof TemplateRoute
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
@@ -239,6 +260,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ScrapeDashRoute: ScrapeDashRoute,
+  SearchRoute: SearchRoute,
   TemplateRoute: TemplateRoute,
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
@@ -261,6 +283,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/scrape-dash",
+        "/search",
         "/template",
         "/insight-studio/$insightId",
         "/news-feed/$documentid",
@@ -275,6 +298,9 @@ export const routeTree = rootRoute
     },
     "/scrape-dash": {
       "filePath": "scrape-dash.tsx"
+    },
+    "/search": {
+      "filePath": "search.tsx"
     },
     "/template": {
       "filePath": "template.tsx"
