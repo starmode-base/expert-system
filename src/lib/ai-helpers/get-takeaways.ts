@@ -15,21 +15,6 @@ const schema = z.object({
         description:
           "Explain the most novel and important takeaway from the document in 10-15 sentences. Prioritize truths and facts over emotions and opinions.",
       }),
-      concept: z.string({
-        description: `Analyze the article's key takeaway and articulate its core generalized concept in 4-8 sentences.
-      This should be an articulation of a high-level, general idea that can be applied to various contexts.
-      You can use analogies or metaphors to ensure clarity and tranferability.`,
-      }),
-      novelty: z.string({
-        description: "Score the novelty of the article takeaway 0-10",
-      }),
-      importance: z.string({
-        description: "Score the importance of the article takeaway 0-10",
-      }),
-      monetization: z.string({
-        description:
-          "Score the monetization potential of the article takeaway 0-10",
-      }),
     }),
   ),
 });

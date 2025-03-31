@@ -121,7 +121,7 @@ function KnowledgeGraph({
         fgRef.current.zoomToFit(1000, 150);
       }
       // If there is a bug wil rerendering the graph, increase the timeout
-    }, 20); // 100ms delay
+    }, 40); // 100ms delay
     return () => {
       clearTimeout(timeout);
     };

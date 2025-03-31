@@ -6,6 +6,7 @@ import { getTakeaways } from "~/lib/ai-helpers/get-takeaways";
 import { generateEmbedding } from "~/postgres/generate-embedding";
 import { getCategory } from "~/lib/ai-helpers/get-category";
 import { eq } from "drizzle-orm";
+import { getConcept } from "./generate-concept";
 
 export const generateTakeaways = inngest.createFunction(
   { id: "app/generate-takeaways" },
@@ -46,10 +47,32 @@ export const generateTakeaways = inngest.createFunction(
     );
 
     /**
+     * Step 3: Generate Concepts
+     */
+    const takeawaysWithConcepts = await Promise.all(
+      takeaways.map(async (takeaway) => {
+        return await step.run(
+          `generate-concepts-${event.data.documentId}`,
+          async () => {
+            const concept = await getConcept(takeaway.takeaway);
+
+            return {
+              ...takeaway,
+              concept: concept.concept,
+              novelty: concept.novelty,
+              importance: concept.importance,
+              monetization: concept.monetization,
+            };
+          },
+        );
+      }),
+    );
+
+    /**
      * Step 2: Categorize
      */
     const takeawaysInserts = await Promise.all(
-      takeaways.map(async (takeaway) => {
+      takeawaysWithConcepts.map(async (takeaway) => {
         return await step.run(
           `get-category-${event.data.documentId}`,
           async () => {
