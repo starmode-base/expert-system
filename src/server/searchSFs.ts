@@ -7,6 +7,7 @@ import { z } from "zod";
 
 export interface TakeawaySearchResult {
   id: string;
+  documentId: string;
   title: string;
   takeaway: string;
   concept: string;
@@ -49,6 +50,7 @@ export const searchTakeawaysSF = createServerFn({
 
     return orderedResults.map((takeaway) => ({
       id: takeaway.takeaway.id,
+      documentId: takeaway.takeaway.documentId,
       title: takeaway.takeaway.title,
       takeaway: takeaway.takeaway.takeaway,
       concept: takeaway.takeaway.concept,
