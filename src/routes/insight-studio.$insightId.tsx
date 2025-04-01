@@ -91,7 +91,10 @@ export function RouteComponent() {
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto px-4 pb-4">
             {activeTab === "insight" ? (
-              <Insight insight={selectedInsight} />
+              <Insight
+                insight={selectedInsight}
+                insightTakeaways={insightTakeaways}
+              />
             ) : (
               <InsightTakeaways insightTakeaways={insightTakeaways} />
             )}

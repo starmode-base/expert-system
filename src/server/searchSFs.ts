@@ -5,7 +5,16 @@ import { cosineDistance, gt, sql } from "drizzle-orm";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-export const searchTakeaways = createServerFn({
+export interface TakeawaySearchResult {
+  id: string;
+  title: string;
+  takeaway: string;
+  concept: string;
+  category: string | undefined;
+  similarity: number;
+}
+
+export const searchTakeawaysSF = createServerFn({
   method: "GET",
 })
   .validator(z.string())
@@ -22,7 +31,7 @@ export const searchTakeaways = createServerFn({
           },
         },
       },
-      where: gt(similarity, 0.5),
+      where: gt(similarity, 0.2),
     });
 
     //   compute cosine similarity
@@ -38,5 +47,12 @@ export const searchTakeaways = createServerFn({
       (a, b) => b.similarity - a.similarity,
     );
 
-    return orderedResults;
+    return orderedResults.map((takeaway) => ({
+      id: takeaway.takeaway.id,
+      title: takeaway.takeaway.title,
+      takeaway: takeaway.takeaway.takeaway,
+      concept: takeaway.takeaway.concept,
+      category: takeaway.takeaway.category?.name,
+      similarity: takeaway.similarity,
+    }));
   });

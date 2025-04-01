@@ -16,7 +16,6 @@ export function TakeawaysSection({
   const [model, setModel] = useState("gpt-4o");
   const sendEventGenerateTakeaways = useServerFn(sendEventGenerateTakeawaysSF);
 
-  console.log({ insights });
   return (
     <div className="flex h-full flex-col overflow-y-auto p-4">
       {selectedDoc.takeaways.map((takeaway) => (

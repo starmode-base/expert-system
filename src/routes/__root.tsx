@@ -118,7 +118,7 @@ function RootDocument(props: React.PropsWithChildren) {
                 activeProps={{
                   className: "font-bold",
                 }}
-                activeOptions={{ exact: true }}
+                activeOptions={{ exact: false }}
               >
                 News Feed
               </Link>
@@ -129,18 +129,28 @@ function RootDocument(props: React.PropsWithChildren) {
                 activeProps={{
                   className: "font-bold",
                 }}
-                activeOptions={{ exact: true }}
+                activeOptions={{ exact: false }}
               >
                 Knowledge Graph
               </Link>
 
               <Link
                 className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                to="/search"
+                activeProps={{
+                  className: "font-bold",
+                }}
+                activeOptions={{ exact: false }}
+              >
+                Search
+              </Link>
+              <Link
+                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
                 to="/insight-studio"
                 activeProps={{
                   className: "font-bold",
                 }}
-                activeOptions={{ exact: true }}
+                activeOptions={{ exact: false }}
               >
                 Insight Studio
               </Link>
