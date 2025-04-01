@@ -34,11 +34,10 @@ function RouteComponent() {
   };
 
   return (
-    <div className="mx-auto flex p-4">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
       <div className="w-1/2 border-r border-gray-200 p-4">
         <h1 className="mb-4 text-2xl font-bold">Search Takeaways</h1>
-
-        <div className="mb-6 flex gap-2">
+        <div className="flex gap-2 border-b border-gray-200 pb-4">
           <input
             type="text"
             value={searchInput}
@@ -60,26 +59,28 @@ function RouteComponent() {
             Search
           </button>
         </div>
-
-        {takeawaySearchResults.length === 0 ? (
-          <p className="text-gray-500">No takeaways found.</p>
-        ) : (
-          <div className="space-y-4">
-            {takeawaySearchResults.map((takeaway) => (
-              <Link
-                key={takeaway.id}
-                to="/search/$documentid"
-                params={{ documentid: takeaway.documentId }}
-              >
-                <TakeawayTile
+        <div className="h-full flex-1 overflow-y-auto">
+          {" "}
+          {takeawaySearchResults.length === 0 ? (
+            <p className="text-gray-500">No takeaways found.</p>
+          ) : (
+            <div className="space-y-4">
+              {takeawaySearchResults.map((takeaway) => (
+                <Link
                   key={takeaway.id}
-                  takeaway={takeaway}
-                  insights={insights}
-                />
-              </Link>
-            ))}
-          </div>
-        )}
+                  to="/search/$documentid"
+                  params={{ documentid: takeaway.documentId }}
+                >
+                  <TakeawayTile
+                    key={takeaway.id}
+                    takeaway={takeaway}
+                    insights={insights}
+                  />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex h-full w-2/3 flex-col">
         <DocumentContent selectedDoc={selectedDoc} insights={insights} />

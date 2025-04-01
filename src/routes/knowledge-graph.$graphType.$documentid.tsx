@@ -121,7 +121,7 @@ function KnowledgeGraph({
         fgRef.current.zoomToFit(1000, 150);
       }
       // If there is a bug wil rerendering the graph, increase the timeout
-    }, 40); // 100ms delay
+    }, 100); // 100ms delay
     return () => {
       clearTimeout(timeout);
     };
@@ -204,10 +204,10 @@ function RouteComponent() {
   }
   invariant(graphData, "No graph data");
   return (
-    <div className="flex h-screen" style={{ height: "calc(100vh - 48px)" }}>
-      <div className="w-1/2 overflow-y-hidden border-r border-gray-200 p-4">
+    <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+      <div className="m-4 w-1/2 overflow-y-hidden border-r border-gray-200">
         <h1 className="mb-4 text-2xl font-semibold">Knowledge Graph</h1>
-        <div className="mb-4 flex">
+        <div className="flex border-b border-gray-200 pb-4">
           <button
             onClick={async () => {
               await navigate({

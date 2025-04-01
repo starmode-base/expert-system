@@ -24,10 +24,12 @@ function RouteComponent() {
   invariant(documents, "No documents");
 
   return (
-    <div className="flex h-screen" style={{ height: "calc(100vh - 48px)" }}>
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
       {/* Left Feed */}
       <div className="w-1/3 border-r border-gray-200 p-4">
-        <h1 className="text-2xl font-semibold">News Feed</h1>
+        <h1 className="border-b border-gray-200 pb-4 text-2xl font-semibold">
+          News Feed
+        </h1>
 
         <div className="h-full flex-1 overflow-y-auto">
           {documents
