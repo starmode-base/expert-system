@@ -48,6 +48,8 @@ export function TakeawaysSection({
         <option value="gpt-4o">gpt-4o ($10)</option>
         <option value="gpt-4o-mini">gpt-4o-mini ($0.60)</option>
         <option value="gpt-4.5-preview">gpt-4.5-preview ($150)</option>
+        <option value="o1">o1 ($60)</option>
+        <option value="o1-pro">o1-pro[WARNING] ($600)</option>
       </select>
 
       <button

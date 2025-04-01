@@ -38,7 +38,7 @@ export const scienceDailyScraper = inngest.createFunction(
           data: {
             documentId,
             takeawayPrompt:
-              "Focus on takeaway on its potential for real impact to peoples lives. ",
+              "Focus on takeaways that are relevant on its potential for real impact to peoples lives.",
             model: "o3-mini",
           },
           user: event.user,
