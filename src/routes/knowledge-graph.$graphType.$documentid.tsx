@@ -22,7 +22,6 @@ export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
       const selectedDoc = (await queryDocument({ data: documentid })) ?? null;
       const insights = await getInsightsSF();
       const { sources, categories } = await getFilterValues();
-      console.log({ insights });
 
       return {
         graphType,
@@ -152,7 +151,7 @@ function KnowledgeGraph({
         <input
           type="range"
           min={0}
-          max={3}
+          max={4}
           step={0.05}
           value={similarityThreshold}
           onChange={(e) => {
