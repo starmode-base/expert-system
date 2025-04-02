@@ -6,7 +6,7 @@ import { getTakeaways } from "~/lib/ai-helpers/get-takeaways";
 import { generateEmbedding } from "~/postgres/generate-embedding";
 import { getCategory } from "~/lib/ai-helpers/get-category";
 import { eq } from "drizzle-orm";
-import { getConcept } from "./generate-concept";
+import { getConcept } from "../../lib/ai-helpers/generate-concept";
 
 export const generateTakeaways = inngest.createFunction(
   { id: "app/generate-takeaways" },
