@@ -16,7 +16,7 @@ interface Takeaway {
 
 const schema = z.object({
   insight: z.string({
-    description: ``,
+    description: `The insight should be very detailed and complete. It should be a fully formed, stand alone thought. Use at least 10 sentences to articulate the insight.`,
   }),
 });
 
@@ -33,7 +33,7 @@ export async function getInsightSimple(
       {
         role: "user",
         content: `
-        Takeaways:
+Context:
         ${takeaways
           .map(
             (takeaway) => `${takeaway.title}
@@ -45,11 +45,12 @@ Key Takeaway:
           .join("\n------\n")}
 
 Instructions
+        - Think vry carfully about the context provided. Look for patterns and relationships between the takeaways.
         - The Insight should be novel and insightful
-        - Be very concise but thorough. No fluff.
+        - Be concise but thorough. No fluff.
         - Be imaginative about the high level implications of the insight.
         - Do NOT start with "The insight is"... or other such fluff.
-
+Objective:
         ${customPrompt}`,
       },
     ],
