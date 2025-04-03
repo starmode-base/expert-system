@@ -50,7 +50,6 @@ Instructions
         - Be concise but thorough. No fluff.
         - Be imaginative about the high level implications of the insight.
         - Do NOT start with "The insight is"... or other such fluff.
-Objective:
         ${customPrompt}`,
       },
     ],

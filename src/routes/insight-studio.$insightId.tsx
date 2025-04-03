@@ -35,7 +35,7 @@ export function RouteComponent() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden p-2">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
       {/* Left Pane */}
       <InsightList insights={insights} />
 
