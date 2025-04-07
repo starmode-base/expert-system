@@ -3,7 +3,6 @@ import { useState } from "react";
 import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { Takeaway } from "~/server/queries";
-import ReactMarkdown from "react-markdown";
 
 interface InsightProps {
   insight: InsightSelect;
@@ -100,7 +99,7 @@ export function Insight({ insight, insightTakeaways }: InsightProps) {
         {insight.insight ? (
           <div className="h-full overflow-y-auto text-base text-gray-700">
             <div className="prose max-w-none">
-              <ReactMarkdown>{insight.insight}</ReactMarkdown>
+              <p>{insight.insight}</p>
             </div>
           </div>
         ) : (
