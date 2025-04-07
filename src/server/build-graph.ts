@@ -155,12 +155,26 @@ export async function buildConceptGraph() {
   return normalizedGraph;
 }
 
+// Memoized - Never refreshed data.
+// let takewayGraphCache: GraphData | null = null;
+
+// async function memoizedBuildTakewayGraph() {
+//   if (!takewayGraphCache) {
+//     console.log("#########  Building!");
+//     takewayGraphCache = await buildTakewayGraph();
+//   } else {
+//     console.log("####### No change");
+//   }
+//   return takewayGraphCache;
+// }
+
 export const loadGraphData = createServerFn({
   method: "GET",
 })
   .validator(z.string())
   .handler(async ({ data: graphType }) => {
     if (graphType === "topic") {
+      console.log("#######Loading topic graph");
       return await buildTakewayGraph();
     } else if (graphType === "concept") {
       return await buildConceptGraph();

@@ -12,12 +12,13 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TemplateImport } from './routes/template'
-import { Route as SearchImport } from './routes/search'
 import { Route as ScrapeDashImport } from './routes/scrape-dash'
 import { Route as IndexImport } from './routes/index'
+import { Route as SearchIndexImport } from './routes/search.index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
 import { Route as KnowledgeGraphIndexImport } from './routes/knowledge-graph.index'
 import { Route as InsightStudioIndexImport } from './routes/insight-studio.index'
+import { Route as SearchDocumentidImport } from './routes/search.$documentid'
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
 import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$insightId'
 import { Route as KnowledgeGraphGraphTypeDocumentidImport } from './routes/knowledge-graph.$graphType.$documentid'
@@ -30,12 +31,6 @@ const TemplateRoute = TemplateImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const SearchRoute = SearchImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const ScrapeDashRoute = ScrapeDashImport.update({
   id: '/scrape-dash',
   path: '/scrape-dash',
@@ -45,6 +40,12 @@ const ScrapeDashRoute = ScrapeDashImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SearchIndexRoute = SearchIndexImport.update({
+  id: '/search/',
+  path: '/search/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -63,6 +64,12 @@ const KnowledgeGraphIndexRoute = KnowledgeGraphIndexImport.update({
 const InsightStudioIndexRoute = InsightStudioIndexImport.update({
   id: '/insight-studio/',
   path: '/insight-studio/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SearchDocumentidRoute = SearchDocumentidImport.update({
+  id: '/search/$documentid',
+  path: '/search/$documentid',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -103,13 +110,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScrapeDashImport
       parentRoute: typeof rootRoute
     }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchImport
-      parentRoute: typeof rootRoute
-    }
     '/template': {
       id: '/template'
       path: '/template'
@@ -129,6 +129,13 @@ declare module '@tanstack/react-router' {
       path: '/news-feed/$documentid'
       fullPath: '/news-feed/$documentid'
       preLoaderRoute: typeof NewsFeedDocumentidImport
+      parentRoute: typeof rootRoute
+    }
+    '/search/$documentid': {
+      id: '/search/$documentid'
+      path: '/search/$documentid'
+      fullPath: '/search/$documentid'
+      preLoaderRoute: typeof SearchDocumentidImport
       parentRoute: typeof rootRoute
     }
     '/insight-studio/': {
@@ -152,6 +159,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsFeedIndexImport
       parentRoute: typeof rootRoute
     }
+    '/search/': {
+      id: '/search/'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/knowledge-graph/$graphType/$documentid': {
       id: '/knowledge-graph/$graphType/$documentid'
       path: '/knowledge-graph/$graphType/$documentid'
@@ -167,26 +181,28 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/scrape-dash': typeof ScrapeDashRoute
-  '/search': typeof SearchRoute
   '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
+  '/search/$documentid': typeof SearchDocumentidRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
+  '/search': typeof SearchIndexRoute
   '/knowledge-graph/$graphType/$documentid': typeof KnowledgeGraphGraphTypeDocumentidRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/scrape-dash': typeof ScrapeDashRoute
-  '/search': typeof SearchRoute
   '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
+  '/search/$documentid': typeof SearchDocumentidRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
+  '/search': typeof SearchIndexRoute
   '/knowledge-graph/$graphType/$documentid': typeof KnowledgeGraphGraphTypeDocumentidRoute
 }
 
@@ -194,13 +210,14 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/scrape-dash': typeof ScrapeDashRoute
-  '/search': typeof SearchRoute
   '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
+  '/search/$documentid': typeof SearchDocumentidRoute
   '/insight-studio/': typeof InsightStudioIndexRoute
   '/knowledge-graph/': typeof KnowledgeGraphIndexRoute
   '/news-feed/': typeof NewsFeedIndexRoute
+  '/search/': typeof SearchIndexRoute
   '/knowledge-graph/$graphType/$documentid': typeof KnowledgeGraphGraphTypeDocumentidRoute
 }
 
@@ -209,37 +226,40 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/scrape-dash'
-    | '/search'
     | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
+    | '/search/$documentid'
     | '/insight-studio'
     | '/knowledge-graph'
     | '/news-feed'
+    | '/search'
     | '/knowledge-graph/$graphType/$documentid'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/scrape-dash'
-    | '/search'
     | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
+    | '/search/$documentid'
     | '/insight-studio'
     | '/knowledge-graph'
     | '/news-feed'
+    | '/search'
     | '/knowledge-graph/$graphType/$documentid'
   id:
     | '__root__'
     | '/'
     | '/scrape-dash'
-    | '/search'
     | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
+    | '/search/$documentid'
     | '/insight-studio/'
     | '/knowledge-graph/'
     | '/news-feed/'
+    | '/search/'
     | '/knowledge-graph/$graphType/$documentid'
   fileRoutesById: FileRoutesById
 }
@@ -247,26 +267,28 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ScrapeDashRoute: typeof ScrapeDashRoute
-  SearchRoute: typeof SearchRoute
   TemplateRoute: typeof TemplateRoute
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
+  SearchDocumentidRoute: typeof SearchDocumentidRoute
   InsightStudioIndexRoute: typeof InsightStudioIndexRoute
   KnowledgeGraphIndexRoute: typeof KnowledgeGraphIndexRoute
   NewsFeedIndexRoute: typeof NewsFeedIndexRoute
+  SearchIndexRoute: typeof SearchIndexRoute
   KnowledgeGraphGraphTypeDocumentidRoute: typeof KnowledgeGraphGraphTypeDocumentidRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ScrapeDashRoute: ScrapeDashRoute,
-  SearchRoute: SearchRoute,
   TemplateRoute: TemplateRoute,
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
+  SearchDocumentidRoute: SearchDocumentidRoute,
   InsightStudioIndexRoute: InsightStudioIndexRoute,
   KnowledgeGraphIndexRoute: KnowledgeGraphIndexRoute,
   NewsFeedIndexRoute: NewsFeedIndexRoute,
+  SearchIndexRoute: SearchIndexRoute,
   KnowledgeGraphGraphTypeDocumentidRoute:
     KnowledgeGraphGraphTypeDocumentidRoute,
 }
@@ -283,13 +305,14 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/scrape-dash",
-        "/search",
         "/template",
         "/insight-studio/$insightId",
         "/news-feed/$documentid",
+        "/search/$documentid",
         "/insight-studio/",
         "/knowledge-graph/",
         "/news-feed/",
+        "/search/",
         "/knowledge-graph/$graphType/$documentid"
       ]
     },
@@ -298,9 +321,6 @@ export const routeTree = rootRoute
     },
     "/scrape-dash": {
       "filePath": "scrape-dash.tsx"
-    },
-    "/search": {
-      "filePath": "search.tsx"
     },
     "/template": {
       "filePath": "template.tsx"
@@ -311,6 +331,9 @@ export const routeTree = rootRoute
     "/news-feed/$documentid": {
       "filePath": "news-feed.$documentid.tsx"
     },
+    "/search/$documentid": {
+      "filePath": "search.$documentid.tsx"
+    },
     "/insight-studio/": {
       "filePath": "insight-studio.index.tsx"
     },
@@ -319,6 +342,9 @@ export const routeTree = rootRoute
     },
     "/news-feed/": {
       "filePath": "news-feed.index.tsx"
+    },
+    "/search/": {
+      "filePath": "search.index.tsx"
     },
     "/knowledge-graph/$graphType/$documentid": {
       "filePath": "knowledge-graph.$graphType.$documentid.tsx"

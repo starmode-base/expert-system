@@ -22,7 +22,6 @@ export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
       const selectedDoc = (await queryDocument({ data: documentid })) ?? null;
       const insights = await getInsightsSF();
       const { sources, categories } = await getFilterValues();
-      console.log({ insights });
 
       return {
         graphType,
@@ -121,7 +120,7 @@ function KnowledgeGraph({
         fgRef.current.zoomToFit(1000, 150);
       }
       // If there is a bug wil rerendering the graph, increase the timeout
-    }, 40); // 100ms delay
+    }, 100); // 100ms delay
     return () => {
       clearTimeout(timeout);
     };
@@ -152,7 +151,7 @@ function KnowledgeGraph({
         <input
           type="range"
           min={0}
-          max={3}
+          max={4}
           step={0.05}
           value={similarityThreshold}
           onChange={(e) => {
@@ -204,10 +203,10 @@ function RouteComponent() {
   }
   invariant(graphData, "No graph data");
   return (
-    <div className="flex h-screen" style={{ height: "calc(100vh - 48px)" }}>
-      <div className="w-1/2 overflow-y-hidden border-r border-gray-200 p-4">
+    <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+      <div className="m-4 w-1/2 overflow-y-hidden border-r border-gray-200">
         <h1 className="mb-4 text-2xl font-semibold">Knowledge Graph</h1>
-        <div className="mb-4 flex">
+        <div className="flex border-b border-gray-200 pb-4">
           <button
             onClick={async () => {
               await navigate({

@@ -75,3 +75,27 @@ export const sendEventGenerateTakeawaysSF = createServerFn({ method: "POST" })
 
     return context.viewer.email;
   });
+
+// app/generate-insight
+
+export const sendEventGenerateInsightSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    z.object({
+      insightId: z.string(),
+      insightPrompt: z.string().optional(),
+      model: z.string().optional(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await inngest.send({
+      name: "app/generate-insight",
+      data,
+      user: {
+        id: context.viewer.id,
+        email: context.viewer.email,
+      },
+    });
+
+    return context.viewer.email;
+  });
