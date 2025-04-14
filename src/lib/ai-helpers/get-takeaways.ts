@@ -16,7 +16,8 @@ const schema = z.object({
           - Prioritize truths and facts over emotions and opinions.
           - The takeaway should be very specific and not a generalization or broad summary.
           - Each takeaway should be completely distinct from other takeaways. Make them unique and unrelated.
-          - Each takeaway should stand alone and not reference other takeaways.`,
+          - Each takeaway shoult NOT reference other takeaways
+          - Make sure that each takeaway should is a complete, stand alone thought. The reader should have no context about the provided text.`,
       }),
     }),
   ),
@@ -40,6 +41,7 @@ export async function getTakeaways(
         It is better to have less takeaways, if they are not unique and unrelated.
 
         Instructions
+        - Prioritize interesting, new and/or important takeaways.
         - Make the takeaway a stand alone thought. The reader should not have any other context about the provided Text.
         - Be very concise but thorough. No fluff.
         - Be factual and accurate.
