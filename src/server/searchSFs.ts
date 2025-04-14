@@ -27,7 +27,6 @@ export const searchTakeawaysSF = createServerFn({
       with: {
         takeaway: {
           with: {
-            document: true,
             category: true,
           },
         },

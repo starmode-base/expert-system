@@ -7,9 +7,11 @@ import { Takeaway } from "~/server/queries";
 export function TakeawayTile({
   takeaway,
   insights,
+  highlighted = false,
 }: {
   takeaway: Takeaway;
   insights: InsightSelect[];
+  highlighted?: boolean;
 }) {
   const [insightSelectionOpen, setInsightSelectionOpen] = useState(false);
   const addTakeawayToInsight = useServerFn(addTakeawayToInsightSF);
@@ -40,7 +42,10 @@ export function TakeawayTile({
   return (
     <div
       key={takeaway.id}
-      className="relative mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md"
+      className={
+        `relative mb-4 rounded-xl border p-4 shadow-md ` +
+        (highlighted ? "border-gray-400 bg-gray-100" : "border-gray-200")
+      }
     >
       <div className="flex items-start justify-between">
         <div>

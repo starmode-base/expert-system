@@ -4,24 +4,27 @@ import { useState } from "react";
 import { DocumentContent } from "~/components/document-content";
 import { TakeawayTile } from "~/components/takeaway-tile";
 import { getInsightsSF } from "~/server/insights-studio-SFs";
-import { queryDocument } from "~/server/queries";
+import { queryDocument, queryTakeaways } from "~/server/queries";
 import { searchTakeawaysSF, TakeawaySearchResult } from "~/server/searchSFs";
 
 export const Route = createFileRoute("/search/$documentid")({
   loader: async ({ params: { documentid } }) => {
     const insights = await getInsightsSF();
+    const takeaways = await queryTakeaways();
+    if (!documentid || documentid === "none") {
+      documentid = takeaways[0]?.documentId ?? "";
+    }
     const selectedDoc = await queryDocument({ data: documentid });
 
-    return { insights, selectedDoc };
+    return { insights, takeaways, selectedDoc };
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const [takeawaySearchResults, setTakeawaySearchResults] = useState<
-    TakeawaySearchResult[]
-  >([]);
-  const { insights, selectedDoc } = Route.useLoaderData();
+  const { takeaways, insights, selectedDoc } = Route.useLoaderData();
+  const [takeawaySearchResults, setTakeawaySearchResults] =
+    useState<TakeawaySearchResult[]>(takeaways);
   const [searchInput, setSearchInput] = useState("");
   const searchTakeaways = useServerFn(searchTakeawaysSF);
 
@@ -75,6 +78,7 @@ function RouteComponent() {
                     key={takeaway.id}
                     takeaway={takeaway}
                     insights={insights}
+                    highlighted={takeaway.documentId === selectedDoc?.id}
                   />
                 </Link>
               ))}

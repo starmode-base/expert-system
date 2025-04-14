@@ -3,6 +3,7 @@ import { db, schema } from "../postgres/db";
 
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { TakeawaySearchResult } from "./searchSFs";
 
 export const queryDocuments = createServerFn({
   method: "GET",
@@ -88,4 +89,30 @@ export const getFilterValues = createServerFn({
       new Set(documentSources.map((source) => source.source)),
     ),
   };
+});
+export const queryTakeaways = createServerFn({
+  method: "GET",
+}).handler(async (): Promise<TakeawaySearchResult[]> => {
+  const takeaways = await db.query.takeaways.findMany({
+    with: {
+      category: true,
+      document: true,
+    },
+  });
+
+  const orderedResults = takeaways.sort(
+    (a, b) =>
+      b.document.publicationDate.getTime() -
+      a.document.publicationDate.getTime(),
+  );
+
+  return orderedResults.map((takeaway) => ({
+    id: takeaway.id,
+    documentId: takeaway.documentId,
+    title: takeaway.title,
+    takeaway: takeaway.takeaway,
+    concept: takeaway.concept,
+    category: takeaway.category?.name,
+    similarity: 0,
+  }));
 });
