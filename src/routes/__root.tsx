@@ -30,19 +30,19 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "ΞXPERT-SYSTEM 🦨",
+        title: "ΞXPERT-SYSTEM",
       },
       {
         name: "description",
-        content: "STΛR MODΞ skunkworks project",
+        content: "STΛR MODΞ - Expert-System",
       },
       {
         name: "og:title",
-        content: "STΛR MODΞ 🦨",
+        content: "STΛR MODΞ",
       },
       {
         name: "og:description",
-        content: "STΛR MODΞ skunkworks project",
+        content: "STΛR MODΞ - Expert-System",
       },
     ],
     links: [
