@@ -1,3 +1,4 @@
+import { invariant } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { inngest } from "~/inngest/client";
@@ -83,11 +84,14 @@ export const sendEventGenerateInsightSF = createServerFn({ method: "POST" })
   .validator(
     z.object({
       insightId: z.string(),
-      insightPrompt: z.string().optional(),
+      insightPrompt: z.string(),
       model: z.string().optional(),
     }),
   )
   .handler(async ({ context, data }) => {
+    invariant(data.insightPrompt, "insightPrompt is required");
+    invariant(data.insightId, "insightId is required");
+
     await inngest.send({
       name: "app/generate-insight",
       data,

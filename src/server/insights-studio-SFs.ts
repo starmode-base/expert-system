@@ -3,7 +3,6 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
-import { Takeaway } from "./queries";
 
 export const createInsightSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])

@@ -14,9 +14,13 @@ interface Takeaway {
 export async function getInsightSimple(
   takeaways: Takeaway[],
   customPrompt: string,
+  model = "o3",
 ) {
   const response = await client.responses.create({
-    model: "o3-mini",
+    model,
+    reasoning: {
+      effort: "high",
+    },
     input: [
       {
         role: "system",
@@ -51,5 +55,5 @@ Instructions
 
   console.log(response);
 
-  return "";
+  return response.output_text;
 }

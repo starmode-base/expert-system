@@ -49,7 +49,11 @@ export const generateInsight = inngest.createFunction(
       `generate-insight-${event.data.insightId}`,
       async () => {
         // ######
-        return getInsightSimple(takeaways, event.data.insightPrompt ?? "");
+        return getInsightSimple(
+          takeaways,
+          event.data.insightPrompt,
+          event.data.model,
+        );
       },
     );
 
