@@ -53,6 +53,9 @@ export function TakeawayTile({
             {takeaway.title}
           </h2>
           <p className="text-sm text-gray-600">{takeaway.category}</p>
+          <p className="text-sm text-gray-600">
+            {takeaway.publicationDate.toLocaleString()}
+          </p>
         </div>
         {insights.length > 0 && (
           <button
@@ -69,16 +72,14 @@ export function TakeawayTile({
       {insightSelectionOpen ? dropDown() : null}
 
       <div className="mt-4 flex flex-col space-y-1 text-sm text-gray-700">
-        <p className="pt-2">
-          <span className="font-medium text-gray-500">Concept:</span>{" "}
-          {takeaway.concept}
-        </p>
-
-        <hr className="my-3 border-gray-300" />
-
         <p>
           <span className="font-medium text-gray-500">Takeaway:</span>{" "}
           {takeaway.takeaway}
+        </p>
+        <hr className="my-3 border-gray-300" />
+        <p className="pt-2">
+          <span className="font-medium text-gray-500">Concept:</span>{" "}
+          {takeaway.concept}
         </p>
       </div>
     </div>

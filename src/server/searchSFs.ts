@@ -9,6 +9,7 @@ export interface TakeawaySearchResult {
   id: string;
   documentId: string;
   title: string;
+  publicationDate: Date;
   takeaway: string;
   concept: string;
   category: string | undefined;
@@ -19,7 +20,7 @@ export const searchTakeawaysSF = createServerFn({
   method: "GET",
 })
   .validator(z.string())
-  .handler(async ({ data: searchString }) => {
+  .handler(async ({ data: searchString }): Promise<TakeawaySearchResult[]> => {
     const searchEmbedding = await generateEmbedding(searchString);
     const similarity = sql<number>`1 - (${cosineDistance(schema.takeawayEmbeddings.embedding, searchEmbedding)})`;
 
@@ -28,6 +29,7 @@ export const searchTakeawaysSF = createServerFn({
         takeaway: {
           with: {
             category: true,
+            document: true,
           },
         },
       },
@@ -47,13 +49,14 @@ export const searchTakeawaysSF = createServerFn({
       (a, b) => b.similarity - a.similarity,
     );
 
-    return orderedResults.map((takeaway) => ({
-      id: takeaway.takeaway.id,
-      documentId: takeaway.takeaway.documentId,
-      title: takeaway.takeaway.title,
-      takeaway: takeaway.takeaway.takeaway,
-      concept: takeaway.takeaway.concept,
-      category: takeaway.takeaway.category?.name,
-      similarity: takeaway.similarity,
+    return orderedResults.map((result) => ({
+      id: result.takeaway.id,
+      documentId: result.takeaway.documentId,
+      title: result.takeaway.title,
+      publicationDate: result.takeaway.document.publicationDate,
+      takeaway: result.takeaway.takeaway,
+      concept: result.takeaway.concept,
+      category: result.takeaway.category?.name,
+      similarity: result.similarity,
     }));
   });

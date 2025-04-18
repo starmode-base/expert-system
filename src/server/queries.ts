@@ -30,6 +30,7 @@ export interface Document {
 export interface Takeaway {
   id: string;
   title: string;
+  publicationDate: Date;
   takeaway: string;
   concept: string;
   category: string | undefined;
@@ -67,6 +68,7 @@ export const queryDocument = createServerFn({
         id: takeaway.id,
         title: takeaway.title,
         takeaway: takeaway.takeaway,
+        publicationDate: document.publicationDate,
         concept: takeaway.concept,
         category: takeaway.category?.name,
       })),
@@ -112,6 +114,7 @@ export const queryDocumentByTakeaway = createServerFn({
       takeaways: document.takeaways.map((tw) => ({
         id: tw.id,
         title: tw.title,
+        publicationDate: document.publicationDate,
         takeaway: tw.takeaway,
         concept: tw.concept,
         category: tw.category?.name,
@@ -156,6 +159,7 @@ export const queryTakeaways = createServerFn({
     id: takeaway.id,
     documentId: takeaway.documentId,
     title: takeaway.title,
+    publicationDate: takeaway.document.publicationDate,
     takeaway: takeaway.takeaway,
     concept: takeaway.concept,
     category: takeaway.category?.name,
