@@ -4,17 +4,14 @@ import { useState } from "react";
 import { DocumentContent } from "~/components/document-content";
 import { TakeawayTile } from "~/components/takeaway-tile";
 import { getInsightsSF } from "~/server/insights-studio-SFs";
-import { queryDocument, queryTakeaways } from "~/server/queries";
+import { queryDocumentByTakeaway, queryTakeaways } from "~/server/queries";
 import { searchTakeawaysSF, TakeawaySearchResult } from "~/server/searchSFs";
 
-export const Route = createFileRoute("/search/$documentid")({
-  loader: async ({ params: { documentid } }) => {
+export const Route = createFileRoute("/search/$takeawayid")({
+  loader: async ({ params: { takeawayid } }) => {
     const insights = await getInsightsSF();
     const takeaways = await queryTakeaways();
-    if (!documentid || documentid === "none") {
-      documentid = takeaways[0]?.documentId ?? "";
-    }
-    const selectedDoc = await queryDocument({ data: documentid });
+    const selectedDoc = await queryDocumentByTakeaway({ data: takeawayid });
 
     return { insights, takeaways, selectedDoc };
   },
@@ -26,6 +23,9 @@ function RouteComponent() {
   const [takeawaySearchResults, setTakeawaySearchResults] =
     useState<TakeawaySearchResult[]>(takeaways);
   const [searchInput, setSearchInput] = useState("");
+  const [selectedTakeaway, setSelectedTakeaway] = useState<string | null>(
+    takeaways[0]?.id ?? null,
+  );
   const searchTakeaways = useServerFn(searchTakeawaysSF);
 
   const handleSearch = async () => {
@@ -71,14 +71,17 @@ function RouteComponent() {
               {takeawaySearchResults.map((takeaway) => (
                 <Link
                   key={takeaway.id}
-                  to="/search/$documentid"
-                  params={{ documentid: takeaway.documentId }}
+                  to="/search/$takeawayid"
+                  params={{ takeawayid: takeaway.id }}
+                  onClick={() => {
+                    setSelectedTakeaway(takeaway.id);
+                  }}
                 >
                   <TakeawayTile
                     key={takeaway.id}
                     takeaway={takeaway}
                     insights={insights}
-                    highlighted={takeaway.documentId === selectedDoc?.id}
+                    highlighted={takeaway.id === selectedTakeaway}
                   />
                 </Link>
               ))}

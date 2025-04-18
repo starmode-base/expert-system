@@ -75,6 +75,52 @@ export const queryDocument = createServerFn({
     return flatDc;
   });
 
+export const queryDocumentByTakeaway = createServerFn({
+  method: "GET",
+})
+  .validator(z.string()) // takeawayId
+  .handler(async ({ data: takeawayId }) => {
+    const takeaway = await db.query.takeaways.findFirst({
+      where: eq(schema.takeaways.id, takeawayId),
+      with: {
+        document: {
+          with: {
+            takeaways: {
+              with: { category: true },
+            },
+          },
+        },
+      },
+    });
+
+    // Either the ID is bad, or the FK was severed
+    if (!takeaway?.document) {
+      return null;
+    }
+
+    const { document } = takeaway;
+
+    // Same flattened response object used in `queryDocument`
+    const flatDc: Document = {
+      id: document.id,
+      title: document.title,
+      description: document.description,
+      publicationDate: document.publicationDate,
+      link: document.link,
+      source: document.source,
+      articleText: document.articleText,
+      takeaways: document.takeaways.map((tw) => ({
+        id: tw.id,
+        title: tw.title,
+        takeaway: tw.takeaway,
+        concept: tw.concept,
+        category: tw.category?.name,
+      })),
+    };
+
+    return flatDc;
+  });
+
 export const getFilterValues = createServerFn({
   method: "GET",
 }).handler(async () => {
