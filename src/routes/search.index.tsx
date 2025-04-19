@@ -5,6 +5,7 @@ export const Route = createFileRoute("/search/")({
     return redirect({
       to: "/search/$takeawayid",
       params: { takeawayid: "none" },
+      search: { searchInput: undefined, filters: undefined },
     });
   },
 });

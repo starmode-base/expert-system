@@ -139,6 +139,7 @@ export const getFilterValues = createServerFn({
     ),
   };
 });
+
 export const queryTakeaways = createServerFn({
   method: "GET",
 }).handler(async (): Promise<TakeawaySearchResult[]> => {
@@ -162,6 +163,7 @@ export const queryTakeaways = createServerFn({
     publicationDate: takeaway.document.publicationDate,
     takeaway: takeaway.takeaway,
     concept: takeaway.concept,
+    source: takeaway.document.source,
     category: takeaway.category?.name,
     similarity: 0,
   }));

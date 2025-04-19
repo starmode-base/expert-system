@@ -54,8 +54,8 @@ function KnowledgeGraph({
   const [filters, setFilters] = useState<FilterParams>({
     sources,
     categories,
-    startDate: null,
-    endDate: null,
+    startDate: undefined,
+    endDate: undefined,
   });
   const [filteredLinks, setFilteredLinks] = useState(graphData.links);
   const [filteredNodes, setFilteredNodes] = useState<Node[]>(graphData.nodes);
@@ -144,6 +144,7 @@ function KnowledgeGraph({
         availableCategories={categories}
         filters={filters}
         setFilters={setFilters}
+        updateURL={false}
       />
       {/* Slider */}
       <div className="flex items-center gap-2 bg-gray-50 px-4 py-2">

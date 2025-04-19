@@ -1,10 +1,14 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { DocumentContent } from "~/components/document-content";
+import { FilterBar, FilterParams } from "~/components/filter-bar";
 import { TakeawayTile } from "~/components/takeaway-tile";
 import { getInsightsSF } from "~/server/insights-studio-SFs";
-import { queryDocumentByTakeaway, queryTakeaways } from "~/server/queries";
+import {
+  getFilterValues,
+  queryDocumentByTakeaway,
+  // queryTakeaways,
+} from "~/server/queries";
 import { searchTakeawaysSF, TakeawaySearchResult } from "~/server/searchSFs";
 
 export function useSpeechSynthesis() {
@@ -33,29 +37,90 @@ export function useSpeechSynthesis() {
 }
 
 export const Route = createFileRoute("/search/$takeawayid")({
-  loader: async ({ params: { takeawayid } }) => {
+  validateSearch: (search: Record<string, unknown> | undefined) => {
+    // validate and parse the search params into a typed state
+    return {
+      searchInput: search?.searchInput as string | undefined,
+      filters: search?.filters as FilterParams | undefined,
+    };
+  },
+  loaderDeps: ({ search: { searchInput, filters } }) => ({
+    searchInput,
+    filters,
+  }),
+  loader: async ({ params: { takeawayid }, deps: search }) => {
     const insights = await getInsightsSF();
-    const takeaways = await queryTakeaways();
+    const { sources, categories } = await getFilterValues();
+
+    console.log({ search });
+
+    const { searchInput, filters } = search;
+
+    const takeaways = await searchTakeawaysSF({
+      data: {
+        searchInput,
+        filters: filters ?? {
+          categories,
+          sources,
+          startDate: undefined,
+          endDate: undefined,
+        },
+      },
+    });
+
     if (!takeawayid || takeawayid === "none") {
       takeawayid = takeaways[0]?.id ?? "";
     }
+
+    const filtersProp = filters ?? {
+      categories,
+      sources,
+      startDate: undefined,
+      endDate: undefined,
+    };
+
     const selectedDoc = await queryDocumentByTakeaway({ data: takeawayid });
 
-    return { insights, takeaways, selectedDoc, takeawayid };
+    return {
+      insights,
+      takeaways,
+      selectedDoc,
+      takeawayid,
+      sources,
+      categories,
+      searchInput,
+      filtersProp,
+    };
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { takeaways, insights, selectedDoc, takeawayid } =
-    Route.useLoaderData();
+  const {
+    takeaways,
+    insights,
+    selectedDoc,
+    takeawayid,
+    sources,
+    categories,
+    searchInput: searchInputProp,
+    filtersProp,
+  } = Route.useLoaderData();
   const router = useRouter();
   const [takeawaySearchResults, setTakeawaySearchResults] =
     useState<TakeawaySearchResult[]>(takeaways);
-  const [searchInput, setSearchInput] = useState("");
+
+  // Keep results in‑sync when loader re‑runs (e.g. after filters change)
+  useEffect(() => {
+    setTakeawaySearchResults(takeaways);
+  }, [takeaways]);
+
+  const [searchInput, setSearchInput] = useState(searchInputProp);
   const [selectedTakeaway, setSelectedTakeaway] = useState<string | null>(
     takeawayid,
   );
+  const [filters, setFilters] = useState<FilterParams>(filtersProp);
+
   // Toggle to enable/disable automatic text‑to‑speech
   const [ttsEnabled, setTTSEnabled] = useState(false);
   // Ref to the scrollable results pane
@@ -73,15 +138,6 @@ function RouteComponent() {
       });
     }
   }, [selectedTakeaway, takeawaySearchResults.length]);
-  const searchTakeaways = useServerFn(searchTakeawaysSF);
-
-  const handleSearch = async () => {
-    console.log(searchInput);
-    if (!searchInput.trim()) return;
-    const results = await searchTakeaways({ data: searchInput });
-    setTakeawaySearchResults(results);
-    console.log(results);
-  };
 
   // TEMPORARY - TODO: Remove when tts.ts is complete
   const { speak, stop } = useSpeechSynthesis();
@@ -116,9 +172,11 @@ function RouteComponent() {
       const newTakeaway = takeawaySearchResults[newIndex];
       if (newTakeaway && newTakeaway.id !== selectedTakeaway) {
         setSelectedTakeaway(newTakeaway.id);
+
         void router.navigate({
           to: "/search/$takeawayid",
           params: { takeawayid: newTakeaway.id },
+          search: { searchInput, filters },
         });
 
         handlePlayTTS(newTakeaway.concept);
@@ -129,7 +187,14 @@ function RouteComponent() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [selectedTakeaway, takeawaySearchResults, handlePlayTTS, router]);
+  }, [
+    selectedTakeaway,
+    takeawaySearchResults,
+    handlePlayTTS,
+    router,
+    searchInput,
+    filters,
+  ]);
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
@@ -142,21 +207,38 @@ function RouteComponent() {
             onChange={(e) => {
               setSearchInput(e.target.value);
             }}
-            onKeyDown={async (e) => {
+            onKeyDown={(e) => {
               if (e.key === "Enter") {
-                await handleSearch();
+                const existingPath = router.state.location.pathname;
+                void router.navigate({
+                  to: existingPath,
+                  search: { searchInput, filters },
+                });
               }
             }}
             placeholder="Search takeaways..."
             className="flex-grow rounded border border-gray-300 p-2"
           />
           <button
-            onClick={handleSearch}
+            onClick={() => {
+              const existingPath = router.state.location.pathname;
+              void router.navigate({
+                to: existingPath,
+                search: { searchInput, filters },
+              });
+            }}
             className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-1 text-white"
           >
             Search
           </button>
         </div>
+        <FilterBar
+          availableSources={sources}
+          availableCategories={categories}
+          filters={filters}
+          setFilters={setFilters}
+          updateURL={true}
+        />
         {/* AUTO‑TTS TOGGLE */}
         <div className="mt-4 flex items-center gap-2">
           <input
@@ -189,6 +271,7 @@ function RouteComponent() {
                   id={`takeaway-${takeaway.id}`}
                   to="/search/$takeawayid"
                   params={{ takeawayid: takeaway.id }}
+                  search={{ searchInput, filters }}
                   onClick={() => {
                     setSelectedTakeaway(takeaway.id);
                     handlePlayTTS(takeaway.takeaway);
