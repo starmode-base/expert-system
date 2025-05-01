@@ -15,6 +15,49 @@ import {
 } from "~/server/queries";
 import { searchTakeawaysSF, TakeawaySearchResult } from "~/server/searchSFs";
 
+/**
+ * denormalizeFilters takes normalized filter values from the URL and maps them back
+ * to their original values. This is required because the normalized values are used
+ * in the URL params to avoid breaking the URL.
+ *
+ * @param {FilterParams} filters - The normalized filter values
+ * @param {string[]} categories - The possible category values
+ * @param {string[]} sources - The possible source values
+ * @returns {FilterParams} The denormalized filter values
+ */
+const denormalizeFilters = (
+  filters: FilterParams,
+  categories: string[],
+  sources: string[],
+) => {
+  // normalizeFilterValue cleans the filter values, so they dont break the URL params
+  // This mapping is required to map the normalized values back to the original
+  const categoryMap: Record<string, string> = categories.reduce(
+    (acc: Record<string, string>, category) => {
+      acc[normalizeFilterValue(category)] = category;
+      return acc;
+    },
+    {},
+  );
+
+  const sourceMap: Record<string, string> = sources.reduce(
+    (acc: Record<string, string>, source) => {
+      acc[normalizeFilterValue(source)] = source;
+      return acc;
+    },
+    {},
+  );
+
+  return {
+    categories: filters.categories
+      .map((category) => categoryMap[category])
+      .filter(Boolean),
+    sources: filters.sources.map((source) => sourceMap[source]).filter(Boolean),
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+  };
+};
+
 export const Route = createFileRoute("/search/$takeawayid")({
   validateSearch: (search: Record<string, unknown> | undefined) => {
     // validate and parse the search params into a typed state
@@ -31,24 +74,6 @@ export const Route = createFileRoute("/search/$takeawayid")({
     const insights = await getInsightsSF();
     const { sources, categories } = await getFilterValues();
 
-    // normalizeFilterValue cleans the filter values, so they dont break the URL params
-    // This mapping is required to map the normalized values back to the original
-    const categoryMap: Record<string, string> = categories.reduce(
-      (acc: Record<string, string>, category) => {
-        acc[normalizeFilterValue(category)] = category;
-        return acc;
-      },
-      {},
-    );
-
-    const sourceMap: Record<string, string> = sources.reduce(
-      (acc: Record<string, string>, source) => {
-        acc[normalizeFilterValue(source)] = source;
-        return acc;
-      },
-      {},
-    );
-
     console.log({ search });
 
     const { searchInput, filters } = search;
@@ -59,16 +84,7 @@ export const Route = createFileRoute("/search/$takeawayid")({
       data: {
         searchInput,
         filters: filters
-          ? {
-              categories: filters.categories
-                .map((category) => categoryMap[category])
-                .filter(Boolean),
-              sources: filters.sources
-                .map((source) => sourceMap[source])
-                .filter(Boolean),
-              startDate: filters.startDate,
-              endDate: filters.endDate,
-            }
+          ? denormalizeFilters(filters, categories, sources)
           : {
               categories,
               sources,
@@ -83,16 +99,7 @@ export const Route = createFileRoute("/search/$takeawayid")({
     }
 
     const filtersProp = filters
-      ? {
-          categories: filters.categories
-            .map((category: string) => categoryMap[category])
-            .filter(Boolean),
-          sources: filters.sources
-            .map((source: string) => sourceMap[source])
-            .filter(Boolean),
-          startDate: filters.startDate,
-          endDate: filters.endDate,
-        }
+      ? denormalizeFilters(filters, categories, sources)
       : {
           categories,
           sources,
@@ -181,7 +188,10 @@ function RouteComponent() {
         void router.navigate({
           to: "/search/$takeawayid",
           params: { takeawayid: newTakeaway.id },
-          search: { searchInput, filters },
+          search: {
+            searchInput,
+            filters: router.state.location.search.filters,
+          },
         });
       }
     };
@@ -208,7 +218,10 @@ function RouteComponent() {
                 const existingPath = router.state.location.pathname;
                 void router.navigate({
                   to: existingPath,
-                  search: { searchInput, filters },
+                  search: {
+                    searchInput,
+                    filters: router.state.location.search.filters,
+                  },
                 });
               }
             }}
@@ -220,7 +233,10 @@ function RouteComponent() {
               const existingPath = router.state.location.pathname;
               void router.navigate({
                 to: existingPath,
-                search: { searchInput, filters },
+                search: {
+                  searchInput,
+                  filters: router.state.location.search.filters,
+                },
               });
             }}
             className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-1 text-white"
@@ -250,7 +266,10 @@ function RouteComponent() {
                   id={`takeaway-${takeaway.id}`}
                   to="/search/$takeawayid"
                   params={{ takeawayid: takeaway.id }}
-                  search={{ searchInput, filters }}
+                  search={{
+                    searchInput,
+                    filters: router.state.location.search.filters,
+                  }}
                   onClick={() => {
                     setSelectedTakeaway(takeaway.id);
                   }}
