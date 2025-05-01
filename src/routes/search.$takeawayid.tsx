@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DocumentContent } from "~/components/document-content";
 import { FilterBar, FilterParams } from "~/components/filter-bar";
 import { TakeawayTile } from "~/components/takeaway-tile";
@@ -10,31 +10,6 @@ import {
   // queryTakeaways,
 } from "~/server/queries";
 import { searchTakeawaysSF, TakeawaySearchResult } from "~/server/searchSFs";
-
-export function useSpeechSynthesis() {
-  const speak = useCallback((text: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!window.speechSynthesis) {
-      console.error("SpeechSynthesis not supported in this browser.");
-      return;
-    }
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-
-    window.speechSynthesis.cancel(); // stop any current speech
-    window.speechSynthesis.speak(utterance);
-  }, []);
-
-  const stop = useCallback(() => {
-    window.speechSynthesis.cancel();
-  }, []);
-
-  return { speak, stop };
-}
 
 export const Route = createFileRoute("/search/$takeawayid")({
   validateSearch: (search: Record<string, unknown> | undefined) => {
@@ -125,8 +100,6 @@ function RouteComponent() {
   );
   const [filters, setFilters] = useState<FilterParams>(filtersProp);
 
-  // Toggle to enable/disable automatic text‑to‑speech
-  const [ttsEnabled, setTTSEnabled] = useState(false);
   // Ref to the scrollable results pane
   const listRef = useRef<HTMLDivElement | null>(null);
 
@@ -142,20 +115,6 @@ function RouteComponent() {
       });
     }
   }, [selectedTakeaway, takeawaySearchResults.length]);
-
-  // TEMPORARY - TODO: Remove when tts.ts is complete
-  const { speak, stop } = useSpeechSynthesis();
-  // Handle text-to-speech
-  const handlePlayTTS = useCallback(
-    (ttsInput: string) => {
-      // TODO: Respace with tts.ts
-      if (ttsEnabled) {
-        stop();
-        speak(ttsInput);
-      }
-    },
-    [ttsEnabled, speak, stop],
-  );
 
   // Handle up/down keyboard navigation
   useEffect(() => {
@@ -182,8 +141,6 @@ function RouteComponent() {
           params: { takeawayid: newTakeaway.id },
           search: { searchInput, filters },
         });
-
-        handlePlayTTS(newTakeaway.concept);
       }
     };
 
@@ -191,14 +148,7 @@ function RouteComponent() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [
-    selectedTakeaway,
-    takeawaySearchResults,
-    handlePlayTTS,
-    router,
-    searchInput,
-    filters,
-  ]);
+  }, [selectedTakeaway, takeawaySearchResults, router, searchInput, filters]);
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
@@ -243,24 +193,6 @@ function RouteComponent() {
           setFilters={setFilters}
           updateURL={true}
         />
-        {/* AUTO‑TTS TOGGLE */}
-        <div className="mt-4 flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="toggle-tts"
-            checked={ttsEnabled}
-            onChange={(e) => {
-              setTTSEnabled(e.target.checked);
-            }}
-            className="h-4 w-4 cursor-pointer"
-          />
-          <label
-            htmlFor="toggle-tts"
-            className="cursor-pointer text-sm text-gray-700"
-          >
-            Auto‑read takeaway
-          </label>
-        </div>
 
         {/* SEARCH PANE */}
         <div ref={listRef} className="h-full flex-1 overflow-y-auto">
@@ -278,7 +210,6 @@ function RouteComponent() {
                   search={{ searchInput, filters }}
                   onClick={() => {
                     setSelectedTakeaway(takeaway.id);
-                    handlePlayTTS(takeaway.takeaway);
                   }}
                 >
                   <TakeawayTile
