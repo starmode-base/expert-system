@@ -1,7 +1,11 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { DocumentContent } from "~/components/document-content";
-import { FilterBar, FilterParams } from "~/components/filter-bar";
+import {
+  FilterBar,
+  FilterParams,
+  normalizeFilterValue,
+} from "~/components/filter-bar";
 import { TakeawayTile } from "~/components/takeaway-tile";
 import { getInsightsSF } from "~/server/insights-studio-SFs";
 import {
@@ -27,6 +31,24 @@ export const Route = createFileRoute("/search/$takeawayid")({
     const insights = await getInsightsSF();
     const { sources, categories } = await getFilterValues();
 
+    // normalizeFilterValue cleans the filter values, so they dont break the URL params
+    // This mapping is required to map the normalized values back to the original
+    const categoryMap: Record<string, string> = categories.reduce(
+      (acc: Record<string, string>, category) => {
+        acc[normalizeFilterValue(category)] = category;
+        return acc;
+      },
+      {},
+    );
+
+    const sourceMap: Record<string, string> = sources.reduce(
+      (acc: Record<string, string>, source) => {
+        acc[normalizeFilterValue(source)] = source;
+        return acc;
+      },
+      {},
+    );
+
     console.log({ search });
 
     const { searchInput, filters } = search;
@@ -38,12 +60,23 @@ export const Route = createFileRoute("/search/$takeawayid")({
     const takeaways = await searchTakeawaysSF({
       data: {
         searchInput,
-        filters: filters ?? {
-          categories,
-          sources,
-          startDate: undefined,
-          endDate: undefined,
-        },
+        filters: filters
+          ? {
+              categories: filters.categories
+                .map((category) => categoryMap[category])
+                .filter(Boolean),
+              sources: filters.sources
+                .map((source) => sourceMap[source])
+                .filter(Boolean),
+              startDate: filters.startDate,
+              endDate: filters.endDate,
+            }
+          : {
+              categories,
+              sources,
+              startDate: undefined,
+              endDate: undefined,
+            },
       },
     });
 
@@ -186,6 +219,7 @@ function RouteComponent() {
             Search
           </button>
         </div>
+
         <FilterBar
           availableSources={sources}
           availableCategories={categories}

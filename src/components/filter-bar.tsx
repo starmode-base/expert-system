@@ -17,6 +17,11 @@ interface FilterBarProps {
   updateURL: boolean;
 }
 
+export const normalizeFilterValue = (value: string) => {
+  // remove spaces and special characters
+  return value.replace(/[^a-zA-Z0-9]+/g, "").toLowerCase();
+};
+
 export const FilterBar = ({
   availableSources,
   availableCategories,
@@ -41,7 +46,14 @@ export const FilterBar = ({
 
     void router.navigate({
       to: existingPath,
-      search: { searchInput, filters: nextFilters },
+      search: {
+        searchInput,
+        filters: {
+          ...nextFilters,
+          categories: nextFilters.categories.map(normalizeFilterValue),
+          sources: nextFilters.sources.map(normalizeFilterValue),
+        },
+      },
     });
   };
 
