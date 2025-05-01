@@ -5,8 +5,8 @@ import { ListFilter, ChevronDown } from "lucide-react";
 export interface FilterParams {
   sources: string[];
   categories: string[];
-  startDate: Date | undefined;
-  endDate: Date | undefined;
+  startDate: string | undefined;
+  endDate: string | undefined;
 }
 
 interface FilterBarProps {
@@ -81,21 +81,23 @@ export const FilterBar = ({
   };
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const date = e.target.value ? new Date(e.target.value) : undefined;
+    const date = e.target.value;
     const newFilters = { ...filters, startDate: date };
     setFilters(newFilters);
     updateURLWithFilters(newFilters);
   };
 
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const date = e.target.value ? new Date(e.target.value) : undefined;
+    const date = e.target.value;
     const newFilters = { ...filters, endDate: date };
     setFilters(newFilters);
     updateURLWithFilters(newFilters);
   };
 
-  const formatDate = (date: Date | null | undefined): string =>
-    date ? (date.toISOString().split("T")[0] ?? "") : "";
+  // const formatDate = (date: Date | null | undefined): string => {
+  //   const formattedDate = date ? (date.toISOString().split("T")[0] ?? "") : "";
+  //   return formattedDate;
+  // };
 
   return (
     <div className="mb-4 rounded-md border border-gray-200 bg-white">
@@ -177,7 +179,7 @@ export const FilterBar = ({
             <label className="mb-1 text-sm font-semibold">Start Date</label>
             <input
               type="date"
-              value={formatDate(filters.startDate)}
+              value={filters.startDate}
               onChange={handleStartDateChange}
               className="rounded border border-gray-300 p-1"
             />
@@ -187,7 +189,7 @@ export const FilterBar = ({
             <label className="mb-1 text-sm font-semibold">End Date</label>
             <input
               type="date"
-              value={formatDate(filters.endDate)}
+              value={filters.endDate}
               onChange={handleEndDateChange}
               className="rounded border border-gray-300 p-1"
             />

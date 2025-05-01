@@ -52,8 +52,6 @@ export const Route = createFileRoute("/search/$takeawayid")({
     console.log({ search });
 
     const { searchInput, filters } = search;
-    //TODO: fix this need to clean search params.
-    // e.g. Business,+Finance+&+Industries
 
     // TODO: need to fix date filter bug
 
