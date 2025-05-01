@@ -101,7 +101,7 @@ export const FilterBar = ({
     <div className="mb-4 rounded-md border border-gray-200 bg-white">
       {/* Header Row */}
       <div
-        className="flex cursor-pointer items-center justify-between border-b px-4 py-2 hover:bg-gray-50"
+        className="flex cursor-pointer items-center justify-between px-4 py-2 hover:bg-gray-50"
         onClick={() => {
           setIsCollapsed((prev) => !prev);
         }}
