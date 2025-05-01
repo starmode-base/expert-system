@@ -84,12 +84,23 @@ export const Route = createFileRoute("/search/$takeawayid")({
       takeawayid = takeaways[0]?.id ?? "";
     }
 
-    const filtersProp = filters ?? {
-      categories,
-      sources,
-      startDate: undefined,
-      endDate: undefined,
-    };
+    const filtersProp = filters
+      ? {
+          categories: filters.categories
+            .map((category: string) => categoryMap[category])
+            .filter(Boolean),
+          sources: filters.sources
+            .map((source: string) => sourceMap[source])
+            .filter(Boolean),
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+        }
+      : {
+          categories,
+          sources,
+          startDate: undefined,
+          endDate: undefined,
+        };
 
     const selectedDoc = await queryDocumentByTakeaway({ data: takeawayid });
 
