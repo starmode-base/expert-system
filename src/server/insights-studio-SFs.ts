@@ -60,47 +60,19 @@ export const removeTakeawayFromInsightSF = createServerFn({ method: "POST" })
       );
   });
 
-export interface InsightTakeaway {
-  insightId: string;
-  takeawayId: string;
-  takeaway: {
-    id: string;
-    createdAt: Date;
-    updatedAt: Date;
-    title: string;
-    documentId: string;
-    takeaway: string;
-    concept: string;
-    novelty: string;
-    importance: string;
-    monetization: string;
-    categoryId: string | null;
-  };
-}
-
-export interface Takeaway {
-  id: string;
-  title: string;
-  takeaway: string;
-  concept: string;
-  novelty: string;
-  importance: string;
-  monetization: string;
-  category: string | undefined;
-}
-
 export const getInsightTakeawaysSF = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator(z.object({ insightId: z.string() }))
   .handler(async ({ data: { insightId } }) => {
     const takeaways = await db.query.insightTakeaways.findMany({
-      with: { takeaway: { with: { category: true } } },
+      with: { takeaway: { with: { category: true, document: true } } },
       where: eq(schema.insightTakeaways.insightId, insightId),
     });
 
     return takeaways.map((takeaway) => ({
       id: takeaway.takeaway.id,
       title: takeaway.takeaway.title,
+      publicationDate: takeaway.takeaway.document.publicationDate,
       takeaway: takeaway.takeaway.takeaway,
       concept: takeaway.takeaway.concept,
       category: takeaway.takeaway.category?.name,

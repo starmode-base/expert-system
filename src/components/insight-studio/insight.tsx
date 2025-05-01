@@ -3,6 +3,7 @@ import { useState } from "react";
 import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { Takeaway } from "~/server/queries";
+import { ModelSelector, ModelValue } from "../model-selector";
 
 interface InsightProps {
   insight: InsightSelect;
@@ -11,7 +12,8 @@ interface InsightProps {
 
 export function Insight({ insight, insightTakeaways }: InsightProps) {
   const [prompt, setPrompt] = useState("");
-  const [model, setModel] = useState("o1");
+  const [model, setModel] = useState<ModelValue>("o3");
+  const [error, setError] = useState<string | null>(null);
   const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
 
   return (
@@ -34,32 +36,38 @@ export function Insight({ insight, insightTakeaways }: InsightProps) {
                 setPrompt(e.target.value);
               }}
             />
+            {error ? (
+              <p className="mt-1 text-sm text-red-500">{error}</p>
+            ) : null}
           </div>
 
           {/* Model Selector */}
           <div className="mb-6">
             <h2 className="text-lg font-medium text-gray-600">Select Model</h2>
-            <select
+            <ModelSelector
               value={model}
-              onChange={(e) => {
-                setModel(e.target.value);
-              }}
-              className="mt-2 w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-gray-400 focus:outline-none"
-            >
-              <option value="o3-mini">o3-mini ($4.40)</option>
-              <option value="gpt-4o">gpt-4o ($10)</option>
-              <option value="gpt-4o-mini">gpt-4o-mini ($0.60)</option>
-              <option value="gpt-4.5-preview">gpt-4.5-preview ($150)</option>
-              <option value="o1">o1 ($60)</option>
-              <option value="o1-pro">o1-pro[WARNING] ($600)</option>
-            </select>
+              onChange={setModel}
+              className="mb-6" // keeps existing margin‑bottom
+            />
           </div>
 
           {/* Generate Insight Button */}
           <div className="mb-6">
             <button
-              className="w-full cursor-pointer rounded bg-gray-900 px-4 py-2 text-white transition hover:bg-gray-800"
+              disabled={!prompt.trim()}
+              className={`w-full rounded px-4 py-2 transition ${
+                prompt.trim()
+                  ? "cursor-pointer bg-gray-900 text-white hover:bg-gray-800"
+                  : "cursor-not-allowed bg-gray-300 text-gray-500"
+              }`}
               onClick={async () => {
+                if (!prompt.trim()) {
+                  setError(
+                    "Please enter a prompt before generating an insight.",
+                  );
+                  return;
+                }
+                setError(null);
                 await sendEventGenerateInsight({
                   data: { insightId: insight.id, insightPrompt: prompt },
                 });

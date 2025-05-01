@@ -41,9 +41,12 @@ function RouteComponent() {
         className="mx-auto max-w-sm"
       />
       <div className="flex flex-1 flex-col items-center justify-center gap-8 pb-10">
-        <div className="max-w-4xl text-center text-5xl font-semibold text-slate-800 sm:text-7xl">
+        <div className="max-w-4xl text-center text-5xl text-slate-800 sm:text-8xl">
           Expert-System
         </div>
+        <small className="block text-2xl font-extralight tracking-[0.15em]">
+          Augmented Reasoning Engine
+        </small>
       </div>
     </div>
   );

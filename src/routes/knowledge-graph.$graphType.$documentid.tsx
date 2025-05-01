@@ -54,8 +54,8 @@ function KnowledgeGraph({
   const [filters, setFilters] = useState<FilterParams>({
     sources,
     categories,
-    startDate: null,
-    endDate: null,
+    startDate: undefined,
+    endDate: undefined,
   });
   const [filteredLinks, setFilteredLinks] = useState(graphData.links);
   const [filteredNodes, setFilteredNodes] = useState<Node[]>(graphData.nodes);
@@ -66,10 +66,18 @@ function KnowledgeGraph({
       (node) =>
         filters.sources.includes(node.source) &&
         filters.categories.includes(node.category) &&
-        (!filters.startDate || node.publicationDate >= filters.startDate),
+        (!filters.startDate ||
+          node.publicationDate >= new Date(filters.startDate)) &&
+        (!filters.endDate || node.publicationDate <= new Date(filters.endDate)),
     );
     setFilteredNodes(filteredNodeTemp);
-  }, [graphData.nodes, filters.categories, filters.sources, filters.startDate]);
+  }, [
+    graphData.nodes,
+    filters.categories,
+    filters.sources,
+    filters.startDate,
+    filters.endDate,
+  ]);
 
   // Define a type guard for objects with an id property
   // Initially, when the component mounts, the types or values might align just fine (or the links might be structured differently). But when you update similarityThreshold, the effect runs again and the check fails because of a type mismatch between link.target (as an object) and the expected id (a primitive).
@@ -144,6 +152,7 @@ function KnowledgeGraph({
         availableCategories={categories}
         filters={filters}
         setFilters={setFilters}
+        updateURL={false}
       />
       {/* Slider */}
       <div className="flex items-center gap-2 bg-gray-50 px-4 py-2">

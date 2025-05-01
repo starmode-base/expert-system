@@ -49,7 +49,11 @@ export const generateInsight = inngest.createFunction(
       `generate-insight-${event.data.insightId}`,
       async () => {
         // ######
-        return getInsightSimple(takeaways, event.data.insightPrompt ?? "");
+        return getInsightSimple(
+          takeaways,
+          event.data.insightPrompt,
+          event.data.model,
+        );
       },
     );
 
@@ -57,7 +61,7 @@ export const generateInsight = inngest.createFunction(
       // ######
       await db
         .update(schema.insights)
-        .set({ insight: generatedInsight.insight })
+        .set({ insight: generatedInsight })
         .where(eq(schema.insights.id, event.data.insightId));
     });
 

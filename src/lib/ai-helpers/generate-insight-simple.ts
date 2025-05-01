@@ -1,7 +1,4 @@
-import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod.mjs";
-import { z } from "zod";
 
 const client = new OpenAI();
 
@@ -14,22 +11,22 @@ interface Takeaway {
   documentText: string;
 }
 
-const schema = z.object({
-  insight: z.string({
-    description: `The insight should be very detailed and complete. It should be a fully formed, stand alone thought. Use at least 10 sentences to articulate the insight.`,
-  }),
-});
-
-const responseFormat = zodResponseFormat(schema, "response");
-
 export async function getInsightSimple(
   takeaways: Takeaway[],
   customPrompt: string,
+  model = "o3",
 ) {
-  const completion = await client.beta.chat.completions.parse({
-    model: "o3-mini",
-    response_format: responseFormat,
-    messages: [
+  const response = await client.responses.create({
+    model,
+    reasoning: {
+      effort: "high",
+    },
+    input: [
+      {
+        role: "system",
+        content:
+          "You are an expert researcher. Your job is to create meaningful insights from a set of summarized research takeaways.",
+      },
       {
         role: "user",
         content: `
@@ -45,17 +42,18 @@ Key Takeaway:
           .join("\n------\n")}
 
 Instructions
-        - Think vry carfully about the context provided. Look for patterns and relationships between the takeaways.
-        - The Insight should be novel and insightful
-        - Be concise but thorough. No fluff.
-        - Be imaginative about the high level implications of the insight.
-        - Do NOT start with "The insight is"... or other such fluff.
-        ${customPrompt}`,
+    - The insight should be very detailed and complete. It should be a fully formed, stand alone thought. Use at least 10 sentences to articulate the insight.
+    - Think very carfully about the context provided. Look for patterns and relationships between the takeaways.
+    - The Insight should be novel and insightful
+    - Be concise but thorough. No fluff.
+    - Be imaginative about the high level implications of the insight.
+    - Do NOT start with "The insight is"... or other such fluff.
+    ${customPrompt}`,
       },
     ],
   });
 
-  invariant(completion.choices[0]?.message.parsed, "No content");
+  console.log(response);
 
-  return completion.choices[0].message.parsed;
+  return response.output_text;
 }

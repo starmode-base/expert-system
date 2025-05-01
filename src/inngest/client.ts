@@ -46,7 +46,7 @@ export const inngest = new Inngest({
     "app/generate-insight": {
       data: z.object({
         insightId: z.string(),
-        insightPrompt: z.string().optional(),
+        insightPrompt: z.string(),
         model: z.string().optional(),
       }),
       user: userSchema,

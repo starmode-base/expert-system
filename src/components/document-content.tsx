@@ -4,6 +4,7 @@ import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateTakeawaysSF } from "~/server/inggest";
 import { Document } from "~/server/queries";
 import { TakeawayTile } from "./takeaway-tile";
+import { ModelSelector, ModelValue } from "./model-selector";
 
 export function TakeawaysSection({
   selectedDoc,
@@ -13,7 +14,7 @@ export function TakeawaysSection({
   insights: InsightSelect[];
 }) {
   const [takeawayPrompt, setTakeawayPrompt] = useState("");
-  const [model, setModel] = useState("gpt-4o");
+  const [model, setModel] = useState<ModelValue>("o4-mini");
   const sendEventGenerateTakeaways = useServerFn(sendEventGenerateTakeawaysSF);
 
   return (
@@ -36,20 +37,11 @@ export function TakeawaysSection({
         placeholder="Enter a prompt"
       />
 
-      <select
+      <ModelSelector
         value={model}
-        onChange={(e) => {
-          setModel(e.target.value);
-        }}
-        className="mb-2 w-full rounded border border-gray-300 px-3 py-2"
-      >
-        <option value="o3-mini">o3-mini ($4.40)</option>
-        <option value="gpt-4o">gpt-4o ($10)</option>
-        <option value="gpt-4o-mini">gpt-4o-mini ($0.60)</option>
-        <option value="gpt-4.5-preview">gpt-4.5-preview ($150)</option>
-        <option value="o1">o1 ($60)</option>
-        <option value="o1-pro">o1-pro[WARNING] ($600)</option>
-      </select>
+        onChange={setModel}
+        className="mb-6" // keeps existing margin‑bottom
+      />
 
       <button
         onClick={async () => {

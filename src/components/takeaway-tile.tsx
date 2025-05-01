@@ -7,9 +7,11 @@ import { Takeaway } from "~/server/queries";
 export function TakeawayTile({
   takeaway,
   insights,
+  highlighted = false,
 }: {
   takeaway: Takeaway;
   insights: InsightSelect[];
+  highlighted?: boolean;
 }) {
   const [insightSelectionOpen, setInsightSelectionOpen] = useState(false);
   const addTakeawayToInsight = useServerFn(addTakeawayToInsightSF);
@@ -40,7 +42,10 @@ export function TakeawayTile({
   return (
     <div
       key={takeaway.id}
-      className="relative mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md"
+      className={
+        `relative mb-4 rounded-xl border p-4 shadow-md ` +
+        (highlighted ? "border-gray-400 bg-gray-100" : "border-gray-200")
+      }
     >
       <div className="flex items-start justify-between">
         <div>
@@ -48,6 +53,9 @@ export function TakeawayTile({
             {takeaway.title}
           </h2>
           <p className="text-sm text-gray-600">{takeaway.category}</p>
+          <p className="text-sm text-gray-600">
+            {takeaway.publicationDate.toLocaleString()}
+          </p>
         </div>
         {insights.length > 0 && (
           <button
@@ -64,16 +72,14 @@ export function TakeawayTile({
       {insightSelectionOpen ? dropDown() : null}
 
       <div className="mt-4 flex flex-col space-y-1 text-sm text-gray-700">
-        <p className="pt-2">
-          <span className="font-medium text-gray-500">Concept:</span>{" "}
-          {takeaway.concept}
-        </p>
-
-        <hr className="my-3 border-gray-300" />
-
         <p>
           <span className="font-medium text-gray-500">Takeaway:</span>{" "}
           {takeaway.takeaway}
+        </p>
+        <hr className="my-3 border-gray-300" />
+        <p className="pt-2">
+          <span className="font-medium text-gray-500">Concept:</span>{" "}
+          {takeaway.concept}
         </p>
       </div>
     </div>

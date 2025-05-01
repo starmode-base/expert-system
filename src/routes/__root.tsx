@@ -30,19 +30,19 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "ΞXPERT-SYSTEM 🦨",
+        title: "ΞXPERT-SYSTEM",
       },
       {
         name: "description",
-        content: "STΛR MODΞ skunkworks project",
+        content: "STΛR MODΞ - Expert-System",
       },
       {
         name: "og:title",
-        content: "STΛR MODΞ 🦨",
+        content: "STΛR MODΞ",
       },
       {
         name: "og:description",
-        content: "STΛR MODΞ skunkworks project",
+        content: "STΛR MODΞ - Expert-System",
       },
     ],
     links: [
@@ -114,15 +114,14 @@ function RootDocument(props: React.PropsWithChildren) {
               <UserButton />
               <Link
                 className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/news-feed"
+                to="/search"
                 activeProps={{
                   className: "font-bold",
                 }}
                 activeOptions={{ exact: false }}
               >
-                News Feed
+                Feed
               </Link>
-
               <Link
                 className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
                 to="/knowledge-graph"
@@ -134,16 +133,6 @@ function RootDocument(props: React.PropsWithChildren) {
                 Knowledge Graph
               </Link>
 
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/search"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Search
-              </Link>
               <Link
                 className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
                 to="/insight-studio"

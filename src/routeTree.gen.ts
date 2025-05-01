@@ -18,7 +18,7 @@ import { Route as SearchIndexImport } from './routes/search.index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
 import { Route as KnowledgeGraphIndexImport } from './routes/knowledge-graph.index'
 import { Route as InsightStudioIndexImport } from './routes/insight-studio.index'
-import { Route as SearchDocumentidImport } from './routes/search.$documentid'
+import { Route as SearchTakeawayidImport } from './routes/search.$takeawayid'
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
 import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$insightId'
 import { Route as KnowledgeGraphGraphTypeDocumentidImport } from './routes/knowledge-graph.$graphType.$documentid'
@@ -67,9 +67,9 @@ const InsightStudioIndexRoute = InsightStudioIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const SearchDocumentidRoute = SearchDocumentidImport.update({
-  id: '/search/$documentid',
-  path: '/search/$documentid',
+const SearchTakeawayidRoute = SearchTakeawayidImport.update({
+  id: '/search/$takeawayid',
+  path: '/search/$takeawayid',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -131,11 +131,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsFeedDocumentidImport
       parentRoute: typeof rootRoute
     }
-    '/search/$documentid': {
-      id: '/search/$documentid'
-      path: '/search/$documentid'
-      fullPath: '/search/$documentid'
-      preLoaderRoute: typeof SearchDocumentidImport
+    '/search/$takeawayid': {
+      id: '/search/$takeawayid'
+      path: '/search/$takeawayid'
+      fullPath: '/search/$takeawayid'
+      preLoaderRoute: typeof SearchTakeawayidImport
       parentRoute: typeof rootRoute
     }
     '/insight-studio/': {
@@ -184,7 +184,7 @@ export interface FileRoutesByFullPath {
   '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
-  '/search/$documentid': typeof SearchDocumentidRoute
+  '/search/$takeawayid': typeof SearchTakeawayidRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
@@ -198,7 +198,7 @@ export interface FileRoutesByTo {
   '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
-  '/search/$documentid': typeof SearchDocumentidRoute
+  '/search/$takeawayid': typeof SearchTakeawayidRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
@@ -213,7 +213,7 @@ export interface FileRoutesById {
   '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
-  '/search/$documentid': typeof SearchDocumentidRoute
+  '/search/$takeawayid': typeof SearchTakeawayidRoute
   '/insight-studio/': typeof InsightStudioIndexRoute
   '/knowledge-graph/': typeof KnowledgeGraphIndexRoute
   '/news-feed/': typeof NewsFeedIndexRoute
@@ -229,7 +229,7 @@ export interface FileRouteTypes {
     | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
-    | '/search/$documentid'
+    | '/search/$takeawayid'
     | '/insight-studio'
     | '/knowledge-graph'
     | '/news-feed'
@@ -242,7 +242,7 @@ export interface FileRouteTypes {
     | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
-    | '/search/$documentid'
+    | '/search/$takeawayid'
     | '/insight-studio'
     | '/knowledge-graph'
     | '/news-feed'
@@ -255,7 +255,7 @@ export interface FileRouteTypes {
     | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
-    | '/search/$documentid'
+    | '/search/$takeawayid'
     | '/insight-studio/'
     | '/knowledge-graph/'
     | '/news-feed/'
@@ -270,7 +270,7 @@ export interface RootRouteChildren {
   TemplateRoute: typeof TemplateRoute
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
-  SearchDocumentidRoute: typeof SearchDocumentidRoute
+  SearchTakeawayidRoute: typeof SearchTakeawayidRoute
   InsightStudioIndexRoute: typeof InsightStudioIndexRoute
   KnowledgeGraphIndexRoute: typeof KnowledgeGraphIndexRoute
   NewsFeedIndexRoute: typeof NewsFeedIndexRoute
@@ -284,7 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   TemplateRoute: TemplateRoute,
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
-  SearchDocumentidRoute: SearchDocumentidRoute,
+  SearchTakeawayidRoute: SearchTakeawayidRoute,
   InsightStudioIndexRoute: InsightStudioIndexRoute,
   KnowledgeGraphIndexRoute: KnowledgeGraphIndexRoute,
   NewsFeedIndexRoute: NewsFeedIndexRoute,
@@ -308,7 +308,7 @@ export const routeTree = rootRoute
         "/template",
         "/insight-studio/$insightId",
         "/news-feed/$documentid",
-        "/search/$documentid",
+        "/search/$takeawayid",
         "/insight-studio/",
         "/knowledge-graph/",
         "/news-feed/",
@@ -331,8 +331,8 @@ export const routeTree = rootRoute
     "/news-feed/$documentid": {
       "filePath": "news-feed.$documentid.tsx"
     },
-    "/search/$documentid": {
-      "filePath": "search.$documentid.tsx"
+    "/search/$takeawayid": {
+      "filePath": "search.$takeawayid.tsx"
     },
     "/insight-studio/": {
       "filePath": "insight-studio.index.tsx"
