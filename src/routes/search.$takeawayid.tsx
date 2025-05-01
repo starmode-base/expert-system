@@ -159,7 +159,7 @@ function RouteComponent() {
     const el = document.getElementById(`takeaway-${selectedTakeaway}`);
     if (el) {
       parent.scrollTo({
-        top: el.offsetTop - parent.clientHeight / 4,
+        top: el.offsetTop - parent.clientHeight / 3,
         behavior: "smooth",
       });
     }
@@ -169,6 +169,8 @@ function RouteComponent() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!["ArrowUp", "ArrowDown"].includes(e.key)) return;
+      // Prevent the browser's native scroll so our programmatic scroll stays centered
+      e.preventDefault();
       const index = takeawaySearchResults.findIndex(
         (t) => t.id === selectedTakeaway,
       );
