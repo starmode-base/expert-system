@@ -73,12 +73,7 @@ export const Route = createFileRoute("/search/$takeawayid")({
   loader: async ({ params: { takeawayid }, deps: search }) => {
     const insights = await getInsightsSF();
     const { sources, categories } = await getFilterValues();
-
-    console.log({ search });
-
     const { searchInput, filters } = search;
-
-    // TODO: need to fix date filter bug
 
     const takeaways = await searchTakeawaysSF({
       data: {
