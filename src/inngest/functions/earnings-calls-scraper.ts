@@ -4,6 +4,7 @@ import { fetchEarningsTranscript } from "~/lib/earnings-transcripts";
 import { saveContent } from "../steps/scrapers/save-content";
 import { and } from "drizzle-orm";
 import { publishNotifyUI } from "~/lib/ably";
+import { generateTakeaways } from "./generate-takeaways";
 
 async function transcriptExsists({
   source,
@@ -34,49 +35,27 @@ export const earningsCallsScraper = inngest.createFunction(
     console.log("Scraper started: ", event.data);
     // Scrape and save content
 
-    // get tickers
-    const symbols = await step.run("get-ticker-symbols", async () => {
-      const topTechStockSymbols: { symbol: string; name: string }[] = [
-        { symbol: "AAPL", name: "Apple Inc." },
-        { symbol: "MSFT", name: "Microsoft Corporation" },
-        { symbol: "GOOGL", name: "Alphabet Inc. (Class A)" },
-        { symbol: "AMZN", name: "Amazon.com, Inc." },
-        { symbol: "NVDA", name: "NVIDIA Corporation" },
-        { symbol: "META", name: "Meta Platforms, Inc." },
-        { symbol: "TSLA", name: "Tesla, Inc." },
-        { symbol: "AVGO", name: "Broadcom Inc." },
-        { symbol: "CRM", name: "Salesforce, Inc." },
-        { symbol: "AMD", name: "Advanced Micro Devices, Inc." },
-      ];
-
-      const symbols = await db.query.stockSymbols.findMany({
-        columns: {
-          symbol: true,
-          name: true,
-        },
-
-        orderBy: (stocks, { sql }) => sql`RANDOM()`,
-        limit: 10,
-      });
-
-      return [...topTechStockSymbols, ...symbols].slice(0, 20);
-    });
+    const symbols = event.data.symbols;
 
     const documentIds = await Promise.all(
       symbols.map(async (symbol) => {
         return await step.run(
           `fetch-earnings-transcript-${symbol.symbol}`,
           async () => {
-            const year = 2024;
-            const quarter = 4;
+            const year = event.data.year;
+            const quarter = event.data.quarter;
 
             const result = await fetchEarningsTranscript({
               ticker: symbol.symbol,
               year,
               quarter,
-            }).catch((error) => {
-              // continue
+            }).catch(async (error) => {
               console.log("error", error);
+              await publishNotifyUI(
+                event.user.id,
+                `There was an Error fetching ${symbol.symbol} transcript`,
+              );
+
               return;
             });
 
@@ -85,13 +64,13 @@ export const earningsCallsScraper = inngest.createFunction(
             }
 
             const publicationDate = new Date(result.date);
-            console.log("Date", publicationDate);
+            const title = `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`;
 
             const document = {
               source: "Earnings Calls",
-              title: `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`,
+              title,
               //   TODO - add earning results from Earnings Calendar API
-              description: `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`,
+              description: title,
               publicationDate,
               link: "",
               articleText: result.transcript,
@@ -100,6 +79,10 @@ export const earningsCallsScraper = inngest.createFunction(
 
             if (await transcriptExsists(document)) {
               console.log("Transcript already exists");
+              await publishNotifyUI(
+                event.user.id,
+                `Error: ${title} already exists`,
+              );
               return;
             }
 
@@ -109,6 +92,21 @@ export const earningsCallsScraper = inngest.createFunction(
       }),
     );
 
+    if (documentIds.filter(Boolean).length === 0) {
+      await step.run("publish-invalidate", async () => {
+        await publishNotifyUI(event.user.id, `Complete`);
+      });
+
+      return;
+    }
+
+    await step.run(
+      "publish-invalidate",
+      publishNotifyUI,
+      event.user.id,
+      `Scrape Complete. Generating takeways for ${documentIds.length} Transcripts`,
+    );
+
     await Promise.all(
       documentIds.map(async (documentId) => {
         // If scrapeLink fails, documentId will be undefined
@@ -116,8 +114,8 @@ export const earningsCallsScraper = inngest.createFunction(
           return;
         }
 
-        await step.sendEvent("generate-takeaways", {
-          name: "app/generate-takeaways",
+        await step.invoke("generate-takeaways", {
+          function: generateTakeaways,
           data: {
             documentId,
             takeawayPrompt:
