@@ -36,34 +36,6 @@ export const earningsCallsScraper = inngest.createFunction(
 
     const symbols = event.data.symbols;
 
-    // get tickers
-    // const symbols = await step.run("get-ticker-symbols", async () => {
-    //   const topTechStockSymbols: { symbol: string; name: string }[] = [
-    //     { symbol: "AAPL", name: "Apple Inc." },
-    //     { symbol: "MSFT", name: "Microsoft Corporation" },
-    //     { symbol: "GOOGL", name: "Alphabet Inc. (Class A)" },
-    //     { symbol: "AMZN", name: "Amazon.com, Inc." },
-    //     { symbol: "NVDA", name: "NVIDIA Corporation" },
-    //     { symbol: "META", name: "Meta Platforms, Inc." },
-    //     { symbol: "TSLA", name: "Tesla, Inc." },
-    //     { symbol: "AVGO", name: "Broadcom Inc." },
-    //     { symbol: "CRM", name: "Salesforce, Inc." },
-    //     { symbol: "AMD", name: "Advanced Micro Devices, Inc." },
-    //   ];
-
-    //   const symbols = await db.query.stockSymbols.findMany({
-    //     columns: {
-    //       symbol: true,
-    //       name: true,
-    //     },
-
-    //     orderBy: (stocks, { sql }) => sql`RANDOM()`,
-    //     limit: 10,
-    //   });
-
-    //   return [...topTechStockSymbols, ...symbols].slice(0, 20);
-    // });
-
     const documentIds = await Promise.all(
       symbols.map(async (symbol) => {
         return await step.run(
