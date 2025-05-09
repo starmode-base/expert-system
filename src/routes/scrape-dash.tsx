@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useConnectionStateListener } from "ably/react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
 import { sendEventEarningsCallscraperSF } from "~/server/inggest";
 import { listOrganizationsSF } from "~/server/organizations";
@@ -46,6 +46,17 @@ function RouteComponent() {
   >([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  // Automatically clear the message after 5 seconds
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => {
+      setMessage("");
+    }, 5000);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [message]);
 
   const currentYear = new Date().getFullYear();
   const availableYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -66,7 +77,12 @@ function RouteComponent() {
 
   useNotifyUI(viewerId, (message) => {
     console.log("message", message);
-    setLoading(false);
+    if (message.data === "Complete") {
+      setMessage("Scrape Complete");
+      setLoading(false);
+    } else {
+      setMessage(message.data as string);
+    }
   });
 
   const sendEventEarningsCallscraper = useServerFn(
@@ -88,9 +104,9 @@ function RouteComponent() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-gray-100 p-6">
+    <div className="flex h-[calc(100vh-64px)] justify-center bg-gray-100 p-6">
       {/* Sidebar: Search + Ticker List */}
-      <aside className="flex w-1/3 flex-col rounded-lg bg-white p-4 shadow">
+      <aside className="flex w-1/2 flex-col rounded-lg bg-white p-4 shadow">
         <div className="mb-4 flex gap-4">
           <div className="flex flex-col">
             <label
@@ -175,7 +191,20 @@ function RouteComponent() {
             );
           })}
         </div>
-
+        {/* ADD MESSAGE POP UP HERE */}
+        {message ? (
+          <div
+            className={`mb-4 rounded px-4 py-2 text-sm ${
+              message === "Scrape Complete"
+                ? "bg-green-100 text-green-800"
+                : message.includes("Error")
+                  ? "bg-red-100 text-red-800"
+                  : "bg-gray-200 text-black"
+            } shadow`}
+          >
+            {message}
+          </div>
+        ) : null}
         <button
           onClick={async () => {
             setLoading(true);
@@ -186,9 +215,10 @@ function RouteComponent() {
                 quarter: selectedQuarter,
               },
             });
+            setSelectedTickers([]);
           }}
           disabled={selectedTickers.length === 0 || loading}
-          className="mt-4 w-full rounded-lg bg-blue-600 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-white"
         >
           {loading ? "Scraping…" : "Scrape Earnings Calls"}
         </button>

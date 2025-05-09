@@ -4,6 +4,7 @@ import { fetchEarningsTranscript } from "~/lib/earnings-transcripts";
 import { saveContent } from "../steps/scrapers/save-content";
 import { and } from "drizzle-orm";
 import { publishNotifyUI } from "~/lib/ably";
+import { generateTakeaways } from "./generate-takeaways";
 
 async function transcriptExsists({
   source,
@@ -48,9 +49,13 @@ export const earningsCallsScraper = inngest.createFunction(
               ticker: symbol.symbol,
               year,
               quarter,
-            }).catch((error) => {
-              // continue
+            }).catch(async (error) => {
               console.log("error", error);
+              await publishNotifyUI(
+                event.user.id,
+                `There was an Error fetching ${symbol.symbol} transcript`,
+              );
+
               return;
             });
 
@@ -59,13 +64,13 @@ export const earningsCallsScraper = inngest.createFunction(
             }
 
             const publicationDate = new Date(result.date);
-            console.log("Date", publicationDate);
+            const title = `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`;
 
             const document = {
               source: "Earnings Calls",
-              title: `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`,
+              title,
               //   TODO - add earning results from Earnings Calendar API
-              description: `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`,
+              description: title,
               publicationDate,
               link: "",
               articleText: result.transcript,
@@ -74,6 +79,10 @@ export const earningsCallsScraper = inngest.createFunction(
 
             if (await transcriptExsists(document)) {
               console.log("Transcript already exists");
+              await publishNotifyUI(
+                event.user.id,
+                `Error: ${title} already exists`,
+              );
               return;
             }
 
@@ -83,6 +92,21 @@ export const earningsCallsScraper = inngest.createFunction(
       }),
     );
 
+    if (documentIds.filter(Boolean).length === 0) {
+      await step.run("publish-invalidate", async () => {
+        await publishNotifyUI(event.user.id, `Complete`);
+      });
+
+      return;
+    }
+
+    await step.run(
+      "publish-invalidate",
+      publishNotifyUI,
+      event.user.id,
+      `Scrape Complete. Generating takeways for ${documentIds.length} Transcripts`,
+    );
+
     await Promise.all(
       documentIds.map(async (documentId) => {
         // If scrapeLink fails, documentId will be undefined
@@ -90,8 +114,8 @@ export const earningsCallsScraper = inngest.createFunction(
           return;
         }
 
-        await step.sendEvent("generate-takeaways", {
-          name: "app/generate-takeaways",
+        await step.invoke("generate-takeaways", {
+          function: generateTakeaways,
           data: {
             documentId,
             takeawayPrompt:

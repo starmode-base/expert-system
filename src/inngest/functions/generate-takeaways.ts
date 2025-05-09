@@ -7,6 +7,7 @@ import { generateEmbedding } from "~/postgres/generate-embedding";
 import { getCategory } from "~/lib/ai-helpers/get-category";
 import { eq } from "drizzle-orm";
 import { getConcept } from "../../lib/ai-helpers/generate-concept";
+import { publishNotifyUI } from "~/lib/ably";
 
 export const generateTakeaways = inngest.createFunction(
   { id: "app/generate-takeaways" },
@@ -44,6 +45,13 @@ export const generateTakeaways = inngest.createFunction(
 
         return takeaways;
       },
+    );
+
+    await step.run(
+      "publish-invalidate",
+      publishNotifyUI,
+      event.user.id,
+      `Generated takeaways: ${takeaways.map((t) => t.title).join(", ")} takeaways`,
     );
 
     /**
