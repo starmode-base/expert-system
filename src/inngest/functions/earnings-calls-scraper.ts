@@ -34,41 +34,43 @@ export const earningsCallsScraper = inngest.createFunction(
     console.log("Scraper started: ", event.data);
     // Scrape and save content
 
+    const symbols = event.data.symbols;
+
     // get tickers
-    const symbols = await step.run("get-ticker-symbols", async () => {
-      const topTechStockSymbols: { symbol: string; name: string }[] = [
-        { symbol: "AAPL", name: "Apple Inc." },
-        { symbol: "MSFT", name: "Microsoft Corporation" },
-        { symbol: "GOOGL", name: "Alphabet Inc. (Class A)" },
-        { symbol: "AMZN", name: "Amazon.com, Inc." },
-        { symbol: "NVDA", name: "NVIDIA Corporation" },
-        { symbol: "META", name: "Meta Platforms, Inc." },
-        { symbol: "TSLA", name: "Tesla, Inc." },
-        { symbol: "AVGO", name: "Broadcom Inc." },
-        { symbol: "CRM", name: "Salesforce, Inc." },
-        { symbol: "AMD", name: "Advanced Micro Devices, Inc." },
-      ];
+    // const symbols = await step.run("get-ticker-symbols", async () => {
+    //   const topTechStockSymbols: { symbol: string; name: string }[] = [
+    //     { symbol: "AAPL", name: "Apple Inc." },
+    //     { symbol: "MSFT", name: "Microsoft Corporation" },
+    //     { symbol: "GOOGL", name: "Alphabet Inc. (Class A)" },
+    //     { symbol: "AMZN", name: "Amazon.com, Inc." },
+    //     { symbol: "NVDA", name: "NVIDIA Corporation" },
+    //     { symbol: "META", name: "Meta Platforms, Inc." },
+    //     { symbol: "TSLA", name: "Tesla, Inc." },
+    //     { symbol: "AVGO", name: "Broadcom Inc." },
+    //     { symbol: "CRM", name: "Salesforce, Inc." },
+    //     { symbol: "AMD", name: "Advanced Micro Devices, Inc." },
+    //   ];
 
-      const symbols = await db.query.stockSymbols.findMany({
-        columns: {
-          symbol: true,
-          name: true,
-        },
+    //   const symbols = await db.query.stockSymbols.findMany({
+    //     columns: {
+    //       symbol: true,
+    //       name: true,
+    //     },
 
-        orderBy: (stocks, { sql }) => sql`RANDOM()`,
-        limit: 10,
-      });
+    //     orderBy: (stocks, { sql }) => sql`RANDOM()`,
+    //     limit: 10,
+    //   });
 
-      return [...topTechStockSymbols, ...symbols].slice(0, 20);
-    });
+    //   return [...topTechStockSymbols, ...symbols].slice(0, 20);
+    // });
 
     const documentIds = await Promise.all(
       symbols.map(async (symbol) => {
         return await step.run(
           `fetch-earnings-transcript-${symbol.symbol}`,
           async () => {
-            const year = 2024;
-            const quarter = 4;
+            const year = event.data.year;
+            const quarter = event.data.quarter;
 
             const result = await fetchEarningsTranscript({
               ticker: symbol.symbol,

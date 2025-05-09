@@ -31,6 +31,11 @@ export const inngest = new Inngest({
      * Earnings Calls
      */
     "scraper/earnings-calls": {
+      data: z.object({
+        symbols: z.array(z.object({ symbol: z.string(), name: z.string() })),
+        year: z.number(),
+        quarter: z.number(),
+      }),
       user: userSchema,
     },
 
