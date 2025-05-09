@@ -143,6 +143,16 @@ function RootDocument(props: React.PropsWithChildren) {
               >
                 Insight Studio
               </Link>
+              <Link
+                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                to="/importer"
+                activeProps={{
+                  className: "font-bold",
+                }}
+                activeOptions={{ exact: false }}
+              >
+                Importer
+              </Link>
             </div>
             {props.children}
           </SignedIn>

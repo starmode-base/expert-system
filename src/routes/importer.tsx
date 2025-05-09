@@ -7,7 +7,7 @@ import { sendEventEarningsCallscraperSF } from "~/server/inggest";
 import { listOrganizationsSF } from "~/server/organizations";
 import { queryStocksSF } from "~/server/query-stocks";
 
-export const Route = createFileRoute("/scrape-dash")({
+export const Route = createFileRoute("/importer")({
   loader: async () => {
     const { viewerId } = await listOrganizationsSF();
 
