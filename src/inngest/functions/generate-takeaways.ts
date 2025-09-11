@@ -8,6 +8,7 @@ import { getCategory } from "~/lib/ai-helpers/get-category";
 import { eq } from "drizzle-orm";
 import { getConcept } from "../../lib/ai-helpers/generate-concept";
 import { publishNotifyUI } from "~/lib/ably";
+import { NonRetriableError } from "inngest";
 
 export const generateTakeaways = inngest.createFunction(
   { id: "app/generate-takeaways" },
@@ -22,9 +23,8 @@ export const generateTakeaways = inngest.createFunction(
     /**
      * Step 1: Generate takeaways
      */
-    const takeaways = await step.run(
-      `generate-takeaways-${event.data.documentId}`,
-      async () => {
+    const takeaways = await step
+      .run(`generate-takeaways-${event.data.documentId}`, async () => {
         const articleText = await db.query.documents.findFirst({
           where: (documents, { eq }) => eq(documents.id, event.data.documentId),
           columns: { articleText: true },
@@ -44,8 +44,14 @@ export const generateTakeaways = inngest.createFunction(
         );
 
         return takeaways;
-      },
-    );
+      })
+      .catch(async () => {
+        await publishNotifyUI(
+          event.user.id,
+          "Error: There was an error generating takeaways.",
+        );
+        throw new NonRetriableError(`Error generating takeaways.`);
+      });
 
     await step.run(
       "publish-invalidate",
