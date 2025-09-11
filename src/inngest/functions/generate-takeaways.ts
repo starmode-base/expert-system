@@ -23,9 +23,8 @@ export const generateTakeaways = inngest.createFunction(
     /**
      * Step 1: Generate takeaways
      */
-    const takeaways = await step.run(
-      `generate-takeaways-${event.data.documentId}`,
-      async () => {
+    const takeaways = await step
+      .run(`generate-takeaways-${event.data.documentId}`, async () => {
         const articleText = await db.query.documents.findFirst({
           where: (documents, { eq }) => eq(documents.id, event.data.documentId),
           columns: { articleText: true },
@@ -45,14 +44,14 @@ export const generateTakeaways = inngest.createFunction(
         );
 
         return takeaways;
-      },
-    ).catch(async () => {
-      await publishNotifyUI(
-        event.user.id,
-        "Error: There was an error generating takeaways.",
-      );
-      throw new NonRetriableError(`Error generating takeaways.`);
-    });
+      })
+      .catch(async () => {
+        await publishNotifyUI(
+          event.user.id,
+          "Error: There was an error generating takeaways.",
+        );
+        throw new NonRetriableError(`Error generating takeaways.`);
+      });
 
     await step.run(
       "publish-invalidate",

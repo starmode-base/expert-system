@@ -81,7 +81,10 @@ function RouteComponent() {
     if (message.data === "Complete") {
       setMessage("Scrape Complete");
       setLoading(false);
-    } else if (typeof message.data === "string" && message.data.toLowerCase().includes("error")) {
+    } else if (
+      typeof message.data === "string" &&
+      message.data.toLowerCase().includes("error")
+    ) {
       setMessage("An error occurred during scraping");
       setLoading(false);
     } else {

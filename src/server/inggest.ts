@@ -76,7 +76,10 @@ export const sendEventGenerateTakeawaysSF = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ context, data }) => {
-    console.log("Using OpenAI key ending in:", process.env.OPENAI_API_KEY?.slice(-5));
+    console.log(
+      "Using OpenAI key ending in:",
+      process.env.OPENAI_API_KEY?.slice(-5),
+    );
     await inngest.send({
       name: "app/generate-takeaways",
       data,
