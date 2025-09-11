@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useConnectionStateListener } from "ably/react";
 import { useMemo, useState, useEffect } from "react";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
+import { uploadStockDataSF } from "~/server/data-loads";
 import { sendEventEarningsCallscraperSF } from "~/server/inggest";
 import { listOrganizationsSF } from "~/server/organizations";
 import { queryStocksSF } from "~/server/query-stocks";
@@ -80,10 +81,14 @@ function RouteComponent() {
     if (message.data === "Complete") {
       setMessage("Scrape Complete");
       setLoading(false);
+    } else if (typeof message.data === "string" && message.data.toLowerCase().includes("error")) {
+      setMessage("An error occurred during scraping");
+      setLoading(false);
     } else {
       setMessage(message.data as string);
     }
   });
+  const uploadStockData = useServerFn(uploadStockDataSF);
 
   const sendEventEarningsCallscraper = useServerFn(
     sendEventEarningsCallscraperSF,
@@ -105,6 +110,14 @@ function RouteComponent() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] justify-center bg-gray-100 p-6">
+      <button
+        onClick={async () => {
+          await uploadStockData();
+        }}
+        className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
+      >
+        Upload Stocks
+      </button>{" "}
       {/* Sidebar: Search + Ticker List */}
       <aside className="flex w-1/2 flex-col rounded-lg bg-white p-4 shadow">
         <div className="mb-4 flex gap-4">
