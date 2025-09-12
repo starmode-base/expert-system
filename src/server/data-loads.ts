@@ -4,6 +4,7 @@ import { join } from "path";
 
 import { parse } from "csv-parse/sync";
 import { db, schema } from "~/postgres/db";
+import { origin } from "~/lib/env";
 
 import { invariant } from "@tanstack/react-router";
 
@@ -192,9 +193,20 @@ interface USStockData {
 export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
   async () => {
     try {
-      // Read the CSV file from the public/data directory
-      const csvPath = join(process.cwd(), "public", "data", "us_stocks.csv");
-      const csvData = readFileSync(csvPath, "utf-8");
+      // Try to fetch the CSV over HTTP so it works in serverless production too
+      // Fallback to reading from local file during development
+      const url = `${origin()}/data/us_stocks.csv`;
+      let csvData: string;
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        csvData = await res.text();
+      } catch {
+        const csvPath = join(process.cwd(), "public", "data", "us_stocks.csv");
+        csvData = readFileSync(csvPath, "utf-8");
+      }
 
       // Parse the CSV data into JSON
       const records = parse(csvData, {
