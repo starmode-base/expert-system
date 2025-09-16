@@ -14,7 +14,7 @@ interface Takeaway {
 export async function getInsightSimple(
   takeaways: Takeaway[],
   customPrompt: string,
-  model = "o3",
+  model = "gpt-5",
 ) {
   const response = await client.responses.create({
     model,

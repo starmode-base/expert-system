@@ -18,7 +18,7 @@ const responseFormat = zodResponseFormat(schema, "response");
 
 export async function getConcept(takeaway: string) {
   const completion = await client.beta.chat.completions.parse({
-    model: "o3-mini",
+    model: "gpt-5-mini",
     response_format: responseFormat,
     messages: [
       {

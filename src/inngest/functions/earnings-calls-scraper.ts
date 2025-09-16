@@ -120,7 +120,7 @@ export const earningsCallsScraper = inngest.createFunction(
             documentId,
             takeawayPrompt:
               "Focus on articulating the single most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Include financial performance of the company to the extent that it supports insights about any of the afore mentioned themes.",
-            model: "o3-mini",
+            model: "gpt-5-mini",
           },
           user: event.user,
         });
