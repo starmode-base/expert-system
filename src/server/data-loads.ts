@@ -4,7 +4,6 @@ import { join } from "path";
 
 import { parse } from "csv-parse/sync";
 import { db, schema } from "~/postgres/db";
-import { origin } from "~/lib/env";
 
 import { invariant } from "@tanstack/react-router";
 
@@ -183,28 +182,38 @@ export const uploadCategoriesSF = createServerFn({ method: "POST" }).handler(
 //  ####################
 // ####################
 
-// Define the structure of the US stock data
-interface USStockData {
-  CompanyNames: string;
-  CompanyCode: string;
-  marketcap_num: string;
+// Define the structure of the S&P 500 constituents CSV
+interface SP500ConstituentRecord {
+  Symbol: string;
+  Security: string;
+  "GICS Sector"?: string;
+  "GICS Sub-Industry"?: string;
+  "Headquarters Location"?: string;
+  "Date added"?: string;
+  CIK?: string;
+  Founded?: string;
 }
 
 export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
   async () => {
     try {
-      // Try to fetch the CSV over HTTP so it works in serverless production too
-      // Fallback to reading from local file during development
-      const url = `${origin()}/data/us_stocks.csv`;
+      // Prefer fetching the canonical S&P 500 CSV; fallback to local file in dev
+      const remoteUrl =
+        "https://datahub.io/core/s-and-p-500-companies/_r/-/data/constituents.csv";
       let csvData: string;
       try {
-        const res = await fetch(url, { cache: "no-store" });
+        const res = await fetch(remoteUrl, { cache: "no-store" });
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
         csvData = await res.text();
       } catch {
-        const csvPath = join(process.cwd(), "public", "data", "us_stocks.csv");
+        const csvPath = join(
+          process.cwd(),
+          "public",
+          "data",
+          "constituents.csv",
+        );
         csvData = readFileSync(csvPath, "utf-8");
       }
 
@@ -212,28 +221,54 @@ export const uploadStockDataSF = createServerFn({ method: "POST" }).handler(
       const records = parse(csvData, {
         columns: true,
         skip_empty_lines: true,
-      }) as USStockData[];
+        trim: true,
+      }) as SP500ConstituentRecord[];
 
       // Filter out invalid records and transform to database format
       const validRecords = records
-        .filter((record) => record.CompanyCode && record.CompanyCode !== "NA")
+        .filter((record) => record.Symbol && record.Security)
         .map((record) => ({
-          symbol: record.CompanyCode,
-          name: record.CompanyNames,
+          symbol: record.Symbol.trim(),
+          name: record.Security.trim(),
         }));
 
-      console.log(`Processing ${validRecords.length} stock records`);
+      console.log(`Processing ${validRecords.length} S&P 500 symbols`);
 
-      // Insert the records into the database
+      // Fetch existing symbols to avoid duplicates
+      const existing = await db
+        .select({ symbol: schema.stockSymbols.symbol })
+        .from(schema.stockSymbols);
+      const existingSymbols = new Set(existing.map((r) => r.symbol));
+
+      // Deduplicate incoming and filter to new symbols only
+      const dedupedBySymbol = new Map<
+        string,
+        { symbol: string; name: string }
+      >();
+      for (const rec of validRecords) {
+        if (!dedupedBySymbol.has(rec.symbol)) {
+          dedupedBySymbol.set(rec.symbol, rec);
+        }
+      }
+      const newRecords = Array.from(dedupedBySymbol.values()).filter(
+        (rec) => !existingSymbols.has(rec.symbol),
+      );
+
+      if (newRecords.length === 0) {
+        console.log("No new stock symbols to insert");
+        return [];
+      }
+
+      // Insert only new records into the database
       const result = await db
         .insert(schema.stockSymbols)
-        .values(validRecords)
+        .values(newRecords)
         .returning({
           id: schema.stockSymbols.id,
           symbol: schema.stockSymbols.symbol,
         });
 
-      console.log(`Successfully inserted ${result.length} stock symbols`);
+      console.log(`Successfully inserted ${result.length} new stock symbols`);
       return result;
     } catch (error) {
       console.error("Error uploading stock data:", error);

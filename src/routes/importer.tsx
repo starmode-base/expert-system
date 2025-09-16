@@ -113,61 +113,68 @@ function RouteComponent() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] justify-center bg-gray-100 p-6">
-      <button
-        onClick={async () => {
-          await uploadStockData();
-        }}
-        className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
-      >
-        Upload Stocks
-      </button>{" "}
       {/* Sidebar: Search + Ticker List */}
       <aside className="flex w-1/2 flex-col rounded-lg bg-white p-4 shadow">
         <div className="mb-4 flex gap-4">
-          <div className="flex flex-col">
-            <label
-              htmlFor="year"
-              className="mb-1 text-sm font-medium text-gray-700"
-            >
-              Year
-            </label>
-            <select
-              id="year"
-              value={selectedYear}
-              onChange={(e) => {
-                setSelectedYear(Number(e.target.value));
+          {/* Place pickers on the left and upload button on the right */}
+          <div className="flex w-full items-end justify-between">
+            <div className="flex gap-4">
+              {/* Year picker */}
+              <div className="flex flex-col">
+                <label
+                  htmlFor="year"
+                  className="mb-1 text-sm font-medium text-gray-700"
+                >
+                  Year
+                </label>
+                <select
+                  id="year"
+                  value={selectedYear}
+                  onChange={(e) => {
+                    setSelectedYear(Number(e.target.value));
+                  }}
+                  className="rounded border border-gray-300 px-2 py-1"
+                >
+                  {availableYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Quarter picker */}
+              <div className="flex flex-col">
+                <label
+                  htmlFor="quarter"
+                  className="mb-1 text-sm font-medium text-gray-700"
+                >
+                  Quarter
+                </label>
+                <select
+                  id="quarter"
+                  value={selectedQuarter}
+                  onChange={(e) => {
+                    setSelectedQuarter(Number(e.target.value));
+                  }}
+                  className="rounded border border-gray-300 px-2 py-1"
+                >
+                  {[1, 2, 3, 4].map((q) => (
+                    <option key={q} value={q}>
+                      Q{q}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {/* Upload button on the right */}
+            <button
+              onClick={async () => {
+                await uploadStockData();
               }}
-              className="rounded border border-gray-300 px-2 py-1"
+              className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
             >
-              {availableYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col">
-            <label
-              htmlFor="quarter"
-              className="mb-1 text-sm font-medium text-gray-700"
-            >
-              Quarter
-            </label>
-            <select
-              id="quarter"
-              value={selectedQuarter}
-              onChange={(e) => {
-                setSelectedQuarter(Number(e.target.value));
-              }}
-              className="rounded border border-gray-300 px-2 py-1"
-            >
-              {[1, 2, 3, 4].map((q) => (
-                <option key={q} value={q}>
-                  Q{q}
-                </option>
-              ))}
-            </select>
+              Update Stocks
+            </button>
           </div>
         </div>
         <h2 className="mb-4 text-lg font-semibold">Select Tickers</h2>
