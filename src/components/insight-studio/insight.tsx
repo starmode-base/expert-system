@@ -12,7 +12,7 @@ interface InsightProps {
 
 export function Insight({ insight, insightTakeaways }: InsightProps) {
   const [prompt, setPrompt] = useState("");
-  const [model, setModel] = useState<ModelValue>("o3");
+  const [model, setModel] = useState<ModelValue>("gpt-5");
   const [error, setError] = useState<string | null>(null);
   const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
 
