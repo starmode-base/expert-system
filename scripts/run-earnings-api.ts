@@ -1,8 +1,8 @@
 import { fetchAlphaVantageEarningsTranscript } from "~/lib/earnings-transcripts";
 
 const result = await fetchAlphaVantageEarningsTranscript({
-  symbol: "IBM",
-  year: 2024,
+  symbol: "OPTT",
+  year: 2025,
   quarter: 1,
 });
 

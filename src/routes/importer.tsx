@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useConnectionStateListener } from "ably/react";
 import { useMemo, useState, useEffect } from "react";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
-import { uploadStockDataSF } from "~/server/data-loads";
+import { updateStockDataSF } from "~/server/data-loads";
 import { sendEventEarningsCallscraperSF } from "~/server/inggest";
 import { listOrganizationsSF } from "~/server/organizations";
 import { queryStocksSF } from "~/server/query-stocks";
@@ -122,7 +122,7 @@ function RouteComponent() {
     }
   });
 
-  const uploadStockData = useServerFn(uploadStockDataSF);
+  const updateStockData = useServerFn(updateStockDataSF);
   const sendEventEarningsCallscraper = useServerFn(
     sendEventEarningsCallscraperSF,
   );
@@ -291,11 +291,11 @@ function RouteComponent() {
             </div>
             <button
               onClick={async () => {
-                await uploadStockData();
+                await updateStockData();
               }}
               className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
             >
-              Update Stocks
+              Update Stock Data
             </button>
           </div>
         </div>
