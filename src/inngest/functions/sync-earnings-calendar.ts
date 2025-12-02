@@ -27,10 +27,19 @@ export const syncEarningsCalendar = inngest.createFunction(
         const entries = await fetchEarningsCalendar("3month");
         console.log(`Fetched ${entries.length} earnings calendar entries`);
         // Serialize dates for step return
-        return entries.map((e) => ({
-          ...e,
-          reportDate: e.reportDate.toISOString(),
-        }));
+        // Only return entries where normalized symbol and name are not the same
+        const filteredEntries = entries
+          .filter(
+            (e) =>
+              e.symbol.trim().toLowerCase() !== e.name.trim().toLowerCase(),
+          )
+          .map((e) => ({
+            ...e,
+            reportDate: e.reportDate.toISOString(),
+          }));
+
+        console.log("filteredEntries length: ", filteredEntries.length);
+        return filteredEntries;
       },
     );
 
