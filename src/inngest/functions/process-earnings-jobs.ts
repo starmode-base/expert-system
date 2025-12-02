@@ -189,7 +189,7 @@ export const processEarningsJobs = inngest.createFunction(
             id: successResult.userId,
             email: "",
           },
-        } as any);
+        });
       } else {
         failed++;
       }
