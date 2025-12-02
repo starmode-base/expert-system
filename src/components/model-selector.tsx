@@ -2,8 +2,8 @@ import { twMerge } from "tailwind-merge";
 import React from "react";
 
 /** Add new options in a single place */
-const MODEL_OPTIONS = [
-  { value: "gpt-5", label: "gpt-5 ($10)" },
+export const MODEL_OPTIONS = [
+  { value: "gpt-5.1", label: "gpt-5.1 ($10)" },
   { value: "gpt-5-mini", label: "gpt-5-mini ($2)" },
   { value: "gpt-5-nano", label: "gpt-5-nano ($0.40)" },
   { value: "gpt-5-pro", label: "gpt-5-pro ($120)" },
