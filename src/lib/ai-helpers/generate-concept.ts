@@ -7,10 +7,17 @@ const client = new OpenAI();
 
 const schema = z.object({
   concept: z.string({
-    description: `Analyze this key takeaway and articulate its core generalized concept in 4-8 sentences.
-    - The concept will be read before the takeaway. Do not repeat the takeaway or findings in it.
-    - This concept should be an articulation of a high-level, general idea that can be applied to various contexts.
-    - Use analogies and/or metaphors to ensure clarity of the concept.`,
+    description: `Rewrite the Takeaway as a short, domain-agnostic mechanism description:
+	•	Remove all proper nouns, tickers, company names, product names, and field-specific jargon.
+	•	Do not mention specific industries (e.g., “biotech,” “social media”) unless absolutely necessary.
+	•	Focus on:
+	•	Actors (generic roles: “producer,” “intermediary,” “regulator,” “end user,” “agent”)
+	•	Resources/Flows (“information,” “capital,” “inventory,” “signals,” “attention,” “fluid,” etc.)
+	•	Constraints (“capacity limits,” “latency,” “friction,” “regulation,” “cost”)
+	•	Mechanism (what causes what: feedback, diffusion, bottleneck, substitution, coordination, etc.)
+	•	Outcome (what changes in the system: growth, failure, delay, saturation, collapse, etc.)
+	•	Use 2–4 sentences, concise but precise.
+	•	Avoid analogy or metaphor; be literal about the causal structure.`,
   }),
 });
 
@@ -18,23 +25,21 @@ const responseFormat = zodResponseFormat(schema, "response");
 
 export async function getConcept(takeaway: string) {
   const completion = await client.beta.chat.completions.parse({
-    model: "gpt-5-mini",
+    model: "gpt-5.1",
     response_format: responseFormat,
     messages: [
       {
         role: "user",
         content: `
-
-        Instructions
-        - All Scores must be a integer, no decimals
-        - The concept should articulate higher level ideas that can be applied to various contexts.
-        - Be very concise but thorough. No fluff.
-        - Dont be hyperbolic
-        - Be imaginative about the high level implications of the takeaway when creating the concpts.
-        - Do NOT start with "The primary concept of the article"... or other such fluff.
+You are an expert systems thinker.
+You will be given a single Takeaway summarizing an event, finding, or situation from news, earnings calls, or scientific papers.
 
         Takeaway:
-        ${takeaway}`,
+        ${takeaway}
+
+        Your task is to:
+      1.	Abstract the mechanism behind the takeaway into domain-agnostic language.
+      2.	Assign dynamic labels describing the underlying system dynamics.`,
       },
     ],
   });

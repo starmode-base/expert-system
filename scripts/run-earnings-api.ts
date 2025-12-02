@@ -1,7 +1,7 @@
-import { fetchEarningsTranscript } from "~/lib/earnings-transcripts";
+import { fetchAlphaVantageEarningsTranscript } from "~/lib/earnings-transcripts";
 
-const result = await fetchEarningsTranscript({
-  ticker: "AES",
+const result = await fetchAlphaVantageEarningsTranscript({
+  symbol: "IBM",
   year: 2024,
   quarter: 1,
 });

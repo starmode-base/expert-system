@@ -3,12 +3,10 @@ import React from "react";
 
 /** Add new options in a single place */
 const MODEL_OPTIONS = [
-  { value: "gpt-4.1", label: "gpt-4.1 ($8)" },
-  { value: "gpt-4o-mini", label: "gpt-4o-mini ($0.60)" },
-  { value: "o4-mini", label: "o4-mini ($4.40)" },
-  { value: "o3", label: "o3 ($8)" },
   { value: "gpt-5", label: "gpt-5 ($10)" },
-  { value: "gpt-5-mini", label: "o3-mini ($2)" },
+  { value: "gpt-5-mini", label: "gpt-5-mini ($2)" },
+  { value: "gpt-5-nano", label: "gpt-5-nano ($0.40)" },
+  { value: "gpt-5-pro", label: "gpt-5-pro ($120)" },
 ] as const;
 
 export type ModelValue = (typeof MODEL_OPTIONS)[number]["value"];

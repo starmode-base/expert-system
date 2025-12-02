@@ -12,12 +12,21 @@ const schema = z.object({
   takeaways: z.array(
     z.object({
       takeaway: z.string({
-        description: `Explain the most novel and important takeaway from the document in 10-15 sentences.
-          - Prioritize truths and facts over emotions and opinions.
-          - The takeaway should be very specific and not a generalization or broad summary.
-          - Each takeaway should be completely distinct from other takeaways. Make them unique and unrelated.
-          - Each takeaway shoult NOT reference other takeaways
-          - Make sure that each takeaway should is a complete, stand alone thought. The reader should have no context about the provided text.`,
+        description: `
+        # Content Requirements:
+        - Prioritize Novelty: Focus on the most interesting, new, or important insights. Ignore generic updates.
+        - For each takeaway, you must capture three distinct dimensions:
+            1. The Context: What is the situation, problem, or environment?
+            2. The Mechanism: What specific action, strategy, or biological process caused the result? (Crucial: Be specific about *how* it works).
+            3. The Outcome: What was the measurable result or insight?
+
+        # Style & Formatting Constraints:
+        - Standalone Thoughts: Each takeaway must be completely self-contained. The reader should require zero context from the original text or other takeaways to understand it.
+        - Deep & Dense: Write 6-12 sentences per takeaway. Be very thorough but concise (no fluff). Every sentence must add value.
+        - Factual Accuracy: Prioritize truths and facts over emotions or opinions. Do not embellish.
+        - Neutral Tone: Strictly avoid promotional language (e.g., "groundbreaking," "revolutionary").
+        - Direct Start: Do not start with "The takeaway is..." or "This article discusses...". Jump straight into the facts.
+        - Independence: Each takeaway must be unique and unrelated to the others. Do not reference previous points.`,
       }),
     }),
   ),
@@ -28,7 +37,7 @@ const responseFormat = zodResponseFormat(schema, "response");
 export async function getTakeaways(
   articleText: string,
   takeawayInstructions?: string,
-  model = "gpt-5-mini",
+  model = "gpt-5.1",
 ) {
   const completion = await client.beta.chat.completions.parse({
     model,
@@ -37,22 +46,14 @@ export async function getTakeaways(
       {
         role: "user",
         content: `
-        Create a list of the 1-3 most novel and important takeaways from the text below.
-        It is better to have less takeaways, if they are not unique and unrelated.
-
-        Instructions
-        - Prioritize interesting, new and/or important takeaways.
-        - Make the takeaway a stand alone thought. The reader should not have any other context about the provided Text.
-        - Be very concise but thorough. No fluff.
-        - Be factual and accurate.
-        - Do not embelish or overdramatize. Don't use promotional words like revolutionary, or groundbreaking.
-        - Dont start with "The primary takeaway of the article"... or other such fluff.
-
-        Specific Instructions:
-        ${takeawayInstructions?.trim() ?? ""}
+        # Role
+        You are a Lead Systems Analyst. Your job is to compress raw information into high-signal takeaways. You are processing a mix of Financial News, Earnings Transcripts, and Scientific Research.
 
         Text:
-        ${articleText}`,
+        ${articleText}
+
+        Create a structured list of the 1-3 most novel and important takeaways from the text below.
+        It is better to have less takeaways, if they are not unique and unrelated.`,
       },
     ],
   });
