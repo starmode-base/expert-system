@@ -1,10 +1,12 @@
 import { randomId } from "~/lib/random-id";
 import {
+  doublePrecision,
   index,
   pgTable,
   primaryKey,
   text,
   timestamp,
+  unique,
   vector,
 } from "drizzle-orm/pg-core";
 
@@ -180,6 +182,71 @@ export const stockSymbols = pgTable("stock_symbols", {
   symbol: text("symbol").notNull(),
   name: text("name").notNull(),
 });
+
+export type StockSymbolSelect = typeof stockSymbols.$inferSelect;
+export type StockSymbolInsert = typeof stockSymbols.$inferInsert;
+
+/**
+ * Tracked Companies - User-specific company watchlist
+ */
+export const trackedCompanies = pgTable(
+  "tracked_companies",
+  {
+    ...baseSchema,
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stockSymbolId: text()
+      .notNull()
+      .references(() => stockSymbols.id, { onDelete: "cascade" }),
+  },
+  (table) => [unique().on(table.userId, table.stockSymbolId)],
+);
+
+export type TrackedCompanySelect = typeof trackedCompanies.$inferSelect;
+export type TrackedCompanyInsert = typeof trackedCompanies.$inferInsert;
+
+/**
+ * Earnings Schedule - Cached earnings calendar from Alpha Vantage
+ */
+export const earningsSchedule = pgTable(
+  "earnings_schedule",
+  {
+    ...baseSchema,
+    symbol: text().notNull(),
+    name: text().notNull(),
+    reportDate: timestamp().notNull(),
+    fiscalDateEnding: text().notNull(),
+    estimate: doublePrecision(),
+    currency: text(),
+  },
+  (table) => [unique().on(table.symbol, table.fiscalDateEnding)],
+);
+
+export type EarningsScheduleSelect = typeof earningsSchedule.$inferSelect;
+export type EarningsScheduleInsert = typeof earningsSchedule.$inferInsert;
+
+/**
+ * Earnings Fetch Jobs - Track status of automated transcript fetches
+ */
+export const earningsFetchJobs = pgTable("earnings_fetch_jobs", {
+  ...baseSchema,
+  userId: text()
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  earningsScheduleId: text()
+    .notNull()
+    .references(() => earningsSchedule.id, { onDelete: "cascade" }),
+  status: text()
+    .$type<"pending" | "processing" | "completed" | "failed" | "skipped">()
+    .notNull()
+    .default("pending"),
+  processedAt: timestamp(),
+  errorMessage: text(),
+});
+
+export type EarningsFetchJobSelect = typeof earningsFetchJobs.$inferSelect;
+export type EarningsFetchJobInsert = typeof earningsFetchJobs.$inferInsert;
 
 /**
  * Takeaway Categories

@@ -12,6 +12,10 @@ import {
   insights,
   insightTakeaways,
   organizationMembers,
+  trackedCompanies,
+  stockSymbols,
+  earningsSchedule,
+  earningsFetchJobs,
 } from "./schema";
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -29,6 +33,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   insights: many(insights),
   organizationMembers: many(organizationMembers),
+  trackedCompanies: many(trackedCompanies),
+  earningsFetchJobs: many(earningsFetchJobs),
 }));
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
@@ -118,6 +124,45 @@ export const organizationMembersRelations = relations(
     user: one(users, {
       fields: [organizationMembers.userId],
       references: [users.id],
+    }),
+  }),
+);
+
+export const stockSymbolsRelations = relations(stockSymbols, ({ many }) => ({
+  trackedCompanies: many(trackedCompanies),
+}));
+
+export const trackedCompaniesRelations = relations(
+  trackedCompanies,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [trackedCompanies.userId],
+      references: [users.id],
+    }),
+    stockSymbol: one(stockSymbols, {
+      fields: [trackedCompanies.stockSymbolId],
+      references: [stockSymbols.id],
+    }),
+  }),
+);
+
+export const earningsScheduleRelations = relations(
+  earningsSchedule,
+  ({ many }) => ({
+    earningsFetchJobs: many(earningsFetchJobs),
+  }),
+);
+
+export const earningsFetchJobsRelations = relations(
+  earningsFetchJobs,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [earningsFetchJobs.userId],
+      references: [users.id],
+    }),
+    earningsSchedule: one(earningsSchedule, {
+      fields: [earningsFetchJobs.earningsScheduleId],
+      references: [earningsSchedule.id],
     }),
   }),
 );
