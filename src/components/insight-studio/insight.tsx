@@ -3,7 +3,7 @@ import { useState } from "react";
 import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { Takeaway } from "~/server/queries";
-import { ModelSelector, ModelValue } from "../model-selector";
+import { MODEL_OPTIONS, ModelSelector, ModelValue } from "../model-selector";
 
 interface InsightProps {
   insight: InsightSelect;
@@ -12,7 +12,7 @@ interface InsightProps {
 
 export function Insight({ insight, insightTakeaways }: InsightProps) {
   const [prompt, setPrompt] = useState("");
-  const [model, setModel] = useState<ModelValue>("gpt-5");
+  const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const [error, setError] = useState<string | null>(null);
   const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
 

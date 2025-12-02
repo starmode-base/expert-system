@@ -21,6 +21,7 @@ const rawEnv = {
   DATABASE_URL_UNPOOLED: process.env.DATABASE_URL_UNPOOLED,
   ABLY_API_KEY: process.env.ABLY_API_KEY,
   API_NINJA: process.env.API_NINJA,
+  ALPHAVANTAGE_API_KEY: process.env.ALPHAVANTAGE_API_KEY,
 
   /**
    * Platform environment variables

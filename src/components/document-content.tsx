@@ -4,7 +4,7 @@ import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateTakeawaysSF } from "~/server/inggest";
 import { Document } from "~/server/queries";
 import { TakeawayTile } from "./takeaway-tile";
-import { ModelSelector, ModelValue } from "./model-selector";
+import { MODEL_OPTIONS, ModelSelector, ModelValue } from "./model-selector";
 
 export function TakeawaysSection({
   selectedDoc,
@@ -14,7 +14,7 @@ export function TakeawaysSection({
   insights: InsightSelect[];
 }) {
   const [takeawayPrompt, setTakeawayPrompt] = useState("");
-  const [model, setModel] = useState<ModelValue>("o4-mini");
+  const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const sendEventGenerateTakeaways = useServerFn(sendEventGenerateTakeawaysSF);
 
   return (

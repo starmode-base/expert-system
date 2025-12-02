@@ -1,6 +1,6 @@
 import { db } from "~/postgres/db";
 import { inngest } from "../client";
-import { fetchEarningsTranscript } from "~/lib/earnings-transcripts";
+import { fetchAlphaVantageEarningsTranscript } from "~/lib/earnings-transcripts";
 import { saveContent } from "../steps/scrapers/save-content";
 import { and } from "drizzle-orm";
 import { publishNotifyUI } from "~/lib/ably";
@@ -45,12 +45,13 @@ export const earningsCallsScraper = inngest.createFunction(
             const year = event.data.year;
             const quarter = event.data.quarter;
 
-            const result = await fetchEarningsTranscript({
-              ticker: symbol.symbol,
+            const result = await fetchAlphaVantageEarningsTranscript({
+              symbol: symbol.symbol,
               year,
               quarter,
             }).catch(async (error) => {
               console.log("error", error);
+
               await publishNotifyUI(
                 event.user.id,
                 `There was an Error fetching ${symbol.symbol} transcript`,
@@ -63,8 +64,28 @@ export const earningsCallsScraper = inngest.createFunction(
               return;
             }
 
-            const publicationDate = new Date(result.date);
+            // Map each quarter to the first month of the following quarter. For Q4, increment the year.
+            const nextQuarterMapping = {
+              1: { month: 4, yearOffset: 0 },
+              2: { month: 7, yearOffset: 0 },
+              3: { month: 10, yearOffset: 0 },
+              4: { month: 1, yearOffset: 1 },
+            };
+            const { month, yearOffset } =
+              nextQuarterMapping[quarter as 1 | 2 | 3 | 4];
+            const publicationYear = year + yearOffset;
+            const monthString = String(month).padStart(2, "0");
+            const publicationDate = new Date(
+              `${publicationYear}-${monthString}-01`,
+            );
             const title = `${symbol.name} - Q${quarter} ${year} Earnings Call Transcript`;
+
+            const articleText = result
+              .map(
+                (entry) =>
+                  `${entry.speaker} (${entry.title}): "${entry.content}"`,
+              )
+              .join("\n");
 
             const document = {
               source: "Earnings Calls",
@@ -73,7 +94,7 @@ export const earningsCallsScraper = inngest.createFunction(
               description: title,
               publicationDate,
               link: "",
-              articleText: result.transcript,
+              articleText,
               tags: [], // TODO - add tags
             };
 
@@ -119,8 +140,8 @@ export const earningsCallsScraper = inngest.createFunction(
           data: {
             documentId,
             takeawayPrompt:
-              "Focus on articulating the single most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Include financial performance of the company to the extent that it supports insights about any of the afore mentioned themes.",
-            model: "gpt-5-mini",
+              "Focus on articulating the most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Only include financial performance of the company to the extent that it supports insights about any of the afore mentioned themes.",
+            model: "gpt-5.1",
           },
           user: event.user,
         });
