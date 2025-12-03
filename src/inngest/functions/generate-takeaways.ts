@@ -20,6 +20,31 @@ export const generateTakeaways = inngest.createFunction(
       return;
     }
 
+    const existingTakeaways = await step.run(
+      "takeaway-already-exists",
+      async () => {
+        const takeaways = await db.query.takeaways.findMany({
+          where: (takeaways, { eq }) =>
+            eq(takeaways.documentId, event.data.documentId),
+        });
+
+        if (takeaways.length > 0) {
+          return takeaways;
+        }
+
+        return [];
+      },
+    );
+
+    // If takeaways already exist, return
+    if (existingTakeaways.length > 0) {
+      await publishNotifyUI(
+        event.user.id,
+        `Takeaways already exist for document ${event.data.documentId}`,
+      );
+      return;
+    }
+
     /**
      * Step 1: Generate takeaways
      */

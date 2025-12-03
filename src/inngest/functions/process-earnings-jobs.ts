@@ -1,8 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import { inngest } from "../client";
-import { fetchAlphaVantageEarningsTranscript } from "~/lib/earnings-transcripts";
-import { saveContent } from "../steps/scrapers/save-content";
+import { fetchAndSaveTranscript } from "../steps/scrapers/save-content";
 import type { EarningsScheduleSelect } from "~/postgres/schema";
 
 interface PendingJob {
@@ -76,29 +75,13 @@ export const processEarningsJobs = inngest.createFunction(
           const { year, quarter } = parseFiscalQuarter(
             earningsSchedule.fiscalDateEnding,
           );
-          const title = `${earningsSchedule.name} - Q${quarter} ${year} Earnings Call Transcript`;
 
           try {
-            const transcript = await fetchAlphaVantageEarningsTranscript({
+            const documentId = await fetchAndSaveTranscript({
               symbol: earningsSchedule.symbol,
+              name: earningsSchedule.name,
               year,
               quarter,
-            });
-
-            const articleText = transcript
-              .map(
-                (entry) =>
-                  `${entry.speaker} (${entry.title}): "${entry.content}"`,
-              )
-              .join("\n");
-
-            const documentId = await saveContent({
-              source: "Earnings Calls",
-              title,
-              description: title,
-              publicationDate: new Date(earningsSchedule.reportDate),
-              link: "",
-              articleText,
             });
 
             await db
@@ -108,20 +91,22 @@ export const processEarningsJobs = inngest.createFunction(
 
             return { success: true as const, documentId, jobId: job.id };
           } catch (error) {
-            const errorMessage =
-              error instanceof Error ? error.message : "Unknown error";
-            console.error(`Failed to process job ${job.id}:`, errorMessage);
+            console.error(`Failed to process job ${job.id}:`, error);
 
             await db
               .update(schema.earningsFetchJobs)
               .set({
                 status: "failed",
                 processedAt: new Date(),
-                errorMessage,
+                errorMessage:
+                  error instanceof Error ? error.message : "Unknown error",
               })
               .where(eq(schema.earningsFetchJobs.id, job.id));
 
-            return { success: false as const, error: errorMessage };
+            return {
+              success: false as const,
+              error: error instanceof Error ? error.message : "Unknown error",
+            };
           }
         }),
       ),
