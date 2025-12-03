@@ -2,7 +2,6 @@ import { inngest } from "../client";
 import { fetchAndSaveTranscript } from "../steps/scrapers/save-content";
 import { publishNotifyUI } from "~/lib/ably";
 import { generateTakeaways } from "./generate-takeaways";
-import { NonRetriableError } from "inngest";
 
 export const earningsCallsScraper = inngest.createFunction(
   { id: "scraper.earnings-calls" },
@@ -13,7 +12,7 @@ export const earningsCallsScraper = inngest.createFunction(
 
     const symbols = event.data.symbols;
 
-    const documentIds = await Promise.all(
+    const documentIdsResult = await Promise.all(
       symbols.map(async (symbol) => {
         return await step.run(
           `fetch-earnings-transcript-${symbol.symbol}`,
@@ -34,16 +33,15 @@ export const earningsCallsScraper = inngest.createFunction(
                 event.user.id,
                 `There was an Error fetching ${symbol.symbol} transcript`,
               );
-              throw new NonRetriableError(
-                `Error fetching ${symbol.symbol} transcript`,
-              );
             }
           },
         );
       }),
     );
 
-    if (documentIds.filter(Boolean).length === 0 && symbols.length > 0) {
+    const documentIds = documentIdsResult.filter(Boolean);
+
+    if (documentIds.length === 0 && symbols.length > 0) {
       await step.run("publish-invalidate", async () => {
         await publishNotifyUI(event.user.id, `Complete`);
       });
