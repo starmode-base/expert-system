@@ -3,18 +3,31 @@ import { useServerFn } from "@tanstack/react-start";
 import { useConnectionStateListener } from "ably/react";
 import { useMemo, useState, useEffect } from "react";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
-import { uploadStockDataSF } from "~/server/data-loads";
+import { updateStockDataSF } from "~/server/data-loads";
 import { sendEventEarningsCallscraperSF } from "~/server/inggest";
 import { listOrganizationsSF } from "~/server/organizations";
 import { queryStocksSF } from "~/server/query-stocks";
+import {
+  listTrackedCompaniesSF,
+  toggleTrackedCompanySF,
+} from "~/server/tracked-companies";
+
+interface TrackedCompany {
+  id: string;
+  stockSymbolId: string;
+  symbol: string;
+  name: string;
+  nextEarningsDate: Date | null;
+}
 
 export const Route = createFileRoute("/importer")({
   loader: async () => {
     const { viewerId } = await listOrganizationsSF();
-
     const stockTickers = await queryStocksSF();
+    const trackedCompanies =
+      (await listTrackedCompaniesSF()) as TrackedCompany[];
 
-    return { viewerId, stockTickers };
+    return { viewerId, stockTickers, trackedCompanies };
   },
   component: RouteComponentProvider,
 });
@@ -33,7 +46,11 @@ function RouteComponentProvider() {
 }
 
 function RouteComponent() {
-  const { viewerId, stockTickers } = Route.useLoaderData();
+  const {
+    viewerId,
+    stockTickers,
+    trackedCompanies: initialTrackedCompanies,
+  } = Route.useLoaderData();
 
   const [selectedYear, setSelectedYear] = useState<number>(
     new Date().getFullYear(),
@@ -48,6 +65,19 @@ function RouteComponent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [trackedCompanies, setTrackedCompanies] = useState<TrackedCompany[]>(
+    initialTrackedCompanies,
+  );
+  const [trackingInProgress, setTrackingInProgress] = useState<Set<string>>(
+    new Set(),
+  );
+
+  // Create a set of tracked stock symbol IDs for quick lookup
+  const trackedStockSymbolIds = useMemo(
+    () => new Set(trackedCompanies.map((tc) => tc.stockSymbolId)),
+    [trackedCompanies],
+  );
+
   // Automatically clear the message after 5 seconds
   useEffect(() => {
     if (!message) return;
@@ -76,26 +106,27 @@ function RouteComponent() {
     console.log("Ably connection state:", current);
   });
 
-  useNotifyUI(viewerId, (message) => {
-    console.log("message", message);
-    if (message.data === "Complete") {
+  useNotifyUI(viewerId, (msg) => {
+    console.log("message", msg);
+    if (msg.data === "Complete") {
       setMessage("Scrape Complete");
       setLoading(false);
     } else if (
-      typeof message.data === "string" &&
-      message.data.toLowerCase().includes("error")
+      typeof msg.data === "string" &&
+      msg.data.toLowerCase().includes("error")
     ) {
       setMessage("An error occurred during scraping");
       setLoading(false);
     } else {
-      setMessage(message.data as string);
+      setMessage(msg.data as string);
     }
   });
-  const uploadStockData = useServerFn(uploadStockDataSF);
 
+  const updateStockData = useServerFn(updateStockDataSF);
   const sendEventEarningsCallscraper = useServerFn(
     sendEventEarningsCallscraperSF,
   );
+  const toggleTrackedCompany = useServerFn(toggleTrackedCompanySF);
 
   const toggleTicker = (symbol: string) => {
     setSelectedTickers((prev) => {
@@ -111,12 +142,105 @@ function RouteComponent() {
     });
   };
 
+  const handleToggleTracking = async (stockSymbolId: string) => {
+    setTrackingInProgress((prev) => new Set(prev).add(stockSymbolId));
+    try {
+      const result = await toggleTrackedCompany({ data: { stockSymbolId } });
+      if (result.isTracked) {
+        // Add to tracked companies
+        const stock = stockTickers.find((s) => s.id === stockSymbolId);
+        if (stock) {
+          // Safe assertion: when isTracked is true, id is always a string
+          setTrackedCompanies((prev) => [
+            ...prev,
+            {
+              id: result.id,
+              stockSymbolId,
+              symbol: stock.symbol,
+              name: stock.name,
+              nextEarningsDate: null,
+            },
+          ]);
+        }
+      } else {
+        // Remove from tracked companies
+        setTrackedCompanies((prev) =>
+          prev.filter((tc) => tc.stockSymbolId !== stockSymbolId),
+        );
+      }
+    } finally {
+      setTrackingInProgress((prev) => {
+        const next = new Set(prev);
+        next.delete(stockSymbolId);
+        return next;
+      });
+    }
+  };
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   return (
-    <div className="flex h-[calc(100vh-64px)] justify-center bg-gray-100 p-6">
-      {/* Sidebar: Search + Ticker List */}
-      <aside className="flex w-1/2 flex-col rounded-lg bg-white p-4 shadow">
+    <div className="flex h-[calc(100vh-64px)] gap-6 bg-gray-100 p-6">
+      {/* Left Panel: Tracked Companies */}
+      <aside className="flex w-1/3 flex-col rounded-lg bg-white p-4 shadow">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Tracked Companies</h2>
+          <span className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800">
+            {trackedCompanies.length} tracked
+          </span>
+        </div>
+        <p className="mb-4 text-sm text-gray-500">
+          Transcripts for tracked companies are automatically fetched the day
+          after their earnings report.
+        </p>
+        <div className="flex-1 overflow-y-auto">
+          {trackedCompanies.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-gray-400">
+              No companies tracked yet
+            </div>
+          ) : (
+            trackedCompanies.map((company) => (
+              <div
+                key={company.id}
+                className="flex items-center justify-between border-b border-gray-100 py-3"
+              >
+                <div>
+                  <div className="font-medium text-gray-900">
+                    {company.symbol}
+                  </div>
+                  <div className="text-sm text-gray-500">{company.name}</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-xs text-gray-400">Next Earnings</div>
+                    <div className="text-sm font-medium text-gray-700">
+                      {formatDate(company.nextEarningsDate)}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleToggleTracking(company.stockSymbolId)}
+                    disabled={trackingInProgress.has(company.stockSymbolId)}
+                    className="cursor-pointer rounded px-2 py-1 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </aside>
+
+      {/* Right Panel: Manual Import + Stock Selection */}
+      <aside className="flex w-2/3 flex-col rounded-lg bg-white p-4 shadow">
         <div className="mb-4 flex gap-4">
-          {/* Place pickers on the left and upload button on the right */}
           <div className="flex w-full items-end justify-between">
             <div className="flex gap-4">
               {/* Year picker */}
@@ -166,14 +290,13 @@ function RouteComponent() {
                 </select>
               </div>
             </div>
-            {/* Upload button on the right */}
             <button
               onClick={async () => {
-                await uploadStockData();
+                await updateStockData();
               }}
               className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
             >
-              Update Stocks
+              Update Stock Data
             </button>
           </div>
         </div>
@@ -194,27 +317,43 @@ function RouteComponent() {
             const isSelected = selectedTickers.some(
               (t) => t.symbol === ticker.symbol,
             );
+            const isTracked = trackedStockSymbolIds.has(ticker.id);
+            const isToggling = trackingInProgress.has(ticker.id);
+
             return (
-              <label
+              <div
                 key={ticker.id}
-                className="flex cursor-pointer items-center space-x-2 rounded p-2 hover:bg-gray-50"
+                className="flex items-center justify-between rounded p-2 hover:bg-gray-50"
               >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => {
-                    toggleTicker(ticker.symbol);
-                  }}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600"
-                />
-                <span className="text-gray-700">
-                  {ticker.name} ({ticker.symbol})
-                </span>
-              </label>
+                <label className="flex flex-1 cursor-pointer items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => {
+                      toggleTicker(ticker.symbol);
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                  />
+                  <span className="text-gray-700">
+                    {ticker.name} ({ticker.symbol})
+                  </span>
+                </label>
+                <button
+                  onClick={() => handleToggleTracking(ticker.id)}
+                  disabled={isToggling}
+                  className={`cursor-pointer rounded px-2 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
+                    isTracked
+                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                      : "text-gray-500 hover:bg-gray-100"
+                  }`}
+                  title={isTracked ? "Stop tracking" : "Start tracking"}
+                >
+                  {isToggling ? "..." : isTracked ? "Tracking" : "Track"}
+                </button>
+              </div>
             );
           })}
         </div>
-        {/* ADD MESSAGE POP UP HERE */}
         {message ? (
           <div
             className={`mb-4 rounded px-4 py-2 text-sm ${
@@ -241,7 +380,7 @@ function RouteComponent() {
             setSelectedTickers([]);
           }}
           disabled={selectedTickers.length === 0 || loading}
-          className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-white"
+          className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-white disabled:opacity-50"
         >
           {loading ? "Scraping…" : "Scrape Earnings Calls"}
         </button>

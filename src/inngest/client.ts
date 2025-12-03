@@ -56,5 +56,19 @@ export const inngest = new Inngest({
       }),
       user: userSchema,
     },
+
+    /**
+     * Sync earnings calendar from Alpha Vantage
+     */
+    "scheduler/sync-earnings-calendar": {
+      data: z.object({}),
+    },
+
+    /**
+     * Process pending earnings fetch jobs
+     */
+    "scheduler/process-earnings-jobs": {
+      data: z.object({}),
+    },
   }),
 });
