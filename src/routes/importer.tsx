@@ -150,10 +150,11 @@ function RouteComponent() {
         // Add to tracked companies
         const stock = stockTickers.find((s) => s.id === stockSymbolId);
         if (stock) {
+          // Safe assertion: when isTracked is true, id is always a string
           setTrackedCompanies((prev) => [
             ...prev,
             {
-              id: stockSymbolId,
+              id: result.id,
               stockSymbolId,
               symbol: stock.symbol,
               name: stock.name,

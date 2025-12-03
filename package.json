@@ -23,7 +23,8 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "watch": "bun tsc --watch"
   },
   "trustedDependencies": [
     "inngest-cli"

@@ -118,38 +118,55 @@ export const removeTrackedCompanySF = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+type ToggleTrackedCompanyResult =
+  | { isTracked: false }
+  | { isTracked: true; id: string };
+
 /**
  * Toggle tracking status for a company
  */
 export const toggleTrackedCompanySF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ stockSymbolId: z.string() }))
-  .handler(async ({ context, data: { stockSymbolId } }) => {
-    const viewer = context.ensureViewer();
+  .handler(
+    async ({
+      context,
+      data: { stockSymbolId },
+    }): Promise<ToggleTrackedCompanyResult> => {
+      const viewer = context.ensureViewer();
 
-    // Check if already tracked
-    const existing = await db.query.trackedCompanies.findFirst({
-      where: and(
-        eq(schema.trackedCompanies.userId, viewer.id),
-        eq(schema.trackedCompanies.stockSymbolId, stockSymbolId),
-      ),
-    });
-
-    if (existing) {
-      // Remove tracking
-      await db
-        .delete(schema.trackedCompanies)
-        .where(eq(schema.trackedCompanies.id, existing.id));
-      return { isTracked: false };
-    } else {
-      // Add tracking
-      await db.insert(schema.trackedCompanies).values({
-        userId: viewer.id,
-        stockSymbolId,
+      // Check if already tracked
+      const existing = await db.query.trackedCompanies.findFirst({
+        where: and(
+          eq(schema.trackedCompanies.userId, viewer.id),
+          eq(schema.trackedCompanies.stockSymbolId, stockSymbolId),
+        ),
       });
-      return { isTracked: true };
-    }
-  });
+
+      if (existing) {
+        // Remove tracking
+        await db
+          .delete(schema.trackedCompanies)
+          .where(eq(schema.trackedCompanies.id, existing.id));
+        return { isTracked: false };
+      } else {
+        // Add tracking
+        const [inserted] = await db
+          .insert(schema.trackedCompanies)
+          .values({
+            userId: viewer.id,
+            stockSymbolId,
+          })
+          .returning({ id: schema.trackedCompanies.id });
+
+        if (!inserted) {
+          throw new Error("Failed to insert tracked company");
+        }
+
+        return { isTracked: true, id: inserted.id };
+      }
+    },
+  );
 
 /**
  * Get tracked status for multiple stocks (for efficient UI updates)
