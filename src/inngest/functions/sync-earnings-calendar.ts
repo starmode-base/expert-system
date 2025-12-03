@@ -13,7 +13,7 @@ interface TrackedCompanyWithSymbol {
  * Runs weekly at 6 AM Phoenix time.
  * - Fetches 3-month earnings calendar
  * - Upserts into earningsSchedule table
- * - Creates earningsFetchJobs for tracked companies reporting tomorrow
+ * - Creates earningsFetchJobs for tracked companies reporting in the next week
  */
 export const syncEarningsCalendar = inngest.createFunction(
   { id: "scheduler.sync-earnings-calendar" },
@@ -99,14 +99,14 @@ export const syncEarningsCalendar = inngest.createFunction(
       },
     );
 
-    // Step 3: Create fetch jobs for tracked companies reporting tomorrow
+    // Step 3: Create fetch jobs for tracked companies reporting in the next week
     const jobsCreated = await step.run("create-fetch-jobs", async () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(0, 0, 0, 0);
 
-      const dayAfterTomorrow = new Date(tomorrow);
-      dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+      const oneWeekFromTomorrow = new Date(tomorrow);
+      oneWeekFromTomorrow.setDate(oneWeekFromTomorrow.getDate() + 7);
 
       // Get all tracked companies with their stock symbols
       const trackedCompaniesRaw = await db.query.trackedCompanies.findMany({
@@ -130,23 +130,23 @@ export const syncEarningsCalendar = inngest.createFunction(
       // Get symbols of tracked companies
       const trackedSymbols = trackedCompanies.map((tc) => tc.symbol);
 
-      // Find earnings scheduled for tomorrow for tracked symbols
-      const earningsForTomorrow = await db.query.earningsSchedule.findMany({
+      // Find earnings scheduled for the next week for tracked symbols
+      const earningsNextWeek = await db.query.earningsSchedule.findMany({
         where: and(
           gte(schema.earningsSchedule.reportDate, tomorrow),
-          lt(schema.earningsSchedule.reportDate, dayAfterTomorrow),
+          lt(schema.earningsSchedule.reportDate, oneWeekFromTomorrow),
           inArray(schema.earningsSchedule.symbol, trackedSymbols),
         ),
       });
 
-      if (earningsForTomorrow.length === 0) {
-        console.log("No tracked earnings scheduled for tomorrow");
+      if (earningsNextWeek.length === 0) {
+        console.log("No tracked earnings scheduled for the next week");
         return 0;
       }
 
       // Create fetch jobs for each user tracking these companies
       let jobCount = 0;
-      for (const earnings of earningsForTomorrow) {
+      for (const earnings of earningsNextWeek) {
         // Find users tracking this symbol
         const usersTracking = trackedCompanies.filter(
           (tc) => tc.symbol === earnings.symbol,
@@ -172,7 +172,7 @@ export const syncEarningsCalendar = inngest.createFunction(
         }
       }
 
-      console.log(`Created ${jobCount} fetch jobs for tomorrow's earnings`);
+      console.log(`Created ${jobCount} fetch jobs for next week's earnings`);
       return jobCount;
     });
 
