@@ -26,7 +26,7 @@ const getDateRange = (daysFromNow: number, rangeDays: number) => {
  */
 export const syncEarningsCalendar = inngest.createFunction(
   { id: "scheduler.sync-earnings-calendar" },
-  { cron: "TZ=America/Phoenix 30 7 * * 3" }, // Weekly on Wednesdays at 7:30 AM
+  { cron: "TZ=America/Phoenix 35 9 * * 3" }, // Weekly on Wednesdays at 9:35 AM
   // { event: "scheduler/sync-earnings-calendar" },
   async ({ step }) => {
     // Step 1: Fetch earnings calendar from Alpha Vantage
