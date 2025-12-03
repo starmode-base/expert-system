@@ -17,7 +17,7 @@ interface TrackedCompanyWithSymbol {
  */
 export const syncEarningsCalendar = inngest.createFunction(
   { id: "scheduler.sync-earnings-calendar" },
-  { cron: "TZ=America/Phoenix 0 6 * * 0" }, // Weekly on Sundays at 6 AM
+  { cron: "TZ=America/Phoenix 0 6 * * 3" }, // Weekly on Wednesdays at 6 AM
   // { event: "scheduler/sync-earnings-calendar" },
   async ({ step }) => {
     // Step 1: Fetch earnings calendar from Alpha Vantage
