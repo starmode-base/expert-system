@@ -156,10 +156,6 @@ export const earningsScheduleRelations = relations(
 export const earningsFetchJobsRelations = relations(
   earningsFetchJobs,
   ({ one }) => ({
-    user: one(users, {
-      fields: [earningsFetchJobs.userId],
-      references: [users.id],
-    }),
     earningsSchedule: one(earningsSchedule, {
       fields: [earningsFetchJobs.earningsScheduleId],
       references: [earningsSchedule.id],

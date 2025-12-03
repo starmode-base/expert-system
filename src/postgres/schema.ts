@@ -231,9 +231,6 @@ export type EarningsScheduleInsert = typeof earningsSchedule.$inferInsert;
  */
 export const earningsFetchJobs = pgTable("earnings_fetch_jobs", {
   ...baseSchema,
-  userId: text()
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
   earningsScheduleId: text()
     .notNull()
     .references(() => earningsSchedule.id, { onDelete: "cascade" }),

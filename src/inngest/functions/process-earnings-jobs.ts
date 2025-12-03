@@ -7,7 +7,6 @@ import type { EarningsScheduleSelect } from "~/postgres/schema";
 
 interface PendingJob {
   id: string;
-  userId: string;
   earningsSchedule: EarningsScheduleSelect;
 }
 
@@ -62,7 +61,6 @@ export const processEarningsJobs = inngest.createFunction(
         where: eq(schema.earningsFetchJobs.status, "pending"),
         with: {
           earningsSchedule: true,
-          user: true,
         },
       });
 
@@ -74,7 +72,6 @@ export const processEarningsJobs = inngest.createFunction(
         if (reportDate >= yesterday && reportDate < today) {
           filtered.push({
             id: job.id,
-            userId: job.userId,
             earningsSchedule: job.earningsSchedule,
           });
         }
@@ -146,7 +143,6 @@ export const processEarningsJobs = inngest.createFunction(
           return {
             success: true as const,
             documentId,
-            userId: job.userId,
           };
         } catch (error) {
           const errorMessage =

@@ -1,12 +1,21 @@
-import { and, eq, gte, lt, inArray, sql } from "drizzle-orm";
+import { and, gte, lt, inArray, sql } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import { inngest } from "../client";
 import { fetchEarningsCalendar } from "~/lib/earnings-calendar";
 
-interface TrackedCompanyWithSymbol {
-  userId: string;
-  symbol: string;
-}
+const toBatches = <T>(arr: T[], size: number): T[][] =>
+  Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+    arr.slice(i * size, i * size + size),
+  );
+
+const getDateRange = (daysFromNow: number, rangeDays: number) => {
+  const start = new Date();
+  start.setDate(start.getDate() + daysFromNow);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + rangeDays);
+  return { start, end };
+};
 
 /**
  * Sync earnings calendar from Alpha Vantage.
@@ -26,20 +35,15 @@ export const syncEarningsCalendar = inngest.createFunction(
       async () => {
         const entries = await fetchEarningsCalendar("3month");
         console.log(`Fetched ${entries.length} earnings calendar entries`);
-        // Serialize dates for step return
-        // Only return entries where normalized symbol and name are not the same
-        const filteredEntries = entries
+
+        // Filter entries where symbol and name are the same, serialize dates
+        // This removes low quality companies from the dataset.
+        return entries
           .filter(
             (e) =>
               e.symbol.trim().toLowerCase() !== e.name.trim().toLowerCase(),
           )
-          .map((e) => ({
-            ...e,
-            reportDate: e.reportDate.toISOString(),
-          }));
-
-        console.log("filteredEntries length: ", filteredEntries.length);
-        return filteredEntries;
+          .map((e) => ({ ...e, reportDate: e.reportDate.toISOString() }));
       },
     );
 
@@ -52,90 +56,79 @@ export const syncEarningsCalendar = inngest.createFunction(
     const upsertedCount = await step.run(
       "upsert-earnings-schedule",
       async () => {
-        // Deduplicate entries by (symbol, fiscalDateEnding) - keep the last occurrence
-        const uniqueEntriesMap = new Map<string, (typeof calendarEntries)[0]>();
-        for (const entry of calendarEntries) {
-          const key = `${entry.symbol}|${entry.fiscalDateEnding}`;
-          uniqueEntriesMap.set(key, entry);
-        }
-        const uniqueEntries = Array.from(uniqueEntriesMap.values());
+        // Deduplicate by (symbol, fiscalDateEnding) - keep last occurrence
+        const uniqueEntries = [
+          ...calendarEntries
+            .reduce(
+              (map, entry) =>
+                map.set(`${entry.symbol}|${entry.fiscalDateEnding}`, entry),
+              new Map<string, (typeof calendarEntries)[0]>(),
+            )
+            .values(),
+        ];
 
         console.log(
           `Deduped ${calendarEntries.length} entries to ${uniqueEntries.length}`,
         );
 
-        // Process in batches using bulk upsert
-        const batchSize = 500;
-        for (let i = 0; i < uniqueEntries.length; i += batchSize) {
-          const batch = uniqueEntries.slice(i, i + batchSize);
-
-          const values = batch.map((entry) => ({
-            symbol: entry.symbol,
-            name: entry.name,
-            reportDate: new Date(entry.reportDate),
-            fiscalDateEnding: entry.fiscalDateEnding,
-            estimate: entry.estimate,
-            currency: entry.currency,
-          }));
-
-          await db
-            .insert(schema.earningsSchedule)
-            .values(values)
-            .onConflictDoUpdate({
-              target: [
-                schema.earningsSchedule.symbol,
-                schema.earningsSchedule.fiscalDateEnding,
-              ],
-              set: {
-                name: sql`excluded.name`,
-                reportDate: sql`excluded.report_date`,
-                estimate: sql`excluded.estimate`,
-                currency: sql`excluded.currency`,
-              },
-            });
-        }
+        // Process in batches
+        await Promise.all(
+          toBatches(uniqueEntries, 500).map((batch) =>
+            db
+              .insert(schema.earningsSchedule)
+              .values(
+                batch.map((entry) => ({
+                  symbol: entry.symbol,
+                  name: entry.name,
+                  reportDate: new Date(entry.reportDate),
+                  fiscalDateEnding: entry.fiscalDateEnding,
+                  estimate: entry.estimate,
+                  currency: entry.currency,
+                })),
+              )
+              .onConflictDoUpdate({
+                target: [
+                  schema.earningsSchedule.symbol,
+                  schema.earningsSchedule.fiscalDateEnding,
+                ],
+                set: {
+                  name: sql`excluded.name`,
+                  reportDate: sql`excluded.report_date`,
+                  estimate: sql`excluded.estimate`,
+                  currency: sql`excluded.currency`,
+                },
+              }),
+          ),
+        );
 
         return uniqueEntries.length;
       },
     );
 
     // Step 3: Create fetch jobs for tracked companies reporting in the next week
+    // Note: Transcripts are system-wide, so we only need one job per earnings report
     const jobsCreated = await step.run("create-fetch-jobs", async () => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
+      const { start: tomorrow, end: oneWeekFromTomorrow } = getDateRange(1, 7);
 
-      const oneWeekFromTomorrow = new Date(tomorrow);
-      oneWeekFromTomorrow.setDate(oneWeekFromTomorrow.getDate() + 7);
-
-      // Get all tracked companies with their stock symbols
-      const trackedCompaniesRaw = await db.query.trackedCompanies.findMany({
-        with: {
-          stockSymbol: true,
-        },
+      // Get tracked companies (need userId for job ownership)
+      const trackedCompanies = await db.query.trackedCompanies.findMany({
+        with: { stockSymbol: true },
       });
 
-      if (trackedCompaniesRaw.length === 0) {
+      if (trackedCompanies.length === 0) {
         console.log("No tracked companies found");
         return 0;
       }
-
-      // Map to simpler structure
-      const trackedCompanies: TrackedCompanyWithSymbol[] =
-        trackedCompaniesRaw.map((tc) => ({
-          userId: tc.userId,
-          symbol: tc.stockSymbol.symbol,
-        }));
-
-      // Get symbols of tracked companies
-      const trackedSymbols = trackedCompanies.map((tc) => tc.symbol);
 
       // Find earnings scheduled for the next week for tracked symbols
       const earningsNextWeek = await db.query.earningsSchedule.findMany({
         where: and(
           gte(schema.earningsSchedule.reportDate, tomorrow),
           lt(schema.earningsSchedule.reportDate, oneWeekFromTomorrow),
-          inArray(schema.earningsSchedule.symbol, trackedSymbols),
+          inArray(
+            schema.earningsSchedule.symbol,
+            trackedCompanies.map((tc) => tc.stockSymbol.symbol),
+          ),
         ),
       });
 
@@ -144,36 +137,35 @@ export const syncEarningsCalendar = inngest.createFunction(
         return 0;
       }
 
-      // Create fetch jobs for each user tracking these companies
-      let jobCount = 0;
-      for (const earnings of earningsNextWeek) {
-        // Find users tracking this symbol
-        const usersTracking = trackedCompanies.filter(
-          (tc) => tc.symbol === earnings.symbol,
-        );
-
-        for (const tracked of usersTracking) {
-          // Check if job already exists
-          const existingJob = await db.query.earningsFetchJobs.findFirst({
-            where: and(
-              eq(schema.earningsFetchJobs.userId, tracked.userId),
-              eq(schema.earningsFetchJobs.earningsScheduleId, earnings.id),
+      // Get existing jobs (one per earningsScheduleId is sufficient)
+      const existingScheduleIds = new Set(
+        (
+          await db.query.earningsFetchJobs.findMany({
+            where: inArray(
+              schema.earningsFetchJobs.earningsScheduleId,
+              earningsNextWeek.map((e) => e.id),
             ),
-          });
+            columns: { earningsScheduleId: true },
+          })
+        ).map((j) => j.earningsScheduleId),
+      );
 
-          if (!existingJob) {
-            await db.insert(schema.earningsFetchJobs).values({
-              userId: tracked.userId,
-              earningsScheduleId: earnings.id,
-              status: "pending",
-            });
-            jobCount++;
-          }
-        }
+      // Create one job per earnings (system-wide, not per user)
+      const newJobs = earningsNextWeek
+        .filter((e) => !existingScheduleIds.has(e.id))
+        .map((e) => ({
+          earningsScheduleId: e.id,
+          status: "pending" as const,
+        }));
+
+      if (newJobs.length > 0) {
+        await db.insert(schema.earningsFetchJobs).values(newJobs);
       }
 
-      console.log(`Created ${jobCount} fetch jobs for next week's earnings`);
-      return jobCount;
+      console.log(
+        `Created ${newJobs.length} fetch jobs for next week's earnings`,
+      );
+      return newJobs.length;
     });
 
     return { synced: upsertedCount, jobsCreated };
