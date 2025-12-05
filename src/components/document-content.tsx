@@ -1,10 +1,8 @@
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { InsightSelect } from "~/postgres/schema";
-import { sendEventGenerateTakeawaysSF } from "~/server/inggest";
 import { Document } from "~/server/queries";
+import { TakeawaySearchResult } from "~/server/searchSFs";
 import { TakeawayTile } from "./takeaway-tile";
-import { MODEL_OPTIONS, ModelSelector, ModelValue } from "./model-selector";
 
 export function TakeawaysSection({
   selectedDoc,
@@ -13,10 +11,6 @@ export function TakeawaysSection({
   selectedDoc: Document;
   insights: InsightSelect[];
 }) {
-  const [takeawayPrompt, setTakeawayPrompt] = useState("");
-  const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
-  const sendEventGenerateTakeaways = useServerFn(sendEventGenerateTakeawaysSF);
-
   return (
     <div className="flex h-full flex-col overflow-y-auto p-4">
       {selectedDoc.takeaways.map((takeaway) => (
@@ -26,37 +20,6 @@ export function TakeawaysSection({
           insights={insights}
         />
       ))}
-
-      <input
-        type="text"
-        value={takeawayPrompt}
-        onChange={(e) => {
-          setTakeawayPrompt(e.target.value);
-        }}
-        className="mb-2 w-full rounded border border-gray-300 px-3 py-2"
-        placeholder="Enter a prompt"
-      />
-
-      <ModelSelector
-        value={model}
-        onChange={setModel}
-        className="mb-6" // keeps existing margin‑bottom
-      />
-
-      <button
-        onClick={async () => {
-          await sendEventGenerateTakeaways({
-            data: {
-              documentId: selectedDoc.id,
-              takeawayPrompt,
-              model,
-            },
-          });
-        }}
-        className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-2 py-1 text-white"
-      >
-        Generate Takeaways
-      </button>
     </div>
   );
 }
@@ -79,6 +42,58 @@ export function ArticleSection({ selectedDoc }: { selectedDoc: Document }) {
   );
 }
 
+export function SimilarTakeawaysSection(props: {
+  similarTakeaways: TakeawaySearchResult[];
+  insights: InsightSelect[];
+}) {
+  if (props.similarTakeaways.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center p-4">
+        <p className="text-gray-500">No similar takeaways found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full flex-col overflow-y-auto p-4">
+      {props.similarTakeaways.map((takeaway) => (
+        <TakeawayTile
+          key={takeaway.id}
+          takeaway={takeaway}
+          insights={props.insights}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function SimilarConceptsSection(props: {
+  similarConcepts: TakeawaySearchResult[];
+  insights: InsightSelect[];
+}) {
+  if (props.similarConcepts.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center p-4">
+        <p className="text-gray-500">No similar concepts found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full flex-col overflow-y-auto p-4">
+      {props.similarConcepts.map((takeaway) => (
+        <TakeawayTile
+          key={takeaway.id}
+          takeaway={takeaway}
+          insights={props.insights}
+        />
+      ))}
+    </div>
+  );
+}
+
+type TabType = "takeaways" | "article" | "similarTakeaways" | "similarConcepts";
+
 export function DocumentContent({
   selectedDoc,
   insights,
@@ -86,9 +101,7 @@ export function DocumentContent({
   selectedDoc: Document | null;
   insights: InsightSelect[];
 }) {
-  const [activeTab, setActiveTab] = useState<"takeaways" | "article">(
-    "takeaways",
-  );
+  const [activeTab, setActiveTab] = useState<TabType>("takeaways");
 
   if (!selectedDoc) {
     return (
@@ -97,6 +110,31 @@ export function DocumentContent({
       </div>
     );
   }
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "takeaways":
+        return (
+          <TakeawaysSection selectedDoc={selectedDoc} insights={insights} />
+        );
+      case "article":
+        return <ArticleSection selectedDoc={selectedDoc} />;
+      case "similarTakeaways":
+        return (
+          <SimilarTakeawaysSection
+            similarTakeaways={selectedDoc.similarTakeaways ?? []}
+            insights={insights}
+          />
+        );
+      case "similarConcepts":
+        return (
+          <SimilarConceptsSection
+            similarConcepts={selectedDoc.similarConcepts ?? []}
+            insights={insights}
+          />
+        );
+    }
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -131,16 +169,36 @@ export function DocumentContent({
           >
             Article
           </button>
+          <button
+            onClick={() => {
+              setActiveTab("similarTakeaways");
+            }}
+            className={`border-b-2 px-3 py-2 text-sm font-medium ${
+              activeTab === "similarTakeaways"
+                ? "border-black-500 text-black-600"
+                : "hover:text-black-600 border-transparent text-gray-500"
+            }`}
+          >
+            Similar Takeaways
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("similarConcepts");
+            }}
+            className={`border-b-2 px-3 py-2 text-sm font-medium ${
+              activeTab === "similarConcepts"
+                ? "border-black-500 text-black-600"
+                : "hover:text-black-600 border-transparent text-gray-500"
+            }`}
+          >
+            Similar Concepts
+          </button>
         </nav>
       </div>
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto px-4 pb-4">
-        {activeTab === "takeaways" ? (
-          <TakeawaysSection selectedDoc={selectedDoc} insights={insights} />
-        ) : (
-          <ArticleSection selectedDoc={selectedDoc} />
-        )}
+        {renderTabContent()}
       </div>
     </div>
   );
