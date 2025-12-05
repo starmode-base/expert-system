@@ -1,10 +1,7 @@
-import { generateEmbedding } from "~/postgres/generate-embedding";
-import { db, schema } from "~/postgres/db";
-import { cosineSimilarity } from "~/lib/vector-similarity";
-import { cosineDistance, gt, sql } from "drizzle-orm";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { queryTakeaways } from "./queries";
+import { vectorTakeawaySearch } from "./vector-queries";
 
 export interface TakeawaySearchResult {
   id: string;
@@ -18,36 +15,6 @@ export interface TakeawaySearchResult {
   similarity: number;
 }
 
-async function vectorSearch(searchInput: string) {
-  const searchEmbedding = await generateEmbedding(searchInput);
-  const similarity = sql<number>`1 - (${cosineDistance(schema.takeawayEmbeddings.embedding, searchEmbedding)})`;
-
-  const similarTakeaways = await db.query.takeawayEmbeddings.findMany({
-    with: {
-      takeaway: {
-        with: {
-          category: true,
-          document: true,
-        },
-      },
-    },
-    where: gt(similarity, 0.2),
-  });
-
-  return similarTakeaways.map((takeaway) => {
-    return {
-      id: takeaway.takeaway.id,
-      documentId: takeaway.takeaway.document.id,
-      title: takeaway.takeaway.title,
-      publicationDate: takeaway.takeaway.document.publicationDate,
-      takeaway: takeaway.takeaway.takeaway,
-      concept: takeaway.takeaway.concept,
-      source: takeaway.takeaway.document.source,
-      category: takeaway.takeaway.category?.name,
-      similarity: cosineSimilarity(searchEmbedding, takeaway.embedding),
-    };
-  });
-}
 export const searchTakeawaysSF = createServerFn({
   method: "GET",
 })
@@ -69,7 +36,7 @@ export const searchTakeawaysSF = createServerFn({
       console.log("searchEmbedding", filters);
 
       const withSimilarity = searchInput
-        ? await vectorSearch(searchInput)
+        ? await vectorTakeawaySearch(searchInput, 100)
         : await queryTakeaways();
 
       // filter,  order by similarity

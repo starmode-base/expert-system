@@ -4,6 +4,7 @@ import { db, schema } from "../postgres/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { TakeawaySearchResult } from "./searchSFs";
+import { vectorConceptSearch, vectorTakeawaySearch } from "./vector-queries";
 
 export const queryDocuments = createServerFn({
   method: "GET",
@@ -25,6 +26,9 @@ export interface Document {
   source: string;
   articleText: string;
   takeaways: Takeaway[];
+  selectedTakeawayId?: string;
+  similarTakeaways?: TakeawaySearchResult[];
+  similarConcepts?: TakeawaySearchResult[];
 }
 
 export interface Takeaway {
@@ -102,6 +106,22 @@ export const queryDocumentByTakeaway = createServerFn({
 
     const { document } = takeaway;
 
+    // Fetch similar takeaways and concepts in parallel
+    // Fetch 11 to ensure we have 10 after filtering out the current takeaway
+    const [similarTakeawaysRaw, similarConceptsRaw] = await Promise.all([
+      vectorTakeawaySearch(takeaway.takeaway, 11),
+      vectorConceptSearch(takeaway.concept, 11),
+    ]);
+
+    // Filter out the current takeaway and limit to top 10
+    const similarTakeaways = similarTakeawaysRaw.filter(
+      (t) => t.id !== takeawayId,
+    );
+
+    const similarConcepts = similarConceptsRaw.filter(
+      (c) => c.id !== takeawayId,
+    );
+
     // Same flattened response object used in `queryDocument`
     const flatDc: Document = {
       id: document.id,
@@ -119,6 +139,9 @@ export const queryDocumentByTakeaway = createServerFn({
         concept: tw.concept,
         category: tw.category?.name,
       })),
+      selectedTakeawayId: takeawayId,
+      similarTakeaways,
+      similarConcepts,
     };
 
     return flatDc;
