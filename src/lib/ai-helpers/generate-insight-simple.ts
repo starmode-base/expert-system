@@ -14,7 +14,7 @@ interface Takeaway {
 export async function getInsightSimple(
   takeaways: Takeaway[],
   customPrompt: string,
-  model = "gpt-5",
+  model = "gpt-5.1",
 ) {
   const response = await client.responses.create({
     model,
@@ -45,8 +45,10 @@ Instructions
     - The insight should be very detailed and complete. It should be a fully formed, stand alone thought. Use at least 10 sentences to articulate the insight.
     - Think very carfully about the context provided. Look for patterns and relationships between the takeaways.
     - The Insight should be novel and insightful
+    - Do not use industry jargon or technical terms. Spell out acronyms and abbreviations. This insight should be approachable to most smart people.
     - Be concise but thorough. No fluff.
     - Be imaginative about the high level implications of the insight.
+    - In your response do not summarize the takeaways. Use them as a foundation to build your insight.
     - Do NOT start with "The insight is"... or other such fluff.
     ${customPrompt}`,
       },
