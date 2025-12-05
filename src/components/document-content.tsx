@@ -1,10 +1,7 @@
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { InsightSelect } from "~/postgres/schema";
-import { sendEventGenerateTakeawaysSF } from "~/server/inggest";
 import { Document } from "~/server/queries";
 import { TakeawayTile } from "./takeaway-tile";
-import { MODEL_OPTIONS, ModelSelector, ModelValue } from "./model-selector";
 
 export function TakeawaysSection({
   selectedDoc,
@@ -13,10 +10,6 @@ export function TakeawaysSection({
   selectedDoc: Document;
   insights: InsightSelect[];
 }) {
-  const [takeawayPrompt, setTakeawayPrompt] = useState("");
-  const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
-  const sendEventGenerateTakeaways = useServerFn(sendEventGenerateTakeawaysSF);
-
   return (
     <div className="flex h-full flex-col overflow-y-auto p-4">
       {selectedDoc.takeaways.map((takeaway) => (
@@ -26,37 +19,6 @@ export function TakeawaysSection({
           insights={insights}
         />
       ))}
-
-      <input
-        type="text"
-        value={takeawayPrompt}
-        onChange={(e) => {
-          setTakeawayPrompt(e.target.value);
-        }}
-        className="mb-2 w-full rounded border border-gray-300 px-3 py-2"
-        placeholder="Enter a prompt"
-      />
-
-      <ModelSelector
-        value={model}
-        onChange={setModel}
-        className="mb-6" // keeps existing margin‑bottom
-      />
-
-      <button
-        onClick={async () => {
-          await sendEventGenerateTakeaways({
-            data: {
-              documentId: selectedDoc.id,
-              takeawayPrompt,
-              model,
-            },
-          });
-        }}
-        className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-2 py-1 text-white"
-      >
-        Generate Takeaways
-      </button>
     </div>
   );
 }
