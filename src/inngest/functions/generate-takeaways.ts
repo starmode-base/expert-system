@@ -17,35 +17,34 @@ export const generateTakeaways = inngest.createFunction(
     console.log(`Generating takeaways for ${event.data.documentId}`);
 
     if (!event.data.documentId) {
-      return;
+      return "No document ID";
     }
 
-    // ALLOW REPEAT GENERATION
+    // BLOCK REPEAT GENERATION
+    const existingTakeaways = await step.run(
+      "takeaway-already-exists",
+      async () => {
+        const takeaways = await db.query.takeaways.findMany({
+          where: (takeaways, { eq }) =>
+            eq(takeaways.documentId, event.data.documentId),
+        });
 
-    // const existingTakeaways = await step.run(
-    //   "takeaway-already-exists",
-    //   async () => {
-    //     const takeaways = await db.query.takeaways.findMany({
-    //       where: (takeaways, { eq }) =>
-    //         eq(takeaways.documentId, event.data.documentId),
-    //     });
+        if (takeaways.length > 0) {
+          return takeaways;
+        }
 
-    //     if (takeaways.length > 0) {
-    //       return takeaways;
-    //     }
+        return [];
+      },
+    );
 
-    //     return [];
-    //   },
-    // );
-
-    // // If takeaways already exist, return
-    // if (existingTakeaways.length > 0) {
-    //   await publishNotifyUI(
-    //     event.user.id,
-    //     `Takeaways already exist for document ${event.data.documentId}`,
-    //   );
-    //   return;
-    // }
+    // If takeaways already exist, early return
+    if (existingTakeaways.length > 0) {
+      await publishNotifyUI(
+        event.user.id,
+        `Takeaways already exist for document ${event.data.documentId}`,
+      );
+      return "Takeaways already exist";
+    }
 
     /**
      * Step 1: Generate takeaways
