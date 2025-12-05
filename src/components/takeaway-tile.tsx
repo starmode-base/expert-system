@@ -14,6 +14,8 @@ export function TakeawayTile({
   highlighted?: boolean;
 }) {
   const [insightSelectionOpen, setInsightSelectionOpen] = useState(false);
+  const [takeawayExpanded, setTakeawayExpanded] = useState(true);
+  const [conceptExpanded, setConceptExpanded] = useState(false);
   const addTakeawayToInsight = useServerFn(addTakeawayToInsightSF);
 
   const handleAddToInsight = async (insightId: string, takeawayId: string) => {
@@ -72,15 +74,37 @@ export function TakeawayTile({
       {insightSelectionOpen ? dropDown() : null}
 
       <div className="mt-4 flex flex-col space-y-1 text-sm text-gray-700">
-        <p>
-          <span className="font-medium text-gray-500">Takeaway:</span>{" "}
-          {takeaway.takeaway}
-        </p>
+        <button
+          onClick={() => {
+            setTakeawayExpanded((prev) => !prev);
+          }}
+          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+        >
+          <span
+            className={`inline-block transition-transform ${takeawayExpanded ? "rotate-90" : ""}`}
+          >
+            ▶
+          </span>
+          Takeaway
+        </button>
+        {takeawayExpanded ? <p className="pl-4">{takeaway.takeaway}</p> : null}
+
         <hr className="my-3 border-gray-300" />
-        <p className="pt-2">
-          <span className="font-medium text-gray-500">Concept:</span>{" "}
-          {takeaway.concept}
-        </p>
+
+        <button
+          onClick={() => {
+            setConceptExpanded((prev) => !prev);
+          }}
+          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+        >
+          <span
+            className={`inline-block transition-transform ${conceptExpanded ? "rotate-90" : ""}`}
+          >
+            ▶
+          </span>
+          Concept
+        </button>
+        {conceptExpanded ? <p className="pl-4">{takeaway.concept}</p> : null}
       </div>
     </div>
   );
