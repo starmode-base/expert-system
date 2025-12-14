@@ -26,10 +26,15 @@ function computeRecencyWeight(
   return Math.max(0, Math.min(1, weight));
 }
 
-export async function fetchTakeaways(query: string, timeWeighted = true) {
-  const takeaways = await vectorTakeawaySearch(query, 10);
+export interface FetchTakeawaysArgs {
+  query: string;
+  timeWeighted?: boolean;
+}
 
-  if (!timeWeighted) {
+export async function fetchTakeaways(args: FetchTakeawaysArgs) {
+  const takeaways = await vectorTakeawaySearch(args.query, 10);
+
+  if (args.timeWeighted === false) {
     return takeaways;
   }
 
@@ -50,3 +55,7 @@ export async function fetchTakeaways(query: string, timeWeighted = true) {
 
   return weightedTakeaways;
 }
+
+export const toolMap = {
+  fetchTakeaways,
+} as const;
