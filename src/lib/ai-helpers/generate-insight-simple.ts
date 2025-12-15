@@ -16,20 +16,7 @@ export async function getInsightSimple(
   customPrompt: string,
   model = "gpt-5.1",
 ) {
-  const response = await client.responses.create({
-    model,
-    reasoning: {
-      effort: "high",
-    },
-    input: [
-      {
-        role: "system",
-        content:
-          "You are an expert researcher. Your job is to create meaningful insights from a set of summarized research takeaways.",
-      },
-      {
-        role: "user",
-        content: `
+  const prompt = `
 Context:
         ${takeaways
           .map(
@@ -50,7 +37,22 @@ Instructions
     - Be imaginative about the high level implications of the insight.
     - In your response do not summarize the takeaways. Use them as a foundation to build your insight.
     - Do NOT start with "The insight is"... or other such fluff.
-    ${customPrompt}`,
+    ${customPrompt}`;
+
+  const response = await client.responses.create({
+    model,
+    reasoning: {
+      effort: "high",
+    },
+    input: [
+      {
+        role: "system",
+        content:
+          "You are an expert researcher. Your job is to create meaningful insights from a set of summarized research takeaways.",
+      },
+      {
+        role: "user",
+        content: prompt,
       },
     ],
   });

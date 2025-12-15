@@ -47,6 +47,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-force-graph-2d": "^1.27.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.0.2",
     "vinxi": "0.5.3",
     "xml2js": "^0.6.2",
