@@ -168,6 +168,7 @@ export const generateInsight = inngest.createFunction(
             conversation.push(...fullOutputContext);
           }
 
+          // Might not be necessary. If the model is using tools, I dont think it will return a message.
           if (messageItems.length > 0) {
             conversation.push(
               ...messageItems.map((item) => toChatMessage(item)),
