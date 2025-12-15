@@ -137,18 +137,14 @@ export const generateInsight = inngest.createFunction(
           const model = event.data.model ?? "gpt-5.2";
           const conversation = generatedInsight.conversation;
 
-          // REPLACE WITH getInsight
           const response = await client.responses.create({
             model,
             reasoning: { effort: "high" },
+            // reasoning: { effort: "high", summary: "auto" }, **** Organization must be verified to generate reasoning summaries
             tools: insightTools,
             tool_choice: "auto",
             input: conversation,
           });
-
-          console.log("########## STEP NUMBER", stepNumber, "##########");
-          console.log("conversation", conversation);
-          console.log("response", response);
 
           const outputItems = response.output;
 
