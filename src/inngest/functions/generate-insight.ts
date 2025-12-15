@@ -113,7 +113,7 @@ export const generateInsight = inngest.createFunction(
       {
         role: "user",
         type: "message",
-        content: buildInsightPrompt(takeaways, ""),
+        content: buildInsightPrompt(takeaways, event.data.insightPrompt),
       },
     ] as ResponseInput;
 

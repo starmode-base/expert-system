@@ -74,7 +74,7 @@ export async function executeToolCalls(toolCalls: ResponseFunctionToolCall[]) {
   )[] = [];
 
   for (const toolCall of toolCalls) {
-    const callId = toolCall.arguments;
+    const callId = toolCall.call_id;
     const name = toolCall.name;
 
     fullOutputContext.push(toolCall);

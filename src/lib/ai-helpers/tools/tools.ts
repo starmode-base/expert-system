@@ -65,7 +65,8 @@ export const insightTools: FunctionTool[] = [
   {
     type: "function",
     name: "fetchTakeaways",
-    description: "Fetch additional relevant takeaways using vector search",
+    description:
+      "Fetch additional relevant takeaways using vector search. Use this tool to additional information (takeaways) that are relevant to the current conversation.",
     strict: true,
 
     parameters: {
