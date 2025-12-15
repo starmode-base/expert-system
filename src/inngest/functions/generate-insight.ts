@@ -56,6 +56,9 @@ Instructions
     - Be imaginative about the high level implications of the insight.
     - In your response do not summarize the takeaways. Use them as a foundation to build your insight.
     - Do NOT start with "The insight is"... or other such fluff.
+    - Write the insight in a compelling way that is easy to read. Use bullet points and other formatting to make it easy to read.
+    - Start with the insight, then provide well reasoned supporting arguments with evidence, quotes and data.
+    - This insight should be able to stand completely alone with a basic understanding on business. Provide the necessary context and background for the insight.
     ${customPrompt}`;
 }
 
@@ -100,7 +103,7 @@ export const generateInsight = inngest.createFunction(
       },
     );
 
-    const conversation = [
+    const initialConversation = [
       {
         role: "system",
         type: "message",
@@ -115,8 +118,13 @@ export const generateInsight = inngest.createFunction(
     ] as ResponseInput;
 
     let stepNumber = 0;
-    let generatedInsight: { insight: string; hasMore: boolean } = {
+    let generatedInsight: {
+      insight: string;
+      conversation: ResponseInput;
+      hasMore: boolean;
+    } = {
       insight: "",
+      conversation: initialConversation,
       hasMore: true,
     };
 
@@ -127,12 +135,14 @@ export const generateInsight = inngest.createFunction(
           // ######
 
           const model = event.data.model ?? "gpt-5.2";
+          const conversation = generatedInsight.conversation;
 
           // REPLACE WITH getInsight
           const response = await client.responses.create({
             model,
             reasoning: { effort: "high" },
             tools: insightTools,
+            tool_choice: "auto",
             input: conversation,
           });
 
@@ -170,6 +180,7 @@ export const generateInsight = inngest.createFunction(
 
           return {
             insight: response.output_text,
+            conversation,
             hasMore: functionCalls.length > 0, // True if function calls are present
           };
         },

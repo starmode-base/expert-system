@@ -1,5 +1,7 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { Takeaway } from "~/server/queries";
@@ -10,7 +12,8 @@ interface InsightProps {
   insightTakeaways: Takeaway[];
 }
 
-export function Insight({ insight, insightTakeaways }: InsightProps) {
+export function Insight(props: InsightProps) {
+  const { insight, insightTakeaways } = props;
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +110,9 @@ export function Insight({ insight, insightTakeaways }: InsightProps) {
         {insight.insight ? (
           <div className="h-full overflow-y-auto text-base text-gray-700">
             <div className="prose max-w-none">
-              <p>{insight.insight}</p>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
+                {insight.insight}
+              </ReactMarkdown>
             </div>
           </div>
         ) : (

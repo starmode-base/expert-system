@@ -66,7 +66,8 @@ export const insightTools: FunctionTool[] = [
     type: "function",
     name: "fetchTakeaways",
     description: "Fetch additional relevant takeaways using vector search",
-    strict: false,
+    strict: true,
+
     parameters: {
       type: "object",
       additionalProperties: false,
@@ -81,7 +82,7 @@ export const insightTools: FunctionTool[] = [
             "Whether to weight results by recency. Defaults to true if omitted",
         },
       },
-      required: ["query"],
+      required: ["query", "timeWeighted"],
     },
   },
 ];
