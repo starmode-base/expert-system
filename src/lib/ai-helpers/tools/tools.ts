@@ -1,4 +1,5 @@
 import { vectorTakeawaySearch } from "~/server/vector-queries";
+import type { FunctionTool } from "openai/resources/responses/responses";
 
 function computeRecencyWeight(
   publicationDate: Date | string,
@@ -59,3 +60,28 @@ export async function fetchTakeaways(args: FetchTakeawaysArgs) {
 export const toolMap = {
   fetchTakeaways,
 } as const;
+
+export const insightTools: FunctionTool[] = [
+  {
+    type: "function",
+    name: "fetchTakeaways",
+    description: "Fetch additional relevant takeaways using vector search",
+    strict: false,
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        query: {
+          type: "string",
+          description: "Search query describing what to fetch takeaways about",
+        },
+        timeWeighted: {
+          type: "boolean",
+          description:
+            "Whether to weight results by recency. Defaults to true if omitted",
+        },
+      },
+      required: ["query"],
+    },
+  },
+];

@@ -1,8 +1,63 @@
 import { db, schema } from "~/postgres/db";
 import { inngest } from "../client";
-import { invariant } from "@tanstack/react-router";
-import { getInsightSimple } from "~/lib/ai-helpers/generate-insight-simple";
+import type {
+  ResponseOutputMessage,
+  ResponseInput,
+} from "openai/resources/responses/responses";
 import { eq } from "drizzle-orm";
+import OpenAI from "openai";
+import { insightTools } from "~/lib/ai-helpers/tools/tools";
+import { executeToolCalls } from "~/lib/ai-helpers/tools/tool-handling";
+import { invariant } from "@tanstack/react-router";
+
+const client = new OpenAI();
+
+interface Takeaway {
+  id: string;
+  source: string;
+  title: string;
+  publicationDate: string;
+  takeaway: string;
+  documentText: string;
+}
+
+export function toChatMessage(m: ResponseOutputMessage) {
+  return {
+    role: m.role,
+    type: m.type,
+    content: m.content
+      .map((p) => (p.type === "output_text" ? p.text : ""))
+      .join(""),
+  };
+}
+
+function buildInsightPrompt(
+  takeaways: Takeaway[],
+  customPrompt: string,
+): string {
+  return `
+Context:
+        ${takeaways
+          .map(
+            (takeaway) => `${takeaway.title}
+Publication Date: ${takeaway.publicationDate}
+Source: ${takeaway.source}
+Key Takeaway:
+          ${takeaway.takeaway}`,
+          )
+          .join("\n------\n")}
+
+Instructions
+    - The insight should be very detailed and complete. It should be a fully formed, stand alone thought. Use at least 10 sentences to articulate the insight.
+    - Think very carfully about the context provided. Look for patterns and relationships between the takeaways.
+    - The Insight should be novel and insightful
+    - Do not use industry jargon or technical terms. Spell out acronyms and abbreviations. This insight should be approachable to most smart people.
+    - Be concise but thorough. No fluff.
+    - Be imaginative about the high level implications of the insight.
+    - In your response do not summarize the takeaways. Use them as a foundation to build your insight.
+    - Do NOT start with "The insight is"... or other such fluff.
+    ${customPrompt}`;
+}
 
 export const generateInsight = inngest.createFunction(
   { id: "app/generate-insight" },
@@ -45,23 +100,89 @@ export const generateInsight = inngest.createFunction(
       },
     );
 
-    const generatedInsight = await step.run(
-      `generate-insight-${event.data.insightId}`,
-      async () => {
-        // ######
-        return getInsightSimple(
-          takeaways,
-          event.data.insightPrompt,
-          event.data.model,
-        );
+    const conversation = [
+      {
+        role: "system",
+        type: "message",
+        content:
+          "You are an expert researcher. Your job is to create meaningful insights from a set of summarized research takeaways.",
       },
-    );
+      {
+        role: "user",
+        type: "message",
+        content: buildInsightPrompt(takeaways, ""),
+      },
+    ] as ResponseInput;
+
+    let stepNumber = 0;
+    let generatedInsight: { insight: string; hasMore: boolean } = {
+      insight: "",
+      hasMore: true,
+    };
+
+    while (generatedInsight.hasMore) {
+      generatedInsight = await step.run(
+        `generate-insight-${event.data.insightId}-step-${stepNumber}`,
+        async () => {
+          // ######
+
+          const model = event.data.model ?? "gpt-5.2";
+
+          // REPLACE WITH getInsight
+          const response = await client.responses.create({
+            model,
+            reasoning: { effort: "high" },
+            tools: insightTools,
+            input: conversation,
+          });
+
+          console.log("########## STEP NUMBER", stepNumber, "##########");
+          console.log("conversation", conversation);
+          console.log("response", response);
+
+          const outputItems = response.output;
+
+          const reasoningItems = outputItems.filter(
+            (item) => item.type === "reasoning",
+          );
+          const messageItems = outputItems.filter(
+            (item) => item.type === "message",
+          );
+          const functionCalls = outputItems.filter(
+            (item) => item.type === "function_call",
+          );
+
+          if (reasoningItems.length > 0) {
+            conversation.push(...reasoningItems);
+          }
+
+          if (functionCalls.length > 0) {
+            const { fullOutputContext } = await executeToolCalls(functionCalls);
+
+            conversation.push(...fullOutputContext);
+          }
+
+          if (messageItems.length > 0) {
+            conversation.push(
+              ...messageItems.map((item) => toChatMessage(item)),
+            );
+          }
+
+          return {
+            insight: response.output_text,
+            hasMore: functionCalls.length > 0, // True if function calls are present
+          };
+        },
+      );
+
+      stepNumber = stepNumber + 1;
+    }
 
     await step.run(`save-insight-${event.data.insightId}`, async () => {
       // ######
       await db
         .update(schema.insights)
-        .set({ insight: generatedInsight })
+        .set({ insight: generatedInsight.insight })
         .where(eq(schema.insights.id, event.data.insightId));
     });
 

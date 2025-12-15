@@ -1,13 +1,7 @@
+import { ResponseFunctionToolCall } from "openai/resources/responses/responses.mjs";
 import { toolMap } from "./tools";
 
 type ToolName = keyof typeof toolMap;
-
-export interface LlmToolCall {
-  name: string;
-  arguments?: unknown;
-  call_id?: string;
-  id?: string;
-}
 
 export type ToolExecutionResult =
   | {
@@ -63,10 +57,6 @@ function parseToolArguments(raw: unknown): Record<string, unknown> {
   return { value: raw };
 }
 
-function getCallId(toolCall: LlmToolCall, idx: number) {
-  return toolCall.call_id ?? toolCall.id ?? `toolcall_${idx}`;
-}
-
 function jsonStringifySafe(value: unknown) {
   try {
     return JSON.stringify(value);
@@ -75,31 +65,21 @@ function jsonStringifySafe(value: unknown) {
   }
 }
 
-export async function executeToolCalls(toolCalls: LlmToolCall[]) {
+export async function executeToolCalls(toolCalls: ResponseFunctionToolCall[]) {
   const results: ToolExecutionResult[] = [];
   const outputs: OpenAIFunctionCallOutputItem[] = [];
+  const fullOutputContext: (
+    | OpenAIFunctionCallOutputItem
+    | ResponseFunctionToolCall
+  )[] = [];
 
-  for (const [idx, toolCall] of toolCalls.entries()) {
-    const callId = getCallId(toolCall, idx);
+  for (const toolCall of toolCalls) {
+    const callId = toolCall.arguments;
     const name = toolCall.name;
 
-    if (!name || typeof name !== "string") {
-      const result: ToolExecutionResult = {
-        ok: false,
-        name: "",
-        callId,
-        error: "Tool call is missing a valid name",
-        details: toolCall,
-      };
-      results.push(result);
-      outputs.push({
-        type: "function_call_output",
-        call_id: callId,
-        output: jsonStringifySafe(result),
-      });
-      continue;
-    }
+    fullOutputContext.push(toolCall);
 
+    // Check if the tool is valid
     if (!(name in toolMap)) {
       const result: ToolExecutionResult = {
         ok: false,
@@ -109,28 +89,36 @@ export async function executeToolCalls(toolCalls: LlmToolCall[]) {
         details: { availableTools: Object.keys(toolMap) },
       };
       results.push(result);
-      outputs.push({
+
+      const outputItem: OpenAIFunctionCallOutputItem = {
         type: "function_call_output",
         call_id: callId,
         output: jsonStringifySafe(result),
-      });
+      };
+
+      outputs.push(outputItem);
+      fullOutputContext.push(outputItem);
       continue;
     }
 
     const tool = toolMap[name as ToolName] as unknown as (
       args: Record<string, unknown>,
     ) => unknown;
+
     const args = parseToolArguments(toolCall.arguments);
 
     try {
       const output = await tool(args);
       const result: ToolExecutionResult = { ok: true, name, callId, output };
       results.push(result);
-      outputs.push({
+
+      const outputItem: OpenAIFunctionCallOutputItem = {
         type: "function_call_output",
         call_id: callId,
         output: jsonStringifySafe(output),
-      });
+      };
+      fullOutputContext.push(outputItem);
+      outputs.push(outputItem);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Tool execution failed";
@@ -142,13 +130,15 @@ export async function executeToolCalls(toolCalls: LlmToolCall[]) {
         details: err,
       };
       results.push(result);
-      outputs.push({
+      const outputItem: OpenAIFunctionCallOutputItem = {
         type: "function_call_output",
         call_id: callId,
         output: jsonStringifySafe(result),
-      });
+      };
+      fullOutputContext.push(outputItem);
+      outputs.push(outputItem);
     }
   }
 
-  return { results, outputs };
+  return { results, outputs, fullOutputContext };
 }
