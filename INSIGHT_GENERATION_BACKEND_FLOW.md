@@ -152,31 +152,31 @@ Notes:
 ```mermaid
 flowchart TD
   %% Stage 1: Ingestion
-  A[Scraper event<br/>scraper/daily-science or scraper/earnings-calls] --> B[Fetch + scrape/fetch text]
-  B --> C[saveContent() / fetchAndSaveTranscript()]
-  C --> D[(Postgres: documents)]
+  A["Scraper event\nscraper/daily-science or scraper/earnings-calls"] --> B["Fetch + scrape/fetch text"]
+  B --> C["saveContent / fetchAndSaveTranscript"]
+  C --> D[("Postgres: documents")]
 
   %% Stage 2: Takeaways + concepts
-  D --> E[Inngest: app/generate-takeaways<br/>documentId]
-  E --> F[getTakeaways(articleText)]
-  F --> G[for each takeaway:<br/>getConcept() + getCategory()]
-  G --> H[(Postgres: takeaways)]
+  D --> E["Inngest: app/generate-takeaways\ndocumentId"]
+  E --> F["getTakeaways(articleText)"]
+  F --> G["For each takeaway:\ngetConcept + getCategory"]
+  G --> H[("Postgres: takeaways")]
 
   %% Stage 3: Embeddings + vector DB
-  H --> I[generateEmbedding(takeaway)]
-  H --> J[generateEmbedding(concept)]
-  I --> K[(Postgres + pgvector: takeaway_embeddings)]
-  J --> L[(Postgres + pgvector: concept_embeddings)]
+  H --> I["generateEmbedding(takeaway)"]
+  H --> J["generateEmbedding(concept)"]
+  I --> K[("Postgres + pgvector: takeaway_embeddings")]
+  J --> L[("Postgres + pgvector: concept_embeddings")]
 
   %% Stage 4: Insight generation
-  M[Inngest: app/generate-insight<br/>insightId] --> N[Load curated takeaways<br/>insights → insight_takeaways → takeaways → documents]
-  N --> O[OpenAI Responses API<br/>tools enabled]
-  O -->|tool call| P[fetchTakeaways()]
-  P --> Q[vectorTakeawaySearch(query)]
+  M["Inngest: app/generate-insight\ninsightId"] --> N["Load curated takeaways\ninsights -> insight_takeaways -> takeaways -> documents"]
+  N --> O["OpenAI Responses API\ntools enabled"]
+  O -->|tool call| P["fetchTakeaways"]
+  P --> Q["vectorTakeawaySearch(query)"]
   Q --> K
-  K --> R[Relevant takeaways + metadata]
+  K --> R["Relevant takeaways + metadata"]
   R --> O
-  O --> S[(Postgres: insights.insight)]
+  O --> S[("Postgres: insights.insight")]
 ```
 
 ---
