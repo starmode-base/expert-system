@@ -122,6 +122,7 @@ export const takeaways = pgTable("takeaways", {
   concept: text().notNull(),
   // remove value on delete
   categoryId: text().references(() => categories.id, { onDelete: "set null" }),
+  summary: text().notNull(),
 });
 
 export type TakeawaySelect = typeof takeaways.$inferSelect;

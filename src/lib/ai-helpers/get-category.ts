@@ -34,7 +34,7 @@ export async function getCategory(text: string) {
     .join("\n");
 
   const completion = await client.beta.chat.completions.parse({
-    model: "gpt-4o-mini",
+    model: "gpt-5-mini",
     response_format: responseFormat,
     messages: [
       {
