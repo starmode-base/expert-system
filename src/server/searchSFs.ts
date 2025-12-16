@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { queryTakeaways } from "./queries";
 import { vectorTakeawaySearch } from "./vector-queries";
+import { TakeawayReferenceSelect } from "~/postgres/schema";
 
 export interface TakeawaySearchResult {
   id: string;
@@ -9,10 +10,12 @@ export interface TakeawaySearchResult {
   title: string;
   publicationDate: Date;
   takeaway: string;
+  summary: string;
   concept: string;
   source: string;
   category: string | undefined;
   similarity: number;
+  references: TakeawayReferenceSelect[];
 }
 
 export const searchTakeawaysSF = createServerFn({
@@ -35,7 +38,7 @@ export const searchTakeawaysSF = createServerFn({
     }): Promise<TakeawaySearchResult[]> => {
       console.log("searchEmbedding", filters);
 
-      const withSimilarity = searchInput
+      const withSimilarity: TakeawaySearchResult[] = searchInput
         ? await vectorTakeawaySearch(searchInput, 100)
         : await queryTakeaways();
 
@@ -61,10 +64,12 @@ export const searchTakeawaysSF = createServerFn({
         title: result.title,
         publicationDate: result.publicationDate,
         takeaway: result.takeaway,
+        summary: result.summary,
         concept: result.concept,
         source: result.source,
         category: result.category,
         similarity: result.similarity,
+        references: result.references,
       }));
     },
   );

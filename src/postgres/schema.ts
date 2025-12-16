@@ -2,6 +2,7 @@ import { randomId } from "~/lib/random-id";
 import {
   doublePrecision,
   index,
+  integer,
   pgTable,
   primaryKey,
   text,
@@ -122,10 +123,23 @@ export const takeaways = pgTable("takeaways", {
   concept: text().notNull(),
   // remove value on delete
   categoryId: text().references(() => categories.id, { onDelete: "set null" }),
+  summary: text().notNull(),
 });
 
 export type TakeawaySelect = typeof takeaways.$inferSelect;
 export type TakeawayInsert = typeof takeaways.$inferInsert;
+
+export const takeawayReferences = pgTable("takeaway_references", {
+  ...baseSchema,
+  takeawayId: text()
+    .notNull()
+    .references(() => takeaways.id, { onDelete: "cascade" }),
+  referenceNumber: integer().notNull(),
+  reference: text().notNull(),
+});
+
+export type TakeawayReferenceSelect = typeof takeawayReferences.$inferSelect;
+export type TakeawayReferenceInsert = typeof takeawayReferences.$inferInsert;
 
 // TODO - add tag junction table
 // export const takeawayTags = pgTable(

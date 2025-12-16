@@ -65,7 +65,11 @@ export const getInsightTakeawaysSF = createServerFn({ method: "GET" })
   .validator(z.object({ insightId: z.string() }))
   .handler(async ({ data: { insightId } }) => {
     const takeaways = await db.query.insightTakeaways.findMany({
-      with: { takeaway: { with: { category: true, document: true } } },
+      with: {
+        takeaway: {
+          with: { category: true, document: true, takeawayReferences: true },
+        },
+      },
       where: eq(schema.insightTakeaways.insightId, insightId),
     });
 
@@ -76,5 +80,7 @@ export const getInsightTakeawaysSF = createServerFn({ method: "GET" })
       takeaway: takeaway.takeaway.takeaway,
       concept: takeaway.takeaway.concept,
       category: takeaway.takeaway.category?.name,
+      summary: takeaway.takeaway.summary,
+      references: takeaway.takeaway.takeawayReferences,
     }));
   });

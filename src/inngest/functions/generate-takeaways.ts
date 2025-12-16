@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import { getConcept } from "../../lib/ai-helpers/generate-concept";
 import { publishNotifyUI } from "~/lib/ably";
 import { NonRetriableError } from "inngest";
+import { getSummary } from "~/lib/ai-helpers/get-summary";
 
 export const generateTakeaways = inngest.createFunction(
   { id: "app/generate-takeaways" },
@@ -106,10 +107,25 @@ export const generateTakeaways = inngest.createFunction(
     );
 
     /**
-     * Step 2: Categorize
+     * Step 2: Generate Summary
+     */
+    const takeawaysWithSummaries = await Promise.all(
+      takeawaysWithConcepts.map(async (takeawayWithConcept) => {
+        return await step.run(
+          `generate-summary-${event.data.documentId}`,
+          async () => {
+            const summary = await getSummary(takeawayWithConcept.takeaway);
+            return { ...takeawayWithConcept, summary: summary.summary };
+          },
+        );
+      }),
+    );
+
+    /**
+     * Step 3: Categorize
      */
     const takeawaysInserts = await Promise.all(
-      takeawaysWithConcepts.map(async (takeaway) => {
+      takeawaysWithSummaries.map(async (takeaway) => {
         return await step.run(
           `get-category-${event.data.documentId}`,
           async () => {
@@ -148,17 +164,28 @@ export const generateTakeaways = inngest.createFunction(
               `Saving takeaways for document ${event.data.documentId}`,
             );
 
-            // Insert new takeaways
-            const [result] = await db
-              .insert(schema.takeaways)
-              .values({
-                documentId: event.data.documentId,
-                ...takeawaysInsert,
-              })
-              .returning();
-            invariant(result, "Failed to create takeaways");
+            return await db.transaction(async (tx) => {
+              // Insert new takeaways
+              const [result] = await tx
+                .insert(schema.takeaways)
+                .values({
+                  documentId: event.data.documentId,
+                  ...takeawaysInsert,
+                })
+                .returning();
+              invariant(result, "Failed to create takeaways");
 
-            return result;
+              //Insert references
+              await tx.insert(schema.takeawayReferences).values(
+                takeawaysInsert.references.map((reference) => ({
+                  takeawayId: result.id,
+                  referenceNumber: reference.number,
+                  reference: reference.reference,
+                })),
+              );
+
+              return result;
+            });
           },
         );
       }),

@@ -2,8 +2,12 @@ import { cosineDistance, desc, gt, sql } from "drizzle-orm";
 import { cosineSimilarity } from "~/lib/vector-similarity";
 import { db, schema } from "~/postgres/db";
 import { generateEmbedding } from "~/postgres/generate-embedding";
+import type { TakeawaySearchResult } from "./searchSFs";
 
-export async function vectorTakeawaySearch(searchInput: string, limit = 10) {
+export async function vectorTakeawaySearch(
+  searchInput: string,
+  limit = 10,
+): Promise<TakeawaySearchResult[]> {
   const searchEmbedding = await generateEmbedding(searchInput);
   const similarity = sql<number>`1 - (${cosineDistance(schema.takeawayEmbeddings.embedding, searchEmbedding)})`;
 
@@ -13,6 +17,7 @@ export async function vectorTakeawaySearch(searchInput: string, limit = 10) {
         with: {
           category: true,
           document: true,
+          takeawayReferences: true,
         },
       },
     },
@@ -28,15 +33,20 @@ export async function vectorTakeawaySearch(searchInput: string, limit = 10) {
       title: takeaway.takeaway.title,
       publicationDate: takeaway.takeaway.document.publicationDate,
       takeaway: takeaway.takeaway.takeaway,
+      summary: takeaway.takeaway.summary,
       concept: takeaway.takeaway.concept,
       source: takeaway.takeaway.document.source,
       category: takeaway.takeaway.category?.name,
       similarity: cosineSimilarity(searchEmbedding, takeaway.embedding),
+      references: takeaway.takeaway.takeawayReferences,
     };
   });
 }
 
-export async function vectorConceptSearch(searchInput: string, limit = 10) {
+export async function vectorConceptSearch(
+  searchInput: string,
+  limit = 10,
+): Promise<TakeawaySearchResult[]> {
   const searchEmbedding = await generateEmbedding(searchInput);
   const similarity = sql<number>`1 - (${cosineDistance(schema.conceptEmbeddings.embedding, searchEmbedding)})`;
 
@@ -46,6 +56,7 @@ export async function vectorConceptSearch(searchInput: string, limit = 10) {
         with: {
           category: true,
           document: true,
+          takeawayReferences: true,
         },
       },
     },
@@ -61,10 +72,12 @@ export async function vectorConceptSearch(searchInput: string, limit = 10) {
       title: concept.takeaway.title,
       publicationDate: concept.takeaway.document.publicationDate,
       takeaway: concept.takeaway.takeaway,
+      summary: concept.takeaway.summary,
       concept: concept.takeaway.concept,
       category: concept.takeaway.category?.name,
       source: concept.takeaway.document.source,
       similarity: cosineSimilarity(searchEmbedding, concept.embedding),
+      references: concept.takeaway.takeawayReferences,
     };
   });
 }
