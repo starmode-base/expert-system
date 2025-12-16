@@ -13,6 +13,7 @@ export async function vectorTakeawaySearch(searchInput: string, limit = 10) {
         with: {
           category: true,
           document: true,
+          takeawayReferences: true,
         },
       },
     },
@@ -32,6 +33,7 @@ export async function vectorTakeawaySearch(searchInput: string, limit = 10) {
       source: takeaway.takeaway.document.source,
       category: takeaway.takeaway.category?.name,
       similarity: cosineSimilarity(searchEmbedding, takeaway.embedding),
+      references: takeaway.takeaway.takeawayReferences,
     };
   });
 }
@@ -46,6 +48,7 @@ export async function vectorConceptSearch(searchInput: string, limit = 10) {
         with: {
           category: true,
           document: true,
+          takeawayReferences: true,
         },
       },
     },
@@ -65,6 +68,7 @@ export async function vectorConceptSearch(searchInput: string, limit = 10) {
       category: concept.takeaway.category?.name,
       source: concept.takeaway.document.source,
       similarity: cosineSimilarity(searchEmbedding, concept.embedding),
+      references: concept.takeaway.takeawayReferences,
     };
   });
 }

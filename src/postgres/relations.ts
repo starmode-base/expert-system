@@ -5,17 +5,18 @@ import {
   organizations,
   takeaways,
   conceptEmbeddings,
+  takeawayEmbeddings,
   categories,
   tags,
-  takeawayEmbeddings,
   documents,
-  insights,
-  insightTakeaways,
-  organizationMembers,
   trackedCompanies,
   stockSymbols,
+  insights,
   earningsSchedule,
   earningsFetchJobs,
+  takeawayReferences,
+  insightTakeaways,
+  organizationMembers,
 } from "./schema";
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -31,10 +32,9 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
+  trackedCompanies: many(trackedCompanies),
   insights: many(insights),
   organizationMembers: many(organizationMembers),
-  trackedCompanies: many(trackedCompanies),
-  earningsFetchJobs: many(earningsFetchJobs),
 }));
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
@@ -63,8 +63,19 @@ export const takeawaysRelations = relations(takeaways, ({ one, many }) => ({
     fields: [takeaways.categoryId],
     references: [categories.id],
   }),
+  takeawayReferences: many(takeawayReferences),
   insightTakeaways: many(insightTakeaways),
 }));
+
+export const takeawayEmbeddingsRelations = relations(
+  takeawayEmbeddings,
+  ({ one }) => ({
+    takeaway: one(takeaways, {
+      fields: [takeawayEmbeddings.takeawayId],
+      references: [takeaways.id],
+    }),
+  }),
+);
 
 export const tagsRelations = relations(tags, ({ one }) => ({
   category: one(categories, {
@@ -78,18 +89,26 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
   takeaways: many(takeaways),
 }));
 
-export const takeawayEmbeddingsRelations = relations(
-  takeawayEmbeddings,
+export const documentsRelations = relations(documents, ({ many }) => ({
+  takeaways: many(takeaways),
+}));
+
+export const trackedCompaniesRelations = relations(
+  trackedCompanies,
   ({ one }) => ({
-    takeaway: one(takeaways, {
-      fields: [takeawayEmbeddings.takeawayId],
-      references: [takeaways.id],
+    user: one(users, {
+      fields: [trackedCompanies.userId],
+      references: [users.id],
+    }),
+    stockSymbol: one(stockSymbols, {
+      fields: [trackedCompanies.stockSymbolId],
+      references: [stockSymbols.id],
     }),
   }),
 );
 
-export const documentsRelations = relations(documents, ({ many }) => ({
-  takeaways: many(takeaways),
+export const stockSymbolsRelations = relations(stockSymbols, ({ many }) => ({
+  trackedCompanies: many(trackedCompanies),
 }));
 
 export const insightsRelations = relations(insights, ({ one, many }) => ({
@@ -99,6 +118,33 @@ export const insightsRelations = relations(insights, ({ one, many }) => ({
   }),
   insightTakeaways: many(insightTakeaways),
 }));
+
+export const earningsFetchJobsRelations = relations(
+  earningsFetchJobs,
+  ({ one }) => ({
+    earningsSchedule: one(earningsSchedule, {
+      fields: [earningsFetchJobs.earningsScheduleId],
+      references: [earningsSchedule.id],
+    }),
+  }),
+);
+
+export const earningsScheduleRelations = relations(
+  earningsSchedule,
+  ({ many }) => ({
+    earningsFetchJobs: many(earningsFetchJobs),
+  }),
+);
+
+export const takeawayReferencesRelations = relations(
+  takeawayReferences,
+  ({ one }) => ({
+    takeaway: one(takeaways, {
+      fields: [takeawayReferences.takeawayId],
+      references: [takeaways.id],
+    }),
+  }),
+);
 
 export const insightTakeawaysRelations = relations(
   insightTakeaways,
@@ -124,41 +170,6 @@ export const organizationMembersRelations = relations(
     user: one(users, {
       fields: [organizationMembers.userId],
       references: [users.id],
-    }),
-  }),
-);
-
-export const stockSymbolsRelations = relations(stockSymbols, ({ many }) => ({
-  trackedCompanies: many(trackedCompanies),
-}));
-
-export const trackedCompaniesRelations = relations(
-  trackedCompanies,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [trackedCompanies.userId],
-      references: [users.id],
-    }),
-    stockSymbol: one(stockSymbols, {
-      fields: [trackedCompanies.stockSymbolId],
-      references: [stockSymbols.id],
-    }),
-  }),
-);
-
-export const earningsScheduleRelations = relations(
-  earningsSchedule,
-  ({ many }) => ({
-    earningsFetchJobs: many(earningsFetchJobs),
-  }),
-);
-
-export const earningsFetchJobsRelations = relations(
-  earningsFetchJobs,
-  ({ one }) => ({
-    earningsSchedule: one(earningsSchedule, {
-      fields: [earningsFetchJobs.earningsScheduleId],
-      references: [earningsSchedule.id],
     }),
   }),
 );

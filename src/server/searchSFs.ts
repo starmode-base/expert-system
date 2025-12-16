@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { queryTakeaways } from "./queries";
 import { vectorTakeawaySearch } from "./vector-queries";
+import { TakeawayReferenceSelect } from "~/postgres/schema";
 
 export interface TakeawaySearchResult {
   id: string;
@@ -13,6 +14,7 @@ export interface TakeawaySearchResult {
   source: string;
   category: string | undefined;
   similarity: number;
+  references: TakeawayReferenceSelect[];
 }
 
 export const searchTakeawaysSF = createServerFn({
@@ -65,6 +67,7 @@ export const searchTakeawaysSF = createServerFn({
         source: result.source,
         category: result.category,
         similarity: result.similarity,
+        references: result.references,
       }));
     },
   );

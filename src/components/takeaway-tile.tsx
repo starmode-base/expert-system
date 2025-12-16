@@ -4,18 +4,16 @@ import { InsightSelect } from "~/postgres/schema";
 import { addTakeawayToInsightSF } from "~/server/insights-studio-SFs";
 import { Takeaway } from "~/server/queries";
 
-export function TakeawayTile({
-  takeaway,
-  insights,
-  highlighted = false,
-}: {
+export function TakeawayTile(props: {
   takeaway: Takeaway;
   insights: InsightSelect[];
   highlighted?: boolean;
 }) {
+  const { takeaway, insights, highlighted = false } = props;
   const [insightSelectionOpen, setInsightSelectionOpen] = useState(false);
   const [takeawayExpanded, setTakeawayExpanded] = useState(true);
   const [conceptExpanded, setConceptExpanded] = useState(false);
+  const [referencesExpanded, setReferencesExpanded] = useState(false);
   const addTakeawayToInsight = useServerFn(addTakeawayToInsightSF);
 
   const handleAddToInsight = async (insightId: string, takeawayId: string) => {
@@ -105,6 +103,39 @@ export function TakeawayTile({
           Concept
         </button>
         {conceptExpanded ? <p className="pl-4">{takeaway.concept}</p> : null}
+
+        <hr className="my-3 border-gray-300" />
+
+        <button
+          onClick={() => {
+            setReferencesExpanded((prev) => !prev);
+          }}
+          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+        >
+          <span
+            className={`inline-block transition-transform ${referencesExpanded ? "rotate-90" : ""}`}
+          >
+            ▶
+          </span>
+          References{" "}
+          <span className="text-gray-400">({takeaway.references.length})</span>
+        </button>
+        {referencesExpanded ? (
+          takeaway.references.length === 0 ? (
+            <p className="pl-4 text-gray-500">No references</p>
+          ) : (
+            <ol className="space-y-1 pl-8 text-gray-700">
+              {takeaway.references
+                .slice()
+                .sort((a, b) => a.referenceNumber - b.referenceNumber)
+                .map((ref) => (
+                  <li key={ref.id} className="list-decimal">
+                    <span className="text-gray-700">{ref.reference}</span>
+                  </li>
+                ))}
+            </ol>
+          )
+        ) : null}
       </div>
     </div>
   );
