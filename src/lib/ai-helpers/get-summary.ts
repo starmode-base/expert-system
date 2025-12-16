@@ -11,7 +11,7 @@ const client = new OpenAI();
 const schema = z.object({
   summary: z.string({
     description:
-      "A 1-2 sentence summary of the text. This will be used to determine if the takeaway is relevant to a research question. If it is then it will be retrieved for additional analysis.",
+      "A 1 sentence summary of the text. This will be used to determine if the takeaway is relevant to a research question. If it is then it will be retrieved for additional analysis.",
   }),
 });
 const responseFormat = zodResponseFormat(schema, "response");

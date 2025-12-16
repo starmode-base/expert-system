@@ -12,6 +12,8 @@ export function TakeawayTile(props: {
   const { takeaway, insights, highlighted = false } = props;
   const [insightSelectionOpen, setInsightSelectionOpen] = useState(false);
   const [takeawayExpanded, setTakeawayExpanded] = useState(true);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
+
   const [conceptExpanded, setConceptExpanded] = useState(false);
   const [referencesExpanded, setReferencesExpanded] = useState(false);
   const addTakeawayToInsight = useServerFn(addTakeawayToInsightSF);
@@ -72,6 +74,23 @@ export function TakeawayTile(props: {
       {insightSelectionOpen ? dropDown() : null}
 
       <div className="mt-4 flex flex-col space-y-1 text-sm text-gray-700">
+        <button
+          onClick={() => {
+            setSummaryExpanded((prev) => !prev);
+          }}
+          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+        >
+          <span
+            className={`inline-block transition-transform ${summaryExpanded ? "rotate-90" : ""}`}
+          >
+            ▶
+          </span>
+          Summary
+        </button>
+        {summaryExpanded ? <p className="pl-4">{takeaway.summary}</p> : null}
+
+        <hr className="my-3 border-gray-300" />
+
         <button
           onClick={() => {
             setTakeawayExpanded((prev) => !prev);

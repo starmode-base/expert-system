@@ -37,6 +37,7 @@ export interface Takeaway {
   title: string;
   publicationDate: Date;
   takeaway: string;
+  summary: string;
   concept: string;
   category: string | undefined;
   references: TakeawayReferenceSelect[];
@@ -53,6 +54,7 @@ export const queryDocument = createServerFn({
         takeaways: {
           with: {
             category: true,
+            takeawayReferences: true,
           },
         },
       },
@@ -74,9 +76,11 @@ export const queryDocument = createServerFn({
         id: takeaway.id,
         title: takeaway.title,
         takeaway: takeaway.takeaway,
+        summary: takeaway.summary,
         publicationDate: document.publicationDate,
         concept: takeaway.concept,
         category: takeaway.category?.name,
+        references: takeaway.takeawayReferences,
       })),
     };
 
@@ -138,6 +142,7 @@ export const queryDocumentByTakeaway = createServerFn({
         title: tw.title,
         publicationDate: document.publicationDate,
         takeaway: tw.takeaway,
+        summary: tw.summary,
         concept: tw.concept,
         category: tw.category?.name,
         references: tw.takeawayReferences,
@@ -189,6 +194,7 @@ export const queryTakeaways = createServerFn({
     title: takeaway.title,
     publicationDate: takeaway.document.publicationDate,
     takeaway: takeaway.takeaway,
+    summary: takeaway.summary,
     concept: takeaway.concept,
     source: takeaway.document.source,
     category: takeaway.category?.name,

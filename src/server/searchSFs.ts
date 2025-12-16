@@ -10,6 +10,7 @@ export interface TakeawaySearchResult {
   title: string;
   publicationDate: Date;
   takeaway: string;
+  summary: string;
   concept: string;
   source: string;
   category: string | undefined;
@@ -37,7 +38,7 @@ export const searchTakeawaysSF = createServerFn({
     }): Promise<TakeawaySearchResult[]> => {
       console.log("searchEmbedding", filters);
 
-      const withSimilarity = searchInput
+      const withSimilarity: TakeawaySearchResult[] = searchInput
         ? await vectorTakeawaySearch(searchInput, 100)
         : await queryTakeaways();
 
@@ -63,6 +64,7 @@ export const searchTakeawaysSF = createServerFn({
         title: result.title,
         publicationDate: result.publicationDate,
         takeaway: result.takeaway,
+        summary: result.summary,
         concept: result.concept,
         source: result.source,
         category: result.category,

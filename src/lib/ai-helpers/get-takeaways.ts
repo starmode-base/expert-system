@@ -38,8 +38,9 @@ const schema = z.object({
             -Do not use the same reference across takeaways.`,
           }),
           reference: z.string({
-            description:
-              "Relevant facts, quotes and data to support the takeaway.",
+            description: `Relevant facts, quotes and data to support the takeaway.
+              - If referencing someones opinion or take then make it a direct quote rather than a summary.
+              - When possible include the exact excerpt from the text. But excerpt should not exceed three sentences.`,
           }),
         }),
       ),
