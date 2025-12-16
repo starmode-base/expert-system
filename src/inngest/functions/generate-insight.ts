@@ -117,84 +117,71 @@ export const generateInsight = inngest.createFunction(
       },
     ] as ResponseInput;
 
-    let stepNumber = 0;
-    let generatedInsight: {
-      insight: string;
-      conversation: ResponseInput;
-      hasMore: boolean;
-    } = {
-      insight: "",
-      conversation: initialConversation,
-      hasMore: true,
-    };
+    const model = event.data.model ?? "gpt-5.2";
 
-    while (generatedInsight.hasMore) {
-      generatedInsight = await step.run(
-        `generate-insight-${event.data.insightId}-step-${stepNumber}`,
+    let insightResponse = await step.run(
+      `first-insight-iteration`,
+      async () => {
+        const response = await client.responses.create({
+          model,
+          reasoning: { effort: "high" },
+          // reasoning: { effort: "high", summary: "auto" }, **** Organization must be verified to generate reasoning summaries
+          tools: insightTools,
+          tool_choice: "auto",
+          input: initialConversation,
+        });
+
+        return {
+          response,
+          hasFunctionCalls: response.output.some(
+            (item) => item.type === "function_call",
+          ),
+          stepNumber: 0,
+        };
+      },
+    );
+
+    while (insightResponse.hasFunctionCalls) {
+      insightResponse = await step.run(
+        `generate-insight-${event.data.insightId}-step-${insightResponse.stepNumber}`,
         async () => {
           // ######
 
-          const model = event.data.model ?? "gpt-5.2";
-          const conversation = generatedInsight.conversation;
+          const functionCalls = insightResponse.response.output.filter(
+            (item) => item.type === "function_call",
+          );
 
+          const functionCallResponse = await executeToolCalls(functionCalls);
           const response = await client.responses.create({
             model,
             reasoning: { effort: "high" },
             // reasoning: { effort: "high", summary: "auto" }, **** Organization must be verified to generate reasoning summaries
             tools: insightTools,
             tool_choice: "auto",
-            input: conversation,
+            previous_response_id: insightResponse.response.id,
+            input: functionCallResponse.outputs,
           });
 
-          const outputItems = response.output;
-
-          const reasoningItems = outputItems.filter(
-            (item) => item.type === "reasoning",
-          );
-          const messageItems = outputItems.filter(
-            (item) => item.type === "message",
-          );
-          const functionCalls = outputItems.filter(
-            (item) => item.type === "function_call",
-          );
-
-          if (reasoningItems.length > 0) {
-            conversation.push(...reasoningItems);
-          }
-
-          if (functionCalls.length > 0) {
-            const { fullOutputContext } = await executeToolCalls(functionCalls);
-
-            conversation.push(...fullOutputContext);
-          }
-
-          // Might not be necessary. If the model is using tools, I dont think it will return a message.
-          if (messageItems.length > 0) {
-            conversation.push(
-              ...messageItems.map((item) => toChatMessage(item)),
-            );
-          }
-
           return {
-            insight: response.output_text,
-            conversation,
-            hasMore: functionCalls.length > 0, // True if function calls are present
+            response,
+            hasFunctionCalls: response.output.some(
+              (item) => item.type === "function_call",
+            ),
+            stepNumber: insightResponse.stepNumber + 1,
           };
         },
       );
-
-      stepNumber = stepNumber + 1;
     }
 
     await step.run(`save-insight-${event.data.insightId}`, async () => {
       // ######
       await db
         .update(schema.insights)
-        .set({ insight: generatedInsight.insight })
+        .set({ insight: insightResponse.response.output_text })
         .where(eq(schema.insights.id, event.data.insightId));
     });
 
-    return generatedInsight;
+    return insightResponse;
 
     // < END FUNCTION >
   },
