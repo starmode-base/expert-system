@@ -164,17 +164,28 @@ export const generateTakeaways = inngest.createFunction(
               `Saving takeaways for document ${event.data.documentId}`,
             );
 
-            // Insert new takeaways
-            const [result] = await db
-              .insert(schema.takeaways)
-              .values({
-                documentId: event.data.documentId,
-                ...takeawaysInsert,
-              })
-              .returning();
-            invariant(result, "Failed to create takeaways");
+            return await db.transaction(async (tx) => {
+              // Insert new takeaways
+              const [result] = await tx
+                .insert(schema.takeaways)
+                .values({
+                  documentId: event.data.documentId,
+                  ...takeawaysInsert,
+                })
+                .returning();
+              invariant(result, "Failed to create takeaways");
 
-            return result;
+              //Insert references
+              await tx.insert(schema.takeawayReferences).values(
+                takeawaysInsert.references.map((reference) => ({
+                  takeawayId: result.id,
+                  referenceNumber: reference.number,
+                  reference: reference.reference,
+                })),
+              );
+
+              return result;
+            });
           },
         );
       }),
