@@ -1,9 +1,6 @@
 import { db, schema } from "~/postgres/db";
 import { inngest } from "../client";
-import type {
-  ResponseOutputMessage,
-  ResponseInput,
-} from "openai/resources/responses/responses";
+import type { ResponseInput } from "openai/resources/responses/responses";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
 import { insightTools } from "~/lib/ai-helpers/tools/tools";
@@ -19,16 +16,6 @@ interface Takeaway {
   publicationDate: string;
   takeaway: string;
   documentText: string;
-}
-
-export function toChatMessage(m: ResponseOutputMessage) {
-  return {
-    role: m.role,
-    type: m.type,
-    content: m.content
-      .map((p) => (p.type === "output_text" ? p.text : ""))
-      .join(""),
-  };
 }
 
 function buildInsightPrompt(
