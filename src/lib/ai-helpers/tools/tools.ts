@@ -1,5 +1,6 @@
 import { vectorTakeawaySearch } from "~/server/vector-queries";
-import type { FunctionTool } from "openai/resources/responses/responses";
+import { db, schema } from "~/postgres/db";
+import { eq } from "drizzle-orm";
 
 function computeRecencyWeight(
   publicationDate: Date | string,
@@ -57,33 +58,35 @@ export async function fetchTakeaways(args: FetchTakeawaysArgs) {
   return weightedTakeaways;
 }
 
-export const toolMap = {
-  fetchTakeaways,
-} as const;
+export async function fetchTakeawayById(args: { id: string }) {
+  if (!args.id) {
+    console.log("***** NO ID");
+    console.log("ARGS", args);
+    return null;
+  }
 
-export const insightTools: FunctionTool[] = [
-  {
-    type: "function",
-    name: "fetchTakeaways",
-    description:
-      "Fetch additional relevant takeaways using vector search. Use this tool to additional information (takeaways) that are relevant to the current conversation.",
-    strict: true,
-
-    parameters: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        query: {
-          type: "string",
-          description: "Search query describing what to fetch takeaways about",
-        },
-        timeWeighted: {
-          type: "boolean",
-          description:
-            "Whether to weight results by recency. Defaults to true if omitted",
-        },
-      },
-      required: ["query", "timeWeighted"],
+  const takeaway = await db.query.takeaways.findFirst({
+    where: eq(schema.takeaways.id, args.id),
+    with: {
+      category: true,
+      document: true,
+      takeawayReferences: true,
     },
-  },
-];
+  });
+
+  if (!takeaway) {
+    console.log("***** NO TAKEAWAY");
+    return null;
+  }
+
+  console.log("***** TAKEAWAY", takeaway.title);
+
+  return `
+    ${takeaway.title}
+    Publication Date: ${takeaway.document.publicationDate.toISOString()}
+    Source: ${takeaway.document.source}
+    Key Takeaway:
+    ${takeaway.takeaway},
+    References: ${takeaway.takeawayReferences.map((reference) => `${reference.referenceNumber}. ${reference.reference}`).join("\n")}
+`;
+}

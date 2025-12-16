@@ -1,5 +1,5 @@
 import { ResponseFunctionToolCall } from "openai/resources/responses/responses.mjs";
-import { toolMap } from "./tools";
+import { toolMap } from "./tool-map";
 
 type ToolName = keyof typeof toolMap;
 
@@ -108,7 +108,9 @@ export async function executeToolCalls(toolCalls: ResponseFunctionToolCall[]) {
     const args = parseToolArguments(toolCall.arguments);
 
     try {
+      console.log("***** EXECUTING TOOL", name, args);
       const output = await tool(args);
+
       const result: ToolExecutionResult = { ok: true, name, callId, output };
       results.push(result);
 

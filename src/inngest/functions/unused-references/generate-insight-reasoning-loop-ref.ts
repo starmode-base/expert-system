@@ -6,7 +6,7 @@ import type {
 } from "openai/resources/responses/responses";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
-import { insightTools } from "~/lib/ai-helpers/tools/tools";
+import { insightTools } from "~/lib/ai-helpers/tools/tool-map";
 import { executeToolCalls } from "~/lib/ai-helpers/tools/tool-handling";
 import { invariant } from "@tanstack/react-router";
 
