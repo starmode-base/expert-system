@@ -26,7 +26,12 @@ const schema = z.object({
         - Factual Accuracy: Prioritize truths and facts over emotions or opinions. Do not embellish.
         - Neutral Tone: Strictly avoid promotional language (e.g., "groundbreaking," "revolutionary").
         - Direct Start: Do not start with "The takeaway is..." or "This article discusses...". Jump straight into the facts.
-        - References: when making a claim, provide a reference number and the relevant fact, quote or data to support the claim. e.g.  "(ref 1)"
+        - References:
+          - when making a claim, provide a reference number and the relevant fact, quote or data to support the claim. e.g.  "(ref 1)"
+          - For direct quotes, include the exact excerpt from the text and attribute the quote to the person.
+        - Start at 1 and increment for each reference.
+        - References should only be used for the current takeaway.
+        - Do not use the same reference across takeaways.
         - Independence: Each takeaway must be unique and unrelated to the others. Do not reference previous points.`,
       }),
       references: z.array(
