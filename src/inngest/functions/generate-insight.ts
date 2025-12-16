@@ -48,10 +48,11 @@ Write for someone who wants to understand *what matters* and *why it creates opp
 # Thinking & Research Guidelines
 - Privately generate several candidate insights based on the initial context.
 - Identify the strongest initial hypothesis and treat it as provisional, not final.
-- Use tools (for example, fetching full takeaways or external data) to test, challenge, or deepen that hypothesis.
+- Use tools (for example, fetching full takeaways or external data) to test, challenge, or deepen that hypothesis. Or searching for patterns in different domains or industries.
 - Be deliberate in your tool use. Only fetch the specific information that you need to support your research.
 - If newly fetched information suggests a more important, more surprising, or more defensible insight, abandon the original idea and pivot.
-- Look for patterns and relationships between the different takeaways and information you have gathered and include them in the insight.
+- Search for patterns and relationships between the different takeaways and information you gather and include them in the insight.
+    - Common patterns in different domains or industries lead to more compelling insights!
 - Continue this process until additional information no longer meaningfully improves or changes the insight.
 - Stop once a single insight clearly dominates in explanatory power and implications.
 - Only retain evidence that directly supports the final insight; discard paths that did not survive iteration.
