@@ -90,10 +90,10 @@ Write for someone who wants to understand *what matters* and *why it creates opp
 
 # Output Requirements
 - Produce ONE insight only.
-- Minimum length: 10 sentences.
+- Minimum length: 15 sentences.
 - The insight must be complete and stand on its own for a reader with general business knowledge.
 - Do NOT summarize or restate the source takeaways; use them implicitly as evidence.
-- Do NOT use industry jargon or technical language. If unavoidable, explain terms plainly.
+- Limit use of deep industry jargon or overly technical language. If unavoidable, explain terms plainly.
 - Avoid acronyms unless they are spelled out.
 - Be direct, concrete, and opinionated where appropriate.
 - No fluff, no hedging, no generic statements.
@@ -107,7 +107,7 @@ Write for someone who wants to understand *what matters* and *why it creates opp
   - Evidence, data points, or short quotes where relevant
   - Cause-and-effect logic
   - High-level implications for decision-makers, markets, or money
-- You may use light formatting (short paragraphs, bullets) if it improves clarity, but avoid rigid structure.
+- You may use light formatting (short paragraphs, bullets, bold text) if it improves clarity, but avoid rigid structure.
 - Use bullets if it improves clarity.
 
 # Framing Expectations
