@@ -1,5 +1,9 @@
 import { FunctionTool } from "openai/resources/responses/responses.mjs";
-import { fetchTakeawayPreviews, fetchTakeawayById } from "./tools";
+import {
+  fetchTakeawayPreviews,
+  fetchTakeawayById,
+  buildFinalInsight,
+} from "./tools";
 
 // ------------------------------------------------------------
 // TOOL MAP - Tools that are availible to the executor (executeToolCalls)
@@ -7,38 +11,39 @@ import { fetchTakeawayPreviews, fetchTakeawayById } from "./tools";
 export const toolMap = {
   fetchTakeawayPreviews,
   fetchTakeawayById,
+  buildFinalInsight,
 } as const;
 
 // ------------------------------------------------------------
 // INSIGHT TOOLS - Tools that are availible to the insight generator agent(generate-insight.ts)
 // ------------------------------------------------------------
 export const insightTools: FunctionTool[] = [
-  {
-    type: "function",
-    name: "fetchTakeawayPreviews",
-    description: `Fetch up to 10 relevant takeaway previews via vector search. Returns a single formatted preview string (title, publication date, source, summary) for each takeaway, separated by '------'. Set timeWeighted=false to disable recency re-ranking.
-      - use this tool when you need additional information that is not availible in the initial context.
-      - This is like a search query. Use fetchTakeawayById to "click through" to the full takeaway.`,
-    strict: true,
+  // {
+  //   type: "function",
+  //   name: "fetchTakeawayPreviews",
+  //   description: `Fetch up to 10 relevant takeaway previews via vector search. Returns a single formatted preview string (title, publication date, source, summary) for each takeaway, separated by '------'. Set timeWeighted=false to disable recency re-ranking.
+  //     - use this tool when you need additional information that is not availible in the initial context.
+  //     - This is like a search query. Use fetchTakeawayById to "click through" to the full takeaway.`,
+  //   strict: true,
 
-    parameters: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        query: {
-          type: "string",
-          description:
-            "Search query describing what you want to find takeaways about",
-        },
-        timeWeighted: {
-          type: "boolean",
-          description:
-            "Whether to weight results by recency. Defaults to true if omitted",
-        },
-      },
-      required: ["query", "timeWeighted"],
-    },
-  },
+  //   parameters: {
+  //     type: "object",
+  //     additionalProperties: false,
+  //     properties: {
+  //       query: {
+  //         type: "string",
+  //         description:
+  //           "Search query describing what you want to find takeaways about",
+  //       },
+  //       timeWeighted: {
+  //         type: "boolean",
+  //         description:
+  //           "Whether to weight results by recency. Defaults to true if omitted",
+  //       },
+  //     },
+  //     required: ["query", "timeWeighted"],
+  //   },
+  // },
   {
     type: "function",
     name: "fetchTakeawayById",
@@ -56,6 +61,41 @@ export const insightTools: FunctionTool[] = [
         },
       },
       required: ["id"],
+    },
+  },
+  {
+    type: "function",
+    name: "buildFinalInsight",
+    description: `Build the final insight from the given context and takeaways.
+      - use this tool when you have all the information you need to build the final insight.
+      - This will call another LLM agent to build the final insight.`,
+    strict: true,
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        insight: {
+          type: "string",
+          description:
+            "The core insight to build the final insight deliverable from.",
+        },
+        key_arguments: {
+          type: "string",
+          description:
+            "key arguments to include in the final insight deliverable.",
+        },
+        references_ids: {
+          type: "array",
+          description:
+            "The ids of the references to use to build the final insight",
+          items: {
+            type: "string",
+            description:
+              "The id (reference_id) will be an alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y",
+          },
+        },
+      },
+      required: ["insight", "key_arguments", "references_ids"],
     },
   },
 ];

@@ -1,6 +1,9 @@
 import { db, schema } from "~/postgres/db";
 import { inngest } from "../client";
-import type { ResponseInput } from "openai/resources/responses/responses";
+import type {
+  ResponseFunctionToolCall,
+  ResponseInput,
+} from "openai/resources/responses/responses";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
@@ -246,81 +249,120 @@ export const generateInsight = inngest.createFunction(
       model,
       reasoning: { effort: "high" as const },
       // reasoning: { effort: "high", summary: "auto" }, **** Organization must be verified to generate reasoning summaries
-      tools: insightTools,
-      tool_choice: "auto" as const,
       parallel_tool_calls: false as const,
     };
 
     let insightResponse = await step.run(
       `first-insight-iteration`,
       async () => {
-        const response = await client.responses.parse({
+        const response = await client.responses.create({
           input: initialConversation,
+          tool_choice: "required",
+          tools: insightTools,
           ...agentParameters,
-          text: {
-            format: zodTextFormat(insightSchema, "insight"),
-          },
         });
+
+        const functionCalls = response.output.filter(
+          (item) => item.type === "function_call",
+        );
 
         return {
           response,
-          hasFunctionCalls: response.output.some(
-            (item) => item.type === "function_call",
-          ),
+          continue: true,
+          functionCalls,
           stepNumber: 0,
         };
       },
     );
 
-    while (insightResponse.hasFunctionCalls) {
+    while (insightResponse.continue) {
+      // < STEP >
+      // Execute tool calls
+      const functionCallOutputs = await step.run(
+        `execute-tool-call-step-${insightResponse.stepNumber}`,
+        async () => {
+          const { outputs } = await executeToolCalls(
+            insightResponse.functionCalls,
+          );
+
+          return outputs;
+        },
+      );
+
+      // < STEP >
+      // Generate insight
       insightResponse = await step.run(
-        `generate-insight-${event.data.insightId}-step-${insightResponse.stepNumber}`,
+        `generate-insight-step-${insightResponse.stepNumber}`,
         async () => {
           // ######
 
-          const functionCalls = insightResponse.response.output.filter(
-            (item) => item.type === "function_call",
-          );
-
-          const functionCallResponse = await executeToolCalls(functionCalls);
-
-          console.log(
-            "##### FUNCTION CALL RESPONSE #####",
-            functionCallResponse.outputs,
-          );
-
-          const response = await client.responses.parse({
+          const response = await client.responses.create({
             ...agentParameters,
             previous_response_id: insightResponse.response.id,
-            input: functionCallResponse.outputs,
-            text: {
-              format: zodTextFormat(insightSchema, "insight"),
-            },
+            input: functionCallOutputs,
+            tools: insightTools,
+            tool_choice: "required",
           });
+
+          const functionCalls = response.output.filter(
+            (item): item is ResponseFunctionToolCall =>
+              item.type === "function_call",
+          );
 
           return {
             response,
-            hasFunctionCalls: response.output.some(
-              (item) => item.type === "function_call",
-            ),
+            continue: true,
+            functionCalls,
             stepNumber: insightResponse.stepNumber + 1,
           };
         },
       );
+
+      // Termination condition: if the last function call is "buildFinalInsight"
+      if (
+        insightResponse.functionCalls.some(
+          (call) => call.name === "buildFinalInsight",
+        )
+      ) {
+        console.log("### Break out of loop ###");
+        insightResponse = {
+          response: insightResponse.response,
+          continue: false,
+          functionCalls: insightResponse.functionCalls,
+          stepNumber: insightResponse.stepNumber,
+        };
+      }
     }
 
+    const finalInsight = await step.run(
+      `build-final-insight-step-${insightResponse.stepNumber}`,
+      async () => {
+        console.log("### Building final insight ###");
+        const { outputs } = await executeToolCalls(
+          insightResponse.functionCalls,
+        );
+
+        console.log("### Final insight outputs ###", outputs);
+
+        return await client.responses.parse({
+          ...agentParameters,
+          previous_response_id: insightResponse.response.id,
+          input: outputs,
+          text: {
+            format: zodTextFormat(insightSchema, "insight"),
+          },
+        });
+      },
+    );
+
     await step.run(`save-insight-${event.data.insightId}`, async () => {
-      console.log(
-        "##### INSIGHT RESPONSE PARSED #####",
-        insightResponse.response.output_parsed,
-      );
+      console.log("##### INSIGHT RESPONSE PARSED #####");
       // ######
       await db
         .update(schema.insights)
         .set({
           insight:
-            insightResponse.response.output_parsed?.insight ??
-            insightResponse.response.output_text,
+            finalInsight.output_parsed?.insight ?? finalInsight.output_text,
         })
         .where(eq(schema.insights.id, event.data.insightId));
     });
@@ -328,8 +370,7 @@ export const generateInsight = inngest.createFunction(
     await step.run(
       `save-insight-references-${event.data.insightId}`,
       async () => {
-        const references =
-          insightResponse.response.output_parsed?.references ?? [];
+        const references = finalInsight.output_parsed?.references ?? [];
 
         if (!references.length) return;
 
@@ -353,7 +394,7 @@ export const generateInsight = inngest.createFunction(
       },
     );
 
-    return insightResponse;
+    return finalInsight;
 
     // < END FUNCTION >
   },

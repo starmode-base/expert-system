@@ -124,7 +124,7 @@ export async function fetchTakeawayById(args: { id: string }) {
     return null;
   }
 
-  console.log("***** TAKEAWAY", takeaway.title);
+  console.log("***** FETCH TAKEAWAY BY ID TOOL - TAKEAWAY", takeaway.title);
 
   return `
     ${takeaway.title}
@@ -135,4 +135,16 @@ export async function fetchTakeawayById(args: { id: string }) {
     Takeaway ID: ${takeaway.id}
     Takeaway References: ${takeaway.takeawayReferences.map((reference) => `${reference.referenceNumber}. (reference_id: ${reference.id}) ${reference.reference}`).join("\n")}
 `;
+}
+
+export function buildFinalInsight(args: {
+  insight: string;
+  key_arguments: string;
+  references_ids: string[];
+}) {
+  return `
+    Core Insight: ${args.insight}
+    Key Arguments: ${args.key_arguments}
+    References: ${args.references_ids.map((reference_id) => `(reference_id: ${reference_id})`).join("\n")}
+  `;
 }
