@@ -82,5 +82,7 @@ export const getInsightTakeawaysSF = createServerFn({ method: "GET" })
       category: takeaway.takeaway.category?.name,
       summary: takeaway.takeaway.summary,
       references: takeaway.takeaway.takeawayReferences,
+      documentTitle: takeaway.takeaway.document.title,
+      documentSource: takeaway.takeaway.document.source,
     }));
   });

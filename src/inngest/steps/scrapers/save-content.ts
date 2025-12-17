@@ -1,6 +1,5 @@
 import { invariant } from "@tanstack/react-router";
 import { and } from "drizzle-orm";
-import { NonRetriableError } from "inngest";
 import { fetchAlphaVantageEarningsTranscript } from "~/lib/earnings-transcripts";
 import { db, schema } from "~/postgres/db";
 
@@ -71,10 +70,6 @@ export async function fetchAndSaveTranscript({
     symbol,
     year,
     quarter,
-  }).catch((error) => {
-    console.log("error", error);
-
-    throw new NonRetriableError(`Error fetching ${symbol} transcript`);
   });
 
   // Map each quarter to the first month of the following quarter. For Q4, increment the year.
@@ -95,9 +90,8 @@ export async function fetchAndSaveTranscript({
     .join("\n");
 
   const document = {
-    source: "Earnings Calls",
+    source: "Public Earnings Transcripts",
     title,
-    //   TODO - add earning results from Earnings Calendar API
     description: title,
     publicationDate,
     link: "",

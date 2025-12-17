@@ -18,6 +18,22 @@ export function TakeawayTile(props: {
   const [referencesExpanded, setReferencesExpanded] = useState(false);
   const addTakeawayToInsight = useServerFn(addTakeawayToInsightSF);
 
+  const documentSource =
+    takeaway.documentSource ?? (takeaway as { source?: string }).source;
+  const documentMeta = [takeaway.documentTitle, documentSource]
+    .filter(Boolean)
+    .join(" · ");
+  const secondaryMeta = [
+    takeaway.category,
+    takeaway.publicationDate.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   const handleAddToInsight = async (insightId: string, takeawayId: string) => {
     await addTakeawayToInsight({ data: { insightId, takeawayId } });
     setInsightSelectionOpen(false);
@@ -54,10 +70,12 @@ export function TakeawayTile(props: {
           <h2 className="text-lg font-semibold text-gray-800">
             {takeaway.title}
           </h2>
-          <p className="text-sm text-gray-600">{takeaway.category}</p>
-          <p className="text-sm text-gray-600">
-            {takeaway.publicationDate.toLocaleString()}
-          </p>
+          {documentMeta ? (
+            <p className="mt-1 truncate text-sm text-gray-600">
+              {documentMeta}
+            </p>
+          ) : null}
+          <p className="mt-0.5 text-xs text-gray-500">{secondaryMeta}</p>
         </div>
         {insights.length > 0 && (
           <button

@@ -11,16 +11,6 @@ export const inngest = new Inngest({
   id: "expert-system",
   schemas: new EventSchemas().fromZod({
     /**
-     * Hello world
-     */
-    "test/hello.world.expert": {
-      data: z.object({
-        animal: z.string(),
-      }),
-      user: userSchema,
-    },
-
-    /**
      * Daily Science Scrapper
      */
     "scraper/daily-science": {

@@ -87,6 +87,7 @@ export async function fetchTakeawayById(args: { id: string }) {
     Source: ${takeaway.document.source}
     Key Takeaway:
     ${takeaway.takeaway},
-    References: ${takeaway.takeawayReferences.map((reference) => `${reference.referenceNumber}. ${reference.reference}`).join("\n")}
+    Takeaway ID: ${takeaway.id}
+    Takeaway References: ${takeaway.takeawayReferences.map((reference) => `${reference.referenceNumber}. (reference_id: ${reference.id}) ${reference.reference}`).join("\n")}
 `;
 }

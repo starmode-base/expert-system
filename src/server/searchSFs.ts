@@ -9,10 +9,13 @@ export interface TakeawaySearchResult {
   documentId: string;
   title: string;
   publicationDate: Date;
+  createdAt: Date;
   takeaway: string;
   summary: string;
   concept: string;
   source: string;
+  documentTitle?: string;
+  documentSource?: string;
   category: string | undefined;
   similarity: number;
   references: TakeawayReferenceSelect[];
@@ -42,7 +45,7 @@ export const searchTakeawaysSF = createServerFn({
         ? await vectorTakeawaySearch(searchInput, 100)
         : await queryTakeaways();
 
-      // filter,  order by similarity
+      // Filter then order results
       const orderedResults = withSimilarity
         .filter((result) => {
           return (
@@ -63,10 +66,13 @@ export const searchTakeawaysSF = createServerFn({
         documentId: result.documentId,
         title: result.title,
         publicationDate: result.publicationDate,
+        createdAt: result.createdAt,
         takeaway: result.takeaway,
         summary: result.summary,
         concept: result.concept,
         source: result.source,
+        documentTitle: result.documentTitle,
+        documentSource: result.documentSource,
         category: result.category,
         similarity: result.similarity,
         references: result.references,

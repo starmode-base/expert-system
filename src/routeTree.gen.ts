@@ -11,7 +11,6 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as TemplateImport } from './routes/template'
 import { Route as ImporterImport } from './routes/importer'
 import { Route as IndexImport } from './routes/index'
 import { Route as SearchIndexImport } from './routes/search.index'
@@ -24,12 +23,6 @@ import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$
 import { Route as KnowledgeGraphGraphTypeDocumentidImport } from './routes/knowledge-graph.$graphType.$documentid'
 
 // Create/Update Routes
-
-const TemplateRoute = TemplateImport.update({
-  id: '/template',
-  path: '/template',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const ImporterRoute = ImporterImport.update({
   id: '/importer',
@@ -110,13 +103,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImporterImport
       parentRoute: typeof rootRoute
     }
-    '/template': {
-      id: '/template'
-      path: '/template'
-      fullPath: '/template'
-      preLoaderRoute: typeof TemplateImport
-      parentRoute: typeof rootRoute
-    }
     '/insight-studio/$insightId': {
       id: '/insight-studio/$insightId'
       path: '/insight-studio/$insightId'
@@ -181,7 +167,6 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/importer': typeof ImporterRoute
-  '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/search/$takeawayid': typeof SearchTakeawayidRoute
@@ -195,7 +180,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/importer': typeof ImporterRoute
-  '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/search/$takeawayid': typeof SearchTakeawayidRoute
@@ -210,7 +194,6 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/importer': typeof ImporterRoute
-  '/template': typeof TemplateRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/search/$takeawayid': typeof SearchTakeawayidRoute
@@ -226,7 +209,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/importer'
-    | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
     | '/search/$takeawayid'
@@ -239,7 +221,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/importer'
-    | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
     | '/search/$takeawayid'
@@ -252,7 +233,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/importer'
-    | '/template'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
     | '/search/$takeawayid'
@@ -267,7 +247,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ImporterRoute: typeof ImporterRoute
-  TemplateRoute: typeof TemplateRoute
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
   SearchTakeawayidRoute: typeof SearchTakeawayidRoute
@@ -281,7 +260,6 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ImporterRoute: ImporterRoute,
-  TemplateRoute: TemplateRoute,
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
   SearchTakeawayidRoute: SearchTakeawayidRoute,
@@ -305,7 +283,6 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/importer",
-        "/template",
         "/insight-studio/$insightId",
         "/news-feed/$documentid",
         "/search/$takeawayid",
@@ -321,9 +298,6 @@ export const routeTree = rootRoute
     },
     "/importer": {
       "filePath": "importer.tsx"
-    },
-    "/template": {
-      "filePath": "template.tsx"
     },
     "/insight-studio/$insightId": {
       "filePath": "insight-studio.$insightId.tsx"

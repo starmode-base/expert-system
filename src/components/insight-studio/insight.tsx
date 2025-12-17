@@ -4,16 +4,18 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
-import { Takeaway } from "~/server/queries";
+import { type InsightReferenceItem, Takeaway } from "~/server/queries";
 import { MODEL_OPTIONS, ModelSelector, ModelValue } from "../model-selector";
 
 interface InsightProps {
   insight: InsightSelect;
   insightTakeaways: Takeaway[];
+  insightReferences: InsightReferenceItem[];
+  onRefresh?: () => Promise<void> | void;
 }
 
 export function Insight(props: InsightProps) {
-  const { insight, insightTakeaways } = props;
+  const { insight, insightTakeaways, insightReferences, onRefresh } = props;
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +76,7 @@ export function Insight(props: InsightProps) {
                 await sendEventGenerateInsight({
                   data: { insightId: insight.id, insightPrompt: prompt },
                 });
+                await onRefresh?.();
               }}
             >
               Generate Insight
@@ -119,6 +122,30 @@ export function Insight(props: InsightProps) {
           <p className="text-sm text-gray-500">
             No insight has been generated yet.
           </p>
+        )}
+
+        {/* Add vertical separator between the generated insight and the references */}
+        <div className="my-4 w-full border-t border-gray-200" />
+
+        <h2 className="mb-2 text-lg font-medium text-gray-600">References</h2>
+
+        {insightReferences.length > 0 ? (
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-gray-800">
+            {insightReferences.map((ref) => (
+              <li key={ref.referenceId} className="leading-6">
+                <span className="font-medium text-gray-900">
+                  ref {ref.insightReferenceNumber}
+                </span>
+                <span className="text-gray-500">:</span>{" "}
+                <span className="text-gray-800">{ref.reference}</span>
+                <div className="mt-0.5 text-xs text-gray-500">
+                  {ref.documentTitle} · {ref.documentSource}
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="text-sm text-gray-500">No references yet.</p>
         )}
       </div>
     </div>

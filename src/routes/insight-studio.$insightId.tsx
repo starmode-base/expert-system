@@ -9,6 +9,7 @@ import {
   getInsightTakeawaysSF,
   updateInsightTitleSF,
 } from "~/server/insights-studio-SFs";
+import { queryInsightReferences } from "~/server/queries";
 
 export const Route = createFileRoute("/insight-studio/$insightId")({
   loader: async ({ params: { insightId } }) => {
@@ -18,8 +19,9 @@ export const Route = createFileRoute("/insight-studio/$insightId")({
     const insightTakeaways = await getInsightTakeawaysSF({
       data: { insightId },
     });
+    const insightReferences = await queryInsightReferences({ data: insightId });
 
-    return { selectedInsight, insights, insightTakeaways };
+    return { selectedInsight, insights, insightTakeaways, insightReferences };
   },
   component: RouteComponent,
 });
@@ -27,7 +29,8 @@ export const Route = createFileRoute("/insight-studio/$insightId")({
 // RouteComponent.tsx
 
 export function RouteComponent() {
-  const { insights, selectedInsight, insightTakeaways } = Route.useLoaderData();
+  const { insights, selectedInsight, insightTakeaways, insightReferences } =
+    Route.useLoaderData();
   const router = useRouter();
   const updateInsightTitle = useServerFn(updateInsightTitleSF);
   const [activeTab, setActiveTab] = useState<"insight" | "takeaways">(
@@ -94,6 +97,10 @@ export function RouteComponent() {
               <Insight
                 insight={selectedInsight}
                 insightTakeaways={insightTakeaways}
+                insightReferences={insightReferences}
+                onRefresh={async () => {
+                  await router.invalidate();
+                }}
               />
             ) : (
               <InsightTakeaways insightTakeaways={insightTakeaways} />

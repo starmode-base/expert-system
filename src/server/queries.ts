@@ -1,11 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db, schema } from "../postgres/db";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { TakeawaySearchResult } from "./searchSFs";
 import { vectorConceptSearch, vectorTakeawaySearch } from "./vector-queries";
 import { TakeawayReferenceSelect } from "~/postgres/schema";
+import { authMiddleware } from "~/middleware/auth-middleware";
 
 export const queryDocuments = createServerFn({
   method: "GET",
@@ -41,7 +42,56 @@ export interface Takeaway {
   concept: string;
   category: string | undefined;
   references: TakeawayReferenceSelect[];
+  documentTitle?: string;
+  documentSource?: string;
 }
+
+export interface InsightReferenceItem {
+  insightReferenceNumber: number;
+  referenceId: string;
+  reference: string;
+  documentTitle: string;
+  documentSource: string;
+}
+
+export const queryInsightReferences = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .validator(z.string()) // insightId
+  .handler(
+    async ({ data: insightId, context }): Promise<InsightReferenceItem[]> => {
+      const insight = await db.query.insights.findFirst({
+        where: and(
+          eq(schema.insights.id, insightId),
+          eq(schema.insights.userId, context.viewer.id),
+        ),
+        columns: { id: true },
+      });
+
+      if (!insight) {
+        return [];
+      }
+
+      const insightReferences = await db.query.insightReferences.findMany({
+        where: eq(schema.insightReferences.insightId, insightId),
+        with: {
+          takeawayReference: {
+            with: { takeaway: { with: { document: true } } },
+          },
+        },
+        orderBy: (insightReferences, { asc }) => [
+          asc(insightReferences.insightReferenceNumber),
+        ],
+      });
+
+      return insightReferences.map((row) => ({
+        insightReferenceNumber: row.insightReferenceNumber,
+        referenceId: row.referenceId,
+        reference: row.takeawayReference.reference,
+        documentTitle: row.takeawayReference.takeaway.document.title,
+        documentSource: row.takeawayReference.takeaway.document.source,
+      }));
+    },
+  );
 
 export const queryDocument = createServerFn({
   method: "GET",
@@ -81,6 +131,8 @@ export const queryDocument = createServerFn({
         concept: takeaway.concept,
         category: takeaway.category?.name,
         references: takeaway.takeawayReferences,
+        documentTitle: document.title,
+        documentSource: document.source,
       })),
     };
 
@@ -146,6 +198,8 @@ export const queryDocumentByTakeaway = createServerFn({
         concept: tw.concept,
         category: tw.category?.name,
         references: tw.takeawayReferences,
+        documentTitle: document.title,
+        documentSource: document.source,
       })),
       selectedTakeawayId: takeawayId,
       similarTakeaways,
@@ -185,7 +239,8 @@ export const queryTakeaways = createServerFn({
   const orderedResults = takeaways.sort(
     (a, b) =>
       b.document.publicationDate.getTime() -
-      a.document.publicationDate.getTime(),
+        a.document.publicationDate.getTime() ||
+      b.createdAt.getTime() - a.createdAt.getTime(),
   );
 
   return orderedResults.map((takeaway) => ({
@@ -193,10 +248,13 @@ export const queryTakeaways = createServerFn({
     documentId: takeaway.documentId,
     title: takeaway.title,
     publicationDate: takeaway.document.publicationDate,
+    createdAt: takeaway.createdAt,
     takeaway: takeaway.takeaway,
     summary: takeaway.summary,
     concept: takeaway.concept,
     source: takeaway.document.source,
+    documentTitle: takeaway.document.title,
+    documentSource: takeaway.document.source,
     category: takeaway.category?.name,
     similarity: 0,
     references: takeaway.takeawayReferences,

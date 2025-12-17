@@ -3,6 +3,12 @@ import { fetchAndSaveTranscript } from "../steps/scrapers/save-content";
 import { publishNotifyUI } from "~/lib/ably";
 import { generateTakeaways } from "./generate-takeaways";
 
+interface ScraperResult {
+  status: "success" | "error";
+  documentId: string | null;
+  error: string | null;
+}
+
 export const earningsCallsScraper = inngest.createFunction(
   { id: "scraper.earnings-calls" },
   { event: "scraper/earnings-calls" },
@@ -12,34 +18,50 @@ export const earningsCallsScraper = inngest.createFunction(
 
     const symbols = event.data.symbols;
 
-    const documentIdsResult = await Promise.all(
-      symbols.map(async (symbol) => {
-        return await step.run(
-          `fetch-earnings-transcript-${symbol.symbol}`,
-          async () => {
-            const year = event.data.year;
-            const quarter = event.data.quarter;
+    const documentIdsResult: ScraperResult[] = [];
 
-            try {
-              return await fetchAndSaveTranscript({
-                symbol: symbol.symbol,
-                name: symbol.name,
-                year,
-                quarter,
-              });
-            } catch (error) {
-              console.log("error", error);
-              await publishNotifyUI(
-                event.user.id,
-                `There was an Error fetching ${symbol.symbol} transcript`,
-              );
-            }
-          },
-        );
-      }),
-    );
+    for (const symbol of symbols) {
+      const result = await step.run(
+        `fetch-earnings-transcript-${symbol.symbol}`,
+        async () => {
+          const year = event.data.year;
+          const quarter = event.data.quarter;
 
-    const documentIds = documentIdsResult.filter(Boolean);
+          try {
+            const documentId = await fetchAndSaveTranscript({
+              symbol: symbol.symbol,
+              name: symbol.name,
+              year,
+              quarter,
+            });
+
+            return {
+              status: "success",
+              error: null,
+              documentId,
+            } as ScraperResult;
+          } catch (error) {
+            console.log("error", error);
+            await publishNotifyUI(
+              event.user.id,
+              `There was an Error fetching ${symbol.symbol} transcript`,
+            );
+
+            return {
+              status: "error",
+              error: error instanceof Error ? error.message : "Unknown error",
+              documentId: null,
+            } as ScraperResult;
+          }
+        },
+      );
+      documentIdsResult.push(result);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    const documentIds = documentIdsResult
+      .filter((r) => r.status === "success")
+      .map((r) => r.documentId);
 
     if (documentIds.length === 0 && symbols.length > 0) {
       await step.run("publish-invalidate", async () => {
