@@ -48,8 +48,9 @@ export async function fetchAlphaVantageEarningsTranscript({
     !typedData.quarter ||
     typedData.transcript.length === 0
   ) {
-    throw new NonRetriableError(
-      `Failed to fetch ${symbol} transcript from Alpha Vantage`,
+    console.log("Typed data", typedData);
+    throw new Error(
+      `Alpha Vantage API response parsing error: ${JSON.stringify(typedData)}`,
     );
   }
 
