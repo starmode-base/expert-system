@@ -1,11 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db, schema } from "../postgres/db";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { TakeawaySearchResult } from "./searchSFs";
 import { vectorConceptSearch, vectorTakeawaySearch } from "./vector-queries";
 import { TakeawayReferenceSelect } from "~/postgres/schema";
+import { authMiddleware } from "~/middleware/auth-middleware";
 
 export const queryDocuments = createServerFn({
   method: "GET",
@@ -42,6 +43,51 @@ export interface Takeaway {
   category: string | undefined;
   references: TakeawayReferenceSelect[];
 }
+
+export interface InsightReferenceItem {
+  insightReferenceNumber: number;
+  referenceId: string;
+  reference: string;
+  documentTitle: string;
+  documentSource: string;
+}
+
+export const queryInsightReferences = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .validator(z.string()) // insightId
+  .handler(
+    async ({ data: insightId, context }): Promise<InsightReferenceItem[]> => {
+      const insight = await db.query.insights.findFirst({
+        where: and(
+          eq(schema.insights.id, insightId),
+          eq(schema.insights.userId, context.viewer.id),
+        ),
+        columns: { id: true },
+      });
+
+      if (!insight) {
+        return [];
+      }
+
+      const insightReferences = await db.query.insightReferences.findMany({
+        where: eq(schema.insightReferences.insightId, insightId),
+        with: {
+          reference: { with: { takeaway: { with: { document: true } } } },
+        },
+        orderBy: (insightReferences, { asc }) => [
+          asc(insightReferences.insightReferenceNumber),
+        ],
+      });
+
+      return insightReferences.map((row) => ({
+        insightReferenceNumber: row.insightReferenceNumber,
+        referenceId: row.referenceId,
+        reference: row.reference.reference,
+        documentTitle: row.reference.takeaway.document.title,
+        documentSource: row.reference.takeaway.document.source,
+      }));
+    },
+  );
 
 export const queryDocument = createServerFn({
   method: "GET",

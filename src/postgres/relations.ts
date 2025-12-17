@@ -15,6 +15,7 @@ import {
   earningsSchedule,
   earningsFetchJobs,
   takeawayReferences,
+  insightReferences,
   insightTakeaways,
   organizationMembers,
 } from "./schema";
@@ -116,6 +117,7 @@ export const insightsRelations = relations(insights, ({ one, many }) => ({
     fields: [insights.userId],
     references: [users.id],
   }),
+  insightReferences: many(insightReferences),
   insightTakeaways: many(insightTakeaways),
 }));
 
@@ -138,10 +140,25 @@ export const earningsScheduleRelations = relations(
 
 export const takeawayReferencesRelations = relations(
   takeawayReferences,
-  ({ one }) => ({
+  ({ one, many }) => ({
     takeaway: one(takeaways, {
       fields: [takeawayReferences.takeawayId],
       references: [takeaways.id],
+    }),
+    insightReferences: many(insightReferences),
+  }),
+);
+
+export const insightReferencesRelations = relations(
+  insightReferences,
+  ({ one }) => ({
+    insight: one(insights, {
+      fields: [insightReferences.insightId],
+      references: [insights.id],
+    }),
+    reference: one(takeawayReferences, {
+      fields: [insightReferences.referenceId],
+      references: [takeawayReferences.id],
     }),
   }),
 );

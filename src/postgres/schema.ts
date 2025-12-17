@@ -291,6 +291,25 @@ export const insights = pgTable("insights", {
 export type InsightSelect = typeof insights.$inferSelect;
 export type InsightInsert = typeof insights.$inferInsert;
 
+export const insightReferences = pgTable(
+  "insight_references",
+  {
+    insightId: text()
+      .notNull()
+      .references(() => insights.id, { onDelete: "cascade" }),
+    insightReferenceNumber: integer().notNull(),
+    referenceId: text()
+      .notNull()
+      .references(() => takeawayReferences.id, { onDelete: "cascade" }),
+    createdAt: createdAtField,
+    updatedAt: updatedAtField,
+  },
+  (table) => [primaryKey({ columns: [table.insightId, table.referenceId] })],
+);
+
+export type InsightReferenceSelect = typeof insightReferences.$inferSelect;
+export type InsightReferenceInsert = typeof insightReferences.$inferInsert;
+
 // insights <> takeaways junction table
 export const insightTakeaways = pgTable(
   "insight_takeaways",

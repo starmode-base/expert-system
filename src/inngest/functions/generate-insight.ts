@@ -327,6 +327,34 @@ export const generateInsight = inngest.createFunction(
         .where(eq(schema.insights.id, event.data.insightId));
     });
 
+    await step.run(
+      `save-insight-references-${event.data.insightId}`,
+      async () => {
+        const references =
+          insightResponse.response.output_parsed?.references ?? [];
+
+        if (!references.length) return;
+
+        const uniqueReferences = Array.from(
+          new Map(
+            references.map((reference) => [reference.reference_id, reference]),
+          ).values(),
+        );
+
+        await db
+          .delete(schema.insightReferences)
+          .where(eq(schema.insightReferences.insightId, event.data.insightId));
+
+        await db.insert(schema.insightReferences).values(
+          uniqueReferences.map((reference) => ({
+            insightId: event.data.insightId,
+            referenceId: reference.reference_id,
+            insightReferenceNumber: reference.insight_reference_number,
+          })),
+        );
+      },
+    );
+
     return insightResponse;
 
     // < END FUNCTION >
