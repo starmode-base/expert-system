@@ -72,7 +72,9 @@ export const queryInsightReferences = createServerFn({ method: "GET" })
       const insightReferences = await db.query.insightReferences.findMany({
         where: eq(schema.insightReferences.insightId, insightId),
         with: {
-          reference: { with: { takeaway: { with: { document: true } } } },
+          takeawayReference: {
+            with: { takeaway: { with: { document: true } } },
+          },
         },
         orderBy: (insightReferences, { asc }) => [
           asc(insightReferences.insightReferenceNumber),
@@ -82,9 +84,9 @@ export const queryInsightReferences = createServerFn({ method: "GET" })
       return insightReferences.map((row) => ({
         insightReferenceNumber: row.insightReferenceNumber,
         referenceId: row.referenceId,
-        reference: row.reference.reference,
-        documentTitle: row.reference.takeaway.document.title,
-        documentSource: row.reference.takeaway.document.source,
+        reference: row.takeawayReference.reference,
+        documentTitle: row.takeawayReference.takeaway.document.title,
+        documentSource: row.takeawayReference.takeaway.document.source,
       }));
     },
   );

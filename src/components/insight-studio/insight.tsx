@@ -123,9 +123,12 @@ export function Insight(props: InsightProps) {
             No insight has been generated yet.
           </p>
         )}
-      </div>
 
-      <div className="mt-4 rounded border border-gray-300 p-4">
+        {/* Add vertical separator between the generated insight and the references */}
+        <div className="my-4 w-full border-t border-gray-200" />
+
+        <h2 className="mb-2 text-lg font-medium text-gray-600">References</h2>
+
         {insightReferences.length > 0 ? (
           <ol className="list-decimal space-y-2 pl-5 text-sm text-gray-800">
             {insightReferences.map((ref) => (
