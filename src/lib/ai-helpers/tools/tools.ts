@@ -1,7 +1,18 @@
 import { vectorTakeawaySearch } from "~/server/vector-queries";
 import { db, schema } from "~/postgres/db";
 import { eq } from "drizzle-orm";
+import { buildTakeawayPreviews } from "~/inngest/functions/generate-insight";
 
+// ------------------------------------------------------------
+// HELPERS
+// ------------------------------------------------------------
+
+/**
+ * Compute a recency weight (0..1) to down-rank older content
+ *
+ * The curve is an S-shape that declines over ~3 months and clamps to [0, 1].
+ * If the publication date is invalid, returns 1 to avoid accidental suppression.
+ */
 function computeRecencyWeight(
   publicationDate: Date | string,
   now = new Date(),
@@ -28,16 +39,45 @@ function computeRecencyWeight(
   return Math.max(0, Math.min(1, weight));
 }
 
-export interface FetchTakeawaysArgs {
+// ------------------------------------------------------------
+// TOOLS
+// ------------------------------------------------------------
+
+/**
+ * Arguments for {@link fetchTakeawayPreviews}
+ */
+export interface FetchTakeawayPreviewsArgs {
   query: string;
   timeWeighted?: boolean;
+  count?: number;
 }
 
-export async function fetchTakeaways(args: FetchTakeawaysArgs) {
-  const takeaways = await vectorTakeawaySearch(args.query, 10);
+function normalizeTakeawayCount(count: number | undefined) {
+  if (typeof count !== "number" || !Number.isFinite(count)) {
+    return 5;
+  }
+
+  return Math.max(1, Math.min(20, Math.floor(count)));
+}
+
+/**
+ * Fetch up to 10 relevant takeaway previews via vector search
+ *
+ * This tool is intended for quickly expanding context (summaries only), not for
+ * retrieving full takeaway bodies or references.
+ *
+ * - If `timeWeighted` is omitted or true, results are re-ranked to prefer newer sources.
+ * - If `timeWeighted` is false, results are returned in pure similarity order.
+ *
+ * Returns a single formatted preview string (title, publication date, source, summary)
+ * for each takeaway, separated by `------`.
+ */
+export async function fetchTakeawayPreviews(args: FetchTakeawayPreviewsArgs) {
+  const count = normalizeTakeawayCount(args.count);
+  const takeaways = await vectorTakeawaySearch(args.query);
 
   if (args.timeWeighted === false) {
-    return takeaways;
+    return buildTakeawayPreviews(takeaways.slice(0, count));
   }
 
   const now = new Date();
@@ -49,15 +89,20 @@ export async function fetchTakeaways(args: FetchTakeawaysArgs) {
       return {
         ...takeaway,
         similarity: weightedSimilarity,
-        unweightedSimilarity: takeaway.similarity,
-        recencyWeight,
       };
     })
     .sort((a, b) => b.similarity - a.similarity);
 
-  return weightedTakeaways;
+  return buildTakeawayPreviews(weightedTakeaways.slice(0, count));
 }
 
+/**
+ * Fetch a single takeaway by id, formatted for use in an LLM prompt
+ *
+ * Returns a formatted string containing the takeaway title, publication date, source,
+ * full takeaway text, takeaway id, and the full list of references (including each `reference_id`).
+ * Returns null if `id` is missing or the takeaway cannot be found.
+ */
 export async function fetchTakeawayById(args: { id: string }) {
   if (!args.id) {
     console.log("***** NO ID");
