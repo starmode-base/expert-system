@@ -233,7 +233,8 @@ export const queryTakeaways = createServerFn({
   const orderedResults = takeaways.sort(
     (a, b) =>
       b.document.publicationDate.getTime() -
-      a.document.publicationDate.getTime(),
+        a.document.publicationDate.getTime() ||
+      b.createdAt.getTime() - a.createdAt.getTime(),
   );
 
   return orderedResults.map((takeaway) => ({
@@ -241,6 +242,7 @@ export const queryTakeaways = createServerFn({
     documentId: takeaway.documentId,
     title: takeaway.title,
     publicationDate: takeaway.document.publicationDate,
+    createdAt: takeaway.createdAt,
     takeaway: takeaway.takeaway,
     summary: takeaway.summary,
     concept: takeaway.concept,

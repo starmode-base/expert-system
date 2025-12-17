@@ -78,7 +78,7 @@ Write for someone who wants to understand *what matters* and *why it creates opp
 - Use Markdown formatting.
 - Do NOT label sections (e.g., no “Why this matters”, “What this changes”).
 - The piece should naturally flow, like a well-written blog post.
-- Begin immediately with the insight itself — no throat-clearing.
+- Begin immediately with a clear and unequivocal statement of the insight itself — no throat-clearing.
 - After stating the insight, develop it through:
   - Clear reasoning
   - Evidence, data points, or short quotes where relevant
