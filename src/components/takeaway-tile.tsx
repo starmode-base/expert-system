@@ -54,6 +54,12 @@ export function TakeawayTile(props: {
           <h2 className="text-lg font-semibold text-gray-800">
             {takeaway.title}
           </h2>
+          {takeaway.documentTitle ? (
+            <p className="text-sm text-gray-600">{takeaway.documentTitle}</p>
+          ) : null}
+          <p className="text-sm text-gray-600">
+            {takeaway.documentSource ?? (takeaway as { source?: string }).source}
+          </p>
           <p className="text-sm text-gray-600">{takeaway.category}</p>
           <p className="text-sm text-gray-600">
             {takeaway.publicationDate.toLocaleString()}

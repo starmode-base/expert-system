@@ -14,6 +14,8 @@ export interface TakeawaySearchResult {
   summary: string;
   concept: string;
   source: string;
+  documentTitle?: string;
+  documentSource?: string;
   category: string | undefined;
   similarity: number;
   references: TakeawayReferenceSelect[];
@@ -69,6 +71,8 @@ export const searchTakeawaysSF = createServerFn({
         summary: result.summary,
         concept: result.concept,
         source: result.source,
+        documentTitle: result.documentTitle,
+        documentSource: result.documentSource,
         category: result.category,
         similarity: result.similarity,
         references: result.references,

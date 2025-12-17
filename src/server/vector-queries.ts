@@ -37,6 +37,8 @@ export async function vectorTakeawaySearch(
       summary: takeaway.takeaway.summary,
       concept: takeaway.takeaway.concept,
       source: takeaway.takeaway.document.source,
+      documentTitle: takeaway.takeaway.document.title,
+      documentSource: takeaway.takeaway.document.source,
       category: takeaway.takeaway.category?.name,
       similarity: cosineSimilarity(searchEmbedding, takeaway.embedding),
       references: takeaway.takeaway.takeawayReferences,
@@ -78,6 +80,8 @@ export async function vectorConceptSearch(
       concept: concept.takeaway.concept,
       category: concept.takeaway.category?.name,
       source: concept.takeaway.document.source,
+      documentTitle: concept.takeaway.document.title,
+      documentSource: concept.takeaway.document.source,
       similarity: cosineSimilarity(searchEmbedding, concept.embedding),
       references: concept.takeaway.takeawayReferences,
     };

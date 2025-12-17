@@ -42,6 +42,8 @@ export interface Takeaway {
   concept: string;
   category: string | undefined;
   references: TakeawayReferenceSelect[];
+  documentTitle?: string;
+  documentSource?: string;
 }
 
 export interface InsightReferenceItem {
@@ -129,6 +131,8 @@ export const queryDocument = createServerFn({
         concept: takeaway.concept,
         category: takeaway.category?.name,
         references: takeaway.takeawayReferences,
+        documentTitle: document.title,
+        documentSource: document.source,
       })),
     };
 
@@ -194,6 +198,8 @@ export const queryDocumentByTakeaway = createServerFn({
         concept: tw.concept,
         category: tw.category?.name,
         references: tw.takeawayReferences,
+        documentTitle: document.title,
+        documentSource: document.source,
       })),
       selectedTakeawayId: takeawayId,
       similarTakeaways,
@@ -247,6 +253,8 @@ export const queryTakeaways = createServerFn({
     summary: takeaway.summary,
     concept: takeaway.concept,
     source: takeaway.document.source,
+    documentTitle: takeaway.document.title,
+    documentSource: takeaway.document.source,
     category: takeaway.category?.name,
     similarity: 0,
     references: takeaway.takeawayReferences,
