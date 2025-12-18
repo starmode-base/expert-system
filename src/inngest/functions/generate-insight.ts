@@ -41,7 +41,6 @@ If you need more information, use the tools to fetch the full takeaways.
 - Use the complete takeaways and their references to support your research. NOT just the summaries.
 - If newly fetched information suggests a more important, more surprising, or more defensible insight, abandon the original idea and pivot.
 - Search for patterns and relationships between the different takeaways and information you gather and include them in the insight.
-    - Common patterns in different domains or industries lead to more compelling insights!
 - Continue this process until additional information no longer meaningfully improves or changes the insight. You should iterate multiple times using different tools.
 - Stop once a single insight clearly dominates in explanatory power and implications.
 - Only retain evidence that directly supports the final insight; discard paths that did not survive iteration.
@@ -68,18 +67,6 @@ const insightSchema = z.object({
 - Be direct, concrete, and opinionated where appropriate.
 - No fluff, no hedging, no generic statements.
 
-# Writing Style & Structure
-- Use Markdown formatting.
-- Do NOT label sections (e.g., no “Why this matters”, “What this changes”).
-- The piece should naturally flow, like a well-written blog post.
-- Begin immediately with a clear and unequivocal insight in bold — no throat-clearing.
-- After stating the insight, develop it through:
-  - Clear reasoning
-  - Evidence, data points, or short quotes where relevant
-  - Cause-and-effect logic
-  - High-level implications for decision-makers, markets, or money
-- You may use light formatting (short paragraphs, bullets, bold text) if it improves clarity, but avoid rigid structure.
-- Use bullets if it improves clarity.
 
 # Rules
 - Do NOT start with phrases like “The insight is…”
@@ -91,6 +78,20 @@ const insightSchema = z.object({
 - When making a reference to a fact, quote or data, cite you source from the Takeaway References.
 - Issue a new reference number in the insight text e.g.  "(ref 1)". Starting at 1 and incrementing for each additional reference.
 - Then record the newly issued insight_reference_number and reference_id (alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y) for each cited reference in the references array.
+
+
+# Writing Style & Structure
+- Use Markdown formatting.
+- Do NOT label sections (e.g., no “Why this matters”, “What this changes”).
+- The piece should naturally flow, like a well-written blog post.
+- Begin immediately with a clear and unequivocal insight in bold — no throat-clearing.
+- After stating the insight, develop it through:
+  - Clear reasoning
+  - Evidence, data points, or short quotes where relevant
+  - Cause-and-effect logic
+  - High-level implications for decision-makers, markets, or money
+- You may use light formatting (short paragraphs, bullets, bold text) to improve clarity, but avoid rigid structure.
+- Write in a crystal clear style, that is easy to understand and follow and fun to read.
 
 `,
   }),
