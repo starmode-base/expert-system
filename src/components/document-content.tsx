@@ -3,11 +3,7 @@ import { Document } from "~/server/queries";
 import { TakeawaySearchResult } from "~/server/searchSFs";
 import { TakeawayTile } from "./takeaway-tile";
 
-export function TakeawaysSection({
-  selectedDoc,
-}: {
-  selectedDoc: Document;
-}) {
+export function TakeawaysSection({ selectedDoc }: { selectedDoc: Document }) {
   return (
     <div className="flex h-full flex-col overflow-y-auto p-4">
       {selectedDoc.takeaways.map((takeaway) => (
