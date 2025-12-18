@@ -214,27 +214,30 @@ export const generateInsight = inngest.createFunction(
       },
     );
 
-    const takeawayPreviewFormatted = await step.run(
-      `get-similar-takeaways-${event.data.insightId}`,
-      async () => {
-        const similarTakeaways = await vectorTakeawaySearchTimeWeighted(
-          takeaway.summary,
-          10,
-        );
-        return buildTakeawayPreviews(similarTakeaways);
-      },
-    );
+    const { takeawayPreviewFormatted, takeawayConceptsPreviewFormatted } =
+      await step.run(
+        `get-similar-takeaways-and-concepts-${event.data.insightId}`,
+        async () => {
+          const similarTakeaways = await vectorTakeawaySearchTimeWeighted(
+            takeaway.summary,
+            10,
+          );
 
-    const takeawayConceptsPreviewFormatted = await step.run(
-      `get-similar-takeaway-concepts-${event.data.insightId}`,
-      async () => {
-        const similarTakeaways = await vectorConceptSearchTimeWeighted(
-          takeaway.concept,
-          10,
-        );
-        return buildTakeawayPreviews(similarTakeaways);
-      },
-    );
+          const similarConceptCandidates =
+            await vectorConceptSearchTimeWeighted(takeaway.concept, 10);
+
+          const takeawayIds = new Set(similarTakeaways.map((t) => t.id));
+          const similarConcepts = similarConceptCandidates.filter(
+            (concept) => !takeawayIds.has(concept.id),
+          );
+
+          return {
+            takeawayPreviewFormatted: buildTakeawayPreviews(similarTakeaways),
+            takeawayConceptsPreviewFormatted:
+              buildTakeawayPreviews(similarConcepts),
+          };
+        },
+      );
 
     const agentParameters = {
       model: "gpt-5.2",
