@@ -198,7 +198,7 @@ export const generateTakeaways = inngest.createFunction(
           console.log(`Saving embedding for document ${takeawaysWrite.id}`);
 
           const takeawayEmbedding = await generateEmbedding(
-            takeawaysWrite.takeaway,
+            takeawaysWrite.summary,
           );
 
           await db
