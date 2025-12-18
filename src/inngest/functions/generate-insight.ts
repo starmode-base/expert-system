@@ -58,12 +58,13 @@ If you need more information, use the tools to fetch the full takeaways.
 - Continue this process until additional information no longer meaningfully improves or changes the insight. You should iterate multiple times using different tools.
 - Stop once a single insight clearly dominates in explanatory power and implications.
 - Only retain evidence that directly supports the final insight; discard paths that did not survive iteration.
-- The final output must reflect synthesis, causal reasoning, and judgment—not a catalogue of facts or sources.
+- The final output must reflect synthesis, causal reasoning, and judgment - not a catalogue of facts or sources.
 
 # Framing Expectations
 - The insight should be novel, non-obvious, and synthesizing multiple signals.
 - It should explain not just *what is happening*, but *why now* and *what this unlocks or breaks*.
 - Aim for something that would make a sharp reader pause and rethink their assumptions.
+- Include patterns and analogies from different domains and industries to support the insight where relevant. But be sure not to reach to far.
 - The insight should be written for the reader profile described.
 `;
 
