@@ -20,6 +20,7 @@ import {
   vectorConceptSearchTimeWeighted,
   vectorTakeawaySearchTimeWeighted,
 } from "~/server/vector-queries";
+import { publishNotifyUI } from "~/lib/ably";
 
 const client = new OpenAI();
 
@@ -37,10 +38,10 @@ interface InsightLoopState {
 }
 
 const systemPrompt = `# Role
-You are an Insight Analyst. Your job is to produce **one** high-quality, standalone business insight that is **new**, **specific**, and **actionable**, using the provided context plus optional targeted research.
+You are an Business and Technology Analyst and Blogger. Your job is to produce **one** high-quality, standalone business insight that is **new**, **specific**, and **actionable**, using the provided context plus optional targeted research.
 # Objective
 Generate exactly one clear, standalone insight based on the provided context and any additional information you independently gather using available tools.
-The insight should feel like a sharp blog post written for an intelligent reader, not a report or summary.
+The insight should feel like a interesting and entertaining blog post written for an intelligent reader, not a report or summary.
 Write for someone who wants to understand *what matters* and *why it creates opportunity or risk*.
 
 Takeaways are key ideas from some source document (Public earnings calls, news articles, research reports, etc.).
@@ -109,6 +110,10 @@ const insightSchema = z.object({
 - Write in a crystal clear style, that is easy to understand and follow and fun to read.
 
 `,
+  }),
+  title: z.string({
+    description:
+      "The title of the insight. Should be short, just a few words to capture the essence of the insight.",
   }),
   references: z.array(
     z.object({
@@ -215,6 +220,8 @@ export const generateInsight = inngest.createFunction(
 
         invariant(insight, "No insights");
         invariant(insight.insightTakeaways[0]);
+
+        await publishNotifyUI(event.user.id, "loading");
 
         return {
           id: insight.insightTakeaways[0].takeaway.id,
@@ -359,7 +366,7 @@ export const generateInsight = inngest.createFunction(
           insightResponse.functionCalls,
         );
 
-        return await client.responses.parse({
+        const r = await client.responses.parse({
           ...agentParameters,
           previous_response_id: insightResponse.response.id,
           input: outputs,
@@ -367,6 +374,10 @@ export const generateInsight = inngest.createFunction(
             format: zodTextFormat(insightSchema, "insight"),
           },
         });
+
+        invariant(r.output_parsed, "No output parsed");
+
+        return r.output_parsed;
       },
     );
 
@@ -376,8 +387,8 @@ export const generateInsight = inngest.createFunction(
       await db
         .update(schema.insights)
         .set({
-          insight:
-            finalInsight.output_parsed?.insight ?? finalInsight.output_text,
+          title: finalInsight.title,
+          insight: finalInsight.insight,
         })
         .where(eq(schema.insights.id, event.data.insightId));
     });
@@ -386,7 +397,7 @@ export const generateInsight = inngest.createFunction(
     await step.run(
       `save-insight-references-${event.data.insightId}`,
       async () => {
-        const references = finalInsight.output_parsed?.references ?? [];
+        const references = finalInsight.references;
 
         if (!references.length) return;
 
@@ -408,6 +419,14 @@ export const generateInsight = inngest.createFunction(
           })),
         );
       },
+    );
+
+    // Step 8: Notify the UI that the insight has been generated
+    await step.run(
+      `notify-ui-${event.data.insightId}`,
+      publishNotifyUI,
+      event.user.id,
+      `Insight generated for ${seedTakeaway.title}`,
     );
 
     return finalInsight;

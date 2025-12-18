@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
+import { sendEventGenerateInsightSF } from "./inggest";
 
 export const createInsightSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -11,7 +12,7 @@ export const createInsightSF = createServerFn({ method: "POST" })
     const [insight] = await db
       .insert(schema.insights)
       .values({
-      userId: context.viewer.id,
+        userId: context.viewer.id,
         title,
       })
       .returning({ id: schema.insights.id });
@@ -66,9 +67,15 @@ export const createInsightWithTakeawaySF = createServerFn({ method: "POST" })
         .insert(schema.insightTakeaways)
         .values({ insightId: insight.id, takeawayId });
     } catch (error) {
-      await db.delete(schema.insights).where(eq(schema.insights.id, insight.id));
+      await db
+        .delete(schema.insights)
+        .where(eq(schema.insights.id, insight.id));
       throw error;
     }
+
+    void sendEventGenerateInsightSF({
+      data: { insightId: insight.id, insightPrompt: "" },
+    });
 
     return { insightId: insight.id };
   });

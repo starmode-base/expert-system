@@ -1,18 +1,22 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useConnectionStateListener } from "ably/react";
 import { useState } from "react";
 import { Insight } from "~/components/insight-studio/insight";
 import { InsightList } from "~/components/insight-studio/insights-list";
 import { InsightTakeaways } from "~/components/insight-studio/insightTakeaways";
+import { PubSubProvider, useNotifyUI } from "~/lib/ably";
 import {
   getInsightsSF,
   getInsightTakeawaysSF,
   updateInsightTitleSF,
 } from "~/server/insights-studio-SFs";
+import { listOrganizationsSF } from "~/server/organizations";
 import { queryInsightReferences } from "~/server/queries";
 
 export const Route = createFileRoute("/insight-studio/$insightId")({
   loader: async ({ params: { insightId } }) => {
+    const { viewerId } = await listOrganizationsSF();
     const insights = await getInsightsSF();
     const selectedInsight =
       insights.find((insight) => insight.id === insightId) ?? null;
@@ -21,21 +25,60 @@ export const Route = createFileRoute("/insight-studio/$insightId")({
     });
     const insightReferences = await queryInsightReferences({ data: insightId });
 
-    return { selectedInsight, insights, insightTakeaways, insightReferences };
+    return {
+      viewerId,
+      selectedInsight,
+      insights,
+      insightTakeaways,
+      insightReferences,
+    };
   },
-  component: RouteComponent,
+  component: RouteComponentProvider,
 });
 
+/**
+ * Route component
+ */
+function RouteComponentProvider() {
+  const { viewerId } = Route.useLoaderData();
+
+  return (
+    <PubSubProvider viewerId={viewerId}>
+      <RouteComponent />
+    </PubSubProvider>
+  );
+}
 // RouteComponent.tsx
 
 export function RouteComponent() {
-  const { insights, selectedInsight, insightTakeaways, insightReferences } =
-    Route.useLoaderData();
+  const {
+    viewerId,
+    insights,
+    selectedInsight,
+    insightTakeaways,
+    insightReferences,
+  } = Route.useLoaderData();
   const router = useRouter();
   const updateInsightTitle = useServerFn(updateInsightTitleSF);
   const [activeTab, setActiveTab] = useState<"insight" | "takeaways">(
     "insight",
   );
+
+  const [loading, setLoading] = useState(false);
+
+  useConnectionStateListener("connected", ({ current }) => {
+    console.log("Ably connection state:", current);
+  });
+
+  useNotifyUI(viewerId, (msg) => {
+    console.log("message", msg);
+    if (msg.data === "loading") {
+      setLoading(true);
+    } else {
+      setLoading(false);
+      void router.invalidate();
+    }
+  });
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
@@ -98,6 +141,7 @@ export function RouteComponent() {
                 insight={selectedInsight}
                 insightTakeaways={insightTakeaways}
                 insightReferences={insightReferences}
+                loading={loading}
                 onRefresh={async () => {
                   await router.invalidate();
                 }}

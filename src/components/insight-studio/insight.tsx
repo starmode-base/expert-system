@@ -11,11 +11,13 @@ interface InsightProps {
   insight: InsightSelect;
   insightTakeaways: Takeaway[];
   insightReferences: InsightReferenceItem[];
+  loading: boolean;
   onRefresh?: () => Promise<void> | void;
 }
 
 export function Insight(props: InsightProps) {
-  const { insight, insightTakeaways, insightReferences, onRefresh } = props;
+  const { insight, insightTakeaways, insightReferences, loading, onRefresh } =
+    props;
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export function Insight(props: InsightProps) {
           {/* Generate Insight Button */}
           <div className="mb-6">
             <button
-              disabled={!prompt.trim()}
+              disabled={!prompt.trim() || loading}
               className={`w-full rounded px-4 py-2 transition ${
                 prompt.trim()
                   ? "cursor-pointer bg-gray-900 text-white hover:bg-gray-800"
@@ -112,11 +114,15 @@ export function Insight(props: InsightProps) {
         <h2 className="mb-2 text-lg font-medium text-gray-600">Insight</h2>
         {insight.insight ? (
           <div className="h-full overflow-y-auto text-base text-gray-700">
-            <div className="prose max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
-                {insight.insight}
-              </ReactMarkdown>
-            </div>
+            {loading ? (
+              <p className="text-sm text-gray-500">Generating insight...</p>
+            ) : (
+              <div className="prose max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
+                  {insight.insight}
+                </ReactMarkdown>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-sm text-gray-500">
