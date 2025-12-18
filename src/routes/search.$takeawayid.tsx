@@ -7,7 +7,6 @@ import {
   normalizeFilterValue,
 } from "~/components/filter-bar";
 import { TakeawayTile } from "~/components/takeaway-tile";
-import { getInsightsSF } from "~/server/insights-studio-SFs";
 import {
   getFilterValues,
   queryDocumentByTakeaway,
@@ -71,7 +70,6 @@ export const Route = createFileRoute("/search/$takeawayid")({
     filters,
   }),
   loader: async ({ params: { takeawayid }, deps: search }) => {
-    const insights = await getInsightsSF();
     const { sources, categories } = await getFilterValues();
     const { searchInput, filters } = search;
 
@@ -105,7 +103,6 @@ export const Route = createFileRoute("/search/$takeawayid")({
     const selectedDoc = await queryDocumentByTakeaway({ data: takeawayid });
 
     return {
-      insights,
       takeaways,
       selectedDoc,
       takeawayid,
@@ -121,7 +118,6 @@ export const Route = createFileRoute("/search/$takeawayid")({
 function RouteComponent() {
   const {
     takeaways,
-    insights,
     selectedDoc,
     takeawayid,
     sources,
@@ -274,7 +270,6 @@ function RouteComponent() {
                   <TakeawayTile
                     key={takeaway.id}
                     takeaway={takeaway}
-                    insights={insights}
                     highlighted={takeaway.id === selectedTakeaway}
                   />
                 </Link>
@@ -284,7 +279,7 @@ function RouteComponent() {
         </div>
       </div>
       <div className="flex h-full w-2/3 flex-col">
-        <DocumentContent selectedDoc={selectedDoc} insights={insights} />
+        <DocumentContent selectedDoc={selectedDoc} />
       </div>
     </div>
   );

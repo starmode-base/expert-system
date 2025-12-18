@@ -13,7 +13,7 @@ export function InsightTakeaways({
   return (
     <ul className="flex flex-col gap-2">
       {insightTakeaways.map((takeaway) => (
-        <TakeawayTile key={takeaway.id} takeaway={takeaway} insights={[]} />
+        <TakeawayTile key={takeaway.id} takeaway={takeaway} />
       ))}
     </ul>
   );

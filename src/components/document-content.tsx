@@ -1,24 +1,17 @@
 import { useState } from "react";
-import { InsightSelect } from "~/postgres/schema";
 import { Document } from "~/server/queries";
 import { TakeawaySearchResult } from "~/server/searchSFs";
 import { TakeawayTile } from "./takeaway-tile";
 
 export function TakeawaysSection({
   selectedDoc,
-  insights,
 }: {
   selectedDoc: Document;
-  insights: InsightSelect[];
 }) {
   return (
     <div className="flex h-full flex-col overflow-y-auto p-4">
       {selectedDoc.takeaways.map((takeaway) => (
-        <TakeawayTile
-          key={takeaway.id}
-          takeaway={takeaway}
-          insights={insights}
-        />
+        <TakeawayTile key={takeaway.id} takeaway={takeaway} />
       ))}
     </div>
   );
@@ -44,7 +37,6 @@ export function ArticleSection({ selectedDoc }: { selectedDoc: Document }) {
 
 export function SimilarTakeawaysSection(props: {
   similarTakeaways: TakeawaySearchResult[];
-  insights: InsightSelect[];
 }) {
   if (props.similarTakeaways.length === 0) {
     return (
@@ -57,11 +49,7 @@ export function SimilarTakeawaysSection(props: {
   return (
     <div className="flex h-full flex-col overflow-y-auto p-4">
       {props.similarTakeaways.map((takeaway) => (
-        <TakeawayTile
-          key={takeaway.id}
-          takeaway={takeaway}
-          insights={props.insights}
-        />
+        <TakeawayTile key={takeaway.id} takeaway={takeaway} />
       ))}
     </div>
   );
@@ -69,7 +57,6 @@ export function SimilarTakeawaysSection(props: {
 
 export function SimilarConceptsSection(props: {
   similarConcepts: TakeawaySearchResult[];
-  insights: InsightSelect[];
 }) {
   if (props.similarConcepts.length === 0) {
     return (
@@ -82,11 +69,7 @@ export function SimilarConceptsSection(props: {
   return (
     <div className="flex h-full flex-col overflow-y-auto p-4">
       {props.similarConcepts.map((takeaway) => (
-        <TakeawayTile
-          key={takeaway.id}
-          takeaway={takeaway}
-          insights={props.insights}
-        />
+        <TakeawayTile key={takeaway.id} takeaway={takeaway} />
       ))}
     </div>
   );
@@ -96,10 +79,8 @@ type TabType = "takeaways" | "article" | "similarTakeaways" | "similarConcepts";
 
 export function DocumentContent({
   selectedDoc,
-  insights,
 }: {
   selectedDoc: Document | null;
-  insights: InsightSelect[];
 }) {
   const [activeTab, setActiveTab] = useState<TabType>("takeaways");
 
@@ -114,23 +95,19 @@ export function DocumentContent({
   const renderTabContent = () => {
     switch (activeTab) {
       case "takeaways":
-        return (
-          <TakeawaysSection selectedDoc={selectedDoc} insights={insights} />
-        );
+        return <TakeawaysSection selectedDoc={selectedDoc} />;
       case "article":
         return <ArticleSection selectedDoc={selectedDoc} />;
       case "similarTakeaways":
         return (
           <SimilarTakeawaysSection
             similarTakeaways={selectedDoc.similarTakeaways ?? []}
-            insights={insights}
           />
         );
       case "similarConcepts":
         return (
           <SimilarConceptsSection
             similarConcepts={selectedDoc.similarConcepts ?? []}
-            insights={insights}
           />
         );
     }

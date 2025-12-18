@@ -7,11 +7,16 @@ import { db, schema } from "~/postgres/db";
 export const createInsightSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    await db.insert(schema.insights).values({
+    const title = `New Insight: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\/|\.|\s/g, "/")}`;
+    const [insight] = await db
+      .insert(schema.insights)
+      .values({
       userId: context.viewer.id,
-      title: `New Insight: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\/|\.|\s/g, "/")}`,
-    });
-    return context.viewer.email;
+        title,
+      })
+      .returning({ id: schema.insights.id });
+
+    return insight?.id ?? null;
   });
 
 export const deleteInsightSF = createServerFn({ method: "POST" })
@@ -39,11 +44,33 @@ export const updateInsightTitleSF = createServerFn({ method: "POST" })
       .where(eq(schema.insights.id, id));
   });
 
-export const addTakeawayToInsightSF = createServerFn({ method: "POST" })
+export const createInsightWithTakeawaySF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator(z.object({ insightId: z.string(), takeawayId: z.string() }))
-  .handler(async ({ data: { insightId, takeawayId } }) => {
-    await db.insert(schema.insightTakeaways).values({ insightId, takeawayId });
+  .validator(z.object({ takeawayId: z.string() }))
+  .handler(async ({ context, data: { takeawayId } }) => {
+    const title = `New Insight: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\/|\.|\s/g, "/")}`;
+    const [insight] = await db
+      .insert(schema.insights)
+      .values({
+        userId: context.viewer.id,
+        title,
+      })
+      .returning({ id: schema.insights.id });
+
+    if (!insight?.id) {
+      throw new Error("Failed to create insight");
+    }
+
+    try {
+      await db
+        .insert(schema.insightTakeaways)
+        .values({ insightId: insight.id, takeawayId });
+    } catch (error) {
+      await db.delete(schema.insights).where(eq(schema.insights.id, insight.id));
+      throw error;
+    }
+
+    return { insightId: insight.id };
   });
 
 export const removeTakeawayFromInsightSF = createServerFn({ method: "POST" })
