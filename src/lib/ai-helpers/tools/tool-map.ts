@@ -17,7 +17,7 @@ export const toolMap = {
 // ------------------------------------------------------------
 // INSIGHT TOOLS - Tools that are availible to the insight generator agent(generate-insight.ts)
 // ------------------------------------------------------------
-export const insightTools: FunctionTool[] = [
+export const researchTools: FunctionTool[] = [
   // {
   //   type: "function",
   //   name: "fetchTakeawayPreviews",
@@ -63,39 +63,45 @@ export const insightTools: FunctionTool[] = [
       required: ["id"],
     },
   },
-  {
-    type: "function",
-    name: "buildFinalInsight",
-    description: `Build the final insight from the given context and takeaways.
-      - use this tool when you have all the information you need to build the final insight.
-      - This will call another LLM agent to build the final insight.`,
-    strict: true,
-    parameters: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        insight: {
+];
+
+export const completionTool: FunctionTool = {
+  type: "function",
+  name: "buildFinalInsight",
+  description: `Build the final insight from the given context and takeaways.
+    - use this tool when you have all the information you need to build the final insight.
+    - This will call another LLM agent to build the final insight.`,
+  strict: true,
+  parameters: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      insight: {
+        type: "string",
+        description:
+          "The core insight to build the final insight deliverable from.",
+      },
+      key_arguments: {
+        type: "string",
+        description:
+          "key arguments to include in the final insight deliverable.",
+      },
+      references_ids: {
+        type: "array",
+        description:
+          "The ids of the references to use to build the final insight",
+        items: {
           type: "string",
           description:
-            "The core insight to build the final insight deliverable from.",
-        },
-        key_arguments: {
-          type: "string",
-          description:
-            "key arguments to include in the final insight deliverable.",
-        },
-        references_ids: {
-          type: "array",
-          description:
-            "The ids of the references to use to build the final insight",
-          items: {
-            type: "string",
-            description:
-              "The id (reference_id) will be an alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y",
-          },
+            "The id (reference_id) will be an alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y",
         },
       },
-      required: ["insight", "key_arguments", "references_ids"],
     },
+    required: ["insight", "key_arguments", "references_ids"],
   },
+} as FunctionTool;
+
+export const researchAndCompletionTools: FunctionTool[] = [
+  ...researchTools,
+  completionTool,
 ];

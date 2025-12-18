@@ -7,46 +7,38 @@ import type {
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import { insightTools } from "~/lib/ai-helpers/tools/tool-map";
+import {
+  researchAndCompletionTools,
+  researchTools,
+} from "~/lib/ai-helpers/tools/tool-map";
 import { executeToolCalls } from "~/lib/ai-helpers/tools/tool-handling";
 import { invariant } from "@tanstack/react-router";
 import { z } from "zod";
 import { TakeawaySearchResult } from "~/server/searchSFs";
-import { fetchTakeawayPreviews } from "~/lib/ai-helpers/tools/tools";
+import {
+  vectorConceptSearchTimeWeighted,
+  vectorTakeawaySearchTimeWeighted,
+} from "~/server/vector-queries";
 
 const client = new OpenAI();
-
-interface TakeawayReferenceForPrompt {
-  id: string;
-  referenceNumber: number;
-  reference: string;
-}
-
-interface TakeawayForPrompt {
-  id: string;
-  source: string;
-  title: string;
-  summary: string;
-  references: TakeawayReferenceForPrompt[];
-  publicationDate: string;
-  takeaway: string;
-}
 
 const systemPrompt = `# Role
 You are an Insight Analyst. Your job is to produce **one** high-quality, standalone business insight that is **new**, **specific**, and **actionable**, using the provided context plus optional targeted research.
 # Objective
 Generate exactly one clear, standalone insight based on the provided context and any additional information you independently gather using available tools.
-
 The insight should feel like a sharp blog post written for an intelligent reader, not a report or summary.
-
 Write for someone who wants to understand *what matters* and *why it creates opportunity or risk*.
 
+Takeaways are key ideas from some source document (Public earnings calls, news articles, research reports, etc.).
+You are provided initial context with recent summaries of similar takeaways and concepts.
+If you need more information, use the tools to fetch the full takeaways.
+
 # Thinking & Research Guidelines
-- Privately generate several candidate insights based on the initial context.
+- Use the takeaway summaries generate several candidate insights.
 - Identify the strongest initial hypothesis and treat it as provisional, not final.
-- Use tools (for example, fetching takeaway previews, fetching full takeaways or external data) to test, challenge, or deepen that hypothesis. Or searching for patterns in different domains or industries.
-- Be deliberate in your tool use. Only fetch the specific information that you need to support your research.
-- Use the complete takeaways and their references to support your research. NOT just the previews.
+- Use tools (e.g. fetching full takeaways or external data) to gather additional information to test, challenge, or deepen that hypothesis. Or searching for patterns in different domains or industries.
+- Be deliberate in your tool use. Only fetch the specific information that you need to support your research or exploration.
+- Use the complete takeaways and their references to support your research. NOT just the summaries.
 - If newly fetched information suggests a more important, more surprising, or more defensible insight, abandon the original idea and pivot.
 - Search for patterns and relationships between the different takeaways and information you gather and include them in the insight.
     - Common patterns in different domains or industries lead to more compelling insights!
@@ -60,10 +52,15 @@ Write for someone who wants to understand *what matters* and *why it creates opp
 - It should explain not just *what is happening*, but *why now* and *what this unlocks or breaks*.
 - Aim for something that would make a sharp reader pause and rethink their assumptions.
 - The insight should be written for the reader profile described.
+`;
+
+const insightSchema = z.object({
+  insight: z.string({
+    description: `Final insight output text (Markdown format).
 
 # Insight Output Requirements
 - Produce ONE insight only.
-- Minimum length: 15 sentences.
+- Length: 15-20 sentences or bullet points.
 - The insight must be complete and stand on its own for a reader with general business knowledge.
 - Do NOT summarize or restate the source takeaways; use them implicitly as evidence.
 - Limit use of deep industry jargon or overly technical language. If unavoidable, explain terms plainly.
@@ -89,11 +86,6 @@ Write for someone who wants to understand *what matters* and *why it creates opp
 - Do NOT include meta commentary about the process.
 - Do NOT present multiple insights.
 - Do NOT write a summary or list of takeaways.
-- Use tools deliberately. Do NOT pull in information that does not serve you research in some way.`;
-
-const insightSchema = z.object({
-  insight: z.string({
-    description: `Final insight output text (Markdown format).
 
 # Reference Citing Requirements:
 - When making a reference to a fact, quote or data, cite you source from the Takeaway References.
@@ -123,8 +115,9 @@ export function buildTakeawayPreviews(takeaways: TakeawaySearchResult[]) {
     .map(
       (takeaway) => `
   ${takeaway.title}
+  Takeaway ID: ${takeaway.id}
   Publication Date: ${new Date(takeaway.publicationDate).toLocaleDateString("en-US")}
-  Source: ${takeaway.source}
+  Source: ${takeaway.documentTitle} - ${takeaway.documentSource}
   Key Takeaway:
   ${takeaway.summary}
   `,
@@ -132,24 +125,27 @@ export function buildTakeawayPreviews(takeaways: TakeawaySearchResult[]) {
     .join("\n------\n");
 }
 
-function buildInsightPrompt(
-  takeaway: TakeawayForPrompt,
+function buildInitialConversation(
   takeawayPreviewFormatted: string,
+  takeawayConceptsPreviewFormatted: string,
   customPrompt: string,
-): string {
-  return `
+): ResponseInput {
+  return [
+    {
+      role: "system",
+      type: "message",
+      content: systemPrompt,
+    },
+    {
+      role: "user",
+      type: "message",
+      content: `
 # Context:
-## Takeaway:
-    ${takeaway.title}
-    Publication Date: ${takeaway.publicationDate}
-    Source: ${takeaway.source}
-    Key Takeaway:
-    ${takeaway.takeaway},
-    Takeaway ID: ${takeaway.id}
-    Takeaway References: ${takeaway.references.map((reference) => `${reference.referenceNumber}. (reference_id: ${reference.id}) ${reference.reference}`).join("\n")}
-
-## Similar Takeaway (summaries):
+## Similar Takeaway (semantic similarity):
     ${takeawayPreviewFormatted}
+
+## Similar Concept (concept similarity):
+    ${takeawayConceptsPreviewFormatted}
 
 ## Reader Profile
 Assume the reader is:
@@ -158,7 +154,9 @@ Assume the reader is:
 - Comfortable with nuance, but impatient with fluff
 
 ## User Prompt:
-    ${customPrompt}`;
+    ${customPrompt}`,
+    },
+  ] as ResponseInput;
 }
 
 // ------------------------------------------------------------
@@ -198,6 +196,7 @@ export const generateInsight = inngest.createFunction(
           title: insight.insightTakeaways[0].takeaway.title,
           takeaway: insight.insightTakeaways[0].takeaway.takeaway,
           summary: insight.insightTakeaways[0].takeaway.summary,
+          concept: insight.insightTakeaways[0].takeaway.concept,
           references:
             insight.insightTakeaways[0].takeaway.takeawayReferences.map(
               (reference) => ({
@@ -218,47 +217,51 @@ export const generateInsight = inngest.createFunction(
     const takeawayPreviewFormatted = await step.run(
       `get-similar-takeaways-${event.data.insightId}`,
       async () => {
-        return await fetchTakeawayPreviews({
-          query: takeaway.summary,
-          timeWeighted: true,
-          count: 10,
-        });
+        const similarTakeaways = await vectorTakeawaySearchTimeWeighted(
+          takeaway.summary,
+          10,
+        );
+        return buildTakeawayPreviews(similarTakeaways);
       },
     );
 
-    const initialConversation = [
-      {
-        role: "system",
-        type: "message",
-        content: systemPrompt,
+    const takeawayConceptsPreviewFormatted = await step.run(
+      `get-similar-takeaway-concepts-${event.data.insightId}`,
+      async () => {
+        const similarTakeaways = await vectorConceptSearchTimeWeighted(
+          takeaway.concept,
+          10,
+        );
+        return buildTakeawayPreviews(similarTakeaways);
       },
-      {
-        role: "user",
-        type: "message",
-        content: buildInsightPrompt(
-          takeaway,
-          takeawayPreviewFormatted,
-          event.data.insightPrompt,
-        ),
-      },
-    ] as ResponseInput;
-
-    const model = "gpt-5.2";
+    );
 
     const agentParameters = {
-      model,
+      model: "gpt-5.2",
       reasoning: { effort: "high" as const },
-      // reasoning: { effort: "high", summary: "auto" }, **** Organization must be verified to generate reasoning summaries
-      parallel_tool_calls: false as const,
+      parallel_tool_calls: true as const,
     };
+
+    console.log("#### INITIAL CONVERSATION ####");
+    console.log(
+      buildInitialConversation(
+        takeawayPreviewFormatted,
+        takeawayConceptsPreviewFormatted,
+        event.data.insightPrompt,
+      ),
+    );
 
     let insightResponse = await step.run(
       `first-insight-iteration`,
       async () => {
         const response = await client.responses.create({
-          input: initialConversation,
+          input: buildInitialConversation(
+            takeawayPreviewFormatted,
+            takeawayConceptsPreviewFormatted,
+            event.data.insightPrompt,
+          ),
           tool_choice: "required",
-          tools: insightTools,
+          tools: researchTools,
           ...agentParameters,
         });
 
@@ -300,7 +303,7 @@ export const generateInsight = inngest.createFunction(
             ...agentParameters,
             previous_response_id: insightResponse.response.id,
             input: functionCallOutputs,
-            tools: insightTools,
+            tools: researchAndCompletionTools,
             tool_choice: "required",
           });
 
