@@ -45,7 +45,8 @@ The insight should feel like a interesting and entertaining blog post written fo
 Write for someone who wants to understand *what matters* and *why it creates opportunity or risk*.
 
 Takeaways are key ideas from some source document (Public earnings calls, news articles, research reports, etc.).
-You are provided initial context with recent summaries of similar takeaways and concepts.
+You are provided initial context with summaries of recent insights and similar takeaways and concepts.
+Generate an insight that is novel with respect to the recent insights.
 If you need more information, use the tools to fetch the full takeaways.
 
 # Thinking & Research Guidelines
@@ -100,7 +101,7 @@ const insightSchema = z.object({
 - Use Markdown formatting.
 - Do NOT label sections (e.g., no “Why this matters”, “What this changes”).
 - The piece should naturally flow, like a well-written blog post.
-- Begin immediately with a clear and unequivocal insight in bold — no throat-clearing.
+- Begin immediately with a core insight statement in bold. This should be clear and unequivocal.
 - After stating the insight, develop it through:
   - Clear reasoning
   - Evidence, data points, or short quotes where relevant
@@ -113,7 +114,11 @@ const insightSchema = z.object({
   }),
   title: z.string({
     description:
-      "The title of the insight. Should be short, just a few words to capture the essence of the insight.",
+      "The title of the insight. Include a nod to the domain. Should be short, several words to capture the essence of the insight.",
+  }),
+  core_insight_statement: z.string({
+    description:
+      "The core insight statement. This should be the same as the core insight statement (at beginning of insight text) in the insight text.",
   }),
   references: z.array(
     z.object({
@@ -151,6 +156,7 @@ export function buildTakeawayPreviews(takeaways: TakeawaySearchResult[]) {
 function buildInitialConversation(
   takeawayPreviewFormatted: string,
   takeawayConceptsPreviewFormatted: string,
+  recentInsights: string,
   customPrompt: string,
 ): ResponseInput {
   return [
@@ -169,6 +175,9 @@ function buildInitialConversation(
 
 ## Similar Concept (concept similarity):
     ${takeawayConceptsPreviewFormatted}
+
+## Recent Insights:
+    ${recentInsights}
 
 ## Reader Profile
 Assume the reader is:
@@ -245,6 +254,30 @@ export const generateInsight = inngest.createFunction(
       },
     );
 
+    // get recent insights to feed into the prompt
+    const recentInsights = await step.run(
+      `get-recent-insights-${event.data.insightId}`,
+      async () => {
+        const insights = await db.query.insights.findMany({
+          where: (insights, { and, eq, ne }) =>
+            and(
+              eq(insights.userId, event.user.id),
+              ne(insights.id, event.data.insightId), // exclude the current insight
+            ),
+          orderBy: (insights, { desc }) => [desc(insights.createdAt)],
+          limit: 15,
+        });
+
+        return insights
+          .map(
+            (insight) => `
+        - ${insight.summary ?? insight.title}
+        `,
+          )
+          .join("\n");
+      },
+    );
+
     // Step 2: Gather context (similar takeaways and concept-neighbors) to ground the agent’s first pass
     const { takeawayPreviewFormatted, takeawayConceptsPreviewFormatted } =
       await step.run(
@@ -275,8 +308,12 @@ export const generateInsight = inngest.createFunction(
     const initialConversation = buildInitialConversation(
       takeawayPreviewFormatted,
       takeawayConceptsPreviewFormatted,
+      recentInsights,
       event.data.insightPrompt,
     );
+
+    console.log("##### INITIAL CONVERSATION #####");
+    console.log(initialConversation);
 
     let insightResponse: InsightLoopState = await step.run(
       `first-insight-iteration`,
@@ -389,6 +426,7 @@ export const generateInsight = inngest.createFunction(
         .set({
           title: finalInsight.title,
           insight: finalInsight.insight,
+          summary: finalInsight.core_insight_statement,
         })
         .where(eq(schema.insights.id, event.data.insightId));
     });

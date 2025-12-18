@@ -285,6 +285,7 @@ export const insights = pgTable("insights", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   title: text().notNull(),
+  summary: text(),
   insight: text(),
 });
 
