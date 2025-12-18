@@ -56,7 +56,7 @@ export const earningsCallsScraper = inngest.createFunction(
         },
       );
       documentIdsResult.push(result);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await step.sleep("sleep-1-second", 1000);
     }
 
     const documentIds = documentIdsResult
