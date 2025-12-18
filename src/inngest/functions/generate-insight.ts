@@ -297,7 +297,7 @@ export const generateInsight = inngest.createFunction(
 
     // Step 4: Tool loop
     // Execute requested tools, feed results back into the model, and repeat until it asks to finalize
-    while (insightResponse.continue) {
+    while (insightResponse.continue && insightResponse.stepNumber < 10) {
       // Step 4a: Execute the model’s tool calls
       const functionCallOutputs = await step.run(
         `execute-tool-call-step-${insightResponse.stepNumber}`,
