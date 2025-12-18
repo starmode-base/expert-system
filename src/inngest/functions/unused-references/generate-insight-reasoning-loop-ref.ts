@@ -6,7 +6,7 @@ import type {
 } from "openai/resources/responses/responses";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
-import { insightTools } from "~/lib/ai-helpers/tools/tool-map";
+import { researchAndCompletionTools } from "~/lib/ai-helpers/tools/tool-map";
 import { executeToolCalls } from "~/lib/ai-helpers/tools/tool-handling";
 import { invariant } from "@tanstack/react-router";
 
@@ -141,7 +141,7 @@ export const generateInsight = inngest.createFunction(
             model,
             reasoning: { effort: "high" },
             // reasoning: { effort: "high", summary: "auto" }, **** Organization must be verified to generate reasoning summaries
-            tools: insightTools,
+            tools: researchAndCompletionTools,
             tool_choice: "auto",
             input: conversation,
           });

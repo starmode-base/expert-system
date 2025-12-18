@@ -1,22 +1,21 @@
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { InsightSelect } from "~/postgres/schema";
-import { addTakeawayToInsightSF } from "~/server/insights-studio-SFs";
+import { createInsightWithTakeawaySF } from "~/server/insights-studio-SFs";
 import { Takeaway } from "~/server/queries";
 
 export function TakeawayTile(props: {
   takeaway: Takeaway;
-  insights: InsightSelect[];
   highlighted?: boolean;
 }) {
-  const { takeaway, insights, highlighted = false } = props;
-  const [insightSelectionOpen, setInsightSelectionOpen] = useState(false);
+  const { takeaway, highlighted = false } = props;
   const [takeawayExpanded, setTakeawayExpanded] = useState(true);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
-
+  const [isCreatingInsight, setIsCreatingInsight] = useState(false);
   const [conceptExpanded, setConceptExpanded] = useState(false);
   const [referencesExpanded, setReferencesExpanded] = useState(false);
-  const addTakeawayToInsight = useServerFn(addTakeawayToInsightSF);
+  const navigate = useNavigate();
+  const createInsightWithTakeaway = useServerFn(createInsightWithTakeawaySF);
 
   const documentSource =
     takeaway.documentSource ?? (takeaway as { source?: string }).source;
@@ -34,27 +33,21 @@ export function TakeawayTile(props: {
     .filter(Boolean)
     .join(" · ");
 
-  const handleAddToInsight = async (insightId: string, takeawayId: string) => {
-    await addTakeawayToInsight({ data: { insightId, takeawayId } });
-    setInsightSelectionOpen(false);
-  };
-
-  const dropDown = () => {
-    if (insights.length === 0) return null;
-
-    return (
-      <div className="absolute top-12 right-4 z-20 w-64 rounded-md border border-gray-300 bg-white shadow-lg">
-        {insights.map((insight) => (
-          <button
-            key={insight.id}
-            onClick={() => handleAddToInsight(insight.id, takeaway.id)}
-            className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-          >
-            {insight.title}
-          </button>
-        ))}
-      </div>
-    );
+  const handleCreateInsight = async () => {
+    if (isCreatingInsight) return;
+    setIsCreatingInsight(true);
+    try {
+      const result = await createInsightWithTakeaway({
+        data: { takeawayId: takeaway.id },
+      });
+      if (!result.insightId) return;
+      await navigate({
+        to: "/insight-studio/$insightId",
+        params: { insightId: result.insightId },
+      });
+    } finally {
+      setIsCreatingInsight(false);
+    }
   };
 
   return (
@@ -77,19 +70,14 @@ export function TakeawayTile(props: {
           ) : null}
           <p className="mt-0.5 text-xs text-gray-500">{secondaryMeta}</p>
         </div>
-        {insights.length > 0 && (
-          <button
-            onClick={() => {
-              setInsightSelectionOpen((prev) => !prev);
-            }}
-            className="text-sm font-medium text-blue-600 underline hover:text-blue-800"
-          >
-            Add to Insight
-          </button>
-        )}
+        <button
+          onClick={handleCreateInsight}
+          disabled={isCreatingInsight}
+          className="text-sm font-medium text-blue-600 underline hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Create Insight
+        </button>
       </div>
-
-      {insightSelectionOpen ? dropDown() : null}
 
       <div className="mt-4 flex flex-col space-y-1 text-sm text-gray-700">
         <button

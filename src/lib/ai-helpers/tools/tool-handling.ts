@@ -108,7 +108,7 @@ export async function executeToolCalls(toolCalls: ResponseFunctionToolCall[]) {
     const args = parseToolArguments(toolCall.arguments);
 
     try {
-      console.log("***** EXECUTING TOOL", name, args);
+      console.log("***** EXECUTING TOOL", name);
       const output = await tool(args);
 
       const result: ToolExecutionResult = { ok: true, name, callId, output };

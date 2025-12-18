@@ -83,7 +83,6 @@ export const sendEventGenerateInsightSF = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ context, data }) => {
-    invariant(data.insightPrompt, "insightPrompt is required");
     invariant(data.insightId, "insightId is required");
 
     await inngest.send({

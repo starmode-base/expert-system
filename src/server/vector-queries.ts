@@ -4,6 +4,57 @@ import { db, schema } from "~/postgres/db";
 import { generateEmbedding } from "~/postgres/generate-embedding";
 import type { TakeawaySearchResult } from "./searchSFs";
 
+// ------------------------------------------------------------
+// Helper functions
+// ------------------------------------------------------------
+
+/**
+ * Compute a recency weight (0..1) to down-rank older content
+ *
+ * The curve is an S-shape that declines over ~3 months and clamps to [0, 1].
+ * If the publication date is invalid, returns 1 to avoid accidental suppression.
+ */
+function computeRecencyWeight(publicationDate: Date, now = new Date()) {
+  const publishedAtMs = publicationDate.getTime();
+  if (Number.isNaN(publishedAtMs)) {
+    return 1;
+  }
+
+  const ageMs = Math.max(0, now.getTime() - publishedAtMs);
+  const ageDays = ageMs / (1000 * 60 * 60 * 24);
+
+  // S-curve that declines over ~3 months
+  const threeMonthsDays = 90;
+  const midpointDays = threeMonthsDays / 2;
+  const k = Math.log(99) / midpointDays;
+
+  const weight = 1 / (1 + Math.exp(k * (ageDays - midpointDays)));
+  return Math.max(0, Math.min(1, weight));
+}
+
+function rerankByTimeWeightedSimilarity(
+  results: TakeawaySearchResult[],
+  now = new Date(),
+) {
+  return results
+    .map((result) => {
+      const recencyWeight = computeRecencyWeight(result.publicationDate, now);
+      const weightedSimilarity = result.similarity * recencyWeight;
+
+      return {
+        ...result,
+        similarity: weightedSimilarity,
+      };
+    })
+    .sort((a, b) => b.similarity - a.similarity);
+}
+// ------------------------------------------------------------
+// Helper functions <END>
+// ------------------------------------------------------------
+
+// ------------------------------------------------------------
+// Query functions
+// ------------------------------------------------------------
 export async function vectorTakeawaySearch(
   searchInput: string,
   limit = 10,
@@ -44,6 +95,18 @@ export async function vectorTakeawaySearch(
       references: takeaway.takeaway.takeawayReferences,
     };
   });
+}
+
+export async function vectorTakeawaySearchTimeWeighted(
+  searchInput: string,
+  limit = 10,
+): Promise<TakeawaySearchResult[]> {
+  const candidateLimit = Math.min(500, Math.max(limit, 50));
+
+  const candidates = await vectorTakeawaySearch(searchInput, candidateLimit);
+  const reranked = rerankByTimeWeightedSimilarity(candidates);
+
+  return reranked.slice(0, limit);
 }
 
 export async function vectorConceptSearch(
@@ -87,3 +150,19 @@ export async function vectorConceptSearch(
     };
   });
 }
+
+export async function vectorConceptSearchTimeWeighted(
+  searchInput: string,
+  limit = 10,
+): Promise<TakeawaySearchResult[]> {
+  const candidateLimit = Math.min(500, Math.max(limit, 50));
+
+  const candidates = await vectorConceptSearch(searchInput, candidateLimit);
+  const reranked = rerankByTimeWeightedSimilarity(candidates);
+
+  return reranked.slice(0, limit);
+}
+
+// ------------------------------------------------------------
+// Query functions <END>
+// ------------------------------------------------------------

@@ -1,72 +1,84 @@
 import { db, schema } from "~/postgres/db";
 import { inngest } from "../client";
-import type { ResponseInput } from "openai/resources/responses/responses";
+import type {
+  ResponseFunctionToolCall,
+  ResponseInput,
+  Response,
+} from "openai/resources/responses/responses";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import { insightTools } from "~/lib/ai-helpers/tools/tool-map";
+import {
+  researchAndCompletionTools,
+  researchTools,
+} from "~/lib/ai-helpers/tools/tool-map";
 import { executeToolCalls } from "~/lib/ai-helpers/tools/tool-handling";
 import { invariant } from "@tanstack/react-router";
-import { vectorTakeawaySearch } from "~/server/vector-queries";
 import { z } from "zod";
+import { TakeawaySearchResult } from "~/server/searchSFs";
+import {
+  vectorConceptSearchTimeWeighted,
+  vectorTakeawaySearchTimeWeighted,
+} from "~/server/vector-queries";
+import { publishNotifyUI } from "~/lib/ably";
 
 const client = new OpenAI();
 
-interface TakeawayReferenceForPrompt {
-  id: string;
-  referenceNumber: number;
-  reference: string;
-}
+const agentParameters = {
+  model: "gpt-5.2",
+  reasoning: { effort: "high" as const },
+  parallel_tool_calls: true as const,
+};
 
-interface TakeawayForPrompt {
-  id: string;
-  source: string;
-  title: string;
-  summary: string;
-  references: TakeawayReferenceForPrompt[];
-  publicationDate: string;
-  takeaway: string;
-}
-
-interface SimilarTakeawayForPrompt {
-  id: string;
-  title: string;
-  publicationDate: string;
-  source: string;
-  summary: string;
+interface InsightLoopState {
+  response: Response;
+  continue: boolean;
+  functionCalls: ResponseFunctionToolCall[];
+  stepNumber: number;
 }
 
 const systemPrompt = `# Role
-You are an Insight Analyst. Your job is to produce **one** high-quality, standalone business insight that is **new**, **specific**, and **actionable**, using the provided context plus optional targeted research.
+You are an Business and Technology Analyst and Blogger. Your job is to produce **one** high-quality, standalone business insight that is **new**, **specific**, and **actionable**, using the provided context plus optional targeted research.
 # Objective
 Generate exactly one clear, standalone insight based on the provided context and any additional information you independently gather using available tools.
-
-The insight should feel like a sharp blog post written for an intelligent reader, not a report or summary.
-
+The insight should feel like a interesting and entertaining blog post written for an intelligent reader, not a report or summary.
 Write for someone who wants to understand *what matters* and *why it creates opportunity or risk*.
 
+Takeaways are key ideas from some source document (Public earnings calls, news articles, research reports, etc.).
+You are provided initial context including:
+-- summaries of recent insights that have been generated for the user
+-- summaries of similar takeaways (semantic similar and conceptually similar)
+To read more about the takeaways, use the tools to fetch the full takeaways.
+Generate an insight in on a different topic than the recent insights.
+
 # Thinking & Research Guidelines
-- Privately generate several candidate insights based on the initial context.
+- Use the takeaway summaries generate several candidate insights.
 - Identify the strongest initial hypothesis and treat it as provisional, not final.
-- Use tools (for example, fetching full takeaways or external data) to test, challenge, or deepen that hypothesis. Or searching for patterns in different domains or industries.
-- Be deliberate in your tool use. Only fetch the specific information that you need to support your research.
+- Use tools (e.g. fetching full takeaways or external data) to gather additional information to test, challenge, or deepen that hypothesis. Or searching for patterns in different domains or industries.
+- Be deliberate in your tool use. Only fetch the specific information that you need to support your research or exploration.
+- Use the complete takeaways and their references to support your research. NOT just the summaries.
 - If newly fetched information suggests a more important, more surprising, or more defensible insight, abandon the original idea and pivot.
 - Search for patterns and relationships between the different takeaways and information you gather and include them in the insight.
-    - Common patterns in different domains or industries lead to more compelling insights!
-- Continue this process until additional information no longer meaningfully improves or changes the insight.
+- Continue this process until additional information no longer meaningfully improves or changes the insight. You should iterate multiple times using different tools.
 - Stop once a single insight clearly dominates in explanatory power and implications.
 - Only retain evidence that directly supports the final insight; discard paths that did not survive iteration.
-- The final output must reflect synthesis, causal reasoning, and judgment—not a catalogue of facts or sources.
+- The final output must reflect synthesis, causal reasoning, and judgment - not a catalogue of facts or sources.
 
 # Framing Expectations
 - The insight should be novel, non-obvious, and synthesizing multiple signals.
 - It should explain not just *what is happening*, but *why now* and *what this unlocks or breaks*.
 - Aim for something that would make a sharp reader pause and rethink their assumptions.
+- Include patterns and analogies from different domains and industries to support the insight where relevant. But be sure not to reach to far.
 - The insight should be written for the reader profile described.
+`;
+
+const insightSchema = z.object({
+  insight: z.string({
+    description: `Final insight output text (Markdown format).
 
 # Insight Output Requirements
 - Produce ONE insight only.
-- Minimum length: 15 sentences.
+- Length: 15-20 sentences or bullet points.
 - The insight must be complete and stand on its own for a reader with general business knowledge.
 - Do NOT summarize or restate the source takeaways; use them implicitly as evidence.
 - Limit use of deep industry jargon or overly technical language. If unavoidable, explain terms plainly.
@@ -74,36 +86,43 @@ Write for someone who wants to understand *what matters* and *why it creates opp
 - Be direct, concrete, and opinionated where appropriate.
 - No fluff, no hedging, no generic statements.
 
-# Writing Style & Structure
-- Use Markdown formatting.
-- Do NOT label sections (e.g., no “Why this matters”, “What this changes”).
-- The piece should naturally flow, like a well-written blog post.
-- Begin immediately with a clear and unequivocal insight in bold — no throat-clearing.
-- After stating the insight, develop it through:
-  - Clear reasoning
-  - Evidence, data points, or short quotes where relevant
-  - Cause-and-effect logic
-  - High-level implications for decision-makers, markets, or money
-- You may use light formatting (short paragraphs, bullets, bold text) if it improves clarity, but avoid rigid structure.
-- Use bullets if it improves clarity.
 
 # Rules
 - Do NOT start with phrases like “The insight is…”
 - Do NOT include meta commentary about the process.
 - Do NOT present multiple insights.
 - Do NOT write a summary or list of takeaways.
-- Use tools deliberately. Do NOT pull in information that does not serve you research in some way.`;
+- Do NOT include titles, headers, or labels for sections (e.g., no “Why this matters”, “What this changes”).
 
-const insightSchema = z.object({
-  insight: z.string({
-    description: `Final insight output text (Markdown format).
+
 
 # Reference Citing Requirements:
 - When making a reference to a fact, quote or data, cite you source from the Takeaway References.
 - Issue a new reference number in the insight text e.g.  "(ref 1)". Starting at 1 and incrementing for each additional reference.
 - Then record the newly issued insight_reference_number and reference_id (alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y) for each cited reference in the references array.
 
+
+# Writing Style & Structure
+- Use Markdown formatting.
+- The piece should naturally flow, like a well-written blog post.
+- Begin immediately with a core insight statement in bold. This insight statement should be clear and unequivocal.
+- After stating the insight, develop it through:
+  - Clear reasoning that is easy to follow and understand.
+  - Evidence, data points, or short quotes where relevant, but not excessive.
+  - Cause-and-effect logic
+  - High-level implications for decision-makers, markets, or money
+- You may use light formatting (short paragraphs, bullets, bold text) to improve clarity, but avoid rigid structure.
+- Write in a crystal clear style, that is easy to understand and follow and fun to read.
+
 `,
+  }),
+  title: z.string({
+    description:
+      "The title of the insight. Include a nod to the domain. Should be short, several words to capture the essence of the insight.",
+  }),
+  core_insight_statement: z.string({
+    description:
+      "The core insight statement. This should be the same as the core insight statement (at beginning of insight text) in the insight text.",
   }),
   references: z.array(
     z.object({
@@ -118,33 +137,51 @@ const insightSchema = z.object({
   ),
 });
 
-function buildInsightPrompt(
-  takeaway: TakeawayForPrompt,
-  similarTakeaways: SimilarTakeawayForPrompt[],
-  customPrompt: string,
-): string {
-  return `
-# Context:
-## Takeaway:
-    ${takeaway.title}
-    Publication Date: ${takeaway.publicationDate}
-    Source: ${takeaway.source}
-    Key Takeaway:
-    ${takeaway.takeaway},
-    Takeaway ID: ${takeaway.id}
-    Takeaway References: ${takeaway.references.map((reference) => `${reference.referenceNumber}. (reference_id: ${reference.id}) ${reference.reference}`).join("\n")}
+// ------------------------------------------------------------
+// Context Builders
+// ------------------------------------------------------------
+export function buildTakeawayPreviews(takeaways: TakeawaySearchResult[]) {
+  const dateFormatter = new Intl.DateTimeFormat("en-US");
 
-## Similar Takeaway (summaries):
-    ${similarTakeaways
-      .map(
-        (similarTakeaway) => `Takeaway ID: ${similarTakeaway.id}
-        Title: ${similarTakeaway.title}
-        Publication Date: ${similarTakeaway.publicationDate}
-        Source: ${similarTakeaway.source}
-        Summary: ${similarTakeaway.summary}
-        `,
-      )
-      .join("\n------\n")}
+  return takeaways
+    .map(
+      (takeaway) => `
+  ${takeaway.title}
+  Takeaway ID: ${takeaway.id}
+  Publication Date: ${dateFormatter.format(new Date(takeaway.publicationDate))}
+  Source: ${takeaway.documentTitle} - ${takeaway.documentSource}
+  Key Takeaway:
+  ${takeaway.summary}
+  `,
+    )
+    .join("\n------\n");
+}
+
+function buildInitialConversation(
+  takeawayPreviewFormatted: string,
+  takeawayConceptsPreviewFormatted: string,
+  recentInsights: string,
+  customPrompt: string,
+): ResponseInput {
+  return [
+    {
+      role: "system",
+      type: "message",
+      content: systemPrompt,
+    },
+    {
+      role: "user",
+      type: "message",
+      content: `
+# Context:
+## Similar Takeaway (semantic similarity):
+    ${takeawayPreviewFormatted}
+
+## Similar Concept (concept similarity):
+    ${takeawayConceptsPreviewFormatted}
+
+## Recent Insights:
+    ${recentInsights}
 
 ## Reader Profile
 Assume the reader is:
@@ -153,19 +190,31 @@ Assume the reader is:
 - Comfortable with nuance, but impatient with fluff
 
 ## User Prompt:
-    ${customPrompt}`;
+    ${customPrompt}`,
+    },
+  ] as ResponseInput;
 }
 
+async function executeToolCallsForResponse(
+  functionCalls: ResponseFunctionToolCall[],
+) {
+  const { outputs } = await executeToolCalls(functionCalls);
+  return outputs;
+}
+
+// ------------------------------------------------------------
+// FUNCTION
+// ------------------------------------------------------------
 export const generateInsight = inngest.createFunction(
   { id: "app/generate-insight" },
   { event: "app/generate-insight" },
   async ({ step, event }) => {
     console.log(`Generating insight for ${event.data.insightId}`);
 
-    const takeaway = await step.run(
+    // Step 1: Load the seed takeaway (the one we are writing an insight about)
+    const seedTakeaway = await step.run(
       `get-takeaways-${event.data.insightId}`,
       async () => {
-        // ######
         const insight = await db.query.insights.findFirst({
           where: (insights, { eq }) => eq(insights.id, event.data.insightId),
           with: {
@@ -185,11 +234,14 @@ export const generateInsight = inngest.createFunction(
         invariant(insight, "No insights");
         invariant(insight.insightTakeaways[0]);
 
+        await publishNotifyUI(event.user.id, "loading");
+
         return {
           id: insight.insightTakeaways[0].takeaway.id,
           title: insight.insightTakeaways[0].takeaway.title,
           takeaway: insight.insightTakeaways[0].takeaway.takeaway,
           summary: insight.insightTakeaways[0].takeaway.summary,
+          concept: insight.insightTakeaways[0].takeaway.concept,
           references:
             insight.insightTakeaways[0].takeaway.takeawayReferences.map(
               (reference) => ({
@@ -203,135 +255,188 @@ export const generateInsight = inngest.createFunction(
             insight.insightTakeaways[0].takeaway.document.publicationDate,
           ).toLocaleDateString("en-US"),
         };
-        //   < END STEP>
       },
     );
 
-    const similarTakeaways = await step.run(
-      `get-similar-takeaways-${event.data.insightId}`,
+    // get recent insights to feed into the prompt
+    const recentInsights = await step.run(
+      `get-recent-insights-${event.data.insightId}`,
       async () => {
-        const similarTakeaways = await vectorTakeawaySearch(
-          takeaway.summary,
-          10,
-        );
+        const insights = await db.query.insights.findMany({
+          where: (insights, { and, eq, ne }) =>
+            and(
+              eq(insights.userId, event.user.id),
+              ne(insights.id, event.data.insightId), // exclude the current insight
+            ),
+          orderBy: (insights, { desc }) => [desc(insights.createdAt)],
+          limit: 15,
+        });
 
-        return similarTakeaways.map((similarTakeaway) => ({
-          id: similarTakeaway.id,
-          title: similarTakeaway.title,
-          publicationDate:
-            similarTakeaway.publicationDate.toLocaleDateString("en-US"),
-          source: similarTakeaway.source,
-          summary: similarTakeaway.summary,
-        }));
+        return insights
+          .map(
+            (insight) => `
+        - ${insight.summary ?? insight.title}
+        `,
+          )
+          .join("\n");
       },
     );
 
-    const initialConversation = [
-      {
-        role: "system",
-        type: "message",
-        content: systemPrompt,
-      },
-      {
-        role: "user",
-        type: "message",
-        content: buildInsightPrompt(
-          takeaway,
-          similarTakeaways,
-          event.data.insightPrompt,
-        ),
-      },
-    ] as ResponseInput;
+    // Step 2: Gather context (similar takeaways and concept-neighbors) to ground the agent’s first pass
+    const { takeawayPreviewFormatted, takeawayConceptsPreviewFormatted } =
+      await step.run(
+        `get-similar-takeaways-and-concepts-${event.data.insightId}`,
+        async () => {
+          const similarTakeaways = await vectorTakeawaySearchTimeWeighted(
+            seedTakeaway.summary,
+            10,
+          );
 
-    const model = event.data.model ?? "gpt-5.2";
+          const similarConceptCandidates =
+            await vectorConceptSearchTimeWeighted(seedTakeaway.concept, 10);
 
-    let insightResponse = await step.run(
+          const takeawayIds = new Set(similarTakeaways.map((t) => t.id));
+          const similarConcepts = similarConceptCandidates.filter(
+            (concept) => !takeawayIds.has(concept.id),
+          );
+
+          return {
+            takeawayPreviewFormatted: buildTakeawayPreviews(similarTakeaways),
+            takeawayConceptsPreviewFormatted:
+              buildTakeawayPreviews(similarConcepts),
+          };
+        },
+      );
+
+    // Step 3: Kick off the agent with a required tool call so it can decide what it needs next
+    const initialConversation = buildInitialConversation(
+      takeawayPreviewFormatted,
+      takeawayConceptsPreviewFormatted,
+      recentInsights,
+      event.data.insightPrompt,
+    );
+
+    let insightResponse: InsightLoopState = await step.run(
       `first-insight-iteration`,
       async () => {
-        const response = await client.responses.parse({
-          model,
-          reasoning: { effort: "high" },
-          // reasoning: { effort: "high", summary: "auto" }, **** Organization must be verified to generate reasoning summaries
-          tools: insightTools,
-          tool_choice: "auto",
+        const response = await client.responses.create({
           input: initialConversation,
-          text: {
-            format: zodTextFormat(insightSchema, "insight"),
-          },
+          tool_choice: "required",
+          tools: researchTools,
+          stream: false,
+          ...agentParameters,
         });
+
+        const functionCalls = response.output.filter(
+          (item): item is ResponseFunctionToolCall =>
+            item.type === "function_call",
+        );
 
         return {
           response,
-          hasFunctionCalls: response.output.some(
-            (item) => item.type === "function_call",
-          ),
+          continue: true,
+          functionCalls,
           stepNumber: 0,
         };
       },
     );
 
-    while (insightResponse.hasFunctionCalls) {
-      insightResponse = await step.run(
-        `generate-insight-${event.data.insightId}-step-${insightResponse.stepNumber}`,
+    // Step 4: Tool loop
+    // Execute requested tools, feed results back into the model, and repeat until it asks to finalize
+    while (insightResponse.continue && insightResponse.stepNumber < 10) {
+      // Step 4a: Execute the model’s tool calls
+      const functionCallOutputs = await step.run(
+        `execute-tool-call-step-${insightResponse.stepNumber}`,
         async () => {
-          // ######
-
-          const functionCalls = insightResponse.response.output.filter(
-            (item) => item.type === "function_call",
+          return await executeToolCallsForResponse(
+            insightResponse.functionCalls,
           );
+        },
+      );
 
-          const functionCallResponse = await executeToolCalls(functionCalls);
-
-          console.log(
-            "##### FUNCTION CALL RESPONSE #####",
-            functionCallResponse.outputs,
-          );
-
-          const response = await client.responses.parse({
-            model,
-            reasoning: { effort: "high" },
-            // reasoning: { effort: "high", summary: "auto" }, **** Organization must be verified to generate reasoning summaries
-            tools: insightTools,
-            tool_choice: "auto",
+      // Step 4b: Ask the model what to do next (more tools or finalize)
+      insightResponse = await step.run(
+        `generate-insight-step-${insightResponse.stepNumber}`,
+        async () => {
+          const response = await client.responses.create({
+            ...agentParameters,
             previous_response_id: insightResponse.response.id,
-            input: functionCallResponse.outputs,
-            text: {
-              format: zodTextFormat(insightSchema, "insight"),
-            },
+            input: functionCallOutputs,
+            tools: researchAndCompletionTools,
+            tool_choice: "required",
+            stream: false,
           });
+
+          const functionCalls = response.output.filter(
+            (item): item is ResponseFunctionToolCall =>
+              item.type === "function_call",
+          );
 
           return {
             response,
-            hasFunctionCalls: response.output.some(
-              (item) => item.type === "function_call",
-            ),
+            continue: true,
+            functionCalls,
             stepNumber: insightResponse.stepNumber + 1,
           };
         },
       );
+
+      // Step 4c: Terminate the loop once it requests the final output
+      if (
+        insightResponse.functionCalls.some(
+          (call) => call.name === "buildFinalInsight",
+        )
+      ) {
+        insightResponse = {
+          response: insightResponse.response,
+          continue: false,
+          functionCalls: insightResponse.functionCalls,
+          stepNumber: insightResponse.stepNumber,
+        };
+      }
     }
 
+    // Step 5: Run the final tool call(s) then parse the final structured output
+    const finalInsight = await step.run(
+      `build-final-insight-step-${insightResponse.stepNumber}`,
+      async () => {
+        const outputs = await executeToolCallsForResponse(
+          insightResponse.functionCalls,
+        );
+
+        const r = await client.responses.parse({
+          ...agentParameters,
+          previous_response_id: insightResponse.response.id,
+          input: outputs,
+          text: {
+            format: zodTextFormat(insightSchema, "insight"),
+          },
+        });
+
+        invariant(r.output_parsed, "No output parsed");
+
+        return r.output_parsed;
+      },
+    );
+
+    // Step 6: Save the final insight text
     await step.run(`save-insight-${event.data.insightId}`, async () => {
-      console.log(
-        "##### INSIGHT RESPONSE PARSED #####",
-        insightResponse.response.output_parsed,
-      );
-      // ######
+      console.log("##### INSIGHT RESPONSE PARSED #####");
       await db
         .update(schema.insights)
         .set({
-          insight:
-            insightResponse.response.output_parsed?.insight ??
-            insightResponse.response.output_text,
+          title: finalInsight.title,
+          insight: finalInsight.insight,
+          summary: finalInsight.core_insight_statement,
         })
         .where(eq(schema.insights.id, event.data.insightId));
     });
 
+    // Step 7: Save the cited reference mapping for the insight
     await step.run(
       `save-insight-references-${event.data.insightId}`,
       async () => {
-        const references =
-          insightResponse.response.output_parsed?.references ?? [];
+        const references = finalInsight.references;
 
         if (!references.length) return;
 
@@ -355,8 +460,14 @@ export const generateInsight = inngest.createFunction(
       },
     );
 
-    return insightResponse;
+    // Step 8: Notify the UI that the insight has been generated
+    await step.run(
+      `notify-ui-${event.data.insightId}`,
+      publishNotifyUI,
+      event.user.id,
+      `Insight generated for ${seedTakeaway.title}`,
+    );
 
-    // < END FUNCTION >
+    return finalInsight;
   },
 );

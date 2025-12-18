@@ -14,8 +14,8 @@ export interface TakeawaySearchResult {
   summary: string;
   concept: string;
   source: string;
-  documentTitle?: string;
-  documentSource?: string;
+  documentTitle: string;
+  documentSource: string;
   category: string | undefined;
   similarity: number;
   references: TakeawayReferenceSelect[];
