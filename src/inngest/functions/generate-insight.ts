@@ -45,9 +45,11 @@ The insight should feel like a interesting and entertaining blog post written fo
 Write for someone who wants to understand *what matters* and *why it creates opportunity or risk*.
 
 Takeaways are key ideas from some source document (Public earnings calls, news articles, research reports, etc.).
-You are provided initial context with summaries of recent insights and similar takeaways and concepts.
-Generate an insight that is novel with respect to the recent insights.
-If you need more information, use the tools to fetch the full takeaways.
+You are provided initial context including:
+-- summaries of recent insights that have been generated for the user
+-- summaries of similar takeaways (semantic similar and conceptually similar)
+To read more about the takeaways, use the tools to fetch the full takeaways.
+Generate an insight in on a different topic than the recent insights.
 
 # Thinking & Research Guidelines
 - Use the takeaway summaries generate several candidate insights.
@@ -90,6 +92,9 @@ const insightSchema = z.object({
 - Do NOT include meta commentary about the process.
 - Do NOT present multiple insights.
 - Do NOT write a summary or list of takeaways.
+- Do NOT include titles, headers, or labels for sections (e.g., no “Why this matters”, “What this changes”).
+
+
 
 # Reference Citing Requirements:
 - When making a reference to a fact, quote or data, cite you source from the Takeaway References.
@@ -99,12 +104,11 @@ const insightSchema = z.object({
 
 # Writing Style & Structure
 - Use Markdown formatting.
-- Do NOT label sections (e.g., no “Why this matters”, “What this changes”).
 - The piece should naturally flow, like a well-written blog post.
-- Begin immediately with a core insight statement in bold. This should be clear and unequivocal.
+- Begin immediately with a core insight statement in bold. This insight statement should be clear and unequivocal.
 - After stating the insight, develop it through:
-  - Clear reasoning
-  - Evidence, data points, or short quotes where relevant
+  - Clear reasoning that is easy to follow and understand.
+  - Evidence, data points, or short quotes where relevant, but not excessive.
   - Cause-and-effect logic
   - High-level implications for decision-makers, markets, or money
 - You may use light formatting (short paragraphs, bullets, bold text) to improve clarity, but avoid rigid structure.
@@ -311,9 +315,6 @@ export const generateInsight = inngest.createFunction(
       recentInsights,
       event.data.insightPrompt,
     );
-
-    console.log("##### INITIAL CONVERSATION #####");
-    console.log(initialConversation);
 
     let insightResponse: InsightLoopState = await step.run(
       `first-insight-iteration`,
