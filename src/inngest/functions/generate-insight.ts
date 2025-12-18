@@ -3,6 +3,7 @@ import { inngest } from "../client";
 import type {
   ResponseFunctionToolCall,
   ResponseInput,
+  Response,
 } from "openai/resources/responses/responses";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
@@ -21,6 +22,19 @@ import {
 } from "~/server/vector-queries";
 
 const client = new OpenAI();
+
+const agentParameters = {
+  model: "gpt-5.2",
+  reasoning: { effort: "high" as const },
+  parallel_tool_calls: true as const,
+};
+
+interface InsightLoopState {
+  response: Response;
+  continue: boolean;
+  functionCalls: ResponseFunctionToolCall[];
+  stepNumber: number;
+}
 
 const systemPrompt = `# Role
 You are an Insight Analyst. Your job is to produce **one** high-quality, standalone business insight that is **new**, **specific**, and **actionable**, using the provided context plus optional targeted research.
@@ -112,12 +126,14 @@ const insightSchema = z.object({
 // Context Builders
 // ------------------------------------------------------------
 export function buildTakeawayPreviews(takeaways: TakeawaySearchResult[]) {
+  const dateFormatter = new Intl.DateTimeFormat("en-US");
+
   return takeaways
     .map(
       (takeaway) => `
   ${takeaway.title}
   Takeaway ID: ${takeaway.id}
-  Publication Date: ${new Date(takeaway.publicationDate).toLocaleDateString("en-US")}
+  Publication Date: ${dateFormatter.format(new Date(takeaway.publicationDate))}
   Source: ${takeaway.documentTitle} - ${takeaway.documentSource}
   Key Takeaway:
   ${takeaway.summary}
@@ -160,6 +176,13 @@ Assume the reader is:
   ] as ResponseInput;
 }
 
+async function executeToolCallsForResponse(
+  functionCalls: ResponseFunctionToolCall[],
+) {
+  const { outputs } = await executeToolCalls(functionCalls);
+  return outputs;
+}
+
 // ------------------------------------------------------------
 // FUNCTION
 // ------------------------------------------------------------
@@ -169,10 +192,10 @@ export const generateInsight = inngest.createFunction(
   async ({ step, event }) => {
     console.log(`Generating insight for ${event.data.insightId}`);
 
-    const takeaway = await step.run(
+    // Step 1: Load the seed takeaway (the one we are writing an insight about)
+    const seedTakeaway = await step.run(
       `get-takeaways-${event.data.insightId}`,
       async () => {
-        // ######
         const insight = await db.query.insights.findFirst({
           where: (insights, { eq }) => eq(insights.id, event.data.insightId),
           with: {
@@ -211,21 +234,21 @@ export const generateInsight = inngest.createFunction(
             insight.insightTakeaways[0].takeaway.document.publicationDate,
           ).toLocaleDateString("en-US"),
         };
-        //   < END STEP>
       },
     );
 
+    // Step 2: Gather context (similar takeaways and concept-neighbors) to ground the agent’s first pass
     const { takeawayPreviewFormatted, takeawayConceptsPreviewFormatted } =
       await step.run(
         `get-similar-takeaways-and-concepts-${event.data.insightId}`,
         async () => {
           const similarTakeaways = await vectorTakeawaySearchTimeWeighted(
-            takeaway.summary,
+            seedTakeaway.summary,
             10,
           );
 
           const similarConceptCandidates =
-            await vectorConceptSearchTimeWeighted(takeaway.concept, 10);
+            await vectorConceptSearchTimeWeighted(seedTakeaway.concept, 10);
 
           const takeawayIds = new Set(similarTakeaways.map((t) => t.id));
           const similarConcepts = similarConceptCandidates.filter(
@@ -240,37 +263,27 @@ export const generateInsight = inngest.createFunction(
         },
       );
 
-    const agentParameters = {
-      model: "gpt-5.2",
-      reasoning: { effort: "high" as const },
-      parallel_tool_calls: true as const,
-    };
-
-    console.log("#### INITIAL CONVERSATION ####");
-    console.log(
-      buildInitialConversation(
-        takeawayPreviewFormatted,
-        takeawayConceptsPreviewFormatted,
-        event.data.insightPrompt,
-      ),
+    // Step 3: Kick off the agent with a required tool call so it can decide what it needs next
+    const initialConversation = buildInitialConversation(
+      takeawayPreviewFormatted,
+      takeawayConceptsPreviewFormatted,
+      event.data.insightPrompt,
     );
 
-    let insightResponse = await step.run(
+    let insightResponse: InsightLoopState = await step.run(
       `first-insight-iteration`,
       async () => {
         const response = await client.responses.create({
-          input: buildInitialConversation(
-            takeawayPreviewFormatted,
-            takeawayConceptsPreviewFormatted,
-            event.data.insightPrompt,
-          ),
+          input: initialConversation,
           tool_choice: "required",
           tools: researchTools,
+          stream: false,
           ...agentParameters,
         });
 
         const functionCalls = response.output.filter(
-          (item) => item.type === "function_call",
+          (item): item is ResponseFunctionToolCall =>
+            item.type === "function_call",
         );
 
         return {
@@ -282,33 +295,30 @@ export const generateInsight = inngest.createFunction(
       },
     );
 
+    // Step 4: Tool loop
+    // Execute requested tools, feed results back into the model, and repeat until it asks to finalize
     while (insightResponse.continue) {
-      // < STEP >
-      // Execute tool calls
+      // Step 4a: Execute the model’s tool calls
       const functionCallOutputs = await step.run(
         `execute-tool-call-step-${insightResponse.stepNumber}`,
         async () => {
-          const { outputs } = await executeToolCalls(
+          return await executeToolCallsForResponse(
             insightResponse.functionCalls,
           );
-
-          return outputs;
         },
       );
 
-      // < STEP >
-      // Generate insight
+      // Step 4b: Ask the model what to do next (more tools or finalize)
       insightResponse = await step.run(
         `generate-insight-step-${insightResponse.stepNumber}`,
         async () => {
-          // ######
-
           const response = await client.responses.create({
             ...agentParameters,
             previous_response_id: insightResponse.response.id,
             input: functionCallOutputs,
             tools: researchAndCompletionTools,
             tool_choice: "required",
+            stream: false,
           });
 
           const functionCalls = response.output.filter(
@@ -325,13 +335,12 @@ export const generateInsight = inngest.createFunction(
         },
       );
 
-      // Termination condition: if the last function call is "buildFinalInsight"
+      // Step 4c: Terminate the loop once it requests the final output
       if (
         insightResponse.functionCalls.some(
           (call) => call.name === "buildFinalInsight",
         )
       ) {
-        console.log("### Break out of loop ###");
         insightResponse = {
           response: insightResponse.response,
           continue: false,
@@ -341,15 +350,13 @@ export const generateInsight = inngest.createFunction(
       }
     }
 
+    // Step 5: Run the final tool call(s) then parse the final structured output
     const finalInsight = await step.run(
       `build-final-insight-step-${insightResponse.stepNumber}`,
       async () => {
-        console.log("### Building final insight ###");
-        const { outputs } = await executeToolCalls(
+        const outputs = await executeToolCallsForResponse(
           insightResponse.functionCalls,
         );
-
-        console.log("### Final insight outputs ###", outputs);
 
         return await client.responses.parse({
           ...agentParameters,
@@ -362,9 +369,9 @@ export const generateInsight = inngest.createFunction(
       },
     );
 
+    // Step 6: Save the final insight text
     await step.run(`save-insight-${event.data.insightId}`, async () => {
       console.log("##### INSIGHT RESPONSE PARSED #####");
-      // ######
       await db
         .update(schema.insights)
         .set({
@@ -374,6 +381,7 @@ export const generateInsight = inngest.createFunction(
         .where(eq(schema.insights.id, event.data.insightId));
     });
 
+    // Step 7: Save the cited reference mapping for the insight
     await step.run(
       `save-insight-references-${event.data.insightId}`,
       async () => {
@@ -402,7 +410,5 @@ export const generateInsight = inngest.createFunction(
     );
 
     return finalInsight;
-
-    // < END FUNCTION >
   },
 );
