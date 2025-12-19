@@ -86,7 +86,6 @@ const insightSchema = z.object({
 - Be direct, concrete, and opinionated where appropriate.
 - No fluff, no hedging, no generic statements.
 
-
 # Rules
 - Do NOT start with phrases like “The insight is…”
 - Do NOT include meta commentary about the process.
@@ -94,13 +93,10 @@ const insightSchema = z.object({
 - Do NOT write a summary or list of takeaways.
 - Do NOT include titles, headers, or labels for sections (e.g., no “Why this matters”, “What this changes”).
 
-
-
 # Reference Citing Requirements:
 - When making a reference to a fact, quote or data, cite you source from the Takeaway References.
 - Issue a new reference number in the insight text e.g.  "(ref 1)". Starting at 1 and incrementing for each additional reference.
 - Then record the newly issued insight_reference_number and reference_id (alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y) for each cited reference in the references array.
-
 
 # Writing Style & Structure
 - Use Markdown formatting.
