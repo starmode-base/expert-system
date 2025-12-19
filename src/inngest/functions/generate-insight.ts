@@ -108,9 +108,7 @@ const insightSchema = z.object({
   - Cause-and-effect logic
   - High-level implications for decision-makers, markets, or money
 - You may use light formatting (short paragraphs, bullets, bold text) to improve clarity, but avoid rigid structure.
-- Write in a crystal clear style, that is easy to understand and follow and fun to read.
-
-`,
+- Write in a crystal clear style, that is easy to understand and follow and fun to read. Like Morgan Housel.`,
   }),
   title: z.string({
     description:
