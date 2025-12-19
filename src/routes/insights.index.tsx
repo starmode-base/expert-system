@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { InsightCard } from "~/components/insight-studio/insight-card";
+import { InsightCard } from "~/components/insight-card";
 import { queryInsightsFeed } from "~/server/queries";
 
 export const Route = createFileRoute("/insights/")({
