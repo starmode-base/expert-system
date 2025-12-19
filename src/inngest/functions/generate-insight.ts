@@ -112,11 +112,11 @@ const insightSchema = z.object({
   }),
   title: z.string({
     description:
-      "The title of the insight. Include a nod to the domain. Should be short, several words to capture the essence of the insight.",
+      "The title of the insight. Include a nod to the domain. Should be short, several words to capture the essence of the insight. Return text, not markdown.",
   }),
   core_insight_statement: z.string({
     description:
-      "The core insight statement. This should be the same as the core insight statement (at beginning of insight text) in the insight text.",
+      "The core insight statement. This should be the same as the core insight statement (at beginning of insight text) in the insight text. Return text, not markdown.",
   }),
   references: z.array(
     z.object({

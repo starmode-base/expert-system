@@ -1,11 +1,10 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { type InsightReferenceItem, Takeaway } from "~/server/queries";
 import { MODEL_OPTIONS, ModelSelector, ModelValue } from "../model-selector";
+import { InsightCard } from "./insight-card";
 
 interface InsightProps {
   insight: InsightSelect;
@@ -110,59 +109,12 @@ export function Insight(props: InsightProps) {
       </div>
 
       {/* Display Generated Insight */}
-      <div className="mt-4 rounded border border-gray-300 p-4">
-        <h2 className="mb-2 text-lg font-medium text-gray-600">Insight</h2>
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div
-              className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-gray-900"
-              aria-label="Loading"
-              role="status"
-            />
-          </div>
-        ) : (
-          <>
-            {insight.insight ? (
-              <div className="h-full overflow-y-auto text-base text-gray-700">
-                <div className="prose max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
-                    {insight.insight}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">
-                No insight has been generated yet.
-              </p>
-            )}
-
-            {/* Add vertical separator between the generated insight and the references */}
-            <div className="my-4 w-full border-t border-gray-200" />
-
-            <h2 className="mb-2 text-lg font-medium text-gray-600">
-              References
-            </h2>
-
-            {insightReferences.length > 0 ? (
-              <ol className="list-decimal space-y-2 pl-5 text-sm text-gray-800">
-                {insightReferences.map((ref) => (
-                  <li key={ref.referenceId} className="leading-6">
-                    <span className="font-medium text-gray-900">
-                      ref {ref.insightReferenceNumber}
-                    </span>
-                    <span className="text-gray-500">:</span>{" "}
-                    <span className="text-gray-800">{ref.reference}</span>
-                    <div className="mt-0.5 text-xs text-gray-500">
-                      {ref.documentTitle} · {ref.documentSource}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="text-sm text-gray-500">No references yet.</p>
-            )}
-          </>
-        )}
+      <div className="mt-4">
+        <InsightCard
+          insight={insight}
+          insightReferences={insightReferences}
+          loading={loading}
+        />
       </div>
     </div>
   );

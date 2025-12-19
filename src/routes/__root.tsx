@@ -124,6 +124,16 @@ function RootDocument(props: React.PropsWithChildren) {
               </Link>
               <Link
                 className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                to="/insights"
+                activeProps={{
+                  className: "font-bold",
+                }}
+                activeOptions={{ exact: false }}
+              >
+                Insights
+              </Link>
+              <Link
+                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
                 to="/knowledge-graph"
                 activeProps={{
                   className: "font-bold",
