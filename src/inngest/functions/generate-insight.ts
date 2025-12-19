@@ -101,7 +101,7 @@ const insightSchema = z.object({
 # Writing Style & Structure
 - Use Markdown formatting.
 - The piece should naturally flow, like a well-written blog post.
-- Begin immediately with a core insight statement in bold. This insight statement should be clear and unequivocal.
+- Begin immediately with a statement of the core insight in bold. This insight statement should be unequivocal, clear, easy to read and understsand and catchy. It should make me want to read more.
 - After stating the insight, develop it through:
   - Clear reasoning that is easy to follow and understand.
   - Evidence, data points, or short quotes where relevant, but not excessive.
