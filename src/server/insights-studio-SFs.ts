@@ -32,6 +32,7 @@ export const getInsightsSF = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     return await db.query.insights.findMany({
       where: eq(schema.insights.userId, context.viewer.id),
+      orderBy: (insights, { desc }) => [desc(insights.createdAt)],
     });
   });
 

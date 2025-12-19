@@ -3,11 +3,17 @@ import { db, schema } from "~/postgres/db";
 import { inngest } from "../client";
 import { fetchAndSaveTranscript } from "../steps/scrapers/save-content";
 import type { EarningsScheduleSelect } from "~/postgres/schema";
+import { AlphaVantageRateLimitError } from "~/lib/earnings-transcripts";
 
 interface PendingJob {
   id: string;
   earningsSchedule: EarningsScheduleSelect;
 }
+
+export const earningsCallTakeawayPrompt = `
+  Focus on articulating the most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Only include financial performance of the company to the extent that it supports insights about any of the afore mentioned themes.
+  - The takeaway itself should NOT be earnings results or financial performance.
+`;
 
 /**
  * Parses fiscalDateEnding (e.g., "2024-12-31") to determine year and quarter.
@@ -91,6 +97,10 @@ export const processEarningsJobs = inngest.createFunction(
 
             return { success: true as const, documentId, jobId: job.id };
           } catch (error) {
+            if (error instanceof AlphaVantageRateLimitError) {
+              throw error;
+            }
+
             console.error(`Failed to process job ${job.id}:`, error);
 
             await db
@@ -123,8 +133,7 @@ export const processEarningsJobs = inngest.createFunction(
           name: "app/generate-takeaways",
           data: {
             documentId: result.documentId,
-            takeawayPrompt:
-              "Focus on articulating the most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Only include financial performance of the company to the extent that it supports insights about any of the afore mentioned themes.",
+            takeawayPrompt: earningsCallTakeawayPrompt,
             model: "gpt-5.1",
           },
           user: { id: "", email: "" },

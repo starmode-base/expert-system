@@ -16,6 +16,7 @@ import { Route as IndexImport } from './routes/index'
 import { Route as SearchIndexImport } from './routes/search.index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
 import { Route as KnowledgeGraphIndexImport } from './routes/knowledge-graph.index'
+import { Route as InsightsIndexImport } from './routes/insights.index'
 import { Route as InsightStudioIndexImport } from './routes/insight-studio.index'
 import { Route as SearchTakeawayidImport } from './routes/search.$takeawayid'
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
@@ -51,6 +52,12 @@ const NewsFeedIndexRoute = NewsFeedIndexImport.update({
 const KnowledgeGraphIndexRoute = KnowledgeGraphIndexImport.update({
   id: '/knowledge-graph/',
   path: '/knowledge-graph/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const InsightsIndexRoute = InsightsIndexImport.update({
+  id: '/insights/',
+  path: '/insights/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -131,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InsightStudioIndexImport
       parentRoute: typeof rootRoute
     }
+    '/insights/': {
+      id: '/insights/'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/knowledge-graph/': {
       id: '/knowledge-graph/'
       path: '/knowledge-graph'
@@ -171,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/search/$takeawayid': typeof SearchTakeawayidRoute
   '/insight-studio': typeof InsightStudioIndexRoute
+  '/insights': typeof InsightsIndexRoute
   '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
   '/search': typeof SearchIndexRoute
@@ -184,6 +199,7 @@ export interface FileRoutesByTo {
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/search/$takeawayid': typeof SearchTakeawayidRoute
   '/insight-studio': typeof InsightStudioIndexRoute
+  '/insights': typeof InsightsIndexRoute
   '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
   '/search': typeof SearchIndexRoute
@@ -198,6 +214,7 @@ export interface FileRoutesById {
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/search/$takeawayid': typeof SearchTakeawayidRoute
   '/insight-studio/': typeof InsightStudioIndexRoute
+  '/insights/': typeof InsightsIndexRoute
   '/knowledge-graph/': typeof KnowledgeGraphIndexRoute
   '/news-feed/': typeof NewsFeedIndexRoute
   '/search/': typeof SearchIndexRoute
@@ -213,6 +230,7 @@ export interface FileRouteTypes {
     | '/news-feed/$documentid'
     | '/search/$takeawayid'
     | '/insight-studio'
+    | '/insights'
     | '/knowledge-graph'
     | '/news-feed'
     | '/search'
@@ -225,6 +243,7 @@ export interface FileRouteTypes {
     | '/news-feed/$documentid'
     | '/search/$takeawayid'
     | '/insight-studio'
+    | '/insights'
     | '/knowledge-graph'
     | '/news-feed'
     | '/search'
@@ -237,6 +256,7 @@ export interface FileRouteTypes {
     | '/news-feed/$documentid'
     | '/search/$takeawayid'
     | '/insight-studio/'
+    | '/insights/'
     | '/knowledge-graph/'
     | '/news-feed/'
     | '/search/'
@@ -251,6 +271,7 @@ export interface RootRouteChildren {
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
   SearchTakeawayidRoute: typeof SearchTakeawayidRoute
   InsightStudioIndexRoute: typeof InsightStudioIndexRoute
+  InsightsIndexRoute: typeof InsightsIndexRoute
   KnowledgeGraphIndexRoute: typeof KnowledgeGraphIndexRoute
   NewsFeedIndexRoute: typeof NewsFeedIndexRoute
   SearchIndexRoute: typeof SearchIndexRoute
@@ -264,6 +285,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
   SearchTakeawayidRoute: SearchTakeawayidRoute,
   InsightStudioIndexRoute: InsightStudioIndexRoute,
+  InsightsIndexRoute: InsightsIndexRoute,
   KnowledgeGraphIndexRoute: KnowledgeGraphIndexRoute,
   NewsFeedIndexRoute: NewsFeedIndexRoute,
   SearchIndexRoute: SearchIndexRoute,
@@ -287,6 +309,7 @@ export const routeTree = rootRoute
         "/news-feed/$documentid",
         "/search/$takeawayid",
         "/insight-studio/",
+        "/insights/",
         "/knowledge-graph/",
         "/news-feed/",
         "/search/",
@@ -310,6 +333,9 @@ export const routeTree = rootRoute
     },
     "/insight-studio/": {
       "filePath": "insight-studio.index.tsx"
+    },
+    "/insights/": {
+      "filePath": "insights.index.tsx"
     },
     "/knowledge-graph/": {
       "filePath": "knowledge-graph.index.tsx"

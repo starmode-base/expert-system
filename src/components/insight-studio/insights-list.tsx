@@ -13,7 +13,7 @@ interface InsightListProps {
   insights: InsightItem[];
 }
 
-export function InsightList({ insights }: InsightListProps) {
+export function InsightList(props: InsightListProps) {
   const navigate = useNavigate();
   const router = useRouter();
   const createInsight = useServerFn(createInsightSF);
@@ -39,25 +39,28 @@ export function InsightList({ insights }: InsightListProps) {
         </button>
       </div>
       <div className="mb-4">
-        {insights.length > 0
-          ? insights.map((insight) => (
+        {props.insights.length > 0
+          ? props.insights.map((insight) => (
               <div
                 key={insight.id}
                 className="flex flex-col border-b border-gray-300 bg-white p-2 hover:bg-gray-100"
               >
                 <div
-                  className="flex cursor-pointer items-start justify-between"
+                  className="flex cursor-pointer items-start gap-2"
                   onClick={async () => {
                     await handleSelectInsight(insight.id);
                   }}
                 >
-                  <p className="text-lg font-semibold">{insight.title}</p>
+                  <p className="min-w-0 flex-1 text-lg leading-snug font-semibold break-words">
+                    {insight.title}
+                  </p>
                   <button
-                    onClick={async () => {
+                    onClick={async (e) => {
+                      e.stopPropagation();
                       await deleteInsight({ data: insight.id });
                       await router.invalidate();
                     }}
-                    className="ml-4 h-8 w-8 rounded-full bg-red-500 text-white hover:bg-red-600"
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"
                     title="Delete"
                   >
                     ✕

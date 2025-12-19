@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { TakeawaySearchResult } from "./searchSFs";
 import { vectorConceptSearch, vectorTakeawaySearch } from "./vector-queries";
-import { TakeawayReferenceSelect } from "~/postgres/schema";
+import { InsightSelect, TakeawayReferenceSelect } from "~/postgres/schema";
 import { authMiddleware } from "~/middleware/auth-middleware";
 
 export const queryDocuments = createServerFn({
@@ -53,6 +53,43 @@ export interface InsightReferenceItem {
   documentTitle: string;
   documentSource: string;
 }
+
+export interface InsightsFeedItem {
+  insight: InsightSelect;
+  insightReferences: InsightReferenceItem[];
+}
+
+export const queryInsightsFeed = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }): Promise<InsightsFeedItem[]> => {
+    const insights = await db.query.insights.findMany({
+      where: eq(schema.insights.userId, context.viewer.id),
+      with: {
+        insightReferences: {
+          with: {
+            takeawayReference: {
+              with: { takeaway: { with: { document: true } } },
+            },
+          },
+          orderBy: (insightReferences, { asc }) => [
+            asc(insightReferences.insightReferenceNumber),
+          ],
+        },
+      },
+      orderBy: (insights, { desc }) => [desc(insights.createdAt)],
+    });
+
+    return insights.map((insight) => ({
+      insight,
+      insightReferences: insight.insightReferences.map((row) => ({
+        insightReferenceNumber: row.insightReferenceNumber,
+        referenceId: row.referenceId,
+        reference: row.takeawayReference.reference,
+        documentTitle: row.takeawayReference.takeaway.document.title,
+        documentSource: row.takeawayReference.takeaway.document.source,
+      })),
+    }));
+  });
 
 export const queryInsightReferences = createServerFn({ method: "GET" })
   .middleware([authMiddleware])

@@ -86,7 +86,6 @@ const insightSchema = z.object({
 - Be direct, concrete, and opinionated where appropriate.
 - No fluff, no hedging, no generic statements.
 
-
 # Rules
 - Do NOT start with phrases like “The insight is…”
 - Do NOT include meta commentary about the process.
@@ -94,35 +93,30 @@ const insightSchema = z.object({
 - Do NOT write a summary or list of takeaways.
 - Do NOT include titles, headers, or labels for sections (e.g., no “Why this matters”, “What this changes”).
 
-
-
 # Reference Citing Requirements:
 - When making a reference to a fact, quote or data, cite you source from the Takeaway References.
 - Issue a new reference number in the insight text e.g.  "(ref 1)". Starting at 1 and incrementing for each additional reference.
 - Then record the newly issued insight_reference_number and reference_id (alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y) for each cited reference in the references array.
 
-
 # Writing Style & Structure
 - Use Markdown formatting.
 - The piece should naturally flow, like a well-written blog post.
-- Begin immediately with a core insight statement in bold. This insight statement should be clear and unequivocal.
+- Begin immediately with a statement of the core insight in bold. This insight statement should be unequivocal, clear, easy to read and understsand and catchy. It should make me want to read more.
 - After stating the insight, develop it through:
   - Clear reasoning that is easy to follow and understand.
   - Evidence, data points, or short quotes where relevant, but not excessive.
   - Cause-and-effect logic
   - High-level implications for decision-makers, markets, or money
 - You may use light formatting (short paragraphs, bullets, bold text) to improve clarity, but avoid rigid structure.
-- Write in a crystal clear style, that is easy to understand and follow and fun to read.
-
-`,
+- Write in a crystal clear style, that is easy to understand and follow and fun to read. Like Morgan Housel.`,
   }),
   title: z.string({
     description:
-      "The title of the insight. Include a nod to the domain. Should be short, several words to capture the essence of the insight.",
+      "The title of the insight. Include a nod to the domain. Should be short, several words to capture the essence of the insight. Return text, not markdown.",
   }),
   core_insight_statement: z.string({
     description:
-      "The core insight statement. This should be the same as the core insight statement (at beginning of insight text) in the insight text.",
+      "The core insight statement. This should be the same as the core insight statement (at beginning of insight text) in the insight text. Return text, not markdown.",
   }),
   references: z.array(
     z.object({

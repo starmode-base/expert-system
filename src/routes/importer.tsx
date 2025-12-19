@@ -94,11 +94,22 @@ function RouteComponent() {
 
   const filteredTickers = useMemo(
     () =>
-      stockTickers.filter(
-        (t) =>
-          t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          t.symbol.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
+      stockTickers
+        .filter(
+          (t) =>
+            t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.symbol.toLowerCase().includes(searchTerm.toLowerCase()),
+        )
+        .slice()
+        .sort((a, b) => {
+          const byName = a.name.localeCompare(b.name, undefined, {
+            sensitivity: "base",
+          });
+          if (byName !== 0) return byName;
+          return a.symbol.localeCompare(b.symbol, undefined, {
+            sensitivity: "base",
+          });
+        }),
     [searchTerm, stockTickers],
   );
 
