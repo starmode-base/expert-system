@@ -2,6 +2,7 @@ import { inngest } from "../client";
 import { fetchAndSaveTranscript } from "../steps/scrapers/save-content";
 import { publishNotifyUI } from "~/lib/ably";
 import { generateTakeaways } from "./generate-takeaways";
+import { AlphaVantageRateLimitError } from "~/lib/earnings-transcripts";
 
 interface ScraperResult {
   status: "success" | "error";
@@ -41,6 +42,10 @@ export const earningsCallsScraper = inngest.createFunction(
               documentId,
             } as ScraperResult;
           } catch (error) {
+            if (error instanceof AlphaVantageRateLimitError) {
+              throw error;
+            }
+
             console.log("error", error);
             await publishNotifyUI(
               event.user.id,

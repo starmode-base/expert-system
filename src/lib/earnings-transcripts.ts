@@ -24,6 +24,49 @@ interface FetchAlphaVantageTranscriptParams {
   quarter: number;
 }
 
+export class AlphaVantageRateLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AlphaVantageRateLimitError";
+  }
+}
+
+function getAlphaVantageInformationMessage(payload: unknown): string | null {
+  if (typeof payload !== "object" || payload === null) {
+    return null;
+  }
+
+  for (const [key, value] of Object.entries(payload)) {
+    if (key.toLowerCase() === "information" && typeof value === "string") {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function isTranscriptResponse(
+  payload: unknown,
+): payload is AlphaVantageEarningsTranscriptResponse {
+  if (typeof payload !== "object" || payload === null) {
+    return false;
+  }
+
+  if (!("symbol" in payload) || typeof payload.symbol !== "string") {
+    return false;
+  }
+
+  if (!("quarter" in payload) || typeof payload.quarter !== "string") {
+    return false;
+  }
+
+  if (!("transcript" in payload) || !Array.isArray(payload.transcript)) {
+    return false;
+  }
+
+  return payload.transcript.length > 0;
+}
+
 export async function fetchAlphaVantageEarningsTranscript({
   symbol,
   year,
@@ -40,15 +83,21 @@ export async function fetchAlphaVantageEarningsTranscript({
     );
   }
 
-  const data = await response.json();
-  const typedData = data as AlphaVantageEarningsTranscriptResponse;
+  console.log("response", response);
 
-  if (
-    !typedData.symbol ||
-    !typedData.quarter ||
-    typedData.transcript.length === 0
-  ) {
+  const data = await response.json();
+  const typedData = data as
+    | AlphaVantageEarningsTranscriptResponse
+    | Record<string, unknown>;
+
+  const infoMessage = getAlphaVantageInformationMessage(typedData);
+  if (infoMessage?.includes("1 request per second")) {
+    throw new AlphaVantageRateLimitError(infoMessage);
+  }
+
+  if (!isTranscriptResponse(typedData)) {
     console.log("Typed data", typedData);
+
     throw new Error(
       `Alpha Vantage API response parsing error: ${JSON.stringify(typedData)}`,
     );
