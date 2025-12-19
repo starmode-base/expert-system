@@ -94,18 +94,23 @@ export function InsightCard(props: InsightCardProps) {
           {referencesExpanded ? (
             props.insightReferences.length > 0 ? (
               <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-800">
-                {props.insightReferences.map((ref) => (
-                  <li key={ref.referenceId} className="leading-6">
-                    <span className="font-medium text-gray-900">
-                      ref {ref.insightReferenceNumber}
-                    </span>
-                    <span className="text-gray-500">:</span>{" "}
-                    <span className="text-gray-800">{ref.reference}</span>
-                    <div className="mt-0.5 text-xs text-gray-500">
-                      {ref.documentTitle} · {ref.documentSource}
-                    </div>
-                  </li>
-                ))}
+                {props.insightReferences
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      a.insightReferenceNumber - b.insightReferenceNumber,
+                  )
+                  .map((ref) => (
+                    <li key={ref.referenceId} className="list-disc">
+                      <span className="text-gray-800">
+                        {ref.insightReferenceNumber}.{" "}
+                      </span>
+                      <span className="text-gray-800">{ref.reference}</span>
+                      <div className="mt-0.5 text-xs text-gray-500">
+                        {ref.documentTitle} · {ref.documentSource}
+                      </div>
+                    </li>
+                  ))}
               </ol>
             ) : (
               <p className="mt-2 text-sm text-gray-500">No references yet.</p>
