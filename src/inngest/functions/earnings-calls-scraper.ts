@@ -3,6 +3,7 @@ import { fetchAndSaveTranscript } from "../steps/scrapers/save-content";
 import { publishNotifyUI } from "~/lib/ably";
 import { generateTakeaways } from "./generate-takeaways";
 import { AlphaVantageRateLimitError } from "~/lib/earnings-transcripts";
+import { earningsCallTakeawayPrompt } from "./process-earnings-jobs";
 
 interface ScraperResult {
   status: "success" | "error";
@@ -94,8 +95,7 @@ export const earningsCallsScraper = inngest.createFunction(
           function: generateTakeaways,
           data: {
             documentId,
-            takeawayPrompt:
-              "Focus on articulating the most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Only include financial performance of the company to the extent that it supports insights about any of the afore mentioned themes.",
+            takeawayPrompt: earningsCallTakeawayPrompt,
             model: "gpt-5.1",
           },
           user: event.user,
