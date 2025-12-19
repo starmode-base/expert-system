@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
-import { inngest } from "../client";
-import { fetchAndSaveTranscript } from "../steps/scrapers/save-content";
+import { inngest } from "../../../client";
+import { fetchAndSaveTranscript } from "../../../steps/scrapers/save-content";
 import type { EarningsScheduleSelect } from "~/postgres/schema";
 import { AlphaVantageRateLimitError } from "~/lib/earnings-transcripts";
 

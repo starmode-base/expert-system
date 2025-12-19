@@ -1,9 +1,9 @@
-import { inngest } from "../client";
-import { fetchAndSaveTranscript } from "../steps/scrapers/save-content";
+import { inngest } from "../../client";
+import { fetchAndSaveTranscript } from "../../steps/scrapers/save-content";
 import { publishNotifyUI } from "~/lib/ably";
-import { generateTakeaways } from "./generate-takeaways";
+import { generateTakeaways } from "../generate-takeaways";
 import { AlphaVantageRateLimitError } from "~/lib/earnings-transcripts";
-import { earningsCallTakeawayPrompt } from "./process-earnings-jobs";
+import { earningsCallTakeawayPrompt } from "./scheduled/process-earnings-jobs";
 
 interface ScraperResult {
   status: "success" | "error";
