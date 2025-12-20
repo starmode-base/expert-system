@@ -15,7 +15,7 @@ export function InsightsFeed(props: InsightsFeedProps) {
   return (
     <div className="border-t border-gray-200">
       {items.map((item) => (
-        <div key={item.insight.id} className="border-b border-black">
+        <div key={item.insight.id} className="border-b border-gray-200">
           <InsightCard
             insight={item.insight}
             insightReferences={item.insightReferences}
