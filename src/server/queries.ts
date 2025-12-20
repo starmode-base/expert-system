@@ -59,6 +59,37 @@ export interface InsightsFeedItem {
   insightReferences: InsightReferenceItem[];
 }
 
+export const queryPublicInsightsFeed = createServerFn({
+  method: "GET",
+}).handler(async (): Promise<InsightsFeedItem[]> => {
+  const insights = await db.query.insights.findMany({
+    with: {
+      insightReferences: {
+        with: {
+          takeawayReference: {
+            with: { takeaway: { with: { document: true } } },
+          },
+        },
+        orderBy: (insightReferences, { asc }) => [
+          asc(insightReferences.insightReferenceNumber),
+        ],
+      },
+    },
+    orderBy: (insights, { desc }) => [desc(insights.createdAt)],
+  });
+
+  return insights.map((insight) => ({
+    insight,
+    insightReferences: insight.insightReferences.map((row) => ({
+      insightReferenceNumber: row.insightReferenceNumber,
+      referenceId: row.referenceId,
+      reference: row.takeawayReference.reference,
+      documentTitle: row.takeawayReference.takeaway.document.title,
+      documentSource: row.takeawayReference.takeaway.document.source,
+    })),
+  }));
+});
+
 export const queryInsightsFeed = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<InsightsFeedItem[]> => {
