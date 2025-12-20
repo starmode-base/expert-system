@@ -122,7 +122,7 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
           className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
           style={feedStyle}
         >
-          <div className="text-center text-5xl leading-tight font-semibold text-balance text-slate-800 sm:text-6xl">
+          <div className="text-center text-4xl leading-tight font-semibold text-balance text-slate-800 sm:text-6xl">
             ΞXPERT-SYSTΞM
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
