@@ -72,7 +72,6 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
     : {
         opacity: feedOpacity,
         filter: `blur(${fadeProgress * 8}px)`,
-        transform: `translateY(${fadeProgress * -10}px)`,
       };
 
   const logoStyle: React.CSSProperties = prefersReducedMotion
@@ -85,18 +84,18 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
       };
 
   return (
-    <div className="relative flex h-dvh flex-col bg-slate-100 p-8">
+    <div className="relative flex h-dvh flex-col bg-slate-100 px-2 sm:px-8">
       <div
         className="pointer-events-none fixed inset-0 z-10 flex items-center justify-center"
         style={logoStyle}
       >
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-4 px-4 sm:gap-6">
           <img
             src="/starmode-logo.svg"
             alt=""
             className="mx-auto w-[min(480px,80vw)]"
           />
-          <div className="text-center text-5xl font-semibold text-slate-800 sm:text-7xl">
+          <div className="text-center text-4xl leading-tight font-semibold text-balance text-slate-800 sm:text-7xl">
             Expert-System
           </div>
           <div
@@ -108,7 +107,7 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
             <SignUpButton mode="modal">
               <button
                 disabled={!isFadeComplete}
-                className="cursor-pointer rounded-md border border-zinc-900 bg-white px-6 py-3 text-base font-medium text-zinc-900 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-[min(22rem,90vw)] cursor-pointer rounded-md border border-zinc-900 bg-white px-6 py-3 text-base font-medium text-zinc-900 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 Sign up
               </button>
@@ -118,19 +117,28 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
       </div>
 
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col overflow-hidden">
-        <div className="flex items-center justify-between gap-4 pb-6">
-          <img src="/starmode-logo.svg" alt="STΛR MODΞ logo" className="h-10" />
-          <div className="flex gap-2">
+        <div
+          className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pb-6"
+          style={feedStyle}
+        >
+          <img
+            src="/starmode-logo.svg"
+            alt="STΛR MODΞ logo"
+            className="h-9 shrink-0 sm:h-10"
+          />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
             <SignInButton mode="modal">
-              <button className="rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-white">
+              <button className="w-full rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-white sm:w-auto">
                 Sign in
               </button>
             </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="rounded-md border border-zinc-900 bg-white px-4 py-2 text-zinc-900">
-                Sign up
-              </button>
-            </SignUpButton>
+            <div className="hidden sm:block">
+              <SignUpButton mode="modal">
+                <button className="w-full rounded-md border border-zinc-900 bg-white px-4 py-2 text-zinc-900 sm:w-auto">
+                  Sign up
+                </button>
+              </SignUpButton>
+            </div>
           </div>
         </div>
 
@@ -138,7 +146,10 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
           className="flex min-h-0 flex-1 flex-col will-change-[opacity,filter,transform]"
           style={feedStyle}
         >
-          <div ref={feedScrollRef} className="mt-4 flex-1 overflow-y-auto">
+          <div
+            ref={feedScrollRef}
+            className="mt-2 flex-1 overflow-y-auto sm:mt-4"
+          >
             <InsightsFeed items={items} />
           </div>
         </div>
