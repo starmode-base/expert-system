@@ -95,7 +95,10 @@ export const queryInsightsFeed = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<InsightsFeedItem[]> => {
     const insights = await db.query.insights.findMany({
-      where: eq(schema.insights.userId, context.viewer.id),
+      where: and(
+        eq(schema.insights.userId, context.viewer.id),
+        isNotNull(schema.insights.insight),
+      ),
       with: {
         insightReferences: {
           with: {
