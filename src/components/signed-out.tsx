@@ -95,8 +95,9 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
             alt=""
             className="mx-auto w-[min(480px,80vw)]"
           />
-          <div className="text-center text-4xl leading-tight font-semibold text-balance text-slate-800 sm:text-7xl">
-            Expert-System
+          {/* ΞXPERT-SYSTΞM */}
+          <div className="text-center text-5xl leading-tight font-semibold text-balance text-slate-800 sm:text-6xl">
+            ΞXPERT-SYSTΞM
           </div>
           <div
             aria-hidden={isFadeComplete ? undefined : true}
@@ -118,14 +119,12 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
 
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col overflow-hidden">
         <div
-          className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pb-6"
+          className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
           style={feedStyle}
         >
-          <img
-            src="/starmode-logo.svg"
-            alt="STΛR MODΞ logo"
-            className="h-9 shrink-0 sm:h-10"
-          />
+          <div className="text-center text-5xl leading-tight font-semibold text-balance text-slate-800 sm:text-6xl">
+            ΞXPERT-SYSTΞM
+          </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
             <SignInButton mode="modal">
               <button className="w-full rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-white sm:w-auto">
@@ -146,10 +145,7 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
           className="flex min-h-0 flex-1 flex-col will-change-[opacity,filter,transform]"
           style={feedStyle}
         >
-          <div
-            ref={feedScrollRef}
-            className="mt-2 flex-1 overflow-y-auto sm:mt-4"
-          >
+          <div ref={feedScrollRef} className="flex-1 overflow-y-auto">
             <InsightsFeed items={items} />
           </div>
         </div>

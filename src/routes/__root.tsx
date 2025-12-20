@@ -31,7 +31,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "ΞXPERT-SYSTEM",
+        title: "ΞXPERT-SYSTΞM",
       },
       {
         name: "description",
@@ -127,26 +127,48 @@ function NavBar() {
       : publicNavItems;
 
   return (
-    <nav className="flex items-center gap-3 px-2 py-3 sm:px-4 sm:py-4">
-      <div className="shrink-0">
-        <UserButton />
-      </div>
-      <div className="min-w-0 flex-1 overflow-x-auto">
-        <div className="flex w-max items-center gap-1 sm:gap-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.key}
-              className="cursor-pointer rounded-md px-2 py-1 text-sm whitespace-nowrap text-gray-600 hover:bg-gray-100 sm:text-base"
-              to={item.to}
-              activeProps={{ className: "font-bold text-gray-900" }}
-              activeOptions={{ exact: false }}
-            >
-              {item.label}
-            </Link>
-          ))}
+    <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+      <nav className="mx-auto flex max-w-4xl items-center gap-3 px-3 py-2 sm:px-6 sm:py-3">
+        <div className="flex shrink-0 items-center gap-3">
+          <Link
+            to="/insights"
+            className="group inline-flex flex-col items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-100"
+          >
+            <img
+              src="/starmode-logo.svg"
+              alt="STΛR MODΞ"
+              className="hidden h-4 w-auto opacity-80 sm:inline"
+            />
+            <span className="text-sm font-semibold tracking-tight text-slate-900 sm:text-base">
+              ΞXPERT-SYSTΞM
+            </span>
+          </Link>
         </div>
-      </div>
-    </nav>
+
+        <div className="min-w-0 flex-1 overflow-x-auto">
+          <div className="flex w-max items-center gap-1.5 sm:gap-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.key}
+                className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
+                to={item.to}
+                activeProps={{
+                  className:
+                    "border-slate-200 bg-slate-900 text-white hover:bg-slate-900 hover:text-white",
+                }}
+                activeOptions={{ exact: false }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="shrink-0">
+          <UserButton />
+        </div>
+      </nav>
+    </header>
   );
 }
 
