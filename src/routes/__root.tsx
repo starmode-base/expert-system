@@ -88,61 +88,63 @@ function RootDocument(props: React.PropsWithChildren) {
           </SignedOut>
           <SignedIn>
             <SignedInRouterGate>
-              <div className="flex gap-2 p-4">
-                <UserButton />
-                <Link
-                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                  to="/search"
-                  activeProps={{
-                    className: "font-bold",
-                  }}
-                  activeOptions={{ exact: false }}
-                >
-                  Feed
-                </Link>
-                <Link
-                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                  to="/insights"
-                  activeProps={{
-                    className: "font-bold",
-                  }}
-                  activeOptions={{ exact: false }}
-                >
-                  Insights
-                </Link>
-                <Link
-                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                  to="/knowledge-graph"
-                  activeProps={{
-                    className: "font-bold",
-                  }}
-                  activeOptions={{ exact: false }}
-                >
-                  Knowledge Graph
-                </Link>
+              <div className="min-h-dvh bg-slate-100">
+                <div className="flex gap-2 p-4">
+                  <UserButton />
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/search"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Feed
+                  </Link>
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/insights"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Insights
+                  </Link>
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/knowledge-graph"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Knowledge Graph
+                  </Link>
 
-                <Link
-                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                  to="/insight-studio"
-                  activeProps={{
-                    className: "font-bold",
-                  }}
-                  activeOptions={{ exact: false }}
-                >
-                  Insight Studio
-                </Link>
-                <Link
-                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                  to="/importer"
-                  activeProps={{
-                    className: "font-bold",
-                  }}
-                  activeOptions={{ exact: false }}
-                >
-                  Importer
-                </Link>
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/insight-studio"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Insight Studio
+                  </Link>
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/importer"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Importer
+                  </Link>
+                </div>
+                {props.children}
               </div>
-              {props.children}
             </SignedInRouterGate>
           </SignedIn>
           <TanStackRouterDevtools position="bottom-right" />
@@ -153,7 +155,7 @@ function RootDocument(props: React.PropsWithChildren) {
   );
 }
 
-// TODO: These gates are slow and inelegant solutions. ask Mikael how to improve this.
+// TODO: These gates are slow and inelegant solutions. Ask Mikael how to improve this.
 
 function SignedOutRouterGate(props: React.PropsWithChildren) {
   const location = useLocation();
