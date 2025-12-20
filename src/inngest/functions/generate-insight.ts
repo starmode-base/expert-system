@@ -47,9 +47,9 @@ Write for someone who wants to understand *what matters* and *why it creates opp
 Takeaways are key ideas from some source document (Public earnings calls, news articles, research reports, etc.).
 You are provided initial context including:
 -- summaries of recent insights that have been generated for the user
--- summaries of similar takeaways (semantic similar and conceptually similar)
+-- summaries of takeaways from recent published research, articles, blogs or public earnings calls
 To read more about the takeaways, use the tools to fetch the full takeaways.
-Generate an insight in on a different topic than the recent insights.
+Generate an insight in on a different topic than the listed recent insights.
 
 # Thinking & Research Guidelines
 - Use the takeaway summaries generate several candidate insights.
@@ -76,39 +76,59 @@ const insightSchema = z.object({
   insight: z.string({
     description: `Final insight output text (Markdown format).
 
+# Objective
+Produce ONE compelling, standalone insight that teaches the reader something non-obvious about the world. The primary goal is **clarity, explanation, and engagement**. Facts and references exist to *support* the insight, not to drive or dominate it.
+
 # Insight Output Requirements
 - Produce ONE insight only.
-- Length: 15-20 sentences or bullet points.
-- The insight must be complete and stand on its own for a reader with general business knowledge.
-- Do NOT summarize or restate the source takeaways; use them implicitly as evidence.
-- Limit use of deep industry jargon or overly technical language. If unavoidable, explain terms plainly.
-- Avoid acronyms unless they are spelled out.
-- Be direct, concrete, and opinionated where appropriate.
+- Length: 10-15 sentences or bullet points.
+- The insight must fully stand on its own for a reader with general business knowledge.
+- Explain the idea clearly and intuitively, as if you are teaching a smart reader something new.
+- Be concrete and opinionated where appropriate.
+- Write to be read, not indexed: prioritize narrative flow and understanding over completeness.
+- Avoid deep industry jargon. If unavoidable, explain it plainly in the moment.
+- Avoid acronyms unless they are spelled out on first use.
 - No fluff, no hedging, no generic statements.
+
+# Core Priority (Very Important)
+- The insight should be driven by **reasoning, analogy, and cause-and-effect**, not by listing facts.
+- References are **supporting evidence only**. Use them sparingly and only when they materially strengthen credibility or anchor a key claim.
+- Do NOT force citations. If a sentence is explanatory or conceptual, it does not need a reference.
 
 # Rules
 - Do NOT start with phrases like “The insight is…”
 - Do NOT include meta commentary about the process.
 - Do NOT present multiple insights.
-- Do NOT write a summary or list of takeaways.
-- Do NOT include titles, headers, or labels for sections (e.g., no “Why this matters”, “What this changes”).
+- Do NOT summarize or restate source takeaways.
+- Do NOT include titles, headers, or labeled sections.
+
+# Opening Requirement
+- Begin immediately with a **bolded core insight statement** on its own line.
+- This statement should be:
+  - Clear and decisive
+  - Easy to understand
+  - Slightly provocative or memorable
+  - Strong enough to pull the reader forward
+
+# Development Guidance
+After the opening insight:
+- Unpack *why* it is true using clear logic and intuitive examples.
+- Show how different forces interact (cause → effect → consequence).
+- Use short, well-placed facts or quotes only where they sharpen the point.
+- Focus on implications for how people think, decide, or allocate money.
+- Prefer explanation over evidence density.
 
 # Reference Citing Requirements:
 - When making a reference to a fact, quote or data, cite you source from the Takeaway References.
 - Issue a new reference number in the insight text e.g.  "(ref 1)". Starting at 1 and incrementing for each additional reference.
 - Then record the newly issued insight_reference_number and reference_id (alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y) for each cited reference in the references array.
 
-# Writing Style & Structure
-- Use Markdown formatting.
-- The piece should naturally flow, like a well-written blog post.
-- Begin immediately with a statement of the core insight in bold. This insight statement should be unequivocal, clear, easy to read and understsand and catchy. It should make me want to read more.
-- After stating the insight, develop it through:
-  - Clear reasoning that is easy to follow and understand.
-  - Evidence, data points, or short quotes where relevant, but not excessive.
-  - Cause-and-effect logic
-  - High-level implications for decision-makers, markets, or money
-- You may use light formatting (short paragraphs, bullets, bold text) to improve clarity, but avoid rigid structure.
-- Write in a crystal clear style, that is easy to understand and follow and fun to read. Like Morgan Housel.`,
+
+# Writing Style
+- Markdown format.
+- Natural flow, like a strong blog post.
+- Clear, human, slightly entertaining.
+- Write like Morgan Housel: simple language, sharp ideas, calm confidence.`,
   }),
   title: z.string({
     description:
@@ -168,11 +188,9 @@ function buildInitialConversation(
       type: "message",
       content: `
 # Context:
-## Similar Takeaway (semantic similarity):
-    ${takeawayPreviewFormatted}
-
-## Similar Concept (concept similarity):
+## Takeaways:
     ${takeawayConceptsPreviewFormatted}
+    ${takeawayPreviewFormatted}
 
 ## Recent Insights:
     ${recentInsights}
