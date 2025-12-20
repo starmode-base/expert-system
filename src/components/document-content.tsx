@@ -110,7 +110,7 @@ export function DocumentContent({
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-white">
       <h2 className="mb-4 px-4 pt-4 text-2xl font-semibold">
         {selectedDoc.title}
       </h2>

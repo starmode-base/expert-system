@@ -9,8 +9,8 @@ export function TakeawayTile(props: {
   highlighted?: boolean;
 }) {
   const { takeaway, highlighted = false } = props;
-  const [takeawayExpanded, setTakeawayExpanded] = useState(true);
-  const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [takeawayExpanded, setTakeawayExpanded] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [isCreatingInsight, setIsCreatingInsight] = useState(false);
   const [conceptExpanded, setConceptExpanded] = useState(false);
   const [referencesExpanded, setReferencesExpanded] = useState(false);

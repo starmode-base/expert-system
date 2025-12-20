@@ -197,7 +197,7 @@ function RouteComponent() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-      <div className="w-1/2 border-r border-gray-200 p-4">
+      <div className="w-1/2 border-r border-gray-200 bg-white p-4">
         <h1 className="mb-4 text-2xl font-bold">Search Takeaways</h1>
         <div className="flex gap-2 pb-4">
           <input
