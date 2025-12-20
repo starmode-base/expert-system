@@ -21,6 +21,7 @@ import { Route as InsightStudioIndexImport } from './routes/insight-studio.index
 import { Route as SearchTakeawayidImport } from './routes/search.$takeawayid'
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
 import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$insightId'
+import { Route as FeedSignedOutImport } from './routes/feed.signed-out'
 import { Route as KnowledgeGraphGraphTypeDocumentidImport } from './routes/knowledge-graph.$graphType.$documentid'
 
 // Create/Update Routes
@@ -85,6 +86,12 @@ const InsightStudioInsightIdRoute = InsightStudioInsightIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const FeedSignedOutRoute = FeedSignedOutImport.update({
+  id: '/feed/signed-out',
+  path: '/feed/signed-out',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const KnowledgeGraphGraphTypeDocumentidRoute =
   KnowledgeGraphGraphTypeDocumentidImport.update({
     id: '/knowledge-graph/$graphType/$documentid',
@@ -108,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/importer'
       fullPath: '/importer'
       preLoaderRoute: typeof ImporterImport
+      parentRoute: typeof rootRoute
+    }
+    '/feed/signed-out': {
+      id: '/feed/signed-out'
+      path: '/feed/signed-out'
+      fullPath: '/feed/signed-out'
+      preLoaderRoute: typeof FeedSignedOutImport
       parentRoute: typeof rootRoute
     }
     '/insight-studio/$insightId': {
@@ -181,6 +195,7 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/importer': typeof ImporterRoute
+  '/feed/signed-out': typeof FeedSignedOutRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/search/$takeawayid': typeof SearchTakeawayidRoute
@@ -195,6 +210,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/importer': typeof ImporterRoute
+  '/feed/signed-out': typeof FeedSignedOutRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/search/$takeawayid': typeof SearchTakeawayidRoute
@@ -210,6 +226,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/importer': typeof ImporterRoute
+  '/feed/signed-out': typeof FeedSignedOutRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/search/$takeawayid': typeof SearchTakeawayidRoute
@@ -226,6 +243,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/importer'
+    | '/feed/signed-out'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
     | '/search/$takeawayid'
@@ -239,6 +257,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/importer'
+    | '/feed/signed-out'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
     | '/search/$takeawayid'
@@ -252,6 +271,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/importer'
+    | '/feed/signed-out'
     | '/insight-studio/$insightId'
     | '/news-feed/$documentid'
     | '/search/$takeawayid'
@@ -267,6 +287,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ImporterRoute: typeof ImporterRoute
+  FeedSignedOutRoute: typeof FeedSignedOutRoute
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
   SearchTakeawayidRoute: typeof SearchTakeawayidRoute
@@ -281,6 +302,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ImporterRoute: ImporterRoute,
+  FeedSignedOutRoute: FeedSignedOutRoute,
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
   SearchTakeawayidRoute: SearchTakeawayidRoute,
@@ -305,6 +327,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/importer",
+        "/feed/signed-out",
         "/insight-studio/$insightId",
         "/news-feed/$documentid",
         "/search/$takeawayid",
@@ -321,6 +344,9 @@ export const routeTree = rootRoute
     },
     "/importer": {
       "filePath": "importer.tsx"
+    },
+    "/feed/signed-out": {
+      "filePath": "feed.signed-out.tsx"
     },
     "/insight-studio/$insightId": {
       "filePath": "insight-studio.$insightId.tsx"

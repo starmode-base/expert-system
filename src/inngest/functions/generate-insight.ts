@@ -101,6 +101,7 @@ Produce ONE compelling, standalone insight that teaches the reader something non
 - Do NOT present multiple insights.
 - Do NOT summarize or restate source takeaways.
 - Do NOT include titles, headers, or labeled sections.
+- Do NOT do NOT include em dashes (—) anywhere in the insight.
 
 # Opening Requirement
 - Begin immediately with a **bolded core insight statement** on its own line.

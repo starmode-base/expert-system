@@ -1,9 +1,11 @@
 import {
   HeadContent,
   Link,
+  Navigate,
   Outlet,
   Scripts,
   createRootRoute,
+  useLocation,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
@@ -14,8 +16,6 @@ import {
   ClerkProvider,
   SignedIn,
   SignedOut,
-  SignInButton,
-  SignUpButton,
   UserButton,
 } from "@clerk/tanstack-start";
 
@@ -84,87 +84,68 @@ function RootDocument(props: React.PropsWithChildren) {
         </head>
         <body>
           <SignedOut>
-            <div className="justify-center_ items-center_ flex h-dvh flex-col gap-8 bg-slate-100 p-8">
-              <img
-                src="/starmode-logo.svg"
-                alt="STΛR MODΞ logo"
-                className="mx-auto max-w-sm"
-              />
-              <div className="flex flex-1 flex-col items-center justify-center gap-8 pb-10">
-                <div className="max-w-4xl text-center text-5xl font-semibold text-slate-800 sm:text-7xl">
-                  Expert-System
-                </div>
-                <div className="flex gap-2">
-                  <SignInButton mode="modal">
-                    <button className="rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-white">
-                      Sign in
-                    </button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
-                    <button className="rounded-md border border-zinc-900 bg-white px-4 py-2 text-zinc-900">
-                      Sign up
-                    </button>
-                  </SignUpButton>
-                </div>
-              </div>
-            </div>
+            <SignedOutRouterGate>{props.children}</SignedOutRouterGate>
           </SignedOut>
           <SignedIn>
-            <div className="flex gap-2 p-4">
-              <UserButton />
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/search"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Feed
-              </Link>
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/insights"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Insights
-              </Link>
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/knowledge-graph"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Knowledge Graph
-              </Link>
+            <SignedInRouterGate>
+              <div className="min-h-dvh bg-slate-100">
+                <div className="flex gap-2 p-4">
+                  <UserButton />
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/search"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Feed
+                  </Link>
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/insights"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Insights
+                  </Link>
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/knowledge-graph"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Knowledge Graph
+                  </Link>
 
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/insight-studio"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Insight Studio
-              </Link>
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/importer"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Importer
-              </Link>
-            </div>
-            {props.children}
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/insight-studio"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Insight Studio
+                  </Link>
+                  <Link
+                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                    to="/importer"
+                    activeProps={{
+                      className: "font-bold",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    Importer
+                  </Link>
+                </div>
+                {props.children}
+              </div>
+            </SignedInRouterGate>
           </SignedIn>
           <TanStackRouterDevtools position="bottom-right" />
           <Scripts />
@@ -172,4 +153,26 @@ function RootDocument(props: React.PropsWithChildren) {
       </html>
     </ClerkProvider>
   );
+}
+
+// TODO: These gates are slow and inelegant solutions. Ask Mikael how to improve this.
+
+function SignedOutRouterGate(props: React.PropsWithChildren) {
+  const location = useLocation();
+
+  if (location.pathname !== "/feed/signed-out") {
+    return <Navigate to="/feed/signed-out" replace />;
+  }
+
+  return props.children;
+}
+
+function SignedInRouterGate(props: React.PropsWithChildren) {
+  const location = useLocation();
+
+  if (location.pathname === "/feed/signed-out") {
+    return <Navigate to="/insights" replace />;
+  }
+
+  return props.children;
 }
