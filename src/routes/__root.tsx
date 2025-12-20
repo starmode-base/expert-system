@@ -16,6 +16,7 @@ import {
   ClerkProvider,
   SignedIn,
   SignedOut,
+  useAuth,
   UserButton,
 } from "@clerk/tanstack-start";
 
@@ -90,58 +91,7 @@ function RootDocument(props: React.PropsWithChildren) {
             <SignedInRouterGate>
               <div className="min-h-dvh bg-slate-100">
                 <div className="flex gap-2 p-4">
-                  <UserButton />
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/search"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Feed
-                  </Link>
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/insights"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Insights
-                  </Link>
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/knowledge-graph"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Knowledge Graph
-                  </Link>
-
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/insight-studio"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Insight Studio
-                  </Link>
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/importer"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Importer
-                  </Link>
+                  <NavBar />
                 </div>
                 {props.children}
               </div>
@@ -152,6 +102,52 @@ function RootDocument(props: React.PropsWithChildren) {
         </body>
       </html>
     </ClerkProvider>
+  );
+}
+
+function NavBar() {
+  const auth = useAuth();
+  console.log(auth.userId);
+  const publicNavItems = [
+    { key: "insights", to: "/insights", label: "Insights" },
+  ];
+
+  const devNavItems = [
+    { key: "takeaways", to: "/search", label: "Takeaways" },
+    {
+      key: "knowledge-graph",
+      to: "/knowledge-graph",
+      label: "Knowledge Graph",
+    },
+    { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
+    { key: "importer", to: "/importer", label: "Importer" },
+  ];
+
+  // TODO: add user role for dev permissions.
+  let navItems: { key: string; to: string; label: string }[] = [];
+  if (auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3") {
+    navItems = publicNavItems.concat(devNavItems);
+  } else {
+    navItems = publicNavItems;
+  }
+
+  return (
+    <div className="flex gap-2 p-4">
+      <UserButton />
+      {navItems.map((item) => (
+        <Link
+          key={item.key}
+          className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+          to={item.to}
+          activeProps={{
+            className: "font-bold",
+          }}
+          activeOptions={{ exact: false }}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </div>
   );
 }
 
