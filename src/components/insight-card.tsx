@@ -8,19 +8,14 @@ interface InsightCardProps {
   insight: InsightSelect;
   insightReferences: InsightReferenceItem[];
   loading: boolean;
-  className?: string;
 }
 
 export function InsightCard(props: InsightCardProps) {
-  const className = props.className
-    ? `rounded border border-gray-300 p-4 ${props.className}`
-    : "rounded border border-gray-300 p-4";
-
   const [insightExpanded, setInsightExpanded] = useState(false);
   const [referencesExpanded, setReferencesExpanded] = useState(false);
 
   return (
-    <div className={className}>
+    <div className="bg-white p-4">
       <div className="mb-2 flex items-center justify-end gap-4">
         <div className="shrink-0 text-xs text-gray-500">
           {props.insight.createdAt.toLocaleString()}

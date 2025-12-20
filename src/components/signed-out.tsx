@@ -1,16 +1,14 @@
 import { SignInButton, SignUpButton } from "@clerk/tanstack-start";
 import { useEffect, useRef, useState } from "react";
-import { InsightCard } from "~/components/insight-card";
+import { InsightsFeed } from "~/components/insights-feed";
 import { type InsightsFeedItem } from "~/server/queries";
 
 export interface SignedOutExperienceProps {
   items: InsightsFeedItem[];
-  error?: string | null;
 }
 
 export function SignedOutExperience(props: SignedOutExperienceProps) {
   const items = props.items;
-  const error = props.error ?? null;
   const feedScrollRef = useRef<HTMLDivElement | null>(null);
   const [fadeProgress, setFadeProgress] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -140,28 +138,8 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
           className="flex min-h-0 flex-1 flex-col will-change-[opacity,filter,transform]"
           style={feedStyle}
         >
-          {error ? (
-            <div className="pt-4 text-sm text-red-700">{error}</div>
-          ) : null}
-
           <div ref={feedScrollRef} className="mt-4 flex-1 overflow-y-auto">
-            {items.length === 0 ? (
-              <div className="py-10 text-sm text-gray-500">
-                No insights yet.
-              </div>
-            ) : (
-              <div className="">
-                {items.map((item) => (
-                  <InsightCard
-                    key={item.insight.id}
-                    insight={item.insight}
-                    insightReferences={item.insightReferences}
-                    loading={false}
-                    className="bg-white"
-                  />
-                ))}
-              </div>
-            )}
+            <InsightsFeed items={items} />
           </div>
         </div>
       </div>
