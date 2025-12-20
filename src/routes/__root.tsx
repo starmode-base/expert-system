@@ -153,6 +153,8 @@ function RootDocument(props: React.PropsWithChildren) {
   );
 }
 
+// TODO: These gates are slow and inelegant solutions. ask Mikael how to improve this.
+
 function SignedOutRouterGate(props: React.PropsWithChildren) {
   const location = useLocation();
 
