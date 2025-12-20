@@ -1,29 +1,35 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import { Link } from "@tanstack/react-router";
-
-export function NotFound({ children }: { children?: any }) {
+export function NotFound() {
   return (
-    <div className="space-y-2 p-2">
-      <div className="text-gray-600 dark:text-gray-400">
-        {children || <p>The page you are looking for does not exist.</p>}
+    <main className="flex h-full w-full items-center justify-center px-4 py-10">
+      <div className="flex w-full max-w-xl flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+        <img src="/starmode-logo.svg" alt="STΛR MODΞ" className="h-9 w-auto" />
+
+        <div className="mt-6 flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+            Page not found
+          </h1>
+          <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            404
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          Check the URL for typos, or use one of the links below to get back on
+          track
+        </div>
+
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              window.history.back();
+            }}
+            className="inline-flex cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-black px-4 py-2 text-sm font-medium text-white"
+          >
+            Go back
+          </button>
+        </div>
       </div>
-      <p className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => {
-            window.history.back();
-          }}
-          className="rounded bg-emerald-500 px-2 py-1 text-sm font-black text-white uppercase"
-        >
-          Go back
-        </button>
-        <Link
-          to="/"
-          className="rounded bg-cyan-600 px-2 py-1 text-sm font-black text-white uppercase"
-        >
-          Start Over
-        </Link>
-      </p>
-    </div>
+    </main>
   );
 }
