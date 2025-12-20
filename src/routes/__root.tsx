@@ -87,61 +87,63 @@ function RootDocument(props: React.PropsWithChildren) {
             <SignedOutRouterGate>{props.children}</SignedOutRouterGate>
           </SignedOut>
           <SignedIn>
-            <div className="flex gap-2 p-4">
-              <UserButton />
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/search"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Feed
-              </Link>
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/insights"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Insights
-              </Link>
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/knowledge-graph"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Knowledge Graph
-              </Link>
+            <SignedInRouterGate>
+              <div className="flex gap-2 p-4">
+                <UserButton />
+                <Link
+                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                  to="/search"
+                  activeProps={{
+                    className: "font-bold",
+                  }}
+                  activeOptions={{ exact: false }}
+                >
+                  Feed
+                </Link>
+                <Link
+                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                  to="/insights"
+                  activeProps={{
+                    className: "font-bold",
+                  }}
+                  activeOptions={{ exact: false }}
+                >
+                  Insights
+                </Link>
+                <Link
+                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                  to="/knowledge-graph"
+                  activeProps={{
+                    className: "font-bold",
+                  }}
+                  activeOptions={{ exact: false }}
+                >
+                  Knowledge Graph
+                </Link>
 
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/insight-studio"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Insight Studio
-              </Link>
-              <Link
-                className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                to="/importer"
-                activeProps={{
-                  className: "font-bold",
-                }}
-                activeOptions={{ exact: false }}
-              >
-                Importer
-              </Link>
-            </div>
-            {props.children}
+                <Link
+                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                  to="/insight-studio"
+                  activeProps={{
+                    className: "font-bold",
+                  }}
+                  activeOptions={{ exact: false }}
+                >
+                  Insight Studio
+                </Link>
+                <Link
+                  className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
+                  to="/importer"
+                  activeProps={{
+                    className: "font-bold",
+                  }}
+                  activeOptions={{ exact: false }}
+                >
+                  Importer
+                </Link>
+              </div>
+              {props.children}
+            </SignedInRouterGate>
           </SignedIn>
           <TanStackRouterDevtools position="bottom-right" />
           <Scripts />
@@ -156,6 +158,16 @@ function SignedOutRouterGate(props: React.PropsWithChildren) {
 
   if (location.pathname !== "/feed/signed-out") {
     return <Navigate to="/feed/signed-out" replace />;
+  }
+
+  return props.children;
+}
+
+function SignedInRouterGate(props: React.PropsWithChildren) {
+  const location = useLocation();
+
+  if (location.pathname === "/feed/signed-out") {
+    return <Navigate to="/insights" replace />;
   }
 
   return props.children;
