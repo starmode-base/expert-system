@@ -59,6 +59,7 @@ Generate an insight in on a different topic than the listed recent insights.
 - Use the complete takeaways and their references to support your research. NOT just the summaries.
 - If newly fetched information suggests a more important, more surprising, or more defensible insight, abandon the original idea and pivot.
 - Search for patterns and relationships between the different takeaways and information you gather and include them in the insight.
+- Use at least 2 distinct sources to support the insight.
 - Continue this process until additional information no longer meaningfully improves or changes the insight. You should iterate multiple times using different tools.
 - Stop once a single insight clearly dominates in explanatory power and implications.
 - Only retain evidence that directly supports the final insight; discard paths that did not survive iteration.
@@ -110,6 +111,8 @@ Produce ONE compelling, standalone insight that teaches the reader something non
   - Easy to understand
   - Slightly provocative or memorable
   - Strong enough to pull the reader forward
+  - Include a recognizable name (business, person, event, etc.)
+  - Hint at the actionable takeaway from the insight.
 
 # Development Guidance
 After the opening insight:
@@ -117,6 +120,7 @@ After the opening insight:
 - Show how different forces interact (cause → effect → consequence).
 - Use short, well-placed facts or quotes only where they sharpen the point.
 - Focus on implications for how people think, decide, or allocate money.
+- End with some practical advice or action item for the reader.
 - Prefer explanation over evidence density.
 
 # Reference Citing Requirements:
