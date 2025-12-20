@@ -9,8 +9,8 @@ export function TakeawayTile(props: {
   highlighted?: boolean;
 }) {
   const { takeaway, highlighted = false } = props;
-  const [takeawayExpanded, setTakeawayExpanded] = useState(true);
-  const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [takeawayExpanded, setTakeawayExpanded] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [isCreatingInsight, setIsCreatingInsight] = useState(false);
   const [conceptExpanded, setConceptExpanded] = useState(false);
   const [referencesExpanded, setReferencesExpanded] = useState(false);
@@ -54,17 +54,17 @@ export function TakeawayTile(props: {
     <div
       key={takeaway.id}
       className={
-        `relative mb-4 rounded-xl border p-4 shadow-md ` +
-        (highlighted ? "border-gray-400 bg-gray-100" : "border-gray-200")
+        `relative mb-4 rounded-xl border bg-white p-4 shadow-md ` +
+        (highlighted ? "border-2 border-gray-400" : "border-gray-200")
       }
     >
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900">
             {takeaway.title}
           </h2>
           {documentMeta ? (
-            <p className="mt-1 truncate text-sm text-gray-600">
+            <p className="mt-1 truncate text-sm text-gray-500">
               {documentMeta}
             </p>
           ) : null}
@@ -73,7 +73,7 @@ export function TakeawayTile(props: {
         <button
           onClick={handleCreateInsight}
           disabled={isCreatingInsight}
-          className="text-sm font-medium text-blue-600 underline hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="text-sm font-medium text-gray-700 underline decoration-gray-300 underline-offset-2 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Create Insight
         </button>
@@ -84,7 +84,7 @@ export function TakeawayTile(props: {
           onClick={() => {
             setSummaryExpanded((prev) => !prev);
           }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-600"
         >
           <span
             className={`inline-block transition-transform ${summaryExpanded ? "rotate-90" : ""}`}
@@ -95,13 +95,13 @@ export function TakeawayTile(props: {
         </button>
         {summaryExpanded ? <p className="pl-4">{takeaway.summary}</p> : null}
 
-        <hr className="my-3 border-gray-300" />
+        <hr className="my-3 border-gray-200" />
 
         <button
           onClick={() => {
             setTakeawayExpanded((prev) => !prev);
           }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-600"
         >
           <span
             className={`inline-block transition-transform ${takeawayExpanded ? "rotate-90" : ""}`}
@@ -112,13 +112,13 @@ export function TakeawayTile(props: {
         </button>
         {takeawayExpanded ? <p className="pl-4">{takeaway.takeaway}</p> : null}
 
-        <hr className="my-3 border-gray-300" />
+        <hr className="my-3 border-gray-200" />
 
         <button
           onClick={() => {
             setConceptExpanded((prev) => !prev);
           }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-600"
         >
           <span
             className={`inline-block transition-transform ${conceptExpanded ? "rotate-90" : ""}`}
@@ -129,13 +129,13 @@ export function TakeawayTile(props: {
         </button>
         {conceptExpanded ? <p className="pl-4">{takeaway.concept}</p> : null}
 
-        <hr className="my-3 border-gray-300" />
+        <hr className="my-3 border-gray-200" />
 
         <button
           onClick={() => {
             setReferencesExpanded((prev) => !prev);
           }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-600"
         >
           <span
             className={`inline-block transition-transform ${referencesExpanded ? "rotate-90" : ""}`}

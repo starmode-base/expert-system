@@ -16,6 +16,7 @@ import {
   ClerkProvider,
   SignedIn,
   SignedOut,
+  useAuth,
   UserButton,
 } from "@clerk/tanstack-start";
 
@@ -30,7 +31,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "ΞXPERT-SYSTEM",
+        title: "ΞXPERT-SYSTΞM",
       },
       {
         name: "description",
@@ -89,60 +90,7 @@ function RootDocument(props: React.PropsWithChildren) {
           <SignedIn>
             <SignedInRouterGate>
               <div className="min-h-dvh bg-slate-100">
-                <div className="flex gap-2 p-4">
-                  <UserButton />
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/search"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Feed
-                  </Link>
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/insights"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Insights
-                  </Link>
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/knowledge-graph"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Knowledge Graph
-                  </Link>
-
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/insight-studio"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Insight Studio
-                  </Link>
-                  <Link
-                    className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-                    to="/importer"
-                    activeProps={{
-                      className: "font-bold",
-                    }}
-                    activeOptions={{ exact: false }}
-                  >
-                    Importer
-                  </Link>
-                </div>
+                <NavBar />
                 {props.children}
               </div>
             </SignedInRouterGate>
@@ -152,6 +100,75 @@ function RootDocument(props: React.PropsWithChildren) {
         </body>
       </html>
     </ClerkProvider>
+  );
+}
+
+function NavBar() {
+  const auth = useAuth();
+  const publicNavItems = [
+    { key: "insights", to: "/insights", label: "Insights" },
+  ];
+
+  const devNavItems = [
+    { key: "takeaways", to: "/search", label: "Takeaways" },
+    {
+      key: "knowledge-graph",
+      to: "/knowledge-graph",
+      label: "Knowledge Graph",
+    },
+    { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
+    { key: "importer", to: "/importer", label: "Importer" },
+  ];
+
+  // TODO: add user role for dev permissions.
+  const navItems: { key: string; to: string; label: string }[] =
+    auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3"
+      ? publicNavItems.concat(devNavItems)
+      : publicNavItems;
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+      <nav className="mx-auto flex max-w-4xl items-center gap-3 px-3 py-2 sm:px-6 sm:py-3">
+        <div className="flex shrink-0 items-center gap-3">
+          <Link
+            to="/insights"
+            className="group inline-flex flex-col items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-100"
+          >
+            <img
+              src="/starmode-logo.svg"
+              alt="STΛR MODΞ"
+              className="hidden h-4 w-auto opacity-80 sm:inline"
+            />
+            <span className="text-sm font-semibold tracking-tight text-slate-900 sm:text-base">
+              ΞXPERT-SYSTΞM
+            </span>
+          </Link>
+        </div>
+
+        <div className="min-w-0 flex-1 overflow-x-auto">
+          <div className="flex w-max items-center gap-1.5 sm:gap-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.key}
+                className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
+                to={item.to}
+                activeProps={{
+                  className:
+                    "border-slate-200 bg-slate-900 text-white hover:bg-slate-900 hover:text-white",
+                }}
+                activeOptions={{ exact: false }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="shrink-0">
+          <UserButton />
+        </div>
+      </nav>
+    </header>
   );
 }
 

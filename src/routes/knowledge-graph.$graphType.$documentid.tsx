@@ -143,7 +143,7 @@ function KnowledgeGraph({
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex h-full w-full flex-col bg-white">
       <FilterBar
         availableSources={sources}
         availableCategories={categories}
@@ -152,7 +152,7 @@ function KnowledgeGraph({
         updateURL={false}
       />
       {/* Slider */}
-      <div className="flex items-center gap-2 bg-gray-50 px-4 py-2">
+      <div className="flex items-center gap-2 px-4 py-2">
         <label className="text-sm font-medium">Similarity Threshold:</label>
         <input
           type="range"
@@ -171,7 +171,7 @@ function KnowledgeGraph({
       </div>
 
       {/* Graph */}
-      <div className="flex-1">
+      <div className="flex-1 bg-white">
         <ForceGraph2D
           d3VelocityDecay={0.5}
           ref={fgRef}
@@ -209,7 +209,7 @@ function RouteComponent() {
   }
   invariant(graphData, "No graph data");
   return (
-    <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+    <div className="flex bg-white" style={{ height: "calc(100vh - 64px)" }}>
       <div className="m-4 w-1/2 overflow-y-hidden border-r border-gray-200">
         <h1 className="mb-4 text-2xl font-semibold">Knowledge Graph</h1>
         <div className="flex border-b border-gray-200 pb-4">

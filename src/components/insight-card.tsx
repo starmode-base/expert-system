@@ -41,7 +41,7 @@ function InsightMarkdownToggle(props: InsightMarkdownToggleProps) {
             props.variant === "preview" ? "text-base text-gray-700" : ""
           }
         >
-          <div className="prose max-w-none">
+          <div className="prose prose-slate prose-sm sm:prose-base max-w-none break-words">
             <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
               {props.markdown ?? ""}
             </ReactMarkdown>
