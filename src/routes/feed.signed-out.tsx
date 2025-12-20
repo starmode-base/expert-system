@@ -4,21 +4,13 @@ import { queryPublicInsightsFeed } from "~/server/queries";
 
 export const Route = createFileRoute("/feed/signed-out")({
   loader: async () => {
-    try {
-      const items = await queryPublicInsightsFeed();
-      return { items, error: null as string | null };
-    } catch (e) {
-      return {
-        items: [],
-        error: e instanceof Error ? e.message : "Failed to load insights",
-      };
-    }
+    return await queryPublicInsightsFeed();
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { items, error } = Route.useLoaderData();
+  const items = Route.useLoaderData();
 
-  return <SignedOutExperience items={items} error={error} />;
+  return <SignedOutExperience items={items} />;
 }
