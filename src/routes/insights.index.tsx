@@ -15,7 +15,7 @@ function RouteComponent() {
 
   return (
     <div className="h-[calc(100dvh-64px)] overflow-hidden">
-      <div className="mx-auto flex h-full max-w-4xl flex-col px-2 py-4 sm:px-4 sm:py-6">
+      <div className="mx-auto flex h-full max-w-4xl flex-col px-2 sm:px-4">
         <div className="min-h-0 flex-1 overflow-y-auto">
           <InsightsFeed items={items} />
         </div>
