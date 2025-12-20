@@ -14,9 +14,9 @@ function RouteComponent() {
   const { items } = Route.useLoaderData();
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-hidden">
-      <div className="mx-auto flex h-full max-w-4xl flex-col px-4 py-6">
-        <div className="mt-4 flex-1 overflow-y-auto">
+    <div className="h-[calc(100dvh-64px)] overflow-hidden">
+      <div className="mx-auto flex h-full max-w-4xl flex-col px-2 py-4 sm:px-4 sm:py-6">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <InsightsFeed items={items} />
         </div>
       </div>

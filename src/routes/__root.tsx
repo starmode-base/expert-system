@@ -90,9 +90,7 @@ function RootDocument(props: React.PropsWithChildren) {
           <SignedIn>
             <SignedInRouterGate>
               <div className="min-h-dvh bg-slate-100">
-                <div className="flex gap-2 p-4">
-                  <NavBar />
-                </div>
+                <NavBar />
                 {props.children}
               </div>
             </SignedInRouterGate>
@@ -107,7 +105,6 @@ function RootDocument(props: React.PropsWithChildren) {
 
 function NavBar() {
   const auth = useAuth();
-  console.log(auth.userId);
   const publicNavItems = [
     { key: "insights", to: "/insights", label: "Insights" },
   ];
@@ -124,30 +121,32 @@ function NavBar() {
   ];
 
   // TODO: add user role for dev permissions.
-  let navItems: { key: string; to: string; label: string }[] = [];
-  if (auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3") {
-    navItems = publicNavItems.concat(devNavItems);
-  } else {
-    navItems = publicNavItems;
-  }
+  const navItems: { key: string; to: string; label: string }[] =
+    auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3"
+      ? publicNavItems.concat(devNavItems)
+      : publicNavItems;
 
   return (
-    <div className="flex gap-2 p-4">
-      <UserButton />
-      {navItems.map((item) => (
-        <Link
-          key={item.key}
-          className="text-grey-500 cursor-pointer rounded-md px-2 hover:bg-gray-100"
-          to={item.to}
-          activeProps={{
-            className: "font-bold",
-          }}
-          activeOptions={{ exact: false }}
-        >
-          {item.label}
-        </Link>
-      ))}
-    </div>
+    <nav className="flex items-center gap-3 px-2 py-3 sm:px-4 sm:py-4">
+      <div className="shrink-0">
+        <UserButton />
+      </div>
+      <div className="min-w-0 flex-1 overflow-x-auto">
+        <div className="flex w-max items-center gap-1 sm:gap-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.key}
+              className="cursor-pointer rounded-md px-2 py-1 text-sm whitespace-nowrap text-gray-600 hover:bg-gray-100 sm:text-base"
+              to={item.to}
+              activeProps={{ className: "font-bold text-gray-900" }}
+              activeOptions={{ exact: false }}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </nav>
   );
 }
 
