@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db, schema } from "../postgres/db";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { TakeawaySearchResult } from "./searchSFs";
 import { vectorConceptSearch, vectorTakeawaySearch } from "./vector-queries";
@@ -63,6 +63,7 @@ export const queryPublicInsightsFeed = createServerFn({
   method: "GET",
 }).handler(async (): Promise<InsightsFeedItem[]> => {
   const insights = await db.query.insights.findMany({
+    where: isNotNull(schema.insights.insight),
     with: {
       insightReferences: {
         with: {
