@@ -96,7 +96,7 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
             className="mx-auto w-[min(480px,80vw)]"
           />
           {/* ΞXPERT-SYSTΞM */}
-          <div className="text-center text-5xl leading-tight font-semibold text-balance text-slate-800 sm:text-6xl">
+          <div className="text-center text-4xl leading-tight font-semibold text-balance text-slate-800 sm:text-6xl">
             ΞXPERT-SYSTΞM
           </div>
           <div
