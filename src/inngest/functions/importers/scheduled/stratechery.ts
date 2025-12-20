@@ -204,7 +204,7 @@ export const stratecheryScraper = inngest.createFunction(
     const existingLinkSet = new Set(existingLinks);
 
     // Filter candidates that are not in the existing link set and have a publication date after October 1st
-    const cutoffDate = new Date("2025-10-01T00:00:00Z");
+    const cutoffDate = new Date("2025-01-01T00:00:00Z");
     const toInsert = candidates.filter(
       (candidate) =>
         !existingLinkSet.has(candidate.link) &&
