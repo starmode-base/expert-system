@@ -1,15 +1,16 @@
 import {
   HeadContent,
   Link,
+  Navigate,
   Outlet,
   Scripts,
   createRootRoute,
+  useLocation,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
 import { DefaultCatchBoundary } from "~/components/default-catch-boundary";
 import { NotFound } from "~/components/not-found";
-import { SignedOutExperience } from "~/components/signed-out";
 import appCss from "~/styles/app.css?url";
 import {
   ClerkProvider,
@@ -83,7 +84,7 @@ function RootDocument(props: React.PropsWithChildren) {
         </head>
         <body>
           <SignedOut>
-            <SignedOutExperience />
+            <SignedOutRouterGate>{props.children}</SignedOutRouterGate>
           </SignedOut>
           <SignedIn>
             <div className="flex gap-2 p-4">
@@ -148,4 +149,14 @@ function RootDocument(props: React.PropsWithChildren) {
       </html>
     </ClerkProvider>
   );
+}
+
+function SignedOutRouterGate(props: React.PropsWithChildren) {
+  const location = useLocation();
+
+  if (location.pathname !== "/feed/signed-out") {
+    return <Navigate to="/feed/signed-out" replace />;
+  }
+
+  return props.children;
 }

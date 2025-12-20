@@ -1,41 +1,19 @@
 import { SignInButton, SignUpButton } from "@clerk/tanstack-start";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { InsightCard } from "~/components/insight-card";
-import {
-  queryPublicInsightsFeed,
-  type InsightsFeedItem,
-} from "~/server/queries";
+import { type InsightsFeedItem } from "~/server/queries";
 
-export function SignedOutExperience() {
-  const loadPublicFeed = useServerFn(queryPublicInsightsFeed);
-  const [items, setItems] = useState<InsightsFeedItem[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export interface SignedOutExperienceProps {
+  items: InsightsFeedItem[];
+  error?: string | null;
+}
+
+export function SignedOutExperience(props: SignedOutExperienceProps) {
+  const items = props.items;
+  const error = props.error ?? null;
   const feedScrollRef = useRef<HTMLDivElement | null>(null);
   const [fadeProgress, setFadeProgress] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function run() {
-      try {
-        const nextItems = (await loadPublicFeed()) as InsightsFeedItem[];
-        if (cancelled) return;
-        setItems(nextItems);
-      } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : "Failed to load insights");
-        setItems([]);
-      }
-    }
-
-    void run();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loadPublicFeed]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -167,9 +145,7 @@ export function SignedOutExperience() {
           ) : null}
 
           <div ref={feedScrollRef} className="mt-4 flex-1 overflow-y-auto">
-            {items === null ? (
-              <div className="py-10 text-sm text-gray-500">Loading…</div>
-            ) : items.length === 0 ? (
+            {items.length === 0 ? (
               <div className="py-10 text-sm text-gray-500">
                 No insights yet.
               </div>
