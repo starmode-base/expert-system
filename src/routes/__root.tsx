@@ -35,7 +35,7 @@ export const Route = createRootRoute({
       },
       {
         name: "description",
-        content: "STΛR MODΞ - Expert-System",
+        content: "STΛR MODΞ - ΞXPERT-SYSTΞM",
       },
       {
         name: "og:title",
@@ -43,7 +43,7 @@ export const Route = createRootRoute({
       },
       {
         name: "og:description",
-        content: "STΛR MODΞ - Expert-System",
+        content: "STΛR MODΞ - ΞXPERT-SYSTΞM",
       },
     ],
     links: [
