@@ -1,10 +1,10 @@
 import { SignInButton, SignUpButton } from "@clerk/tanstack-start";
 import { useEffect, useRef, useState } from "react";
 import { InsightsFeed } from "~/components/insight-feed/insights-feed";
-import { type InsightsFeedItem } from "~/server/queries";
+import { type InsightsItem } from "~/server/queries";
 
 export interface SignedOutExperienceProps {
-  items: InsightsFeedItem[];
+  items: InsightsItem[];
 }
 
 export function SignedOutExperience(props: SignedOutExperienceProps) {

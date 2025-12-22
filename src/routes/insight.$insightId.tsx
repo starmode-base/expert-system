@@ -28,8 +28,7 @@ function RouteComponent() {
         <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white">
           {item ? (
             <InsightCard
-              insight={item.insight}
-              insightReferences={item.insightReferences}
+              insightFeedItem={item}
               loading={false}
               expanded={true}
             />

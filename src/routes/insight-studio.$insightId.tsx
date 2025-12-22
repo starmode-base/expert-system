@@ -8,13 +8,11 @@ import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import {
   getInsightsSF,
+  listInsightsSF,
   updateInsightTitleSF,
 } from "~/server/insights-studio-SFs";
 import { listOrganizationsSF } from "~/server/organizations";
-import {
-  queryInsightReferences,
-  type InsightReferenceItem,
-} from "~/server/queries";
+import { type InsightReferenceItem, type InsightsItem } from "~/server/queries";
 import { InsightCard } from "../components/insight-feed/insight-card";
 import {
   MODEL_OPTIONS,
@@ -25,17 +23,13 @@ import {
 export const Route = createFileRoute("/insight-studio/$insightId")({
   loader: async ({ params: { insightId } }) => {
     const { viewerId } = await listOrganizationsSF();
-    const insights = await getInsightsSF();
-    const selectedInsight =
-      insights.find((insight) => insight.id === insightId) ?? null;
-
-    const insightReferences = await queryInsightReferences({ data: insightId });
+    const insights = await listInsightsSF();
+    const selectedInsightItem = await getInsightsSF({ data: insightId });
 
     return {
       viewerId,
-      selectedInsight,
+      selectedInsightItem,
       insights,
-      insightReferences,
     };
   },
   component: RouteComponentProvider,
@@ -170,8 +164,12 @@ function Insight(props: InsightProps) {
       {/* Display Generated Insight */}
       <div className="border-t border-gray-200">
         <InsightCard
-          insight={insight}
-          insightReferences={insightReferences}
+          insightFeedItem={
+            {
+              insight,
+              insightReferences,
+            } satisfies InsightsItem
+          }
           loading={loading}
         />
       </div>
@@ -194,8 +192,7 @@ function RouteComponentProvider() {
 // RouteComponent.tsx
 
 export function RouteComponent() {
-  const { viewerId, insights, selectedInsight, insightReferences } =
-    Route.useLoaderData();
+  const { viewerId, insights, selectedInsightItem } = Route.useLoaderData();
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -220,7 +217,7 @@ export function RouteComponent() {
       <InsightList insights={insights} />
 
       {/* Right Pane */}
-      {!selectedInsight ? (
+      {!selectedInsightItem ? (
         <div className="flex w-2/3 items-center justify-center">
           <p className="text-gray-500">Select an insight to view details</p>
         </div>
@@ -229,8 +226,8 @@ export function RouteComponent() {
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto px-4 pb-4">
             <Insight
-              insight={selectedInsight}
-              insightReferences={insightReferences}
+              insight={selectedInsightItem.insight}
+              insightReferences={selectedInsightItem.insightReferences}
               loading={loading}
               onRefresh={async () => {
                 await router.invalidate();

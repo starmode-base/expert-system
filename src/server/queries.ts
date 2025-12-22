@@ -54,14 +54,14 @@ export interface InsightReferenceItem {
   documentSource: string;
 }
 
-export interface InsightsFeedItem {
+export interface InsightsItem {
   insight: InsightSelect;
   insightReferences: InsightReferenceItem[];
 }
 
 export const queryPublicInsightsFeed = createServerFn({
   method: "GET",
-}).handler(async (): Promise<InsightsFeedItem[]> => {
+}).handler(async (): Promise<InsightsItem[]> => {
   const insights = await db.query.insights.findMany({
     where: isNotNull(schema.insights.insight),
     with: {
@@ -93,7 +93,7 @@ export const queryPublicInsightsFeed = createServerFn({
 
 export const queryPublicInsightById = createServerFn({ method: "GET" })
   .validator(z.string()) // insightId
-  .handler(async ({ data: insightId }): Promise<InsightsFeedItem | null> => {
+  .handler(async ({ data: insightId }): Promise<InsightsItem | null> => {
     const insight = await db.query.insights.findFirst({
       where: and(
         eq(schema.insights.id, insightId),
@@ -131,7 +131,7 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
 
 export const queryInsightsFeed = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .handler(async ({ context }): Promise<InsightsFeedItem[]> => {
+  .handler(async ({ context }): Promise<InsightsItem[]> => {
     const insights = await db.query.insights.findMany({
       where: and(
         eq(schema.insights.userId, context.viewer.id),
