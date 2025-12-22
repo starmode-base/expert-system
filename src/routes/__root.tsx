@@ -105,9 +105,7 @@ function RootDocument(props: React.PropsWithChildren) {
 
 function NavBar() {
   const auth = useAuth();
-  const publicNavItems = [
-    { key: "insights", to: "/insights", label: "Insights" },
-  ];
+  const publicNavItems = [{ key: "feed", to: "/feed", label: "Feed" }];
 
   const devNavItems = [
     { key: "takeaways", to: "/search", label: "Takeaways" },
