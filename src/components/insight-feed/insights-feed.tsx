@@ -1,4 +1,4 @@
-import { InsightCard } from "~/components/insight-card";
+import { InsightCard } from "~/components/insight-feed/insight-card";
 import type { InsightsFeedItem } from "~/server/queries";
 
 export interface InsightsFeedProps {

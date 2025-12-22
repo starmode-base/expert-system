@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { InsightCard } from "~/components/insight-card";
+import { InsightCard } from "~/components/insight-feed/insight-card";
 import { queryPublicInsightById } from "~/server/queries";
 
 export const Route = createFileRoute("/insight/$insightId")({

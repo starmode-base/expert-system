@@ -5,7 +5,7 @@ import { useRouter } from "@tanstack/react-router";
 import { ArrowUpOnSquareIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { InsightSelect } from "~/postgres/schema";
 import { InsightReferenceItem } from "~/server/queries";
-import { InsightReferences } from "~/components/insight-references";
+import { InsightReferences } from "~/components/insight-feed/insight-references";
 
 interface InsightCardProps {
   insight: InsightSelect;
@@ -125,6 +125,9 @@ export function InsightCard(props: InsightCardProps) {
             const copied = await copyToClipboard(fullUrl);
             if (copied) {
               setShareLinkCopied(true);
+              window.setTimeout(() => {
+                setShareLinkCopied(false);
+              }, 2000);
             }
           }}
         >
