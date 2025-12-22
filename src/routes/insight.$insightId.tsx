@@ -22,7 +22,7 @@ function RouteComponent() {
           className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200/60 hover:text-slate-900"
         >
           <span aria-hidden>←</span>
-          Back
+          Feed
         </Link>
 
         <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white">

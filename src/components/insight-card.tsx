@@ -1,6 +1,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useState } from "react";
+import { useRouter } from "@tanstack/react-router";
+import { ArrowUpOnSquareIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { InsightSelect } from "~/postgres/schema";
 import { InsightReferenceItem } from "~/server/queries";
 import { InsightReferences } from "~/components/insight-references";
@@ -14,6 +16,20 @@ interface InsightCardProps {
 
 const INSIGHT_PREVIEW_CHAR_LIMIT = 360;
 
+async function copyToClipboard(text: string) {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    window.prompt("Copy link", text);
+    return false;
+  }
+}
+
 interface InsightMarkdownToggleProps {
   markdown: string | null | undefined;
   createdAt: Date;
@@ -25,35 +41,31 @@ function InsightMarkdownToggle(props: InsightMarkdownToggleProps) {
   const insightExists = Boolean(props.markdown?.trim());
 
   return (
-    <button
-      type="button"
-      onClick={props.onToggleExpanded}
-      className="block w-full cursor-pointer text-left"
-    >
-      <div className="mb-2 flex items-center justify-end gap-4">
-        <div className="shrink-0 text-xs text-gray-500">
-          {props.createdAt.toLocaleDateString()}
-        </div>
-      </div>
-
-      {insightExists ? (
-        <div
-          className={
-            props.variant === "preview" ? "text-base text-gray-700" : ""
-          }
-        >
-          <div className="prose prose-slate prose-sm sm:prose-base max-w-none break-words">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
-              {props.markdown ?? ""}
-            </ReactMarkdown>
+    <div>
+      <button
+        type="button"
+        onClick={props.onToggleExpanded}
+        className="block w-full cursor-pointer text-left"
+      >
+        {insightExists ? (
+          <div
+            className={
+              props.variant === "preview" ? "text-base text-gray-700" : ""
+            }
+          >
+            <div className="prose prose-slate prose-sm sm:prose-base max-w-none break-words">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
+                {props.markdown ?? ""}
+              </ReactMarkdown>
+            </div>
           </div>
-        </div>
-      ) : (
-        <p className="text-sm text-gray-500">
-          No insight has been generated yet.
-        </p>
-      )}
-    </button>
+        ) : (
+          <p className="text-sm text-gray-500">
+            No insight has been generated yet.
+          </p>
+        )}
+      </button>
+    </div>
   );
 }
 
@@ -81,15 +93,49 @@ function getMarkdownPreview(markdown: string, limit: number) {
 
 export function InsightCard(props: InsightCardProps) {
   const [insightExpanded, setInsightExpanded] = useState(props.expanded);
+  const router = useRouter();
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
 
-  const insightMarkdown = props.insight.insight ?? "";
   const { preview: insightPreviewMarkdown } = getMarkdownPreview(
-    insightMarkdown,
+    props.insight.insight ?? "",
     INSIGHT_PREVIEW_CHAR_LIMIT,
   );
 
   return (
     <div className="bg-white p-4">
+      <div className="mb-2 flex items-center justify-end gap-2">
+        <div className="shrink-0 text-xs text-gray-500">
+          {props.insight.createdAt.toLocaleDateString()}
+        </div>
+        <button
+          type="button"
+          className={
+            shareLinkCopied
+              ? "inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium"
+              : "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-slate-700"
+          }
+          aria-label={shareLinkCopied ? "Copied share link" : "Copy share link"}
+          onClick={async () => {
+            const href = router.buildLocation({
+              to: "/insight/$insightId",
+              params: { insightId: props.insight.id },
+            }).href;
+
+            const fullUrl = new URL(href, window.location.origin).toString();
+            const copied = await copyToClipboard(fullUrl);
+            if (copied) {
+              setShareLinkCopied(true);
+            }
+          }}
+        >
+          {shareLinkCopied ? (
+            <CheckIcon className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <ArrowUpOnSquareIcon className="h-4 w-4" aria-hidden="true" />
+          )}
+          <span>{shareLinkCopied ? "Copied" : ""}</span>
+        </button>
+      </div>
       {props.loading ? (
         <div className="flex items-center justify-center py-8">
           <div
