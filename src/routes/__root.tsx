@@ -131,7 +131,7 @@ function NavBar() {
       <nav className="mx-auto flex max-w-4xl items-center gap-3 px-3 py-2 sm:px-6 sm:py-3">
         <div className="flex shrink-0 items-center gap-3">
           <Link
-            to="/insights"
+            to="/feed"
             className="group inline-flex flex-col items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-100"
           >
             <img
@@ -177,8 +177,13 @@ function NavBar() {
 function SignedOutRouterGate(props: React.PropsWithChildren) {
   const location = useLocation();
 
-  if (location.pathname !== "/feed/signed-out") {
-    return <Navigate to="/feed/signed-out" replace />;
+  if (
+    !(
+      location.pathname.startsWith("/guest/feed") ||
+      location.pathname.startsWith("/insight/")
+    )
+  ) {
+    return <Navigate to="/guest/feed" />;
   }
 
   return props.children;
@@ -187,8 +192,8 @@ function SignedOutRouterGate(props: React.PropsWithChildren) {
 function SignedInRouterGate(props: React.PropsWithChildren) {
   const location = useLocation();
 
-  if (location.pathname === "/feed/signed-out") {
-    return <Navigate to="/insights" replace />;
+  if (location.pathname === "/guest/feed") {
+    return <Navigate to="/feed" replace />;
   }
 
   return props.children;

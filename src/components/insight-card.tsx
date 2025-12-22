@@ -9,6 +9,7 @@ interface InsightCardProps {
   insight: InsightSelect;
   insightReferences: InsightReferenceItem[];
   loading: boolean;
+  expanded?: boolean;
 }
 
 const INSIGHT_PREVIEW_CHAR_LIMIT = 360;
@@ -79,7 +80,7 @@ function getMarkdownPreview(markdown: string, limit: number) {
 }
 
 export function InsightCard(props: InsightCardProps) {
-  const [insightExpanded, setInsightExpanded] = useState(false);
+  const [insightExpanded, setInsightExpanded] = useState(props.expanded);
 
   const insightMarkdown = props.insight.insight ?? "";
   const { preview: insightPreviewMarkdown } = getMarkdownPreview(
