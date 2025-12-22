@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { createInsightWithTakeawaySF } from "~/server/insights-studio-SFs";
 import { Takeaway } from "~/server/queries";
@@ -14,7 +13,6 @@ export function TakeawayTile(props: {
   const [isCreatingInsight, setIsCreatingInsight] = useState(false);
   const [conceptExpanded, setConceptExpanded] = useState(false);
   const [referencesExpanded, setReferencesExpanded] = useState(false);
-  const navigate = useNavigate();
   const createInsightWithTakeaway = useServerFn(createInsightWithTakeawaySF);
 
   const documentSource =
@@ -33,17 +31,12 @@ export function TakeawayTile(props: {
     .filter(Boolean)
     .join(" · ");
 
-  const handleCreateInsight = async () => {
+  const handleCreateInsight = () => {
     if (isCreatingInsight) return;
     setIsCreatingInsight(true);
     try {
-      const result = await createInsightWithTakeaway({
+      void createInsightWithTakeaway({
         data: { takeawayId: takeaway.id },
-      });
-      if (!result.insightId) return;
-      await navigate({
-        to: "/insight-studio/$insightId",
-        params: { insightId: result.insightId },
       });
     } finally {
       setIsCreatingInsight(false);

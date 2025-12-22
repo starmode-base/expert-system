@@ -4,11 +4,9 @@ import { useConnectionStateListener } from "ably/react";
 import { useState } from "react";
 import { Insight } from "~/components/insight-studio/insight";
 import { InsightList } from "~/components/insight-studio/insights-list";
-import { InsightTakeaways } from "~/components/insight-studio/insightTakeaways";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
 import {
   getInsightsSF,
-  getInsightTakeawaysSF,
   updateInsightTitleSF,
 } from "~/server/insights-studio-SFs";
 import { listOrganizationsSF } from "~/server/organizations";
@@ -20,16 +18,13 @@ export const Route = createFileRoute("/insight-studio/$insightId")({
     const insights = await getInsightsSF();
     const selectedInsight =
       insights.find((insight) => insight.id === insightId) ?? null;
-    const insightTakeaways = await getInsightTakeawaysSF({
-      data: { insightId },
-    });
+
     const insightReferences = await queryInsightReferences({ data: insightId });
 
     return {
       viewerId,
       selectedInsight,
       insights,
-      insightTakeaways,
       insightReferences,
     };
   },
@@ -51,13 +46,8 @@ function RouteComponentProvider() {
 // RouteComponent.tsx
 
 export function RouteComponent() {
-  const {
-    viewerId,
-    insights,
-    selectedInsight,
-    insightTakeaways,
-    insightReferences,
-  } = Route.useLoaderData();
+  const { viewerId, insights, selectedInsight, insightReferences } =
+    Route.useLoaderData();
   const router = useRouter();
   const updateInsightTitle = useServerFn(updateInsightTitleSF);
   const [activeTab, setActiveTab] = useState<"insight" | "takeaways">(
@@ -136,19 +126,14 @@ export function RouteComponent() {
 
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto px-4 pb-4">
-            {activeTab === "insight" ? (
-              <Insight
-                insight={selectedInsight}
-                insightTakeaways={insightTakeaways}
-                insightReferences={insightReferences}
-                loading={loading}
-                onRefresh={async () => {
-                  await router.invalidate();
-                }}
-              />
-            ) : (
-              <InsightTakeaways insightTakeaways={insightTakeaways} />
-            )}
+            <Insight
+              insight={selectedInsight}
+              insightReferences={insightReferences}
+              loading={loading}
+              onRefresh={async () => {
+                await router.invalidate();
+              }}
+            />
           </div>
         </div>
       )}

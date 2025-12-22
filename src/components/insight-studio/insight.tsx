@@ -2,21 +2,19 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
-import { type InsightReferenceItem, Takeaway } from "~/server/queries";
+import { type InsightReferenceItem } from "~/server/queries";
 import { MODEL_OPTIONS, ModelSelector, ModelValue } from "../model-selector";
 import { InsightCard } from "../insight-feed/insight-card";
 
 interface InsightProps {
   insight: InsightSelect;
-  insightTakeaways: Takeaway[];
   insightReferences: InsightReferenceItem[];
   loading: boolean;
   onRefresh?: () => Promise<void> | void;
 }
 
 export function Insight(props: InsightProps) {
-  const { insight, insightTakeaways, insightReferences, loading, onRefresh } =
-    props;
+  const { insight, insightReferences, loading, onRefresh } = props;
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const [error, setError] = useState<string | null>(null);
@@ -75,35 +73,16 @@ export function Insight(props: InsightProps) {
                 }
                 setError(null);
                 await sendEventGenerateInsight({
-                  data: { insightId: insight.id, insightPrompt: prompt },
+                  data: {
+                    seedText: "TODO: get seed text from takeaway",
+                    insightPrompt: prompt,
+                  },
                 });
                 await onRefresh?.();
               }}
             >
               Generate Insight
             </button>
-          </div>
-        </div>
-        {/* Selected Takeaways */}
-        <div className="w-1/2 p-4">
-          <h2 className="text-lg font-medium text-gray-600">
-            Selected Takeaways
-          </h2>
-          <div className="h-full overflow-y-auto">
-            {insightTakeaways.length > 0 ? (
-              insightTakeaways.map((takeaway, index) => (
-                <div
-                  key={index}
-                  className="mt-2 rounded border border-gray-300 p-3"
-                >
-                  <p className="text-sm">{takeaway.title}</p>
-                </div>
-              ))
-            ) : (
-              <p className="mt-2 text-sm text-gray-500">
-                No takeaways selected.
-              </p>
-            )}
           </div>
         </div>
       </div>

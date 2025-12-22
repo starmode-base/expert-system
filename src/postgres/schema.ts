@@ -310,20 +310,3 @@ export const insightReferences = pgTable(
 
 export type InsightReferenceSelect = typeof insightReferences.$inferSelect;
 export type InsightReferenceInsert = typeof insightReferences.$inferInsert;
-
-// insights <> takeaways junction table
-export const insightTakeaways = pgTable(
-  "insight_takeaways",
-  {
-    insightId: text()
-      .notNull()
-      .references(() => insights.id, { onDelete: "cascade" }),
-    takeawayId: text()
-      .notNull()
-      .references(() => takeaways.id, { onDelete: "cascade" }),
-  },
-  (table) => [primaryKey({ columns: [table.insightId, table.takeawayId] })],
-);
-
-export type InsightTakeawaySelect = typeof insightTakeaways.$inferSelect;
-export type InsightTakeawayInsert = typeof insightTakeaways.$inferInsert;
