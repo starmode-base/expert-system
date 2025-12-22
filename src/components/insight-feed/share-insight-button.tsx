@@ -29,8 +29,8 @@ export function ShareInsightButton(props: ShareInsightButtonProps) {
       type="button"
       className={
         shareLinkCopied
-          ? "inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800"
-          : "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-slate-700"
+          ? "inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800"
+          : "inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-slate-700"
       }
       aria-label={shareLinkCopied ? "Copied share link" : "Copy share link"}
       onClick={async () => {
