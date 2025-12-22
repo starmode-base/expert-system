@@ -1,6 +1,7 @@
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { InsightSelect } from "~/postgres/schema";
+import { updateInsightTitleSF } from "~/server/insights-studio-SFs";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { type InsightReferenceItem } from "~/server/queries";
 import { MODEL_OPTIONS, ModelSelector, ModelValue } from "../model-selector";
@@ -15,19 +16,53 @@ interface InsightProps {
 
 export function Insight(props: InsightProps) {
   const { insight, insightReferences, loading, onRefresh } = props;
-  const [prompt, setPrompt] = useState("");
+  const [title, setTitle] = useState(insight.title);
+  const [prompt, setPrompt] = useState(insight.insightPrompt ?? "");
+  const [seedText, setSeedText] = useState(insight.seedText ?? "");
   const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const [error, setError] = useState<string | null>(null);
   const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
+  const updateInsightTitle = useServerFn(updateInsightTitleSF);
+
+  useEffect(() => {
+    setTitle(insight.title);
+    setPrompt(insight.insightPrompt ?? "");
+    setSeedText(insight.seedText ?? "");
+  }, [insight.id, insight.insightPrompt, insight.seedText, insight.title]);
 
   return (
     <div className="mx-auto h-full rounded-lg bg-white p-6">
-      <h1 className="mb-4 text-2xl font-bold text-gray-800">
-        Insight Generator
-      </h1>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => {
+          const nextTitle = e.target.value;
+          setTitle(nextTitle);
+          void (async () => {
+            await updateInsightTitle({
+              data: { id: insight.id, title: nextTitle },
+            });
+            await onRefresh?.();
+          })();
+        }}
+        className="mb-4 w-full px-2 py-1 text-2xl font-bold text-gray-800 outline-none focus:border focus:border-zinc-500"
+      />
 
       <div className="flex">
-        <div className="w-1/2 border-r border-gray-300 p-4">
+        <div className="w-full p-4">
+          {/* Seed text input */}
+          <div className="mb-6">
+            <h2 className="text-lg font-medium text-gray-600">Seed text</h2>
+            <textarea
+              placeholder="Enter seed text..."
+              className="mt-2 min-h-32 w-full resize-y rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+              value={seedText}
+              onChange={(e) => {
+                setSeedText(e.target.value);
+              }}
+            />
+          </div>
+
           {/* Prompt Input */}
           <div className="mb-6">
             <h2 className="text-lg font-medium text-gray-600">Enter Prompt</h2>
@@ -74,7 +109,7 @@ export function Insight(props: InsightProps) {
                 setError(null);
                 await sendEventGenerateInsight({
                   data: {
-                    seedText: "TODO: get seed text from takeaway",
+                    seedText,
                     insightPrompt: prompt,
                   },
                 });
@@ -88,7 +123,7 @@ export function Insight(props: InsightProps) {
       </div>
 
       {/* Display Generated Insight */}
-      <div className="mt-4">
+      <div className="border-t border-gray-200">
         <InsightCard
           insight={insight}
           insightReferences={insightReferences}
