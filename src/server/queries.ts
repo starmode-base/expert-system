@@ -91,6 +91,44 @@ export const queryPublicInsightsFeed = createServerFn({
   }));
 });
 
+export const queryPublicInsightById = createServerFn({ method: "GET" })
+  .validator(z.string()) // insightId
+  .handler(async ({ data: insightId }): Promise<InsightsFeedItem | null> => {
+    const insight = await db.query.insights.findFirst({
+      where: and(
+        eq(schema.insights.id, insightId),
+        isNotNull(schema.insights.insight),
+      ),
+      with: {
+        insightReferences: {
+          with: {
+            takeawayReference: {
+              with: { takeaway: { with: { document: true } } },
+            },
+          },
+          orderBy: (insightReferences, { asc }) => [
+            asc(insightReferences.insightReferenceNumber),
+          ],
+        },
+      },
+    });
+
+    if (!insight) {
+      return null;
+    }
+
+    return {
+      insight,
+      insightReferences: insight.insightReferences.map((row) => ({
+        insightReferenceNumber: row.insightReferenceNumber,
+        referenceId: row.referenceId,
+        reference: row.takeawayReference.reference,
+        documentTitle: row.takeawayReference.takeaway.document.title,
+        documentSource: row.takeawayReference.takeaway.document.source,
+      })),
+    };
+  });
+
 export const queryInsightsFeed = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<InsightsFeedItem[]> => {

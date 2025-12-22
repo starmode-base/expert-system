@@ -4,7 +4,7 @@ import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { type InsightReferenceItem, Takeaway } from "~/server/queries";
 import { MODEL_OPTIONS, ModelSelector, ModelValue } from "../model-selector";
-import { InsightCard } from "../insight-card";
+import { InsightCard } from "../insight-feed/insight-card";
 
 interface InsightProps {
   insight: InsightSelect;

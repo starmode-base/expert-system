@@ -106,11 +106,12 @@ Produce ONE compelling, standalone insight that teaches the reader something non
 
 # Opening Requirement
 - Begin immediately with a **bolded core insight statement** on its own line.
-- This statement should be:
-  - Clear and decisive
-  - Easy to understand
-  - Slightly provocative or memorable
-  - Strong enough to pull the reader forward
+- This statement should:
+  - Use different phrasing than previous recent insights.
+  - Be clear and decisive
+  - Be easy to understand
+  - Be slightly provocative or memorable
+  - Be strong enough to pull the reader forward
   - Include a recognizable name (business, person, event, etc.)
   - Hint at the actionable takeaway from the insight.
 
