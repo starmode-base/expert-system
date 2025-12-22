@@ -109,12 +109,13 @@ function NavBar() {
 
   const devNavItems = [
     { key: "takeaways", to: "/search", label: "Takeaways" },
+    { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
+
     {
       key: "knowledge-graph",
       to: "/knowledge-graph",
       label: "Knowledge Graph",
     },
-    { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
     { key: "importer", to: "/importer", label: "Importer" },
   ];
 
