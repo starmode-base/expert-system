@@ -287,6 +287,8 @@ export const insights = pgTable("insights", {
   title: text().notNull(),
   summary: text(),
   insight: text(),
+  seedText: text(),
+  insightPrompt: text(),
 });
 
 export type InsightSelect = typeof insights.$inferSelect;

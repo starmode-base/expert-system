@@ -394,6 +394,8 @@ export const generateInsight = inngest.createFunction(
           title: finalInsight.title,
           insight: finalInsight.insight,
           summary: finalInsight.core_insight_statement,
+          seedText: event.data.seedText,
+          insightPrompt: event.data.insightPrompt,
         })
         .returning();
       invariant(result, "Failed to create insight");
