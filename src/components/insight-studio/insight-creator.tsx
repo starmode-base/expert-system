@@ -42,6 +42,12 @@ export function InsightCreator(props: InsightCreatorProps) {
             }}
           />
         </div>
+        {/* // TODO add search button to fetch similar takeaways and concepts */}
+        <div className="mb-6">
+          <button className="w-full rounded bg-gray-900 px-4 py-2 text-white transition hover:bg-gray-800">
+            Search
+          </button>
+        </div>
 
         {/* Prompt Input */}
         <div className="mb-6">
