@@ -189,15 +189,21 @@ export function InsightCreator() {
           hidden={similarItemsTab !== "takeaways"}
           className="min-h-0 flex-1"
         >
-          <div className="flex h-full flex-col overflow-y-auto p-4">
+          <div className="h-full overflow-y-auto">
             {summaryTakeaways.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="p-4 text-sm text-gray-500">
                 No similar takeaways found.
               </p>
             ) : (
-              summaryTakeaways.map((takeaway) => (
-                <TakeawayTile key={takeaway.id} takeaway={takeaway} />
-              ))
+              <div className="border-t border-gray-200">
+                {summaryTakeaways.map((takeaway) => {
+                  return (
+                    <div key={takeaway.id} className="border-b border-gray-200">
+                      <TakeawayTile takeaway={takeaway} />
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
@@ -209,15 +215,21 @@ export function InsightCreator() {
           hidden={similarItemsTab !== "concepts"}
           className="min-h-0 flex-1"
         >
-          <div className="flex h-full flex-col overflow-y-auto p-4">
+          <div className="h-full overflow-y-auto">
             {conceptTakeaways.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="p-4 text-sm text-gray-500">
                 No similar concepts found.
               </p>
             ) : (
-              conceptTakeaways.map((takeaway) => (
-                <TakeawayTile key={takeaway.id} takeaway={takeaway} />
-              ))
+              <div className="border-t border-gray-200">
+                {conceptTakeaways.map((takeaway) => {
+                  return (
+                    <div key={takeaway.id} className="border-b border-gray-200">
+                      <TakeawayTile takeaway={takeaway} />
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>

@@ -153,9 +153,18 @@ function InsightDetails(props: InsightProps) {
                   No similar takeaways found.
                 </p>
               ) : (
-                takeawaysSummary.map((takeaway) => (
-                  <TakeawayTile key={takeaway.id} takeaway={takeaway} />
-                ))
+                <div className="border-t border-gray-200">
+                  {takeawaysSummary.map((takeaway) => {
+                    return (
+                      <div
+                        key={takeaway.id}
+                        className="border-b border-gray-200"
+                      >
+                        <TakeawayTile takeaway={takeaway} />
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
@@ -172,9 +181,18 @@ function InsightDetails(props: InsightProps) {
                   No similar concepts found.
                 </p>
               ) : (
-                takeawaysConcepts.map((takeaway) => (
-                  <TakeawayTile key={takeaway.id} takeaway={takeaway} />
-                ))
+                <div className="border-t border-gray-200">
+                  {takeawaysConcepts.map((takeaway) => {
+                    return (
+                      <div
+                        key={takeaway.id}
+                        className="border-b border-gray-200"
+                      >
+                        <TakeawayTile takeaway={takeaway} />
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>

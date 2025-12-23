@@ -45,10 +45,9 @@ export function TakeawayTile(props: {
 
   return (
     <div
-      key={takeaway.id}
       className={
-        `relative mb-4 rounded-xl border bg-white p-4 shadow-md ` +
-        (highlighted ? "border-2 border-gray-400" : "border-gray-200")
+        "relative bg-white p-4 transition-colors hover:bg-gray-50" +
+        (highlighted ? " ring-2 ring-gray-300" : "")
       }
     >
       <div className="flex items-start justify-between">
@@ -66,7 +65,7 @@ export function TakeawayTile(props: {
         <button
           onClick={handleCreateInsight}
           disabled={isCreatingInsight}
-          className="text-sm font-medium text-gray-700 underline decoration-gray-300 underline-offset-2 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex cursor-pointer items-center rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Create Insight
         </button>
@@ -77,16 +76,18 @@ export function TakeawayTile(props: {
           onClick={() => {
             setSummaryExpanded((prev) => !prev);
           }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-600"
+          className="flex w-full cursor-pointer items-center gap-1 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
         >
           <span
-            className={`inline-block transition-transform ${summaryExpanded ? "rotate-90" : ""}`}
+            className={`inline-block text-[10px] transition-transform ${summaryExpanded ? "rotate-90" : ""}`}
           >
             ▶
           </span>
           Summary
         </button>
-        {summaryExpanded ? <p className="pl-4">{takeaway.summary}</p> : null}
+        {summaryExpanded ? (
+          <p className="pl-4 text-sm text-gray-700">{takeaway.summary}</p>
+        ) : null}
 
         <hr className="my-3 border-gray-200" />
 
@@ -94,16 +95,18 @@ export function TakeawayTile(props: {
           onClick={() => {
             setTakeawayExpanded((prev) => !prev);
           }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-600"
+          className="flex w-full cursor-pointer items-center gap-1 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
         >
           <span
-            className={`inline-block transition-transform ${takeawayExpanded ? "rotate-90" : ""}`}
+            className={`inline-block text-[10px] transition-transform ${takeawayExpanded ? "rotate-90" : ""}`}
           >
             ▶
           </span>
           Takeaway
         </button>
-        {takeawayExpanded ? <p className="pl-4">{takeaway.takeaway}</p> : null}
+        {takeawayExpanded ? (
+          <p className="pl-4 text-sm text-gray-700">{takeaway.takeaway}</p>
+        ) : null}
 
         <hr className="my-3 border-gray-200" />
 
@@ -111,16 +114,18 @@ export function TakeawayTile(props: {
           onClick={() => {
             setConceptExpanded((prev) => !prev);
           }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-600"
+          className="flex w-full cursor-pointer items-center gap-1 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
         >
           <span
-            className={`inline-block transition-transform ${conceptExpanded ? "rotate-90" : ""}`}
+            className={`inline-block text-[10px] transition-transform ${conceptExpanded ? "rotate-90" : ""}`}
           >
             ▶
           </span>
           Concept
         </button>
-        {conceptExpanded ? <p className="pl-4">{takeaway.concept}</p> : null}
+        {conceptExpanded ? (
+          <p className="pl-4 text-sm text-gray-700">{takeaway.concept}</p>
+        ) : null}
 
         <hr className="my-3 border-gray-200" />
 
@@ -128,10 +133,10 @@ export function TakeawayTile(props: {
           onClick={() => {
             setReferencesExpanded((prev) => !prev);
           }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-600"
+          className="flex w-full cursor-pointer items-center gap-1 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
         >
           <span
-            className={`inline-block transition-transform ${referencesExpanded ? "rotate-90" : ""}`}
+            className={`inline-block text-[10px] transition-transform ${referencesExpanded ? "rotate-90" : ""}`}
           >
             ▶
           </span>
@@ -142,7 +147,7 @@ export function TakeawayTile(props: {
           takeaway.references.length === 0 ? (
             <p className="pl-4 text-gray-500">No references</p>
           ) : (
-            <ol className="space-y-1 pl-8 text-gray-700">
+            <ol className="space-y-1 pl-8 text-sm text-gray-700">
               {takeaway.references
                 .slice()
                 .sort((a, b) => a.referenceNumber - b.referenceNumber)
