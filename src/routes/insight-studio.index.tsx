@@ -13,10 +13,10 @@ export const Route = createFileRoute("/insight-studio/")({
     const { viewerId } = await listOrganizationsSF();
 
     const similarTakeaways = await vectorTakeawaySearchTimeWeightedSF({
-      data: { query: "What are the key takeaways from the article?" },
+      data: { query: "autonomous vehicles" },
     });
     const similarConcepts = await vectorConceptSearchTimeWeightedSF({
-      data: { query: "test" },
+      data: { query: "autonomous vehicles" },
     });
 
     return { viewerId, similarTakeaways, similarConcepts };
@@ -24,5 +24,11 @@ export const Route = createFileRoute("/insight-studio/")({
 });
 
 function RouteComponent() {
-  return <InsightCreator placeholder="Enter your insight prompt..." />;
+  const { similarTakeaways, similarConcepts } = Route.useLoaderData();
+  return (
+    <InsightCreator
+      similarTakeaways={similarTakeaways}
+      similarConcepts={similarConcepts}
+    />
+  );
 }
