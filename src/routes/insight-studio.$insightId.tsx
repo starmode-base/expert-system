@@ -4,7 +4,6 @@ import { useConnectionStateListener } from "ably/react";
 import { useEffect, useState } from "react";
 import { InsightList } from "~/components/insight-studio/insights-list";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
-import { InsightSelect } from "~/postgres/schema";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import {
   getInsightsSF,
@@ -12,13 +11,19 @@ import {
   updateInsightTitleSF,
 } from "~/server/insights-studio-SFs";
 import { listOrganizationsSF } from "~/server/organizations";
-import { type InsightReferenceItem, type InsightsItem } from "~/server/queries";
+import {
+  type InsightsItem,
+  vectorConceptSearchTimeWeightedSF,
+  vectorTakeawaySearchTimeWeightedSF,
+} from "~/server/queries";
 import { InsightCard } from "../components/insight-feed/insight-card";
 import {
   MODEL_OPTIONS,
   ModelSelector,
   ModelValue,
 } from "../components/model-selector";
+import { TakeawaySearchResult } from "~/server/searchSFs";
+import { TakeawayTile } from "~/components/takeaway-tile";
 
 export const Route = createFileRoute("/insight-studio/$insightId")({
   loader: async ({ params: { insightId } }) => {
@@ -26,37 +31,87 @@ export const Route = createFileRoute("/insight-studio/$insightId")({
     const insights = await listInsightsSF();
     const selectedInsightItem = await getInsightsSF({ data: insightId });
 
+    const similarTakeaways = selectedInsightItem?.insight.seedText
+      ? await vectorTakeawaySearchTimeWeightedSF({
+          data: { query: selectedInsightItem.insight.seedText },
+        })
+      : [];
+    const similarConcepts = selectedInsightItem?.insight.seedText
+      ? await vectorConceptSearchTimeWeightedSF({
+          data: { query: selectedInsightItem.insight.seedText },
+        })
+      : [];
+
     return {
       viewerId,
       selectedInsightItem,
       insights,
+      similarTakeaways,
+      similarConcepts,
     };
   },
   component: RouteComponentProvider,
 });
 
 interface InsightProps {
-  insight: InsightSelect;
-  insightReferences: InsightReferenceItem[];
+  insight: InsightsItem;
+  similarTakeaways: TakeawaySearchResult[];
+  similarConcepts: TakeawaySearchResult[];
   loading: boolean;
   onRefresh?: () => Promise<void> | void;
 }
 
+type SimilarItemsTab = "takeaways" | "concepts";
+
 function Insight(props: InsightProps) {
-  const { insight, insightReferences, loading, onRefresh } = props;
-  const [title, setTitle] = useState(insight.title);
-  const [prompt, setPrompt] = useState(insight.insightPrompt ?? "");
-  const [seedText, setSeedText] = useState(insight.seedText ?? "");
+  const { insight, similarTakeaways, similarConcepts, loading, onRefresh } =
+    props;
+  const [title, setTitle] = useState(insight.insight.title);
+  const [prompt, setPrompt] = useState(insight.insight.insightPrompt ?? "");
+  const [seedText, setSeedText] = useState(insight.insight.seedText ?? "");
   const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const [error, setError] = useState<string | null>(null);
+  const [similarItemsTab, setSimilarItemsTab] = useState<SimilarItemsTab>(
+    () => {
+      if (similarTakeaways.length === 0 && similarConcepts.length > 0) {
+        return "concepts";
+      }
+      return "takeaways";
+    },
+  );
   const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
   const updateInsightTitle = useServerFn(updateInsightTitleSF);
 
   useEffect(() => {
-    setTitle(insight.title);
-    setPrompt(insight.insightPrompt ?? "");
-    setSeedText(insight.seedText ?? "");
-  }, [insight.id, insight.insightPrompt, insight.seedText, insight.title]);
+    setTitle(insight.insight.title);
+    setPrompt(insight.insight.insightPrompt ?? "");
+    setSeedText(insight.insight.seedText ?? "");
+  }, [
+    insight.insight.id,
+    insight.insight.insightPrompt,
+    insight.insight.seedText,
+    insight.insight.title,
+  ]);
+
+  useEffect(() => {
+    if (similarItemsTab === "takeaways") {
+      if (similarTakeaways.length > 0) return;
+      if (similarConcepts.length > 0) {
+        setSimilarItemsTab("concepts");
+      }
+      return;
+    }
+
+    if (similarConcepts.length > 0) return;
+    if (similarTakeaways.length > 0) {
+      setSimilarItemsTab("takeaways");
+    }
+  }, [
+    similarConcepts.length,
+    similarItemsTab,
+    similarTakeaways.length,
+    setSimilarItemsTab,
+  ]);
 
   return (
     <div className="mx-auto h-full rounded-lg bg-white p-6">
@@ -68,7 +123,7 @@ function Insight(props: InsightProps) {
           setTitle(nextTitle);
           void (async () => {
             await updateInsightTitle({
-              data: { id: insight.id, title: nextTitle },
+              data: { id: insight.insight.id, title: nextTitle },
             });
             await onRefresh?.();
           })();
@@ -149,29 +204,93 @@ function Insight(props: InsightProps) {
           </div>
         </div>
 
-        <div className="w-1/3 border-r border-gray-200 p-4">
-          <h2 className="text-lg font-medium text-gray-600">
-            Similar Takeaways
-          </h2>
-        </div>
-        <div className="w-1/3 p-4">
-          <h2 className="text-lg font-medium text-gray-600">
-            Similar Concepts
-          </h2>
+        <div className="w-2/3 p-4">
+          <div
+            className="mb-2 border-b border-gray-200"
+            role="tablist"
+            aria-label="Similar items"
+          >
+            <nav className="flex space-x-4">
+              <button
+                type="button"
+                role="tab"
+                id="similar-items-tab-takeaways"
+                aria-selected={similarItemsTab === "takeaways"}
+                aria-controls="similar-items-panel-takeaways"
+                onClick={() => {
+                  setSimilarItemsTab("takeaways");
+                }}
+                className={`border-b-2 px-3 py-2 text-sm font-medium ${
+                  similarItemsTab === "takeaways"
+                    ? "border-black-500 text-black-600"
+                    : "hover:text-black-600 border-transparent text-gray-500"
+                }`}
+              >
+                Takeaways
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="similar-items-tab-concepts"
+                aria-selected={similarItemsTab === "concepts"}
+                aria-controls="similar-items-panel-concepts"
+                onClick={() => {
+                  setSimilarItemsTab("concepts");
+                }}
+                className={`border-b-2 px-3 py-2 text-sm font-medium ${
+                  similarItemsTab === "concepts"
+                    ? "border-black-500 text-black-600"
+                    : "hover:text-black-600 border-transparent text-gray-500"
+                }`}
+              >
+                Concepts
+              </button>
+            </nav>
+          </div>
+
+          <div
+            role="tabpanel"
+            id="similar-items-panel-takeaways"
+            aria-labelledby="similar-items-tab-takeaways"
+            hidden={similarItemsTab !== "takeaways"}
+          >
+            <div className="flex max-h-[50vh] flex-col overflow-y-auto p-4">
+              {similarTakeaways.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  No similar takeaways found.
+                </p>
+              ) : (
+                similarTakeaways.map((takeaway) => (
+                  <TakeawayTile key={takeaway.id} takeaway={takeaway} />
+                ))
+              )}
+            </div>
+          </div>
+
+          <div
+            role="tabpanel"
+            id="similar-items-panel-concepts"
+            aria-labelledby="similar-items-tab-concepts"
+            hidden={similarItemsTab !== "concepts"}
+          >
+            <div className="flex max-h-[50vh] flex-col overflow-y-auto p-4">
+              {similarConcepts.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  No similar concepts found.
+                </p>
+              ) : (
+                similarConcepts.map((takeaway) => (
+                  <TakeawayTile key={takeaway.id} takeaway={takeaway} />
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Display Generated Insight */}
       <div className="border-t border-gray-200">
-        <InsightCard
-          insightFeedItem={
-            {
-              insight,
-              insightReferences,
-            } satisfies InsightsItem
-          }
-          loading={loading}
-        />
+        <InsightCard insightFeedItem={insight} loading={loading} />
       </div>
     </div>
   );
@@ -192,7 +311,13 @@ function RouteComponentProvider() {
 // RouteComponent.tsx
 
 export function RouteComponent() {
-  const { viewerId, insights, selectedInsightItem } = Route.useLoaderData();
+  const {
+    viewerId,
+    insights,
+    selectedInsightItem,
+    similarTakeaways,
+    similarConcepts,
+  } = Route.useLoaderData();
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -226,8 +351,9 @@ export function RouteComponent() {
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto px-4 pb-4">
             <Insight
-              insight={selectedInsightItem.insight}
-              insightReferences={selectedInsightItem.insightReferences}
+              insight={selectedInsightItem}
+              similarTakeaways={similarTakeaways}
+              similarConcepts={similarConcepts}
               loading={loading}
               onRefresh={async () => {
                 await router.invalidate();

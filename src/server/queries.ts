@@ -4,7 +4,12 @@ import { db, schema } from "../postgres/db";
 import { and, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { TakeawaySearchResult } from "./searchSFs";
-import { vectorConceptSearch, vectorTakeawaySearch } from "./vector-queries";
+import {
+  vectorConceptSearch,
+  vectorConceptSearchTimeWeighted,
+  vectorTakeawaySearch,
+  vectorTakeawaySearchTimeWeighted,
+} from "./vector-queries";
 import { InsightSelect, TakeawayReferenceSelect } from "~/postgres/schema";
 import { authMiddleware } from "~/middleware/auth-middleware";
 
@@ -370,3 +375,29 @@ export const queryTakeaways = createServerFn({
     references: takeaway.takeawayReferences,
   }));
 });
+
+export const vectorTakeawaySearchTimeWeightedSF = createServerFn({
+  method: "GET",
+})
+  .validator(
+    z.object({
+      query: z.string(),
+      limit: z.number().optional(),
+    }),
+  )
+  .handler(async ({ data }): Promise<TakeawaySearchResult[]> => {
+    return await vectorTakeawaySearchTimeWeighted(data.query, data.limit ?? 10);
+  });
+
+export const vectorConceptSearchTimeWeightedSF = createServerFn({
+  method: "GET",
+})
+  .validator(
+    z.object({
+      query: z.string(),
+      limit: z.number().optional(),
+    }),
+  )
+  .handler(async ({ data }): Promise<TakeawaySearchResult[]> => {
+    return await vectorConceptSearchTimeWeighted(data.query, data.limit ?? 10);
+  });
