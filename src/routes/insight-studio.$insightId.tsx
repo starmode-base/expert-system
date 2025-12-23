@@ -1,23 +1,11 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useConnectionStateListener } from "ably/react";
-import { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { InsightList } from "~/components/insight-studio/insights-list";
-import { PubSubProvider, useNotifyUI } from "~/lib/ably";
-import { sendEventGenerateInsightSF } from "~/server/inggest";
-import {
-  getInsightsSF,
-  listInsightsSF,
-  updateInsightTitleSF,
-} from "~/server/insights-studio-SFs";
+import { PubSubProvider } from "~/lib/ably";
+import { getInsightsSF, listInsightsSF } from "~/server/insights-studio-SFs";
 import { listOrganizationsSF } from "~/server/organizations";
 import { getinsightTakeawaysSF, type InsightsItem } from "~/server/queries";
 import { InsightCard } from "../components/insight-feed/insight-card";
-import {
-  MODEL_OPTIONS,
-  ModelSelector,
-  ModelValue,
-} from "../components/model-selector";
 import { TakeawaySearchResult } from "~/server/searchSFs";
 import { TakeawayTile } from "~/components/takeaway-tile";
 
@@ -47,123 +35,65 @@ interface InsightProps {
   takeawaysSummary: TakeawaySearchResult[];
   takeawaysConcepts: TakeawaySearchResult[];
   loading: boolean;
-  onRefresh?: () => Promise<void> | void;
 }
 
 type SimilarItemsTab = "takeaways" | "concepts";
 
 function InsightDetails(props: InsightProps) {
-  const { insight, takeawaysSummary, takeawaysConcepts, loading, onRefresh } =
-    props;
-  const [title, setTitle] = useState(insight.insight.title);
-  const [prompt, setPrompt] = useState(insight.insight.insightPrompt ?? "");
-  const [seedText, setSeedText] = useState(insight.insight.seedText ?? "");
-  const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
-  const [error, setError] = useState<string | null>(null);
+  const { insight, takeawaysSummary, takeawaysConcepts, loading } = props;
   const [similarItemsTab, setSimilarItemsTab] =
     useState<SimilarItemsTab>("takeaways");
-  const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
-  const updateInsightTitle = useServerFn(updateInsightTitleSF);
-
-  useEffect(() => {
-    setTitle(insight.insight.title);
-    setPrompt(insight.insight.insightPrompt ?? "");
-    setSeedText(insight.insight.seedText ?? "");
-  }, [
-    insight.insight.id,
-    insight.insight.insightPrompt,
-    insight.insight.seedText,
-    insight.insight.title,
-  ]);
 
   return (
     <div className="mx-auto bg-white">
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => {
-          const nextTitle = e.target.value;
-          setTitle(nextTitle);
-          void (async () => {
-            await updateInsightTitle({
-              data: { id: insight.insight.id, title: nextTitle },
-            });
-            await onRefresh?.();
-          })();
-        }}
-        className="mb-4 w-full px-2 py-1 text-2xl font-bold text-gray-800 outline-none focus:border focus:border-zinc-500"
-      />
+      <div className="border-b border-gray-200 px-4 py-4">
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+          {insight.insight.title}
+        </h1>
+        {loading ? (
+          <p className="mt-1 text-sm text-gray-500">Generating…</p>
+        ) : null}
+      </div>
 
       <div className="flex">
         <div className="w-1/3 border-r border-gray-200 p-4">
-          {/* Seed text input */}
           <div className="mb-6">
-            <h2 className="text-lg font-medium text-gray-600">Seed text</h2>
-            <textarea
-              placeholder="Enter seed text..."
-              className="mt-2 min-h-32 w-full resize-y rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-gray-400 focus:outline-none"
-              value={seedText}
-              onChange={(e) => {
-                setSeedText(e.target.value);
-              }}
-            />
+            <h2 className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+              Seed text
+            </h2>
+            <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
+              <p className="break-words whitespace-pre-wrap">
+                {insight.insight.seedText?.trim()
+                  ? insight.insight.seedText
+                  : "—"}
+              </p>
+            </div>
           </div>
 
-          {/* Prompt Input */}
           <div className="mb-6">
-            <h2 className="text-lg font-medium text-gray-600">Enter Prompt</h2>
-            <input
-              type="text"
-              placeholder="Enter your insight prompt..."
-              className="mt-2 w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-gray-400 focus:outline-none"
-              value={prompt}
-              onChange={(e) => {
-                setPrompt(e.target.value);
-              }}
-            />
-            {error ? (
-              <p className="mt-1 text-sm text-red-500">{error}</p>
-            ) : null}
+            <h2 className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+              Prompt
+            </h2>
+            <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
+              <p className="break-words whitespace-pre-wrap">
+                {insight.insight.insightPrompt?.trim()
+                  ? insight.insight.insightPrompt
+                  : "—"}
+              </p>
+            </div>
           </div>
 
-          {/* Model Selector */}
-          <div className="mb-6">
-            <h2 className="text-lg font-medium text-gray-600">Select Model</h2>
-            <ModelSelector
-              value={model}
-              onChange={setModel}
-              className="mb-6" // keeps existing margin‑bottom
-            />
-          </div>
-
-          {/* Generate Insight Button */}
-          <div className="mb-6">
-            <button
-              disabled={!prompt.trim() || loading}
-              className={`w-full rounded px-4 py-2 transition ${
-                prompt.trim() && !loading
-                  ? "cursor-pointer bg-gray-900 text-white hover:bg-gray-800"
-                  : "cursor-not-allowed bg-gray-300 text-gray-500"
-              }`}
-              onClick={async () => {
-                if (!prompt.trim()) {
-                  setError(
-                    "Please enter a prompt before generating an insight.",
-                  );
-                  return;
-                }
-                setError(null);
-                await sendEventGenerateInsight({
-                  data: {
-                    seedText,
-                    insightPrompt: prompt,
-                  },
-                });
-                await onRefresh?.();
-              }}
-            >
-              Generate Insight
-            </button>
+          <div>
+            <h2 className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+              Summary
+            </h2>
+            <div className="mt-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800">
+              <p className="break-words whitespace-pre-wrap">
+                {insight.insight.summary?.trim()
+                  ? insight.insight.summary
+                  : "—"}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -185,8 +115,8 @@ function InsightDetails(props: InsightProps) {
                 }}
                 className={`border-b-2 px-3 py-2 text-sm font-medium ${
                   similarItemsTab === "takeaways"
-                    ? "border-black-500 text-black-600"
-                    : "hover:text-black-600 border-transparent text-gray-500"
+                    ? "border-gray-900 text-gray-900"
+                    : "border-transparent text-gray-500 hover:text-gray-900"
                 }`}
               >
                 Takeaways
@@ -202,8 +132,8 @@ function InsightDetails(props: InsightProps) {
                 }}
                 className={`border-b-2 px-3 py-2 text-sm font-medium ${
                   similarItemsTab === "concepts"
-                    ? "border-black-500 text-black-600"
-                    : "hover:text-black-600 border-transparent text-gray-500"
+                    ? "border-gray-900 text-gray-900"
+                    : "border-transparent text-gray-500 hover:text-gray-900"
                 }`}
               >
                 Concepts
@@ -269,30 +199,8 @@ function RouteComponentProvider() {
 // RouteComponent.tsx
 
 export function RouteComponent() {
-  const {
-    viewerId,
-    insights,
-    selectedInsightItem,
-    takeawaysSummary,
-    takeawaysConcepts,
-  } = Route.useLoaderData();
-  const router = useRouter();
-
-  const [loading, setLoading] = useState(false);
-
-  useConnectionStateListener("connected", ({ current }) => {
-    console.log("Ably connection state:", current);
-  });
-
-  useNotifyUI(viewerId, (msg) => {
-    console.log("message", msg);
-    if (msg.data === "loading") {
-      setLoading(true);
-    } else {
-      setLoading(false);
-      void router.invalidate();
-    }
-  });
+  const { insights, selectedInsightItem, takeawaysSummary, takeawaysConcepts } =
+    Route.useLoaderData();
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-white">
@@ -312,16 +220,14 @@ export function RouteComponent() {
               insight={selectedInsightItem}
               takeawaysSummary={takeawaysSummary}
               takeawaysConcepts={takeawaysConcepts}
-              loading={loading}
-              onRefresh={async () => {
-                await router.invalidate();
-              }}
+              loading={false}
             />
             {/* Display Generated Insight */}
             <div className="border-t border-gray-200">
               <InsightCard
                 insightFeedItem={selectedInsightItem}
-                loading={loading}
+                loading={false}
+                expanded={true}
               />
             </div>
           </div>
