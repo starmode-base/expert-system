@@ -1,5 +1,5 @@
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TakeawayTile } from "~/components/takeaway-tile";
 import {
   MODEL_OPTIONS,
@@ -8,16 +8,20 @@ import {
 } from "~/components/model-selector";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { type TakeawaySearchResult } from "~/server/searchSFs";
-
-export interface InsightCreatorProps {
-  similarTakeaways: TakeawaySearchResult[];
-  similarConcepts: TakeawaySearchResult[];
-}
+import {
+  vectorConceptSearchTimeWeightedSF,
+  vectorTakeawaySearchTimeWeightedSF,
+} from "~/server/queries";
 
 type SimilarItemsTab = "takeaways" | "concepts";
 
-export function InsightCreator(props: InsightCreatorProps) {
-  const { similarTakeaways, similarConcepts } = props;
+export function InsightCreator() {
+  const [summaryTakeaways, setSummaryTakeaways] = useState<
+    TakeawaySearchResult[]
+  >([]);
+  const [conceptTakeaways, setConceptTakeaways] = useState<
+    TakeawaySearchResult[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [seedText, setSeedText] = useState("");
@@ -26,6 +30,43 @@ export function InsightCreator(props: InsightCreatorProps) {
   const [similarItemsTab, setSimilarItemsTab] =
     useState<SimilarItemsTab>("takeaways");
   const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
+
+  function useDebouncedSearch(seedText: string | null | undefined) {
+    const requestIdRef = useRef(0);
+
+    useEffect(() => {
+      const q = (seedText ?? "").trim();
+
+      if (q.length < 8) {
+        setSummaryTakeaways([]);
+        setConceptTakeaways([]);
+        return;
+      }
+
+      const myRequestId = ++requestIdRef.current;
+
+      const t = window.setTimeout(() => {
+        void (async () => {
+          const [summary, concepts] = await Promise.all([
+            vectorTakeawaySearchTimeWeightedSF({ data: { query: q } }),
+            vectorConceptSearchTimeWeightedSF({ data: { query: q } }),
+          ]);
+
+          // ignore stale responses
+          if (myRequestId !== requestIdRef.current) return;
+
+          setSummaryTakeaways(summary);
+          setConceptTakeaways(concepts);
+        })();
+      }, 350);
+
+      return () => {
+        window.clearTimeout(t);
+      };
+    }, [seedText]);
+  }
+
+  useDebouncedSearch(seedText);
 
   return (
     <div className="flex h-[calc(100dvh-64px)] w-full overflow-hidden bg-white">
@@ -41,12 +82,6 @@ export function InsightCreator(props: InsightCreatorProps) {
               setSeedText(e.target.value);
             }}
           />
-        </div>
-        {/* // TODO add search button to fetch similar takeaways and concepts */}
-        <div className="mb-6">
-          <button className="w-full rounded bg-gray-900 px-4 py-2 text-white transition hover:bg-gray-800">
-            Search
-          </button>
         </div>
 
         {/* Prompt Input */}
@@ -155,12 +190,12 @@ export function InsightCreator(props: InsightCreatorProps) {
           className="min-h-0 flex-1"
         >
           <div className="flex h-full flex-col overflow-y-auto p-4">
-            {similarTakeaways.length === 0 ? (
+            {summaryTakeaways.length === 0 ? (
               <p className="text-sm text-gray-500">
                 No similar takeaways found.
               </p>
             ) : (
-              similarTakeaways.map((takeaway) => (
+              summaryTakeaways.map((takeaway) => (
                 <TakeawayTile key={takeaway.id} takeaway={takeaway} />
               ))
             )}
@@ -175,12 +210,12 @@ export function InsightCreator(props: InsightCreatorProps) {
           className="min-h-0 flex-1"
         >
           <div className="flex h-full flex-col overflow-y-auto p-4">
-            {similarConcepts.length === 0 ? (
+            {conceptTakeaways.length === 0 ? (
               <p className="text-sm text-gray-500">
                 No similar concepts found.
               </p>
             ) : (
-              similarConcepts.map((takeaway) => (
+              conceptTakeaways.map((takeaway) => (
                 <TakeawayTile key={takeaway.id} takeaway={takeaway} />
               ))
             )}
