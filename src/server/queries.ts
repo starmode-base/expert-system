@@ -383,10 +383,14 @@ export const vectorTakeawaySearchTimeWeightedSF = createServerFn({
     z.object({
       query: z.string(),
       limit: z.number().optional(),
+      halfLifeDays: z.number().optional(),
     }),
   )
   .handler(async ({ data }): Promise<TakeawaySearchResult[]> => {
-    return await vectorTakeawaySearchTimeWeighted(data.query, data.limit ?? 10);
+    return await vectorTakeawaySearchTimeWeighted(data.query, {
+      limit: data.limit,
+      halfLifeDays: data.halfLifeDays,
+    });
   });
 
 export const vectorConceptSearchTimeWeightedSF = createServerFn({
@@ -396,10 +400,14 @@ export const vectorConceptSearchTimeWeightedSF = createServerFn({
     z.object({
       query: z.string(),
       limit: z.number().optional(),
+      halfLifeDays: z.number().optional(),
     }),
   )
   .handler(async ({ data }): Promise<TakeawaySearchResult[]> => {
-    return await vectorConceptSearchTimeWeighted(data.query, data.limit ?? 10);
+    return await vectorConceptSearchTimeWeighted(data.query, {
+      limit: data.limit,
+      halfLifeDays: data.halfLifeDays,
+    });
   });
 
 export const getinsightTakeawaysSF = createServerFn({

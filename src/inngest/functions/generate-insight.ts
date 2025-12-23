@@ -256,12 +256,18 @@ export const generateInsight = inngest.createFunction(
     } = await step.run(`get-similar-takeaways-and-concepts`, async () => {
       const similarTakeaways = await vectorTakeawaySearchTimeWeighted(
         event.data.seedText,
-        10,
+        {
+          limit: 10,
+          halfLifeDays: 90, // 3 months relevance half life
+        },
       );
 
       const similarConceptCandidates = await vectorConceptSearchTimeWeighted(
         event.data.seedText,
-        10,
+        {
+          limit: 10,
+          halfLifeDays: 90, // 3 months relevance half life
+        },
       );
 
       const takeawayIds = new Set(similarTakeaways.map((t) => t.id));

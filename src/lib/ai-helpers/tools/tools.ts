@@ -37,7 +37,10 @@ function normalizeTakeawayCount(count: number | undefined) {
  */
 export async function fetchTakeawayPreviews(args: FetchTakeawayPreviewsArgs) {
   const count = normalizeTakeawayCount(args.count);
-  const takeaways = await vectorTakeawaySearchTimeWeighted(args.query, count);
+  const takeaways = await vectorTakeawaySearchTimeWeighted(args.query, {
+    limit: count,
+    halfLifeDays: 90, // 3 months relevance half life
+  });
 
   return buildTakeawayPreviews(takeaways);
 }

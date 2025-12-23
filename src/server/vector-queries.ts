@@ -14,7 +14,11 @@ import type { TakeawaySearchResult } from "./searchSFs";
  * The curve is an S-shape that declines over ~3 months and clamps to [0, 1].
  * If the publication date is invalid, returns 1 to avoid accidental suppression.
  */
-function computeRecencyWeight(publicationDate: Date, now = new Date()) {
+function computeRecencyWeight(
+  publicationDate: Date,
+  now = new Date(),
+  halfLifeDays = 90,
+) {
   const publishedAtMs = publicationDate.getTime();
   if (Number.isNaN(publishedAtMs)) {
     return 1;
@@ -24,21 +28,29 @@ function computeRecencyWeight(publicationDate: Date, now = new Date()) {
   const ageDays = ageMs / (1000 * 60 * 60 * 24);
 
   // S-curve that declines over ~3 months
-  const threeMonthsDays = 90;
-  const midpointDays = threeMonthsDays / 2;
-  const k = Math.log(99) / midpointDays;
 
-  const weight = 1 / (1 + Math.exp(k * (ageDays - midpointDays)));
-  return Math.max(0, Math.min(1, weight));
+  const k = Math.log(9) / halfLifeDays;
+
+  const floor = 0.1;
+  const weight =
+    floor + (1 - floor) / (1 + Math.exp(k * (ageDays - halfLifeDays)));
+  return Math.max(floor, Math.min(1, weight));
 }
 
 function rerankByTimeWeightedSimilarity(
   results: TakeawaySearchResult[],
-  now = new Date(),
+  options?: {
+    now?: Date;
+    halfLifeDays?: number;
+  },
 ) {
   return results
     .map((result) => {
-      const recencyWeight = computeRecencyWeight(result.publicationDate, now);
+      const recencyWeight = computeRecencyWeight(
+        result.publicationDate,
+        options?.now,
+        options?.halfLifeDays,
+      );
       const weightedSimilarity = result.similarity * recencyWeight;
 
       return {
@@ -99,14 +111,17 @@ export async function vectorTakeawaySearch(
 
 export async function vectorTakeawaySearchTimeWeighted(
   searchInput: string,
-  limit = 10,
+  options?: {
+    limit?: number;
+    halfLifeDays?: number;
+  },
 ): Promise<TakeawaySearchResult[]> {
-  const candidateLimit = Math.min(500, Math.max(limit, 50));
+  const candidateLimit = Math.min(500, Math.max(options?.limit ?? 10, 50));
 
   const candidates = await vectorTakeawaySearch(searchInput, candidateLimit);
-  const reranked = rerankByTimeWeightedSimilarity(candidates);
+  const reranked = rerankByTimeWeightedSimilarity(candidates, options);
 
-  return reranked.slice(0, limit);
+  return reranked;
 }
 
 export async function vectorConceptSearch(
@@ -153,14 +168,17 @@ export async function vectorConceptSearch(
 
 export async function vectorConceptSearchTimeWeighted(
   searchInput: string,
-  limit = 10,
+  options?: {
+    limit?: number;
+    halfLifeDays?: number;
+  },
 ): Promise<TakeawaySearchResult[]> {
-  const candidateLimit = Math.min(500, Math.max(limit, 50));
+  const candidateLimit = Math.min(500, Math.max(options?.limit ?? 10, 50));
 
   const candidates = await vectorConceptSearch(searchInput, candidateLimit);
-  const reranked = rerankByTimeWeightedSimilarity(candidates);
+  const reranked = rerankByTimeWeightedSimilarity(candidates, options);
 
-  return reranked.slice(0, limit);
+  return reranked;
 }
 
 // ------------------------------------------------------------
