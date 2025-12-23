@@ -8,13 +8,14 @@ import {
   organizations,
   categories,
   tags,
+  insights,
   earningsSchedule,
   earningsFetchJobs,
   trackedCompanies,
   stockSymbols,
-  insights,
   documents,
   takeawayReferences,
+  insightTakeaways,
   organizationMembers,
   insightReferences,
 } from "./schema";
@@ -41,6 +42,7 @@ export const takeawaysRelations = relations(takeaways, ({ one, many }) => ({
     references: [categories.id],
   }),
   takeawayReferences: many(takeawayReferences),
+  insightTakeaways: many(insightTakeaways),
 }));
 
 export const takeawayEmbeddingsRelations = relations(
@@ -66,8 +68,8 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
-  trackedCompanies: many(trackedCompanies),
   insights: many(insights),
+  trackedCompanies: many(trackedCompanies),
   organizationMembers: many(organizationMembers),
 }));
 
@@ -86,6 +88,15 @@ export const tagsRelations = relations(tags, ({ one }) => ({
 export const categoriesRelations = relations(categories, ({ many }) => ({
   tags: many(tags),
   takeaways: many(takeaways),
+}));
+
+export const insightsRelations = relations(insights, ({ one, many }) => ({
+  user: one(users, {
+    fields: [insights.userId],
+    references: [users.id],
+  }),
+  insightTakeaways: many(insightTakeaways),
+  insightReferences: many(insightReferences),
 }));
 
 export const earningsFetchJobsRelations = relations(
@@ -123,14 +134,6 @@ export const stockSymbolsRelations = relations(stockSymbols, ({ many }) => ({
   trackedCompanies: many(trackedCompanies),
 }));
 
-export const insightsRelations = relations(insights, ({ one, many }) => ({
-  user: one(users, {
-    fields: [insights.userId],
-    references: [users.id],
-  }),
-  insightReferences: many(insightReferences),
-}));
-
 export const documentsRelations = relations(documents, ({ many }) => ({
   takeaways: many(takeaways),
 }));
@@ -143,6 +146,20 @@ export const takeawayReferencesRelations = relations(
       references: [takeaways.id],
     }),
     insightReferences: many(insightReferences),
+  }),
+);
+
+export const insightTakeawaysRelations = relations(
+  insightTakeaways,
+  ({ one }) => ({
+    insight: one(insights, {
+      fields: [insightTakeaways.insightId],
+      references: [insights.id],
+    }),
+    takeaway: one(takeaways, {
+      fields: [insightTakeaways.takeawayId],
+      references: [takeaways.id],
+    }),
   }),
 );
 

@@ -249,29 +249,42 @@ export const generateInsight = inngest.createFunction(
     });
 
     // Step 2: Gather context (similar takeaways and concept-neighbors) to ground the agent’s first pass
-    const { takeawayPreviewFormatted, takeawayConceptsPreviewFormatted } =
-      await step.run(`get-similar-takeaways-and-concepts`, async () => {
-        const similarTakeaways = await vectorTakeawaySearchTimeWeighted(
-          event.data.seedText,
-          10,
-        );
+    const {
+      takeawayPreviewFormatted,
+      takeawayConceptsPreviewFormatted,
+      takeawayAndConceptIds,
+    } = await step.run(`get-similar-takeaways-and-concepts`, async () => {
+      const similarTakeaways = await vectorTakeawaySearchTimeWeighted(
+        event.data.seedText,
+        10,
+      );
 
-        const similarConceptCandidates = await vectorConceptSearchTimeWeighted(
-          event.data.seedText,
-          10,
-        );
+      const similarConceptCandidates = await vectorConceptSearchTimeWeighted(
+        event.data.seedText,
+        10,
+      );
 
-        const takeawayIds = new Set(similarTakeaways.map((t) => t.id));
-        const similarConcepts = similarConceptCandidates.filter(
-          (concept) => !takeawayIds.has(concept.id),
-        );
+      const takeawayIds = new Set(similarTakeaways.map((t) => t.id));
+      const similarConcepts = similarConceptCandidates.filter(
+        (concept) => !takeawayIds.has(concept.id),
+      );
 
-        return {
-          takeawayPreviewFormatted: buildTakeawayPreviews(similarTakeaways),
-          takeawayConceptsPreviewFormatted:
-            buildTakeawayPreviews(similarConcepts),
-        };
-      });
+      const takeawayAndConceptIds = [
+        ...Array.from(takeawayIds).map((id) => {
+          return { id, type: "takeaway" };
+        }),
+        ...similarConcepts.map((c) => {
+          return { id: c.id, type: "concept" };
+        }),
+      ];
+
+      return {
+        takeawayPreviewFormatted: buildTakeawayPreviews(similarTakeaways),
+        takeawayConceptsPreviewFormatted:
+          buildTakeawayPreviews(similarConcepts),
+        takeawayAndConceptIds,
+      };
+    });
 
     // Step 3: Kick off the agent with a required tool call so it can decide what it needs next
     const initialConversation = buildInitialConversation(
@@ -387,24 +400,7 @@ export const generateInsight = inngest.createFunction(
     // Step 6: Save the final insight text
     const insightId = await step.run(`save-insight`, async () => {
       console.log("##### INSIGHT RESPONSE PARSED #####");
-      const [result] = await db
-        .insert(schema.insights)
-        .values({
-          userId: event.user.id,
-          title: finalInsight.title,
-          insight: finalInsight.insight,
-          summary: finalInsight.core_insight_statement,
-          seedText: event.data.seedText,
-          insightPrompt: event.data.insightPrompt,
-        })
-        .returning();
-      invariant(result, "Failed to create insight");
 
-      return result.id;
-    });
-
-    // Step 7: Save the cited reference mapping for the insight
-    await step.run(`save-insight-references`, async () => {
       const references = finalInsight.references;
 
       if (!references.length) return;
@@ -415,13 +411,42 @@ export const generateInsight = inngest.createFunction(
         ).values(),
       );
 
-      await db.insert(schema.insightReferences).values(
-        uniqueReferences.map((reference) => ({
-          insightId,
-          referenceId: reference.reference_id,
-          insightReferenceNumber: reference.insight_reference_number,
-        })),
-      );
+      const insightId = await db.transaction(async (tx) => {
+        const [result] = await tx
+          .insert(schema.insights)
+          .values({
+            userId: event.user.id,
+            title: finalInsight.title,
+            insight: finalInsight.insight,
+            summary: finalInsight.core_insight_statement,
+            seedText: event.data.seedText,
+            insightPrompt: event.data.insightPrompt,
+          })
+          .returning();
+        invariant(result, "Failed to create insight");
+
+        await tx.insert(schema.insightTakeaways).values(
+          takeawayAndConceptIds.map(({ id, type }) => ({
+            insightId: result.id,
+            takeawayId: id,
+            type: type as "takeaway" | "concept",
+          })),
+        );
+
+        await tx.insert(schema.insightReferences).values(
+          uniqueReferences.map((reference) => ({
+            insightId: result.id,
+            referenceId: reference.reference_id,
+            insightReferenceNumber: reference.insight_reference_number,
+          })),
+        );
+
+        return result.id;
+      });
+
+      invariant(insightId, "Failed to create insight");
+
+      return insightId;
     });
 
     // Step 8: Notify the UI that the insight has been generated
@@ -429,7 +454,7 @@ export const generateInsight = inngest.createFunction(
       `notify-ui`,
       publishNotifyUI,
       event.user.id,
-      `Insight generated for ${event.data.seedText}`,
+      `Insight generated for id ${insightId ?? "unknown"}`,
     );
 
     return finalInsight;

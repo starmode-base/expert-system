@@ -401,3 +401,59 @@ export const vectorConceptSearchTimeWeightedSF = createServerFn({
   .handler(async ({ data }): Promise<TakeawaySearchResult[]> => {
     return await vectorConceptSearchTimeWeighted(data.query, data.limit ?? 10);
   });
+
+export const getinsightTakeawaysSF = createServerFn({
+  method: "GET",
+})
+  .validator(z.string()) // insightId
+  .handler(
+    async ({
+      data: insightId,
+    }): Promise<{
+      takeawaysSummary: TakeawaySearchResult[];
+      takeawaysConcepts: TakeawaySearchResult[];
+    }> => {
+      const takeaways = await db.query.insightTakeaways.findMany({
+        where: eq(schema.insightTakeaways.insightId, insightId),
+        with: {
+          takeaway: {
+            with: {
+              category: true,
+              document: true,
+              takeawayReferences: true,
+            },
+          },
+        },
+      });
+
+      const takeawaysWithType = takeaways.map((takeaway) => ({
+        id: takeaway.takeaway.id,
+        documentId: takeaway.takeaway.documentId,
+        title: takeaway.takeaway.title,
+        publicationDate: takeaway.takeaway.document.publicationDate,
+        createdAt: takeaway.takeaway.createdAt,
+        takeaway: takeaway.takeaway.takeaway,
+        summary: takeaway.takeaway.summary,
+        concept: takeaway.takeaway.concept,
+        source: takeaway.takeaway.document.source,
+        documentTitle: takeaway.takeaway.document.title,
+        documentSource: takeaway.takeaway.document.source,
+        category: takeaway.takeaway.category?.name,
+        similarity: 0,
+        references: takeaway.takeaway.takeawayReferences.map(
+          (reference) => reference,
+        ),
+        type: takeaway.type,
+      }));
+      const takeawaysSummary = takeawaysWithType.filter(
+        (takeaway) => takeaway.type === "takeaway",
+      );
+      const takeawaysConcepts = takeawaysWithType.filter(
+        (takeaway) => takeaway.type === "concept",
+      );
+      return {
+        takeawaysSummary,
+        takeawaysConcepts,
+      };
+    },
+  );

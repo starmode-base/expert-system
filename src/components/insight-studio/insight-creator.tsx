@@ -1,99 +1,38 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useConnectionStateListener } from "ably/react";
-import { useEffect, useState } from "react";
-import { InsightList } from "~/components/insight-studio/insights-list";
-import { PubSubProvider, useNotifyUI } from "~/lib/ably";
-import { sendEventGenerateInsightSF } from "~/server/inggest";
-import {
-  getInsightsSF,
-  listInsightsSF,
-  updateInsightTitleSF,
-} from "~/server/insights-studio-SFs";
-import { listOrganizationsSF } from "~/server/organizations";
-import { getinsightTakeawaysSF, type InsightsItem } from "~/server/queries";
-import { InsightCard } from "../components/insight-feed/insight-card";
+import { useState } from "react";
+import { TakeawayTile } from "~/components/takeaway-tile";
 import {
   MODEL_OPTIONS,
   ModelSelector,
-  ModelValue,
-} from "../components/model-selector";
-import { TakeawaySearchResult } from "~/server/searchSFs";
-import { TakeawayTile } from "~/components/takeaway-tile";
+  type ModelValue,
+} from "~/components/model-selector";
+import { sendEventGenerateInsightSF } from "~/server/inggest";
+import { type TakeawaySearchResult } from "~/server/searchSFs";
 
-export const Route = createFileRoute("/insight-studio/$insightId")({
-  loader: async ({ params: { insightId } }) => {
-    const { viewerId } = await listOrganizationsSF();
-    const insights = await listInsightsSF();
-    const selectedInsightItem = await getInsightsSF({ data: insightId });
-
-    const { takeawaysSummary, takeawaysConcepts } = await getinsightTakeawaysSF(
-      { data: insightId },
-    );
-
-    return {
-      viewerId,
-      selectedInsightItem,
-      insights,
-      takeawaysSummary,
-      takeawaysConcepts,
-    };
-  },
-  component: RouteComponentProvider,
-});
-
-interface InsightProps {
-  insight: InsightsItem;
-  takeawaysSummary: TakeawaySearchResult[];
-  takeawaysConcepts: TakeawaySearchResult[];
-  loading: boolean;
-  onRefresh?: () => Promise<void> | void;
+export interface InsightCreatorProps {
+  placeholder: string;
 }
 
 type SimilarItemsTab = "takeaways" | "concepts";
 
-function InsightDetails(props: InsightProps) {
-  const { insight, takeawaysSummary, takeawaysConcepts, loading, onRefresh } =
-    props;
-  const [title, setTitle] = useState(insight.insight.title);
-  const [prompt, setPrompt] = useState(insight.insight.insightPrompt ?? "");
-  const [seedText, setSeedText] = useState(insight.insight.seedText ?? "");
+export function InsightCreator(props: InsightCreatorProps) {
+  const { placeholder } = props;
+  const [loading, setLoading] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [seedText, setSeedText] = useState("");
   const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const [error, setError] = useState<string | null>(null);
   const [similarItemsTab, setSimilarItemsTab] =
     useState<SimilarItemsTab>("takeaways");
   const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
-  const updateInsightTitle = useServerFn(updateInsightTitleSF);
 
-  useEffect(() => {
-    setTitle(insight.insight.title);
-    setPrompt(insight.insight.insightPrompt ?? "");
-    setSeedText(insight.insight.seedText ?? "");
-  }, [
-    insight.insight.id,
-    insight.insight.insightPrompt,
-    insight.insight.seedText,
-    insight.insight.title,
-  ]);
+  const takeawaysSummary = [] as TakeawaySearchResult[];
+  const takeawaysConcepts = [] as TakeawaySearchResult[];
+
+  console.log(placeholder);
 
   return (
     <div className="mx-auto bg-white">
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => {
-          const nextTitle = e.target.value;
-          setTitle(nextTitle);
-          void (async () => {
-            await updateInsightTitle({
-              data: { id: insight.insight.id, title: nextTitle },
-            });
-            await onRefresh?.();
-          })();
-        }}
-        className="mb-4 w-full px-2 py-1 text-2xl font-bold text-gray-800 outline-none focus:border focus:border-zinc-500"
-      />
-
       <div className="flex">
         <div className="w-1/3 border-r border-gray-200 p-4">
           {/* Seed text input */}
@@ -159,7 +98,7 @@ function InsightDetails(props: InsightProps) {
                     insightPrompt: prompt,
                   },
                 });
-                await onRefresh?.();
+                setLoading(true);
               }}
             >
               Generate Insight
@@ -250,83 +189,6 @@ function InsightDetails(props: InsightProps) {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-/**
- * Route component
- */
-function RouteComponentProvider() {
-  const { viewerId } = Route.useLoaderData();
-
-  return (
-    <PubSubProvider viewerId={viewerId}>
-      <RouteComponent />
-    </PubSubProvider>
-  );
-}
-// RouteComponent.tsx
-
-export function RouteComponent() {
-  const {
-    viewerId,
-    insights,
-    selectedInsightItem,
-    takeawaysSummary,
-    takeawaysConcepts,
-  } = Route.useLoaderData();
-  const router = useRouter();
-
-  const [loading, setLoading] = useState(false);
-
-  useConnectionStateListener("connected", ({ current }) => {
-    console.log("Ably connection state:", current);
-  });
-
-  useNotifyUI(viewerId, (msg) => {
-    console.log("message", msg);
-    if (msg.data === "loading") {
-      setLoading(true);
-    } else {
-      setLoading(false);
-      void router.invalidate();
-    }
-  });
-
-  return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-white">
-      {/* Left Pane */}
-      <InsightList insights={insights} />
-
-      {/* Right Pane */}
-      {!selectedInsightItem ? (
-        <div className="flex w-2/3 items-center justify-center">
-          <p className="text-gray-500">Select an insight to view details</p>
-        </div>
-      ) : (
-        <div className="flex h-full w-4/5 flex-col">
-          {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto px-4">
-            <InsightDetails
-              insight={selectedInsightItem}
-              takeawaysSummary={takeawaysSummary}
-              takeawaysConcepts={takeawaysConcepts}
-              loading={loading}
-              onRefresh={async () => {
-                await router.invalidate();
-              }}
-            />
-            {/* Display Generated Insight */}
-            <div className="border-t border-gray-200">
-              <InsightCard
-                insightFeedItem={selectedInsightItem}
-                loading={loading}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
