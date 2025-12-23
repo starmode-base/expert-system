@@ -48,8 +48,12 @@ export function InsightCreator() {
       const t = window.setTimeout(() => {
         void (async () => {
           const [summary, concepts] = await Promise.all([
-            vectorTakeawaySearchTimeWeightedSF({ data: { query: q } }),
-            vectorConceptSearchTimeWeightedSF({ data: { query: q } }),
+            vectorTakeawaySearchTimeWeightedSF({
+              data: { query: q, limit: 10 },
+            }),
+            vectorConceptSearchTimeWeightedSF({
+              data: { query: q, limit: 10 },
+            }),
           ]);
 
           // ignore stale responses

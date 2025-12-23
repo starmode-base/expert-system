@@ -116,12 +116,13 @@ export async function vectorTakeawaySearchTimeWeighted(
     halfLifeDays?: number;
   },
 ): Promise<TakeawaySearchResult[]> {
-  const candidateLimit = Math.min(500, Math.max(options?.limit ?? 10, 50));
+  const defaultLimit = options?.limit ?? 10;
+  const candidateLimit = Math.min(500, Math.max(defaultLimit, 50));
 
   const candidates = await vectorTakeawaySearch(searchInput, candidateLimit);
   const reranked = rerankByTimeWeightedSimilarity(candidates, options);
 
-  return reranked;
+  return reranked.slice(0, defaultLimit);
 }
 
 export async function vectorConceptSearch(
@@ -173,12 +174,13 @@ export async function vectorConceptSearchTimeWeighted(
     halfLifeDays?: number;
   },
 ): Promise<TakeawaySearchResult[]> {
-  const candidateLimit = Math.min(500, Math.max(options?.limit ?? 10, 50));
+  const defaultLimit = options?.limit ?? 10;
+  const candidateLimit = Math.min(500, Math.max(defaultLimit, 50));
 
   const candidates = await vectorConceptSearch(searchInput, candidateLimit);
   const reranked = rerankByTimeWeightedSimilarity(candidates, options);
 
-  return reranked;
+  return reranked.slice(0, defaultLimit);
 }
 
 // ------------------------------------------------------------
