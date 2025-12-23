@@ -1,6 +1,6 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { createInsightSF, deleteInsightSF } from "~/server/insights-studio-SFs";
+import { deleteInsightSF } from "~/server/insights-studio-SFs";
 
 // InsightList.tsx (Left Pane Component)
 interface InsightItem {
@@ -16,7 +16,6 @@ interface InsightListProps {
 export function InsightList(props: InsightListProps) {
   const navigate = useNavigate();
   const router = useRouter();
-  const createInsight = useServerFn(createInsightSF);
   const deleteInsight = useServerFn(deleteInsightSF);
 
   const handleSelectInsight = async (insightId: string) => {
@@ -30,8 +29,7 @@ export function InsightList(props: InsightListProps) {
       <div className="mb-4 flex justify-end">
         <button
           onClick={async () => {
-            await createInsight();
-            await router.invalidate();
+            await navigate({ to: "/insight-studio" });
           }}
           className="border border-zinc-900 bg-zinc-900 px-4 py-2 text-white"
         >
