@@ -69,13 +69,17 @@ export const listTrackedCompaniesSF = createServerFn({ method: "GET" })
       const bTime = b.nextEarningsDate ? b.nextEarningsDate.getTime() : null;
 
       if (aTime === null && bTime === null) {
-        return a.symbol.localeCompare(b.symbol, undefined, { sensitivity: "base" });
+        return a.symbol.localeCompare(b.symbol, undefined, {
+          sensitivity: "base",
+        });
       }
       if (aTime === null) return 1;
       if (bTime === null) return -1;
 
       if (aTime !== bTime) return aTime - bTime;
-      return a.symbol.localeCompare(b.symbol, undefined, { sensitivity: "base" });
+      return a.symbol.localeCompare(b.symbol, undefined, {
+        sensitivity: "base",
+      });
     });
 
     return results;
