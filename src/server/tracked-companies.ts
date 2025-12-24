@@ -56,13 +56,29 @@ export const listTrackedCompaniesSF = createServerFn({ method: "GET" })
       }
     }
 
-    return trackedCompanies.map((tc) => ({
+    const results = trackedCompanies.map((tc) => ({
       id: tc.id,
       stockSymbolId: tc.stockSymbolId,
       symbol: tc.stockSymbol.symbol,
       name: tc.stockSymbol.name,
       nextEarningsDate: earningsMap.get(tc.stockSymbol.symbol) ?? null,
     }));
+
+    results.sort((a, b) => {
+      const aTime = a.nextEarningsDate ? a.nextEarningsDate.getTime() : null;
+      const bTime = b.nextEarningsDate ? b.nextEarningsDate.getTime() : null;
+
+      if (aTime === null && bTime === null) {
+        return a.symbol.localeCompare(b.symbol, undefined, { sensitivity: "base" });
+      }
+      if (aTime === null) return 1;
+      if (bTime === null) return -1;
+
+      if (aTime !== bTime) return aTime - bTime;
+      return a.symbol.localeCompare(b.symbol, undefined, { sensitivity: "base" });
+    });
+
+    return results;
   });
 
 /**
