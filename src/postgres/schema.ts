@@ -287,6 +287,8 @@ export const insights = pgTable("insights", {
   title: text().notNull(),
   summary: text(),
   insight: text(),
+  seedText: text(),
+  insightPrompt: text(),
 });
 
 export type InsightSelect = typeof insights.$inferSelect;
@@ -321,6 +323,7 @@ export const insightTakeaways = pgTable(
     takeawayId: text()
       .notNull()
       .references(() => takeaways.id, { onDelete: "cascade" }),
+    type: text().$type<"concept" | "takeaway">().notNull(),
   },
   (table) => [primaryKey({ columns: [table.insightId, table.takeawayId] })],
 );

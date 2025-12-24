@@ -3,13 +3,11 @@ import remarkGfm from "remark-gfm";
 import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { ArrowUpOnSquareIcon, CheckIcon } from "@heroicons/react/24/outline";
-import { InsightSelect } from "~/postgres/schema";
-import { InsightReferenceItem } from "~/server/queries";
+import type { InsightsItem } from "~/server/queries";
 import { InsightReferences } from "~/components/insight-feed/insight-references";
 
 interface InsightCardProps {
-  insight: InsightSelect;
-  insightReferences: InsightReferenceItem[];
+  insightFeedItem: InsightsItem;
   loading: boolean;
   expanded?: boolean;
 }
@@ -97,7 +95,7 @@ export function InsightCard(props: InsightCardProps) {
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
 
   const { preview: insightPreviewMarkdown } = getMarkdownPreview(
-    props.insight.insight ?? "",
+    props.insightFeedItem.insight.insight ?? "",
     INSIGHT_PREVIEW_CHAR_LIMIT,
   );
 
@@ -105,7 +103,7 @@ export function InsightCard(props: InsightCardProps) {
     <div className="bg-white p-4">
       <div className="mb-2 flex items-center justify-end gap-2">
         <div className="shrink-0 text-xs text-gray-500">
-          {props.insight.createdAt.toLocaleDateString()}
+          {props.insightFeedItem.insight.createdAt.toLocaleDateString()}
         </div>
         <button
           type="button"
@@ -118,7 +116,7 @@ export function InsightCard(props: InsightCardProps) {
           onClick={async () => {
             const href = router.buildLocation({
               to: "/insight/$insightId",
-              params: { insightId: props.insight.id },
+              params: { insightId: props.insightFeedItem.insight.id },
             }).href;
 
             const fullUrl = new URL(href, window.location.origin).toString();
@@ -150,8 +148,8 @@ export function InsightCard(props: InsightCardProps) {
       ) : insightExpanded ? (
         <>
           <InsightMarkdownToggle
-            markdown={props.insight.insight}
-            createdAt={props.insight.createdAt}
+            markdown={props.insightFeedItem.insight.insight}
+            createdAt={props.insightFeedItem.insight.createdAt}
             variant="full"
             onToggleExpanded={() => {
               setInsightExpanded((prev) => !prev);
@@ -160,12 +158,16 @@ export function InsightCard(props: InsightCardProps) {
           {/* Add margin below the expanded insight content */}
           <div className="mb-4" />
 
-          <InsightReferences insightReferences={props.insightReferences} />
+          <InsightReferences
+            insightReferences={props.insightFeedItem.insightReferences}
+          />
         </>
       ) : (
         <InsightMarkdownToggle
-          markdown={props.insight.insight ? insightPreviewMarkdown : ""}
-          createdAt={props.insight.createdAt}
+          markdown={
+            props.insightFeedItem.insight.insight ? insightPreviewMarkdown : ""
+          }
+          createdAt={props.insightFeedItem.insight.createdAt}
           variant="preview"
           onToggleExpanded={() => {
             setInsightExpanded((prev) => !prev);

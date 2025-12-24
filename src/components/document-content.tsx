@@ -3,17 +3,25 @@ import { Document } from "~/server/queries";
 import { TakeawaySearchResult } from "~/server/searchSFs";
 import { TakeawayTile } from "./takeaway-tile";
 
-export function TakeawaysSection({ selectedDoc }: { selectedDoc: Document }) {
+export function TakeawaysSection(props: { selectedDoc: Document }) {
+  const selectedDoc = props.selectedDoc;
+
   return (
-    <div className="flex h-full flex-col overflow-y-auto p-4">
-      {selectedDoc.takeaways.map((takeaway) => (
-        <TakeawayTile key={takeaway.id} takeaway={takeaway} />
-      ))}
+    <div className="border-t border-gray-200">
+      {selectedDoc.takeaways.map((takeaway) => {
+        return (
+          <div key={takeaway.id} className="border-b border-gray-200">
+            <TakeawayTile takeaway={takeaway} />
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-export function ArticleSection({ selectedDoc }: { selectedDoc: Document }) {
+export function ArticleSection(props: { selectedDoc: Document }) {
+  const selectedDoc = props.selectedDoc;
+
   return (
     <div className="h-full flex-1 overflow-y-auto p-4">
       <div className="mb-4">
@@ -34,7 +42,9 @@ export function ArticleSection({ selectedDoc }: { selectedDoc: Document }) {
 export function SimilarTakeawaysSection(props: {
   similarTakeaways: TakeawaySearchResult[];
 }) {
-  if (props.similarTakeaways.length === 0) {
+  const similarTakeaways = props.similarTakeaways;
+
+  if (similarTakeaways.length === 0) {
     return (
       <div className="flex h-full items-center justify-center p-4">
         <p className="text-gray-500">No similar takeaways found</p>
@@ -43,10 +53,14 @@ export function SimilarTakeawaysSection(props: {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto p-4">
-      {props.similarTakeaways.map((takeaway) => (
-        <TakeawayTile key={takeaway.id} takeaway={takeaway} />
-      ))}
+    <div className="border-t border-gray-200">
+      {similarTakeaways.map((takeaway) => {
+        return (
+          <div key={takeaway.id} className="border-b border-gray-200">
+            <TakeawayTile takeaway={takeaway} />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -54,7 +68,9 @@ export function SimilarTakeawaysSection(props: {
 export function SimilarConceptsSection(props: {
   similarConcepts: TakeawaySearchResult[];
 }) {
-  if (props.similarConcepts.length === 0) {
+  const similarConcepts = props.similarConcepts;
+
+  if (similarConcepts.length === 0) {
     return (
       <div className="flex h-full items-center justify-center p-4">
         <p className="text-gray-500">No similar concepts found</p>
@@ -63,21 +79,22 @@ export function SimilarConceptsSection(props: {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto p-4">
-      {props.similarConcepts.map((takeaway) => (
-        <TakeawayTile key={takeaway.id} takeaway={takeaway} />
-      ))}
+    <div className="border-t border-gray-200">
+      {similarConcepts.map((takeaway) => {
+        return (
+          <div key={takeaway.id} className="border-b border-gray-200">
+            <TakeawayTile takeaway={takeaway} />
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 type TabType = "takeaways" | "article" | "similarTakeaways" | "similarConcepts";
 
-export function DocumentContent({
-  selectedDoc,
-}: {
-  selectedDoc: Document | null;
-}) {
+export function DocumentContent(props: { selectedDoc: Document | null }) {
+  const selectedDoc = props.selectedDoc;
   const [activeTab, setActiveTab] = useState<TabType>("takeaways");
 
   if (!selectedDoc) {

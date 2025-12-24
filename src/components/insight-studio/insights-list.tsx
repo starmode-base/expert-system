@@ -1,8 +1,8 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { createInsightSF, deleteInsightSF } from "~/server/insights-studio-SFs";
+import { deleteInsightSF } from "~/server/insights-studio-SFs";
 
-// InsightList.tsx (Left Pane Component)
+// Insight list (left pane component)
 interface InsightItem {
   id: string;
   title: string;
@@ -16,7 +16,6 @@ interface InsightListProps {
 export function InsightList(props: InsightListProps) {
   const navigate = useNavigate();
   const router = useRouter();
-  const createInsight = useServerFn(createInsightSF);
   const deleteInsight = useServerFn(deleteInsightSF);
 
   const handleSelectInsight = async (insightId: string) => {
@@ -26,49 +25,57 @@ export function InsightList(props: InsightListProps) {
     });
   };
   return (
-    <div className="h-full w-1/5 items-center gap-2 overflow-y-auto border-r border-gray-300 p-2">
-      <div className="mb-4 flex justify-end">
+    <div className="flex h-full w-80 shrink-0 flex-col border-r border-gray-200 bg-white">
+      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+        <div className="text-sm font-semibold text-gray-900">Insights</div>
         <button
+          type="button"
           onClick={async () => {
-            await createInsight();
-            await router.invalidate();
+            await navigate({ to: "/insight-studio" });
           }}
-          className="border border-zinc-900 bg-zinc-900 px-4 py-2 text-white"
+          className="inline-flex items-center justify-center rounded-md bg-gray-900 px-2.5 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+          title="Create new insight"
         >
-          +
+          New
         </button>
       </div>
-      <div className="mb-4">
-        {props.insights.length > 0
-          ? props.insights.map((insight) => (
-              <div
-                key={insight.id}
-                className="flex flex-col border-b border-gray-300 bg-white p-2 hover:bg-gray-100"
-              >
-                <div
-                  className="flex cursor-pointer items-start gap-2"
-                  onClick={async () => {
-                    await handleSelectInsight(insight.id);
-                  }}
-                >
-                  <p className="min-w-0 flex-1 text-lg leading-snug font-semibold break-words">
-                    {insight.title}
-                  </p>
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {props.insights.length === 0 ? (
+          <p className="p-4 text-sm text-gray-500">No insights</p>
+        ) : (
+          <div className="border-t border-gray-200">
+            {props.insights.map((insight) => (
+              <div key={insight.id} className="border-b border-gray-200">
+                <div className="flex items-start gap-2 px-4 py-3 hover:bg-gray-50">
                   <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
+                    type="button"
+                    className="min-w-0 flex-1 text-left"
+                    onClick={async () => {
+                      await handleSelectInsight(insight.id);
+                    }}
+                  >
+                    <p className="truncate text-sm font-medium text-gray-900">
+                      {insight.title}
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
                       await deleteInsight({ data: insight.id });
                       await router.invalidate();
                     }}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-xs text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     title="Delete"
                   >
                     ✕
                   </button>
                 </div>
               </div>
-            ))
-          : "No insights"}
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

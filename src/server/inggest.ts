@@ -77,13 +77,13 @@ export const sendEventGenerateInsightSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(
     z.object({
-      insightId: z.string(),
+      seedText: z.string(),
       insightPrompt: z.string(),
       model: z.string().optional(),
     }),
   )
   .handler(async ({ context, data }) => {
-    invariant(data.insightId, "insightId is required");
+    invariant(data.seedText, "seedText is required");
 
     await inngest.send({
       name: "app/generate-insight",

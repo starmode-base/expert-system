@@ -197,7 +197,7 @@ function RouteComponent() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-      <div className="w-1/2 border-r border-gray-200 bg-white p-4">
+      <div className="flex h-full w-1/2 flex-col border-r border-gray-200 bg-white p-4">
         <h1 className="mb-4 text-2xl font-bold">Search Takeaways</h1>
         <div className="flex gap-2 pb-4">
           <input
@@ -247,17 +247,17 @@ function RouteComponent() {
         />
 
         {/* SEARCH PANE */}
-        <div ref={listRef} className="h-full flex-1 overflow-y-auto">
-          {" "}
+        <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto">
           {takeawaySearchResults.length === 0 ? (
             <p className="text-gray-500">No takeaways found.</p>
           ) : (
-            <div className="space-y-4">
+            <div className="border-t border-gray-200">
               {takeawaySearchResults.map((takeaway) => (
                 <Link
                   key={takeaway.id}
                   id={`takeaway-${takeaway.id}`}
                   to="/search/$takeawayid"
+                  className="block border-b border-gray-200 focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:outline-none"
                   params={{ takeawayid: takeaway.id }}
                   search={{
                     searchInput,
@@ -268,7 +268,6 @@ function RouteComponent() {
                   }}
                 >
                   <TakeawayTile
-                    key={takeaway.id}
                     takeaway={takeaway}
                     highlighted={takeaway.id === selectedTakeaway}
                   />
