@@ -78,6 +78,30 @@ function RouteComponent() {
     [trackedCompanies],
   );
 
+  const sortedTrackedCompanies = useMemo(() => {
+    return trackedCompanies.slice().sort((a, b) => {
+      const aTime = a.nextEarningsDate
+        ? new Date(a.nextEarningsDate).getTime()
+        : null;
+      const bTime = b.nextEarningsDate
+        ? new Date(b.nextEarningsDate).getTime()
+        : null;
+
+      if (aTime === null && bTime === null) {
+        return a.symbol.localeCompare(b.symbol, undefined, {
+          sensitivity: "base",
+        });
+      }
+      if (aTime === null) return 1;
+      if (bTime === null) return -1;
+
+      if (aTime !== bTime) return aTime - bTime;
+      return a.symbol.localeCompare(b.symbol, undefined, {
+        sensitivity: "base",
+      });
+    });
+  }, [trackedCompanies]);
+
   // Automatically clear the message after 5 seconds
   useEffect(() => {
     if (!message) return;
@@ -217,7 +241,7 @@ function RouteComponent() {
               No companies tracked yet
             </div>
           ) : (
-            trackedCompanies.map((company) => (
+            sortedTrackedCompanies.map((company) => (
               <div
                 key={company.id}
                 className="flex items-center justify-between border-b border-gray-100 py-3"
