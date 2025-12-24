@@ -227,11 +227,11 @@ export function RouteComponent() {
 
       {/* Right Pane */}
       {!selectedInsightItem ? (
-        <div className="flex w-2/3 items-center justify-center">
+        <div className="flex min-w-0 flex-1 items-center justify-center">
           <p className="text-gray-500">Select an insight to view details</p>
         </div>
       ) : (
-        <div className="flex h-full w-4/5 flex-col">
+        <div className="flex h-full min-w-0 flex-1 flex-col">
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto px-4">
             <InsightDetails
