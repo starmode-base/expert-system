@@ -110,7 +110,7 @@ Guidelines:
  */
 export const stratecheryScraper = inngest.createFunction(
   { id: "scheduler.stratechery-scraper" },
-  { cron: "TZ=America/Phoenix 0 9 * * *" },
+  { cron: "TZ=America/Phoenix 0 5 * * *" },
   async ({ step }) => {
     const rssItems: StratecheryRssItem[] = await step.run(
       "fetch-and-parse-rss",

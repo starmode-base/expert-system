@@ -33,7 +33,7 @@ function parseFiscalQuarter(fiscalDateEnding: string) {
  */
 export const processEarningsJobs = inngest.createFunction(
   { id: "scheduler.process-earnings-jobs" },
-  { cron: "TZ=America/Phoenix 0 8 * * *" },
+  { cron: "TZ=America/Phoenix 0 5 * * *" },
   async ({ step }) => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);

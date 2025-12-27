@@ -22,7 +22,7 @@ const openAiClient = new OpenAI();
  */
 export const dailyInsight = inngest.createFunction(
   { id: "scheduler.daily-insight" },
-  { cron: "TZ=America/Phoenix 0 9 * * *" },
+  { cron: "TZ=America/Phoenix 0 7 * * *" },
   async ({ step }) => {
     const users = await step.run("get-all-users", async () => {
       const rows = await db.query.users.findMany({
