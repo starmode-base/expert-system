@@ -53,6 +53,14 @@ export const dailyInsight = inngest.createFunction(
       },
     );
 
+    // If no seed texts, don't send any insights
+    if (seedTexts.length === 0)
+      return {
+        users: users.length,
+        takeaways: takeaways.length,
+        sent: 0,
+      };
+
     const sentCount = await Promise.all(
       users.flatMap((user) =>
         seedTexts.map(async (seedText, seedTextIndex) => {
