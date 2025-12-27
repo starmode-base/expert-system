@@ -97,6 +97,7 @@ export async function fetchAlphaVantageEarningsTranscript({
 
   if (!isTranscriptResponse(typedData)) {
     console.log("Typed data", typedData);
+    console.log("raw data", data);
 
     throw new Error(
       `Alpha Vantage API response parsing error: ${JSON.stringify(typedData)}`,
