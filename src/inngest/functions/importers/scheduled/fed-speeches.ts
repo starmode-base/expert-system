@@ -201,21 +201,26 @@ export const fedSpeechesScraper = inngest.createFunction(
       return { inserted: 0, skipped: recentCandidates.length };
     }
 
-    const scraped: (FedCandidate & { articleText: string })[] = [];
+    const scraped = await Promise.allSettled(
+      toScrape.map(async (candidate, index) => {
+        const articleText = await step.run(`scrape-page-${index}`, async () => {
+          return await scrapePageText(candidate.link);
+        });
 
-    for (const [index, candidate] of toScrape.entries()) {
-      const articleText = await step.run(`scrape-page-${index}`, async () => {
-        return await scrapePageText(candidate.link);
-      });
+        return { candidate, articleText };
+      }),
+    );
 
-      if (articleText.trim()) {
-        scraped.push({ ...candidate, articleText });
-      }
+    const fulfilledScraped = scraped.filter(
+      (
+        result,
+      ): result is PromiseFulfilledResult<{
+        candidate: FedCandidate;
+        articleText: string;
+      }> => result.status === "fulfilled",
+    );
 
-      await step.sleep(`rate-limit-${index}`, 800);
-    }
-
-    if (scraped.length === 0) {
+    if (fulfilledScraped.length === 0) {
       return { inserted: 0, skipped: toScrape.length };
     }
 
@@ -223,13 +228,16 @@ export const fedSpeechesScraper = inngest.createFunction(
       return await db
         .insert(schema.documents)
         .values(
-          scraped.map((doc) => ({
+          fulfilledScraped.map((doc) => ({
             source: FED_SOURCE,
-            title: doc.title,
-            description: doc.description || doc.category || doc.title,
-            publicationDate: new Date(doc.publicationDate),
-            link: doc.link,
-            articleText: doc.articleText,
+            title: doc.value.candidate.title,
+            description:
+              doc.value.candidate.description ||
+              doc.value.candidate.category ||
+              doc.value.candidate.title,
+            publicationDate: new Date(doc.value.candidate.publicationDate),
+            link: doc.value.candidate.link,
+            articleText: doc.value.articleText,
           })),
         )
         .returning({ id: schema.documents.id });

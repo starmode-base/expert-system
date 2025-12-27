@@ -40,12 +40,11 @@ export async function extractBodyTextFromHtml(html: string): Promise<string> {
 
   const response = await client.responses.parse({
     model: "gpt-5-nano",
-    reasoning: { effort: "low" },
     input: [
       {
         role: "system",
         content:
-          "You extract the main article/document body text from HTML. Return only the primary content text. Exclude navigation, headers/footers, sidebars, cookie banners, subscription prompts, ads, related links, and comments. Preserve paragraph breaks with blank lines. Do not add or paraphrase any content; only extract what is present. If there is no clear main body content, return an empty string.",
+          "You extract the main article/document body text from HTML. Return only the Title, author, publication date, primary content text and any text relevent to the reader. Exclude navigation, headers/footers, sidebars, cookie banners, subscription prompts, ads, related links, and comments. Preserve paragraph breaks with blank lines. Do not add or paraphrase any content; only extract what is present. If there is no clear main body content, return an empty string.",
       },
       {
         role: "user",
