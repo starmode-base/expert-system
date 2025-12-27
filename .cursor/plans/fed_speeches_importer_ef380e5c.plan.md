@@ -29,14 +29,14 @@ Create a new scheduled importer `fed-speeches.ts` that ingests items from the Fe
 - Fetch RSS XML from `https://www.federalreserve.gov/feeds/speeches_and_testimony.xml`.
 - Parse with `xml2js` using an “always arrays + CDATA-safe” extraction helper (copy the robust approach from [`/Users/spencersm/Documents/projects/expert-system/src/inngest/functions/importers/scheduled/stratechery.ts`](/Users/spencersm/Documents/projects/expert-system/src/inngest/functions/importers/scheduled/stratechery.ts)).
 - For each `<item>` extract:
-    - `title`, `link`, `description`, `category`, `pubDate` (and/or `guid`)
-    - Normalize `link` (strip hash, etc.) and use `link` as the dedupe key.
+  - `title`, `link`, `description`, `category`, `pubDate` (and/or `guid`)
+  - Normalize `link` (strip hash, etc.) and use `link` as the dedupe key.
 - Apply a **6-month cutoff** (only ingest items where `pubDate >= now - 180 days`).
 - Deduplicate against existing rows by querying `documents.link` (batch `inArray` query, like Stratechery).
 - For each new item, fetch its HTML page and extract readable text with `cheerio`:
-    - Remove obvious chrome (`script/style/nav/header/footer`, etc.).
-    - Prefer common “main content” containers if found (e.g. `main`, `#article`, `#content`), otherwise fall back to cleaned `body` text.
-    - Normalize whitespace to a clean plain-text block.
+  - Remove obvious chrome (`script/style/nav/header/footer`, etc.).
+  - Prefer common “main content” containers if found (e.g. `main`, `#article`, `#content`), otherwise fall back to cleaned `body` text.
+  - Normalize whitespace to a clean plain-text block.
 - Insert into `documents` (same columns as other importers: `source`, `title`, `description`, `publicationDate`, `link`, `articleText`).
 - After insert, **enqueue `app/generate-takeaways`** via `step.sendEvent` for each inserted document (same pattern as Stratechery), using a Fed-oriented takeaway prompt.
 - **Register the function** in [`/Users/spencersm/Documents/projects/expert-system/src/inngest/functions/index.ts`](/Users/spencersm/Documents/projects/expert-system/src/inngest/functions/index.ts)
