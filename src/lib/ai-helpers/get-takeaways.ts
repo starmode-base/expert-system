@@ -44,8 +44,10 @@ const schema = z.object({
           }),
           reference: z.string({
             description: `Relevant facts, quotes and data to support the takeaway.
-              - If referencing someones opinion or take then make it a direct quote rather than a summary.
-              - When possible include the exact excerpt from the text. But excerpt should not exceed three sentences.`,
+              - Use a direct quotes and attribution whenever possible. e.g. "[text]" - Jermome Powel
+              - The reference should be an exact excerpt from the text. Never use a summary of the text.
+              - The excerpt should not exceed three sentences.
+              - use '...' for split quotes`,
           }),
         }),
       ),
@@ -74,6 +76,7 @@ export async function getTakeaways(
         ${articleText}
 
         Create a structured list of the 1-3 most novel and important takeaways from the text below.
+        Include references to support the facts, quotes, claims and data.
         It is better to have less takeaways, if they are not unique and unrelated.`,
       },
     ],
