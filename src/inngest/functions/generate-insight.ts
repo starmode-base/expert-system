@@ -141,7 +141,7 @@ After the opening insight:
   }),
   core_insight_statement: z.string({
     description:
-      "The core insight statement. This should be the same as the core insight statement (at beginning of insight text) in the insight text. Return text, not markdown.",
+      "The core insight statement as text. This should be the same text as the core insight statement (at beginning of insight text) in the insight text. This should be text, not markdown.",
   }),
   references: z.array(
     z.object({
