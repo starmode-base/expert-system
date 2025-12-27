@@ -1,4 +1,5 @@
 import { earningsCallsScraper } from "./importers/earnings-calls-scraper";
+import { dailyInsight } from "./daily-insight";
 import { generateInsight } from "./generate-insight";
 import { generateTakeaways } from "./generate-takeaways";
 import { processEarningsJobs } from "./importers/scheduled/process-earnings-jobs";
@@ -14,4 +15,5 @@ export const inngestFunctions = [
   syncEarningsCalendar,
   processEarningsJobs,
   stratecheryScraper,
+  dailyInsight,
 ];
