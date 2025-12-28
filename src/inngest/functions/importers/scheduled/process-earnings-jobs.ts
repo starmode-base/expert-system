@@ -88,6 +88,7 @@ export const processEarningsJobs = inngest.createFunction(
               name: earningsSchedule.name,
               year,
               quarter,
+              earningsDate: new Date(earningsSchedule.reportDate),
             });
 
             await db
@@ -134,7 +135,7 @@ export const processEarningsJobs = inngest.createFunction(
           data: {
             documentId: result.documentId,
             takeawayPrompt: earningsCallTakeawayPrompt,
-            model: "gpt-5.1",
+            model: "gpt-5.2",
           },
           user: { id: "", email: "" },
         }),
