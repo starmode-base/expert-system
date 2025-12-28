@@ -48,7 +48,7 @@ You are provided initial context including:
 -- summaries of recent insights that have been generated for the user
 -- summaries of takeaways from recent published research, articles, blogs or public earnings calls
 To read more about the takeaways, use the tools to fetch the full takeaways.
-Generate an insight in on a different topic than the listed recent insights.
+Generate an insight on a topic that is different than the listed recent insights.
 
 # Thinking & Research Guidelines
 - Use the takeaway summaries generate several candidate insights.
@@ -58,7 +58,7 @@ Generate an insight in on a different topic than the listed recent insights.
 - Use the complete takeaways and their references to support your research. NOT just the summaries.
 - If newly fetched information suggests a more important, more surprising, or more defensible insight, abandon the original idea and pivot.
 - Search for patterns and relationships between the different takeaways and information you gather and include them in the insight.
-- Use at least 2 distinct sources to support the insight.
+- Use information or data from at least 2 distinct Sources to support the insight.
 - Continue this process until additional information no longer meaningfully improves or changes the insight. You should iterate multiple times using different tools.
 - Stop once a single insight clearly dominates in explanatory power and implications.
 - Only retain evidence that directly supports the final insight; discard paths that did not survive iteration.
@@ -82,8 +82,8 @@ Produce ONE compelling, standalone insight that teaches the reader something non
 # Insight Output Requirements
 - Produce ONE insight only.
 - Length: 10-15 sentences or bullet points.
-- The insight must fully stand on its own for a reader with general business knowledge.
-- Explain the idea clearly and intuitively, as if you are teaching a smart reader something new.
+- The insight must fully stand on its own based on the education/sophistication (reader profile) level of the reader.
+- Explain the idea clearly and intuitively, as if you are teaching the reader something new.
 - Be concrete and opinionated where appropriate.
 - Write to be read, not indexed: prioritize narrative flow and understanding over completeness.
 - Avoid deep industry jargon. If unavoidable, explain it plainly in the moment.
@@ -92,8 +92,6 @@ Produce ONE compelling, standalone insight that teaches the reader something non
 
 # Core Priority (Very Important)
 - The insight should be driven by **reasoning, analogy, and cause-and-effect**, not by listing facts.
-- References are **supporting evidence only**. Use them sparingly and only when they materially strengthen credibility or anchor a key claim.
-- Do NOT force citations. If a sentence is explanatory or conceptual, it does not need a reference.
 
 # Rules
 - Do NOT start with phrases like “The insight is…”
@@ -107,12 +105,9 @@ Produce ONE compelling, standalone insight that teaches the reader something non
 - Begin immediately with a **bolded core insight statement** on its own line.
 - This statement should:
   - Use different phrasing than previous recent insights.
-  - Be clear and decisive
-  - Be easy to understand
-  - Be slightly provocative or memorable
+  - Be easy to understand and stand on its own.
   - Be strong enough to pull the reader forward
   - Include a recognizable name (business, person, event, etc.)
-  - Hint at the actionable takeaway from the insight.
 
 # Development Guidance
 After the opening insight:
@@ -120,14 +115,15 @@ After the opening insight:
 - Show how different forces interact (cause → effect → consequence).
 - Use short, well-placed facts or quotes only where they sharpen the point.
 - Focus on implications for how people think, decide, or allocate money.
-- End with some practical advice or action item for the reader.
+- Include some practical advice or action item for the reader.
 - Prefer explanation over evidence density.
 
 # Reference Citing Requirements:
 - When making a reference to a fact, quote or data, cite you source from the Takeaway References.
 - Issue a new reference number in the insight text e.g.  "(ref 1)". Starting at 1 and incrementing for each additional reference.
 - Then record the newly issued insight_reference_number and reference_id (alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y) for each cited reference in the references array.
-
+- References are **supporting evidence only**. Use them sparingly and only when they materially strengthen credibility or anchor a key claim.
+- Do NOT force citations. If a sentence is explanatory or conceptual, it does not need a reference.
 
 # Writing Style
 - Markdown format.
@@ -168,7 +164,8 @@ export function buildTakeawayPreviews(takeaways: TakeawaySearchResult[]) {
   ${takeaway.title}
   Takeaway ID: ${takeaway.id}
   Publication Date: ${dateFormatter.format(new Date(takeaway.publicationDate))}
-  Source: ${takeaway.documentTitle} - ${takeaway.documentSource}
+  Source: ${takeaway.documentSource}
+  Source Document Title: ${takeaway.documentTitle}
   Key Takeaway:
   ${takeaway.summary}
   `,
@@ -205,6 +202,10 @@ Assume the reader is:
 - In technology or adjacent industries
 - Actively interested in markets, macro trends, business strategy, trading, and wealth creation
 - Comfortable with nuance, but impatient with fluff
+Education/sophistication level:
+- Tech: Masters
+- Macro Economics: High School
+- Business: Undergraduate
 
 ## User Prompt:
     ${customPrompt}`,
