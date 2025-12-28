@@ -68,7 +68,7 @@ export const dailyInsight = inngest.createFunction(
             name: "app/generate-insight",
             data: {
               seedText,
-              insightPrompt: "create an clear investment thesis",
+              insightPrompt: "",
             },
             user: { id: user.id, email: user.email },
           });
