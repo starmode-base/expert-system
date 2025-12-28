@@ -22,6 +22,7 @@ const rawEnv = {
   ABLY_API_KEY: process.env.ABLY_API_KEY,
   API_NINJA: process.env.API_NINJA,
   ALPHAVANTAGE_API_KEY: process.env.ALPHAVANTAGE_API_KEY,
+  X_BEARER_TOKEN: process.env.X_BEARER_TOKEN,
 
   /**
    * Platform environment variables
