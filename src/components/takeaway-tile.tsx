@@ -31,13 +31,15 @@ export function TakeawayTile(props: {
     .filter(Boolean)
     .join(" · ");
 
-  const handleCreateInsight = () => {
+  const handleCreateInsight = async () => {
     if (isCreatingInsight) return;
     setIsCreatingInsight(true);
     try {
       void createInsightWithTakeaway({
         data: { takeawayId: takeaway.id },
       });
+      //sleep for 3 seconds
+      await new Promise((resolve) => setTimeout(resolve, 10000));
     } finally {
       setIsCreatingInsight(false);
     }
@@ -65,9 +67,14 @@ export function TakeawayTile(props: {
         <button
           onClick={handleCreateInsight}
           disabled={isCreatingInsight}
+          //show a loading spinner if isCreatingInsight is true
           className="inline-flex cursor-pointer items-center rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Create Insight
+          {isCreatingInsight ? (
+            <span className="animate-spin">⚪</span>
+          ) : (
+            "Create Insight"
+          )}
         </button>
       </div>
 

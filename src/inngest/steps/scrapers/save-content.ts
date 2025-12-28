@@ -55,24 +55,8 @@ export async function saveContent(document: Document) {
   return result[0].id;
 }
 
-export async function fetchAndSaveTranscript({
-  symbol,
-  name,
-  year,
-  quarter,
-}: {
-  symbol: string;
-  name: string;
-  year: number;
-  quarter: number;
-}) {
-  const result = await fetchAlphaVantageEarningsTranscript({
-    symbol,
-    year,
-    quarter,
-  });
-
-  // Map each quarter to the first month of the following quarter. For Q4, increment the year.
+// Map each quarter to the first month of the following quarter. For Q4, increment the year.
+function getEarningsDate(year: number, quarter: number) {
   const nextQuarterMapping = {
     1: { month: 4, yearOffset: 0 },
     2: { month: 7, yearOffset: 0 },
@@ -83,6 +67,30 @@ export async function fetchAndSaveTranscript({
   const publicationYear = year + yearOffset;
   const monthString = String(month).padStart(2, "0");
   const publicationDate = new Date(`${publicationYear}-${monthString}-01`);
+  return publicationDate;
+}
+
+export async function fetchAndSaveTranscript({
+  symbol,
+  name,
+  year,
+  quarter,
+  earningsDate,
+}: {
+  symbol: string;
+  name: string;
+  year: number;
+  quarter: number;
+  earningsDate?: Date;
+}) {
+  const result = await fetchAlphaVantageEarningsTranscript({
+    symbol,
+    year,
+    quarter,
+  });
+
+  const publicationDate = earningsDate ?? getEarningsDate(year, quarter);
+
   const title = `${name} - Q${quarter} ${year} Earnings Call Transcript`;
 
   const articleText = result

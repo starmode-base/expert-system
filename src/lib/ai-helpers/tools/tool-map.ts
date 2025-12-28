@@ -86,18 +86,18 @@ export const completionTool: FunctionTool = {
         description:
           "key arguments to include in the final insight deliverable.",
       },
-      references_ids: {
-        type: "array",
-        description:
-          "The ids of the references to use to build the final insight",
-        items: {
-          type: "string",
-          description:
-            "The id (reference_id) will be an alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y",
-        },
-      },
+      // references_ids: {
+      //   type: "array",
+      //   description:
+      //     "The ids of the references to use to build the final insight",
+      //   items: {
+      //     type: "string",
+      //     description:
+      //       "The id (reference_id) will be an alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y",
+      //   },
+      // },
     },
-    required: ["insight", "key_arguments", "references_ids"],
+    required: ["insight", "key_arguments"],
   },
 } as FunctionTool;
 

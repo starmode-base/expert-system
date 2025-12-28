@@ -78,7 +78,8 @@ export async function fetchTakeawayById(args: { id: string }) {
   return `
     ${takeaway.title}
     Publication Date: ${takeaway.document.publicationDate.toISOString()}
-    Source: ${takeaway.document.title} - ${takeaway.document.source}
+    Source: ${takeaway.document.source}
+    Source Document Title: ${takeaway.document.title}
     Key Takeaway:
     ${takeaway.takeaway},
     Takeaway ID: ${takeaway.id}
