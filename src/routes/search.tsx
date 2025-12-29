@@ -119,9 +119,7 @@ function RouteComponent() {
   return (
     <div className="h-[calc(100dvh-64px)] overflow-hidden">
       <div className="mx-auto flex h-full max-w-4xl flex-col px-2 sm:px-4">
-        <div className="flex flex-col gap-3 py-4">
-          <h1 className="text-xl font-bold sm:text-2xl">Search Takeaways</h1>
-
+        <div className="flex flex-col gap-3 bg-white p-4">
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
               type="text"
