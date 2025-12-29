@@ -4,14 +4,12 @@ import { ListFilter, ChevronDown } from "lucide-react";
 
 export interface FilterParams {
   sources: string[];
-  categories: string[];
   startDate: string | undefined;
   endDate: string | undefined;
 }
 
 interface FilterBarProps {
   availableSources: string[];
-  availableCategories: string[];
   filters: FilterParams;
   setFilters: (filters: FilterParams) => void;
   updateURL: boolean;
@@ -22,13 +20,8 @@ export const normalizeFilterValue = (value: string) => {
   return value.replace(/[^a-zA-Z0-9]+/g, "").toLowerCase();
 };
 
-export const FilterBar = ({
-  availableSources,
-  availableCategories,
-  filters,
-  setFilters,
-  updateURL,
-}: FilterBarProps) => {
+export const FilterBar = (props: FilterBarProps) => {
+  const { availableSources, filters, setFilters, updateURL } = props;
   const [isCollapsed, setIsCollapsed] = React.useState(true);
 
   // Helpers to toggle values
@@ -50,7 +43,6 @@ export const FilterBar = ({
         searchInput,
         filters: {
           ...nextFilters,
-          categories: nextFilters.categories.map(normalizeFilterValue),
           sources: nextFilters.sources.map(normalizeFilterValue),
         },
       },
@@ -66,15 +58,6 @@ export const FilterBar = ({
     const newFilters = {
       ...filters,
       sources: toggleValue(filters.sources, source),
-    };
-    setFilters(newFilters);
-    updateURLWithFilters(newFilters);
-  };
-
-  const handleCategoryToggle = (category: string) => {
-    const newFilters = {
-      ...filters,
-      categories: toggleValue(filters.categories, category),
     };
     setFilters(newFilters);
     updateURLWithFilters(newFilters);
@@ -100,15 +83,15 @@ export const FilterBar = ({
   // };
 
   return (
-    <div className="mb-4 rounded-md border border-gray-200 bg-white">
+    <div className="rounded-lg border border-gray-200 bg-white/90 shadow-sm">
       {/* Header Row */}
       <div
-        className="flex cursor-pointer items-center justify-between px-4 py-2 hover:bg-gray-50"
+        className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-gray-50"
         onClick={() => {
           setIsCollapsed((prev) => !prev);
         }}
       >
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+        <div className="flex items-center gap-2 text-sm font-medium text-gray-800">
           <ListFilter size={18} />
           Filters
         </div>
@@ -128,11 +111,11 @@ export const FilterBar = ({
             : "max-h-[1000px] opacity-100"
         }`}
       >
-        <div className="flex flex-wrap items-start gap-6 bg-gray-50 px-4 py-3">
+        <div className="flex flex-wrap items-start gap-4 bg-white px-3 pt-1 pb-3 sm:gap-6 sm:pt-2">
           {/* Source Filter */}
           <div>
             <label className="mb-1 block text-sm font-semibold">Sources</label>
-            <div className="flex max-h-36 flex-col gap-1 overflow-y-auto">
+            <div className="flex max-h-28 flex-col gap-1 overflow-y-auto">
               {availableSources.map((source) => (
                 <label key={source} className="flex items-center gap-2 text-sm">
                   <input
@@ -149,31 +132,6 @@ export const FilterBar = ({
             </div>
           </div>
 
-          {/* Category Filter */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold">
-              Categories
-            </label>
-            <div className="flex max-h-36 flex-col gap-1 overflow-y-auto">
-              {availableCategories.map((category) => (
-                <label
-                  key={category}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.categories.includes(category)}
-                    onChange={() => {
-                      handleCategoryToggle(category);
-                    }}
-                    className="accent-green-500"
-                  />
-                  {category}
-                </label>
-              ))}
-            </div>
-          </div>
-
           {/* Date Filters */}
           <div className="flex flex-col">
             <label className="mb-1 text-sm font-semibold">Start Date</label>
@@ -181,7 +139,7 @@ export const FilterBar = ({
               type="date"
               value={filters.startDate}
               onChange={handleStartDateChange}
-              className="rounded border border-gray-300 p-1"
+              className="rounded border border-gray-300 px-2 py-1 text-sm"
             />
           </div>
 
@@ -191,7 +149,7 @@ export const FilterBar = ({
               type="date"
               value={filters.endDate}
               onChange={handleEndDateChange}
-              className="rounded border border-gray-300 p-1"
+              className="rounded border border-gray-300 px-2 py-1 text-sm"
             />
           </div>
         </div>

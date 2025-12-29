@@ -48,34 +48,36 @@ export function TakeawayTile(props: {
   return (
     <div
       className={
-        "relative bg-white p-4 transition-colors hover:bg-gray-50" +
-        (highlighted ? " ring-2 ring-gray-300" : "")
+        "relative bg-white p-4 transition-colors hover:bg-gray-50 sm:p-6" +
+        (highlighted ? " ring-2 ring-gray-300" : "") +
+        " border-b border-gray-200"
       }
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-1">
+          <h2 className="text-base leading-tight font-semibold break-words text-gray-900 sm:text-lg">
             {takeaway.title}
           </h2>
           {documentMeta ? (
-            <p className="mt-1 truncate text-sm text-gray-500">
+            <p className="text-sm break-words text-gray-500 sm:truncate">
               {documentMeta}
             </p>
           ) : null}
-          <p className="mt-0.5 text-xs text-gray-500">{secondaryMeta}</p>
+          <p className="text-xs text-gray-500">{secondaryMeta}</p>
         </div>
-        <button
-          onClick={handleCreateInsight}
-          disabled={isCreatingInsight}
-          //show a loading spinner if isCreatingInsight is true
-          className="inline-flex cursor-pointer items-center rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isCreatingInsight ? (
-            <span className="animate-spin">⚪</span>
-          ) : (
-            "Create Insight"
-          )}
-        </button>
+        <div className="flex w-full items-center gap-2 sm:w-auto sm:justify-end">
+          <button
+            onClick={handleCreateInsight}
+            disabled={isCreatingInsight}
+            className="inline-flex w-full cursor-pointer items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-3 sm:py-1.5 sm:text-xs"
+          >
+            {isCreatingInsight ? (
+              <span className="animate-spin">⚪</span>
+            ) : (
+              "Create Insight"
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-col space-y-1 text-sm text-gray-700">
@@ -93,7 +95,9 @@ export function TakeawayTile(props: {
           Summary
         </button>
         {summaryExpanded ? (
-          <p className="pl-4 text-sm text-gray-700">{takeaway.summary}</p>
+          <p className="pl-4 text-sm leading-relaxed break-words text-gray-700">
+            {takeaway.summary}
+          </p>
         ) : null}
 
         <hr className="my-3 border-gray-200" />
@@ -112,7 +116,9 @@ export function TakeawayTile(props: {
           Takeaway
         </button>
         {takeawayExpanded ? (
-          <p className="pl-4 text-sm text-gray-700">{takeaway.takeaway}</p>
+          <p className="pl-4 text-sm leading-relaxed break-words text-gray-700">
+            {takeaway.takeaway}
+          </p>
         ) : null}
 
         <hr className="my-3 border-gray-200" />
@@ -131,7 +137,9 @@ export function TakeawayTile(props: {
           Concept
         </button>
         {conceptExpanded ? (
-          <p className="pl-4 text-sm text-gray-700">{takeaway.concept}</p>
+          <p className="pl-4 text-sm leading-relaxed break-words text-gray-700">
+            {takeaway.concept}
+          </p>
         ) : null}
 
         <hr className="my-3 border-gray-200" />
@@ -154,7 +162,7 @@ export function TakeawayTile(props: {
           takeaway.references.length === 0 ? (
             <p className="pl-4 text-gray-500">No references</p>
           ) : (
-            <ol className="space-y-1 pl-8 text-sm text-gray-700">
+            <ol className="space-y-1 pl-6 text-sm leading-relaxed text-gray-700 sm:pl-8">
               {takeaway.references
                 .slice()
                 .sort((a, b) => a.referenceNumber - b.referenceNumber)
