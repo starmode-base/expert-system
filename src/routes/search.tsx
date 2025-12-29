@@ -105,65 +105,63 @@ function RouteComponent() {
   const [searchInput, setSearchInput] = useState(searchInputProp);
   const [filters, setFilters] = useState<FilterParams>(filtersProp);
 
+  const handleSearch = () => {
+    const existingPath = router.state.location.pathname;
+    void router.navigate({
+      to: existingPath,
+      search: {
+        searchInput,
+        filters: router.state.location.search.filters,
+      },
+    });
+  };
+
   return (
-    <div className="flex h-[calc(100vh-64px)] items-center justify-center overflow-hidden">
-      {/* center pane */}
-      <div className="flex h-full w-1/2 flex-col items-center justify-center border-r border-gray-200 bg-white p-4">
-        <h1 className="mb-4 text-2xl font-bold">Search Takeaways</h1>
-        <div className="flex gap-2 pb-4">
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const existingPath = router.state.location.pathname;
-                void router.navigate({
-                  to: existingPath,
-                  search: {
-                    searchInput,
-                    filters: router.state.location.search.filters,
-                  },
-                });
-              }
-            }}
-            placeholder="Search takeaways..."
-            className="flex-grow rounded border border-gray-300 p-2"
+    <div className="h-[calc(100dvh-64px)] overflow-hidden">
+      <div className="mx-auto flex h-full max-w-4xl flex-col px-2 sm:px-4">
+        <div className="flex flex-col gap-3 py-4">
+          <h1 className="text-xl font-bold sm:text-2xl">Search Takeaways</h1>
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
+              placeholder="Search takeaways..."
+              className="min-w-0 flex-1 rounded border border-gray-300 p-2"
+            />
+            <button
+              onClick={handleSearch}
+              className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-white sm:py-1"
+            >
+              Search
+            </button>
+          </div>
+
+          <FilterBar
+            availableSources={sources}
+            filters={filters}
+            setFilters={setFilters}
+            updateURL={true}
           />
-          <button
-            onClick={() => {
-              const existingPath = router.state.location.pathname;
-              void router.navigate({
-                to: existingPath,
-                search: {
-                  searchInput,
-                  filters: router.state.location.search.filters,
-                },
-              });
-            }}
-            className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-1 text-white"
-          >
-            Search
-          </button>
         </div>
 
-        <FilterBar
-          availableSources={sources}
-          filters={filters}
-          setFilters={setFilters}
-          updateURL={true}
-        />
-
-        {/* SEARCH PANE */}
         <div className="min-h-0 flex-1 overflow-y-auto">
           {takeawaySearchResults.length === 0 ? (
-            <p className="text-gray-500">No takeaways found.</p>
+            <p className="py-4 text-center text-gray-500">
+              No takeaways found.
+            </p>
           ) : (
             <div className="border-t border-gray-200">
               {takeawaySearchResults.map((takeaway) => (
-                <TakeawayTile takeaway={takeaway} />
+                <TakeawayTile key={takeaway.id} takeaway={takeaway} />
               ))}
             </div>
           )}
