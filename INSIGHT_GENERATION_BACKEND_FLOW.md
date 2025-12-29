@@ -1,33 +1,34 @@
 # Insight generation: backend data flow
 
-This doc describes the **backend-only** pipeline that turns raw documents into generated insights.
+This doc describes the backend pipelines that turn raw documents into shared takeaways and user-specific insights.
 
-## High-level stages
+## Flows at a glance
 
-1. **Document ingestion** (scrape/fetch → persist `documents`)
-2. **Takeaway generation** (LLM summaries) + **concept generation** (LLM concept label) + **categorization**
-3. **Vector DB + search** (embed takeaways/concepts → store in Postgres `pgvector` → cosine similarity search)
-4. **Insight generation** (compose an insight from selected takeaways, optionally pulling more via vector search)
+- System-wide takeaways: ingest documents → generate takeaways with concepts/categories → embed into pgvector for semantic search.
+- User-specific insights: scheduled or ad-hoc insight generation per user, seeded from recent takeaways and vector search.
+- Takeaways are shared across all users; insights are always tied to a single user.
 
 ---
 
-## Stage 1: Document ingestion
+## System-wide takeaways pipeline
+
+### Stage 1: Document ingestion
 
 **Goal**: Get raw text into the database as a `documents` row.
 
-### Inputs
+**Inputs**
 
-- **Scraper events** (Inngest):
-  - `scraper/daily-science` → RSS + HTML scrape
+- **Scraper/ingester events** (Inngest):
+  - `scheduler/stratechery-scraper` → Stratechery RSS fetch (daily cron)
   - `scraper/earnings-calls` → AlphaVantage transcript fetch
 
-### Processing
+**Processing**
 
-- Scrapers normalize scraped content into a `Document` shape and persist it via:
+- Scrapers normalize scraped content into a `Document` shape and persist via:
   - `saveContent(document)` → inserts into `documents`
   - `fetchAndSaveTranscript(...)` → fetches transcript → dedupes by `(source, title)` → calls `saveContent`
 
-### Output (storage)
+**Output (storage)**
 
 - `documents` table
   - Key fields used downstream:
@@ -35,24 +36,22 @@ This doc describes the **backend-only** pipeline that turns raw documents into g
     - `documents.articleText` (the raw text input for LLM summarization)
     - `documents.source`, `documents.publicationDate`, `documents.title`
 
-### What triggers the next stage
+**What triggers the next stage**
 
 - After a `documentId` is created, scrapers trigger takeaway generation by emitting:
   - event `app/generate-takeaways` with `data.documentId` (and prompt/model settings)
 
----
-
-## Stage 2: Takeaway generation (including concepts)
+### Stage 2: Takeaway generation (including concepts)
 
 **Goal**: Turn one document into multiple structured takeaways, each with a concept and category, and persist them.
 
-### Input
+**Input**
 
 - `documentId` from `documents`
 
-### Processing (Inngest function: `app/generate-takeaways`)
+**Processing (Inngest function: `app/generate-takeaways`)**
 
-- **Repeat guard**: checks for existing `takeaways` rows for the `documentId`; if any exist, it exits early
+- **Repeat guard**: exits early if takeaways already exist for the `documentId`
 - **LLM takeaway extraction**:
   - loads `documents.articleText`
   - calls `getTakeaways(articleText, takeawayPrompt, model)`
@@ -63,120 +62,99 @@ This doc describes the **backend-only** pipeline that turns raw documents into g
 - **Persistence**:
   - deletes any existing takeaways for the document (defensive cleanup)
   - inserts new rows into `takeaways`
+  - generates embeddings for the takeaway text and concept and upserts into `takeaway_embeddings` and `concept_embeddings`
 
-### Output (storage)
+**Output (storage)**
 
 - `takeaways` table (one row per takeaway)
   - Key fields used downstream:
     - `takeaways.id`
-    - `takeaways.takeaway` (the summary text that gets embedded and used as context)
-    - `takeaways.concept` (a short concept label that also gets embedded)
+    - `takeaways.title`
+    - `takeaways.takeaway` (full text)
+    - `takeaways.summary` (shorter preview text)
+    - `takeaways.concept` (short concept label)
     - `takeaways.categoryId`
     - `takeaways.documentId` (join back to raw document metadata/text)
 
----
+### Stage 3: Embeddings + vector search
 
-## Stage 3: Vector DB and search
+**Goal**: Make takeaways (and their concepts) searchable by semantic similarity across the system.
 
-**Goal**: Make takeaways (and their concepts) searchable by semantic similarity.
-
-### “Vector DB” in this repo
+**“Vector DB” in this repo**
 
 - **Postgres + `pgvector`** columns managed via Drizzle
 - Two embedding tables (each has an HNSW index for approximate nearest neighbor search):
   - `takeaway_embeddings.embedding` (`vector(1536)`)
   - `concept_embeddings.embedding` (`vector(1536)`)
 
-### Embedding write path (part of Stage 2)
-
-After each `takeaways` row is inserted, the pipeline:
-
-- calls `generateEmbedding(takeaway.takeaway)` and upserts into `takeaway_embeddings`
-- calls `generateEmbedding(takeaway.concept)` and upserts into `concept_embeddings`
-
-Notes:
-
-- Embeddings are generated with OpenAI model `text-embedding-3-small`
-- Embeddings are stored with a unique `takeawayId` so they can be joined back to the canonical takeaway row
-
-### Search/read path (used during insight generation and search features)
+**Search/read path**
 
 - Query embedding:
   - `generateEmbedding(searchInput)`
-- Vector similarity query:
-  - `vectorTakeawaySearch(searchInput, limit)`:
-    - computes cosine distance against `takeaway_embeddings.embedding`
-    - filters for similarity > 0.2
-    - returns takeaways joined with `document` + `category`
-  - `vectorConceptSearch(searchInput, limit)`:
-    - searches `concept_embeddings.embedding`
-    - returns takeaways joined with `document` + `category`
+- Vector similarity queries:
+  - `vectorTakeawaySearch(searchInput, limit)` and `vectorTakeawaySearchTimeWeighted(...)`
+  - `vectorConceptSearch(searchInput, limit)` and `vectorConceptSearchTimeWeighted(...)`
+  - Both return takeaways joined with `document` + `category`
 
----
-
-## Stage 4: Insight generation
-
-**Goal**: Generate a detailed insight from a curated set of takeaways, with the ability to pull in more context via vector search.
-
-### Input
-
-- `insightId` (an `insights` row that is connected to takeaways via the join table)
-- `insightPrompt` (user-provided extra instruction)
-- optional `model`
-
-### Processing (Inngest function: `app/generate-insight`)
-
-- Loads the insight and its curated takeaways via joins:
-  - `insights` → `insight_takeaways` → `takeaways` → `documents`
-- Builds the initial prompt containing:
-  - takeaway titles, source, publication date, and takeaway text
-- Calls the OpenAI Responses API with:
-  - `tools: insightTools`
-  - `tool_choice: "auto"`
-- Tool loop:
-  - If the model requests a tool call, the backend executes it and feeds results back into the conversation
-  - The primary tool is:
-    - `fetchTakeaways({ query, timeWeighted })` → uses `vectorTakeawaySearch(query, 10)` and optionally reweights by recency
-- Terminates when there are no more tool calls
-- Persists the final result:
-  - updates `insights.insight` with the generated text
-
-### Output (storage)
-
-- `insights.insight` (final generated insight text)
-
----
-
-## End-to-end diagram (backend)
+### System-wide flow diagram
 
 ```mermaid
 flowchart TD
-  %% Stage 1: Ingestion
-  A["Scraper event\nscraper/daily-science or scraper/earnings-calls"] --> B["Fetch + scrape/fetch text"]
-  B --> C["saveContent / fetchAndSaveTranscript"]
-  C --> D[("Postgres: documents")]
+  A["Stratechery RSS\nscheduler.stratechery-scraper"] --> B["Normalize + saveContent"]
+  A2["Earnings call import\nscraper/earnings-calls"] --> B
+  B --> C[("Postgres: documents")]
+  C --> D["Inngest: app/generate-takeaways\ndocumentId + prompt + model"]
+  D --> E[("Postgres: takeaways\n(title, takeaway, summary, concept, categoryId, documentId)")]
+  E --> F["generateEmbedding(takeaway)"]
+  E --> G["generateEmbedding(concept)"]
+  F --> H[("Postgres + pgvector: takeaway_embeddings")]
+  G --> I[("Postgres + pgvector: concept_embeddings")]
+  H --> J["vectorTakeawaySearch / ...TimeWeighted"]
+  I --> K["vectorConceptSearch / ...TimeWeighted"]
+```
 
-  %% Stage 2: Takeaways + concepts
-  D --> E["Inngest: app/generate-takeaways\ndocumentId"]
-  E --> F["getTakeaways(articleText)"]
-  F --> G["For each takeaway:\ngetConcept + getCategory"]
-  G --> H[("Postgres: takeaways")]
+---
 
-  %% Stage 3: Embeddings + vector DB
-  H --> I["generateEmbedding(takeaway)"]
-  H --> J["generateEmbedding(concept)"]
-  I --> K[("Postgres + pgvector: takeaway_embeddings")]
-  J --> L[("Postgres + pgvector: concept_embeddings")]
+## User-specific insight pipeline
 
-  %% Stage 4: Insight generation
-  M["Inngest: app/generate-insight\ninsightId"] --> N["Load curated takeaways\ninsights -> insight_takeaways -> takeaways -> documents"]
-  N --> O["OpenAI Responses API\ntools enabled"]
-  O -->|tool call| P["fetchTakeaways"]
-  P --> Q["vectorTakeawaySearch(query)"]
-  Q --> K
-  K --> R["Relevant takeaways + metadata"]
-  R --> O
-  O --> S[("Postgres: insights.insight")]
+### Inputs / triggers
+
+- `app/generate-insight` events supply `seedText`, optional `insightPrompt`, and the target user.
+- **Daily automation** (`scheduler.daily-insight`, cron `TZ=America/Phoenix 0 7 * * *`):
+  - Fetches takeaways created in the last 24 hours (system-wide).
+  - If more than three exist, clusters them into three seed summaries via `generateTakeawaySummaries`; otherwise uses the raw summaries.
+  - Fans out one `app/generate-insight` event per user × seed text (prompt empty).
+
+### Processing (Inngest function: `app/generate-insight`)
+
+- Load the user’s recent insights to avoid duplication in the prompt.
+- Find similar takeaways and concept neighbors with `vectorTakeawaySearchTimeWeighted` and `vectorConceptSearchTimeWeighted` using the `seedText`.
+- Build the initial conversation and run OpenAI Responses with research tools; execute the tool loop (including fetching takeaways) until the model requests the final output.
+- Parse the structured result, then persist:
+  - `insights` (per-user insight text + summary)
+  - `insight_takeaways` (join to takeaways/concepts used)
+  - `insight_references` (citations back to takeaway references)
+- Notify the UI when the insight is generated.
+
+**Output (storage)**
+
+- `insights.insight` and `insights.summary`, keyed by `insights.userId` (user-specific)
+
+### User-specific flow diagram
+
+```mermaid
+flowchart TD
+  T["System takeaways + embeddings\n(shared across users)"]
+  A["Daily cron\nscheduler.daily-insight"] --> B["Takeaways last 24h\n(optional 3 seed summaries)"]
+  B --> C["Send app/generate-insight events\nper user × seedText"]
+  C --> D["Load user recent insights"]
+  C --> E["vectorTakeawaySearchTimeWeighted\nvectorConceptSearchTimeWeighted (seedText)"]
+  T --> E
+  D --> F["OpenAI Responses agent\n+ research tools"]
+  E --> F
+  F --> G[("Postgres: insights (user-specific)")]
+  G --> H[("insight_takeaways + insight_references")]
+  H --> I["publishNotifyUI"]
 ```
 
 ---
@@ -184,8 +162,8 @@ flowchart TD
 ## Quick “where to look in code”
 
 - **Ingestion**
-  - `src/inngest/functions/science-daily-scraper.ts`
-  - `src/inngest/functions/earnings-calls-scraper.ts`
+  - `src/inngest/functions/importers/scheduled/stratechery.ts`
+  - `src/inngest/functions/importers/earnings-calls-scraper.ts`
   - `src/inngest/steps/scrapers/save-content.ts`
 - **Takeaways + concepts + categorization**
   - `src/inngest/functions/generate-takeaways.ts`
@@ -196,7 +174,8 @@ flowchart TD
   - `src/postgres/schema.ts` (pgvector tables + HNSW indexes)
   - `src/postgres/generate-embedding.ts`
   - `src/server/vector-queries.ts`
-- **Insight generation**
+- **Insights (user-specific)**
+  - `src/inngest/functions/daily-insight.ts`
   - `src/inngest/functions/generate-insight.ts`
   - `src/lib/ai-helpers/tools/tools.ts`
   - `src/lib/ai-helpers/tools/tool-handling.ts`
