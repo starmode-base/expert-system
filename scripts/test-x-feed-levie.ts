@@ -1,4 +1,4 @@
-import { fetchTweetsByUsername } from "~/inngest/functions/importers/scheduled/x-feed";
+import { fetchTweetsByUsername } from "~/inngest/functions/importers/unused/fetch-x-posts";
 
 const username = "levie";
 

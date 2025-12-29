@@ -4,7 +4,7 @@ import { generateInsight } from "./generate-insight";
 import { generateTakeaways } from "./generate-takeaways";
 import { fedSpeechesScraper } from "./importers/scheduled/fed-speeches";
 import { processEarningsJobs } from "./importers/scheduled/process-earnings-jobs";
-import { scienceDailyScraper } from "./importers/science-daily-scraper";
+import { scienceDailyScraper } from "./importers/unused/science-daily-scraper";
 import { stratecheryScraper } from "./importers/scheduled/stratechery";
 import { syncEarningsCalendar } from "./importers/scheduled/sync-earnings-calendar";
 
