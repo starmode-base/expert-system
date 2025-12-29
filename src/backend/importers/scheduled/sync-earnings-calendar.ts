@@ -1,7 +1,7 @@
 import { and, gte, lt, inArray, sql } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
-import { inngest } from "../../../client";
-import { fetchEarningsCalendar } from "~/lib/earnings-calendar";
+import { inngest } from "../../client";
+import { fetchEarningsCalendar } from "~/backend/importers/scrapers/earnings-calendar";
 
 const toBatches = <T>(arr: T[], size: number): T[][] =>
   Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>

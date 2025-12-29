@@ -1,7 +1,7 @@
 import { invariant } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { inngest } from "~/inngest/client";
+import { inngest } from "~/backend/client";
 import { authMiddleware } from "~/middleware/auth-middleware";
 
 export const sendEventScienceDailyScraperSF = createServerFn({ method: "POST" })

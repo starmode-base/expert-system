@@ -1,10 +1,7 @@
 // UNUSED
 
-import {
-  extractRssItems,
-  scrapeLink,
-} from "../../../steps/scrapers/scientific-daily";
-import { inngest } from "../../../client";
+import { extractRssItems, scrapeLink } from "../scrapers/scientific-daily";
+import { inngest } from "../../client";
 import { publishNotifyUI } from "~/lib/ably";
 
 export const scienceDailyScraper = inngest.createFunction(

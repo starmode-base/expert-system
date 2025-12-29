@@ -1,15 +1,14 @@
 import { db, schema } from "~/postgres/db";
-import { inngest } from "../client";
 import { invariant } from "@tanstack/react-router";
-import { getTakeaways } from "~/lib/ai-helpers/get-takeaways";
-// import { getArticleTags } from "~/lib/ai-helpers/tag-article";
+import { getTakeaways } from "~/backend/takeaways/helpers/get-takeaways";
 import { generateEmbedding } from "~/postgres/generate-embedding";
-import { getCategory } from "~/lib/ai-helpers/get-category";
+import { getCategory } from "~/backend/takeaways/helpers/get-category";
 import { eq } from "drizzle-orm";
-import { getConcept } from "../../lib/ai-helpers/generate-concept";
+import { getConcept } from "~/backend/takeaways/helpers/generate-concept";
 import { publishNotifyUI } from "~/lib/ably";
 import { NonRetriableError } from "inngest";
-import { getSummary } from "~/lib/ai-helpers/get-summary";
+import { getSummary } from "~/backend/takeaways/helpers/get-summary";
+import { inngest } from "../client";
 
 export const generateTakeaways = inngest.createFunction(
   { id: "app/generate-takeaways" },

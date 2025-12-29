@@ -1,7 +1,7 @@
 import { earningsCallsScraper } from "./importers/earnings-calls-scraper";
-import { dailyInsight } from "./daily-insight";
-import { generateInsight } from "./generate-insight";
-import { generateTakeaways } from "./generate-takeaways";
+import { dailyInsight } from "./insights/daily-insight";
+import { generateInsight } from "./insights/generate-insight";
+import { generateTakeaways } from "./takeaways/generate-takeaways";
 import { fedSpeechesScraper } from "./importers/scheduled/fed-speeches";
 import { processEarningsJobs } from "./importers/scheduled/process-earnings-jobs";
 import { scienceDailyScraper } from "./importers/unused/science-daily-scraper";

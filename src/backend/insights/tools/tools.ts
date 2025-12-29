@@ -1,6 +1,6 @@
 import { db, schema } from "~/postgres/db";
 import { eq } from "drizzle-orm";
-import { buildTakeawayPreviews } from "~/inngest/functions/generate-insight";
+import { buildTakeawayPreviews } from "~/backend/insights/generate-insight";
 import { vectorTakeawaySearchTimeWeighted } from "~/server/vector-queries";
 
 // ------------------------------------------------------------
