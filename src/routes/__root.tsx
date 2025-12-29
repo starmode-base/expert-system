@@ -105,12 +105,13 @@ function RootDocument(props: React.PropsWithChildren) {
 
 function NavBar() {
   const auth = useAuth();
-  const publicNavItems = [{ key: "feed", to: "/feed", label: "Feed" }];
+  const publicNavItems = [
+    { key: "feed", to: "/feed", label: "Feed" },
+    { key: "takeaways", to: "/search", label: "Takeaways" },
+  ];
 
   const devNavItems = [
-    { key: "takeaways", to: "/search", label: "Takeaways" },
     { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
-
     {
       key: "knowledge-graph",
       to: "/knowledge-graph",
