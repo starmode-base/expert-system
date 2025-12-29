@@ -4,14 +4,12 @@ import { ListFilter, ChevronDown } from "lucide-react";
 
 export interface FilterParams {
   sources: string[];
-  categories: string[];
   startDate: string | undefined;
   endDate: string | undefined;
 }
 
 interface FilterBarProps {
   availableSources: string[];
-  availableCategories: string[];
   filters: FilterParams;
   setFilters: (filters: FilterParams) => void;
   updateURL: boolean;
@@ -24,7 +22,6 @@ export const normalizeFilterValue = (value: string) => {
 
 export const FilterBar = ({
   availableSources,
-  availableCategories,
   filters,
   setFilters,
   updateURL,
@@ -50,7 +47,6 @@ export const FilterBar = ({
         searchInput,
         filters: {
           ...nextFilters,
-          categories: nextFilters.categories.map(normalizeFilterValue),
           sources: nextFilters.sources.map(normalizeFilterValue),
         },
       },
@@ -66,15 +62,6 @@ export const FilterBar = ({
     const newFilters = {
       ...filters,
       sources: toggleValue(filters.sources, source),
-    };
-    setFilters(newFilters);
-    updateURLWithFilters(newFilters);
-  };
-
-  const handleCategoryToggle = (category: string) => {
-    const newFilters = {
-      ...filters,
-      categories: toggleValue(filters.categories, category),
     };
     setFilters(newFilters);
     updateURLWithFilters(newFilters);
@@ -144,31 +131,6 @@ export const FilterBar = ({
                     className="accent-blue-500"
                   />
                   {source}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Category Filter */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold">
-              Categories
-            </label>
-            <div className="flex max-h-36 flex-col gap-1 overflow-y-auto">
-              {availableCategories.map((category) => (
-                <label
-                  key={category}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.categories.includes(category)}
-                    onChange={() => {
-                      handleCategoryToggle(category);
-                    }}
-                    className="accent-green-500"
-                  />
-                  {category}
                 </label>
               ))}
             </div>

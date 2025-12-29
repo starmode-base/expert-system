@@ -28,7 +28,6 @@ export const searchTakeawaysSF = createServerFn({
     z.object({
       searchInput: z.string().optional(),
       filters: z.object({
-        categories: z.array(z.string()),
         sources: z.array(z.string()),
         startDate: z.string().optional(),
         endDate: z.string().optional(),
@@ -53,9 +52,6 @@ export const searchTakeawaysSF = createServerFn({
               result.publicationDate >= new Date(filters.startDate)) &&
             (!filters.endDate ||
               result.publicationDate <= new Date(filters.endDate)) &&
-            // if no categories are selected, show all.
-            (!result.category ||
-              filters.categories.includes(result.category)) &&
             filters.sources.includes(result.source)
           );
         })

@@ -18,25 +18,12 @@ import { searchTakeawaysSF, TakeawaySearchResult } from "~/server/searchSFs";
  * in the URL params to avoid breaking the URL.
  *
  * @param {FilterParams} filters - The normalized filter values
- * @param {string[]} categories - The possible category values
  * @param {string[]} sources - The possible source values
  * @returns {FilterParams} The denormalized filter values
  */
-const denormalizeFilters = (
-  filters: FilterParams,
-  categories: string[],
-  sources: string[],
-) => {
+const denormalizeFilters = (filters: FilterParams, sources: string[]) => {
   // normalizeFilterValue cleans the filter values, so they dont break the URL params
   // This mapping is required to map the normalized values back to the original
-  const categoryMap: Record<string, string> = categories.reduce(
-    (acc: Record<string, string>, category) => {
-      acc[normalizeFilterValue(category)] = category;
-      return acc;
-    },
-    {},
-  );
-
   const sourceMap: Record<string, string> = sources.reduce(
     (acc: Record<string, string>, source) => {
       acc[normalizeFilterValue(source)] = source;
@@ -46,16 +33,13 @@ const denormalizeFilters = (
   );
 
   return {
-    categories: filters.categories
-      .map((category) => categoryMap[category])
-      .filter(Boolean),
     sources: filters.sources.map((source) => sourceMap[source]).filter(Boolean),
     startDate: filters.startDate,
     endDate: filters.endDate,
   };
 };
 
-export const Route = createFileRoute("/search/")({
+export const Route = createFileRoute("/search")({
   validateSearch: (search: Record<string, unknown> | undefined) => {
     // validate and parse the search params into a typed state
     return {
@@ -68,16 +52,15 @@ export const Route = createFileRoute("/search/")({
     filters,
   }),
   loader: async ({ deps: search }) => {
-    const { sources, categories } = await getFilterValues();
+    const { sources } = await getFilterValues();
     const { searchInput, filters } = search;
 
     const takeaways = await searchTakeawaysSF({
       data: {
         searchInput,
         filters: filters
-          ? denormalizeFilters(filters, categories, sources)
+          ? denormalizeFilters(filters, sources)
           : {
-              categories,
               sources,
               startDate: undefined,
               endDate: undefined,
@@ -86,9 +69,8 @@ export const Route = createFileRoute("/search/")({
     });
 
     const filtersProp = filters
-      ? denormalizeFilters(filters, categories, sources)
+      ? denormalizeFilters(filters, sources)
       : {
-          categories,
           sources,
           startDate: undefined,
           endDate: undefined,
@@ -97,7 +79,6 @@ export const Route = createFileRoute("/search/")({
     return {
       takeaways,
       sources,
-      categories,
       searchInput,
       filtersProp,
     };
@@ -109,7 +90,6 @@ function RouteComponent() {
   const {
     takeaways,
     sources,
-    categories,
     searchInput: searchInputProp,
     filtersProp,
   } = Route.useLoaderData();
@@ -171,7 +151,6 @@ function RouteComponent() {
 
         <FilterBar
           availableSources={sources}
-          availableCategories={categories}
           filters={filters}
           setFilters={setFilters}
           updateURL={true}
