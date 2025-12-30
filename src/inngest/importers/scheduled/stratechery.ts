@@ -1,4 +1,4 @@
-import { inngest } from "~/backend/client";
+import { inngest } from "~/inngest/client";
 import fetch from "node-fetch";
 import { parseStringPromise } from "xml2js";
 import * as cheerio from "cheerio";

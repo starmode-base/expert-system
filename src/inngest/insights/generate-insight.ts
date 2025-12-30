@@ -10,8 +10,8 @@ import { zodTextFormat } from "openai/helpers/zod";
 import {
   researchAndCompletionTools,
   researchTools,
-} from "~/backend/insights/tools/tool-map";
-import { executeToolCalls } from "~/backend/insights/tools/tool-handling";
+} from "~/inngest/insights/tools/tool-map";
+import { executeToolCalls } from "~/inngest/insights/tools/tool-handling";
 import { invariant } from "@tanstack/react-router";
 import { z } from "zod";
 import { TakeawaySearchResult } from "~/server/searchSFs";

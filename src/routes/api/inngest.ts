@@ -17,9 +17,9 @@
  * https://vercel.com/docs/errors/error-list#unmatched-function-pattern
  */
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { inngest } from "~/backend/client";
+import { inngest } from "~/inngest/client";
 import { ServeHandlerOptions, InngestCommHandler } from "inngest";
-import { inngestFunctions } from "~/backend/index";
+import { inngestFunctions } from "~/inngest/index";
 
 const serve = (options: ServeHandlerOptions) => {
   const handler = new InngestCommHandler({

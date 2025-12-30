@@ -1,4 +1,4 @@
-import { fetchTweetsByUsername } from "~/backend/importers/unused/fetch-x-posts";
+import { fetchTweetsByUsername } from "~/inngest/importers/unused/fetch-x-posts";
 
 const username = "levie";
 

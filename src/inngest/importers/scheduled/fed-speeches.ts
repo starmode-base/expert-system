@@ -4,7 +4,7 @@ import { invariant } from "@tanstack/react-router";
 import { inArray } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import { inngest } from "../../client";
-import { extractBodyTextFromHtml } from "~/backend/importers/scrapers/extract-body-text";
+import { extractBodyTextFromHtml } from "~/inngest/importers/scrapers/extract-body-text";
 
 interface FedRssItem {
   title?: (string | { _: string })[];

@@ -1,6 +1,6 @@
 import { publishNotifyUI } from "~/lib/ably";
 import { generateTakeaways } from "../takeaways/generate-takeaways";
-import { AlphaVantageRateLimitError } from "~/backend/importers/scrapers/earnings-transcripts";
+import { AlphaVantageRateLimitError } from "~/inngest/importers/scrapers/earnings-transcripts";
 import { earningsCallTakeawayPrompt } from "./scheduled/process-earnings-jobs";
 import { inngest } from "../client";
 import { fetchAndSaveTranscript } from "./scrapers/save-content";

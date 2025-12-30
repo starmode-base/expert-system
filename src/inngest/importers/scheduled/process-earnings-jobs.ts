@@ -3,7 +3,7 @@ import { db, schema } from "~/postgres/db";
 import { inngest } from "../../client";
 import { fetchAndSaveTranscript } from "../scrapers/save-content";
 import type { EarningsScheduleSelect } from "~/postgres/schema";
-import { AlphaVantageRateLimitError } from "~/backend/importers/scrapers/earnings-transcripts";
+import { AlphaVantageRateLimitError } from "~/inngest/importers/scrapers/earnings-transcripts";
 
 interface PendingJob {
   id: string;
