@@ -132,24 +132,29 @@ export function parseMacroVoicesTranscriptHtml(html: string) {
     }
 
     const strongText = cleanText(paragraph.find("strong").first().text());
+    const speakerName = strongText.replace(/[:\-–\s]+$/, "");
+    const normalizedSpeaker = speakerName || strongText;
     const isSpeakerLine =
-      strongText &&
+      normalizedSpeaker &&
       (text === strongText ||
+        text === speakerName ||
         text === `${strongText}:` ||
-        text === `${strongText} -`);
+        text === `${speakerName}:` ||
+        text === `${strongText} -` ||
+        text === `${speakerName} -`);
 
     if (isSpeakerLine) {
-      currentSpeaker = strongText;
+      currentSpeaker = normalizedSpeaker;
       continue;
     }
 
     const startsWithSpeaker =
-      strongText &&
+      normalizedSpeaker &&
       text.startsWith(strongText) &&
       text.length > strongText.length + 1;
 
     if (startsWithSpeaker) {
-      currentSpeaker = strongText;
+      currentSpeaker = normalizedSpeaker;
       const spoken = cleanText(
         text.slice(strongText.length).replace(/^[:\-–\s]+/, ""),
       );
