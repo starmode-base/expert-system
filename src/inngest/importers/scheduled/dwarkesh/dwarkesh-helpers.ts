@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import { parseStringPromise } from "xml2js";
 import * as cheerio from "cheerio";
-import type { AnyNode } from "domhandler";
+import type { AnyNode, Element } from "domhandler";
 import { invariant } from "@tanstack/react-router";
 
 export interface DwarkeshPodcastCandidate {
@@ -35,6 +35,20 @@ interface TranscriptEntry {
   text: string;
 }
 
+const SKIP_PREFIXES = [
+  "sponsors",
+  "ready for more",
+  "subscribe",
+  "description",
+  "timestamps",
+];
+
+const SKIP_INCLUDES = [
+  "recent episodes",
+  "commentsrestacks",
+  "discussion about this video",
+];
+
 function normalizeText(value: string): string {
   return value
     .replace(/\u00a0/g, " ")
@@ -58,33 +72,84 @@ function findContentRoot($: cheerio.CheerioAPI) {
   );
 }
 
+function findTranscriptHeading(
+  $: cheerio.CheerioAPI,
+  root: cheerio.Cheerio<AnyNode>,
+): cheerio.Cheerio<Element> | null {
+  const headingSelectors =
+    "h1, h2, h3, h4, h5, h6, strong, b, p strong, p b, [data-testid='heading']";
+
+  const heading = root
+    .find(headingSelectors)
+    .filter(
+      (_, el) => normalizeText($(el).text()).toLowerCase() === "transcript",
+    )
+    .first();
+
+  return heading.length > 0 ? heading : null;
+}
+
+function isElementNode(node: AnyNode): node is Element {
+  return typeof (node as Element).tagName === "string";
+}
+
 function collectTextBlocks(
   $: cheerio.CheerioAPI,
   root: cheerio.Cheerio<AnyNode>,
+  startAfter?: cheerio.Cheerio<Element> | null,
 ): string[] {
-  return root
-    .find("p, li")
-    .toArray()
-    .map((el: AnyNode) => normalizeText($(el).text()))
-    .filter((text): text is string => Boolean(text))
-    .filter((text: string) => {
-      const lower = text.toLowerCase();
-      const skipStartsWith = ["sponsors", "ready for more", "subscribe"];
-      const skipIncludes = [
-        "recent episodes",
-        "commentsrestacks",
-        "discussion about this video",
-      ];
+  const orderedNodes: AnyNode[] = root.find("*").toArray();
+  const startNode: Element | null = startAfter?.get(0) ?? null;
+  const startIndex = startNode
+    ? orderedNodes.findIndex((node) => node === startNode)
+    : -1;
 
-      const isSkippedPrefix = skipStartsWith.some((phrase) =>
-        lower.startsWith(phrase),
-      );
-      const isSkippedContains = skipIncludes.some((phrase) =>
-        lower.includes(phrase),
-      );
+  const blocks: string[] = [];
 
-      return !(isSkippedPrefix || isSkippedContains);
-    });
+  for (
+    let i = startIndex >= 0 ? startIndex + 1 : 0;
+    i < orderedNodes.length;
+    i += 1
+  ) {
+    const node = orderedNodes[i];
+    if (!node) {
+      continue;
+    }
+
+    if (!isElementNode(node)) {
+      continue;
+    }
+
+    const tag = node.tagName.toLowerCase();
+    if (tag !== "p" && tag !== "li") {
+      continue;
+    }
+
+    const text = normalizeText($(node).text());
+    if (!text) {
+      continue;
+    }
+
+    const lower = text.toLowerCase();
+    const isTimeline =
+      /^\(?\d{2}:\d{2}:\d{2}\)?\s*[-–—]?\s*/.test(lower) &&
+      !/^([a-z]|[a-z].+)/i.test(lower);
+
+    const isSkippedPrefix = SKIP_PREFIXES.some((phrase) =>
+      lower.startsWith(phrase),
+    );
+    const isSkippedContains = SKIP_INCLUDES.some((phrase) =>
+      lower.includes(phrase),
+    );
+
+    if (isSkippedPrefix || isSkippedContains || isTimeline) {
+      continue;
+    }
+
+    blocks.push(text);
+  }
+
+  return blocks;
 }
 
 function parseTranscriptEntries(blocks: string[]): TranscriptEntry[] {
@@ -148,8 +213,10 @@ function renderTranscript(
 
   return entries
     .map((entry) => {
-      const prefix = entry.timestamp ? `[${entry.timestamp}] ` : "";
-      return `${prefix}${entry.speaker}: ${entry.text}`;
+      if (entry.timestamp) {
+        return `${entry.speaker} (${entry.timestamp}): ${entry.text}`;
+      }
+      return `${entry.speaker}: ${entry.text}`;
     })
     .join("\n");
 }
@@ -160,7 +227,8 @@ export async function fetchDwarkeshPodcastTranscript(url: string) {
   const $ = cheerio.load(html);
 
   const root = findContentRoot($);
-  const blocks = collectTextBlocks($, root);
+  const transcriptHeading = findTranscriptHeading($, root);
+  const blocks = collectTextBlocks($, root, transcriptHeading);
   const entries = parseTranscriptEntries(blocks);
 
   return renderTranscript(entries, blocks);
@@ -285,18 +353,12 @@ export async function fetchDwarkeshCandidatesWithTranscripts(
 ) {
   const results = await Promise.all(
     candidates.map(async (candidate) => {
-      try {
-        const articleText = await fetchDwarkeshPodcastTranscript(
-          candidate.link,
-        );
-        if (!articleText) {
-          return null;
-        }
-
-        return { ...candidate, articleText };
-      } catch {
+      const articleText = await fetchDwarkeshPodcastTranscript(candidate.link);
+      if (!articleText) {
         return null;
       }
+
+      return { ...candidate, articleText };
     }),
   );
 
