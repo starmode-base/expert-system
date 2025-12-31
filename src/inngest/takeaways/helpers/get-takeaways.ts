@@ -47,6 +47,7 @@ const schema = z.object({
               - Use a direct quotes and attribution whenever possible. e.g. "[text]" - Jermome Powel
               - The reference should be an exact excerpt from the text. Never use a summary of the text.
               - The excerpt should not exceed three sentences.
+              - Err on over referencing to ensure the takeaways are well supported by the text.
               - use '...' for split quotes`,
           }),
         }),
@@ -60,7 +61,7 @@ const responseFormat = zodResponseFormat(schema, "response");
 export async function getTakeaways(
   articleText: string,
   takeawayInstructions?: string,
-  model = "gpt-5.1",
+  model = "gpt-5.2",
 ) {
   const completion = await client.beta.chat.completions.parse({
     model,
@@ -76,7 +77,8 @@ export async function getTakeaways(
         ${articleText}
 
         Create a structured list of the 1-3 most novel and important takeaways from the text below.
-        Include references to support the facts, quotes, claims and data.
+        Make sure to heavily reference the text to support the facts, quotes, claims and data.
+        Better to have more references to support the takeaways.
         It is better to have less takeaways, if they are not unique and unrelated.`,
       },
     ],
