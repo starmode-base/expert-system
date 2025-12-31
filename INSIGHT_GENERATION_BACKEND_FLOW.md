@@ -162,20 +162,20 @@ flowchart TD
 ## Quick “where to look in code”
 
 - **Ingestion**
-  - `src/inngest/functions/importers/scheduled/stratechery.ts`
-  - `src/inngest/functions/importers/earnings-calls-scraper.ts`
-  - `src/inngest/steps/scrapers/save-content.ts`
+  - `src/inngest/importers/scheduled/stratechery.ts`
+  - `src/inngest/importers/earnings-calls-scraper.ts`
+  - `src/inngest/importers/scrapers/save-content.ts`
 - **Takeaways + concepts + categorization**
-  - `src/inngest/functions/generate-takeaways.ts`
-  - `src/lib/ai-helpers/get-takeaways.ts`
-  - `src/lib/ai-helpers/generate-concept.ts`
-  - `src/lib/ai-helpers/get-category.ts`
+  - `src/inngest/takeaways/generate-takeaways.ts`
+  - `src/inngest/takeaways/helpers/get-takeaways.ts`
+  - `src/inngest/takeaways/helpers/generate-concept.ts`
+  - `src/inngest/takeaways/helpers/get-category.ts`
 - **Vector DB + embedding + search**
   - `src/postgres/schema.ts` (pgvector tables + HNSW indexes)
   - `src/postgres/generate-embedding.ts`
   - `src/server/vector-queries.ts`
 - **Insights (user-specific)**
-  - `src/inngest/functions/daily-insight.ts`
-  - `src/inngest/functions/generate-insight.ts`
-  - `src/lib/ai-helpers/tools/tools.ts`
-  - `src/lib/ai-helpers/tools/tool-handling.ts`
+  - `src/inngest/insights/daily-insight.ts`
+  - `src/inngest/insights/generate-insight.ts`
+  - `src/inngest/insights/tools/tools.ts`
+  - `src/inngest/insights/tools/tool-handling.ts`
