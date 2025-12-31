@@ -29,6 +29,7 @@ const schema = z.object({
         - References:
           - when making a claim, provide a reference number and the relevant fact, quote or data to support the claim. e.g.  "(ref 1)"
           - For direct quotes, include the exact excerpt from the text and attribute the quote to the person.
+          - If no direct quote exists, cite the exact sentence(s) that state the fact (still verbatim). Don’t invent a quote.
         - Start at 1 and increment for each reference.
         - References should only be used for the current takeaway.
         - Do not use the same reference across takeaways.
@@ -46,7 +47,7 @@ const schema = z.object({
             description: `Relevant facts, quotes and data to support the takeaway.
               - Use a direct quotes and attribution whenever possible. e.g. "[text]" - Jermome Powel
               - The reference should be an exact excerpt from the text. Never use a summary of the text.
-              - The excerpt should not exceed three sentences.
+              - The reference should be able to stand alone, such that it could be reused in a different context.
               - Err on over referencing to ensure the takeaways are well supported by the text.
               - use '...' for split quotes`,
           }),
