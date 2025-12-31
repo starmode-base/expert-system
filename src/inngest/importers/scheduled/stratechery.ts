@@ -238,7 +238,7 @@ export const stratecheryScraper = inngest.createFunction(
           data: {
             documentId: doc.id,
             takeawayPrompt: stratecheryTakeawayPrompt,
-            model: "gpt-5.1",
+            model: "gpt-5.2",
           },
           user: { id: "", email: "" },
         });

@@ -7,7 +7,8 @@ import { processEarningsJobs } from "./importers/scheduled/process-earnings-jobs
 import { scienceDailyScraper } from "./importers/unused/science-daily-scraper";
 import { stratecheryScraper } from "./importers/scheduled/stratechery";
 import { syncEarningsCalendar } from "./importers/scheduled/sync-earnings-calendar";
-import { dwarkeshPodcastScraper } from "./importers/scheduled/dwarkesh-podcast";
+import { dwarkeshPodcastScraper } from "./importers/scheduled/dwarkesh/dwarkesh-job";
+import { macroVoicesScraper } from "./importers/scheduled/macrovoices/macrovoices-job";
 
 export const inngestFunctions = [
   scienceDailyScraper,
@@ -20,4 +21,5 @@ export const inngestFunctions = [
   fedSpeechesScraper,
   dailyInsight,
   dwarkeshPodcastScraper,
+  macroVoicesScraper,
 ];
