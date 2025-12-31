@@ -10,8 +10,8 @@ import { zodTextFormat } from "openai/helpers/zod";
 import {
   researchAndCompletionTools,
   researchTools,
-} from "~/lib/ai-helpers/tools/tool-map";
-import { executeToolCalls } from "~/lib/ai-helpers/tools/tool-handling";
+} from "~/inngest/insights/tools/tool-map";
+import { executeToolCalls } from "~/inngest/insights/tools/tool-handling";
 import { invariant } from "@tanstack/react-router";
 import { z } from "zod";
 import { TakeawaySearchResult } from "~/server/searchSFs";
@@ -410,8 +410,6 @@ export const generateInsight = inngest.createFunction(
 
       const references = finalInsight.references;
 
-      if (!references.length) return;
-
       const uniqueReferences = Array.from(
         new Map(
           references.map((reference) => [reference.reference_id, reference]),
@@ -461,7 +459,7 @@ export const generateInsight = inngest.createFunction(
       `notify-ui`,
       publishNotifyUI,
       event.user.id,
-      `Insight generated for id ${insightId ?? "unknown"}`,
+      `Insight generated for id: ${insightId}`,
     );
 
     return finalInsight;

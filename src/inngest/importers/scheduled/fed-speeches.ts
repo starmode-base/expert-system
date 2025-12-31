@@ -3,8 +3,8 @@ import { parseStringPromise } from "xml2js";
 import { invariant } from "@tanstack/react-router";
 import { inArray } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
-import { inngest } from "~/inngest/client";
-import { extractBodyTextFromHtml } from "~/lib/ai-helpers/extract-body-text";
+import { inngest } from "../../client";
+import { extractBodyTextFromHtml } from "~/inngest/importers/scrapers/extract-body-text";
 
 interface FedRssItem {
   title?: (string | { _: string })[];

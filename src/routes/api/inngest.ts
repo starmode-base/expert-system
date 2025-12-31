@@ -19,7 +19,7 @@
 import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { inngest } from "~/inngest/client";
 import { ServeHandlerOptions, InngestCommHandler } from "inngest";
-import { inngestFunctions } from "~/inngest/functions";
+import { inngestFunctions } from "~/inngest/index";
 
 const serve = (options: ServeHandlerOptions) => {
   const handler = new InngestCommHandler({

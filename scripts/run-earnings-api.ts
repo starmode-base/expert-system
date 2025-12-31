@@ -1,4 +1,4 @@
-import { fetchAlphaVantageEarningsTranscript } from "~/lib/earnings-transcripts";
+import { fetchAlphaVantageEarningsTranscript } from "~/inngest/importers/scrapers/earnings-transcripts";
 
 const result = await fetchAlphaVantageEarningsTranscript({
   symbol: "META",

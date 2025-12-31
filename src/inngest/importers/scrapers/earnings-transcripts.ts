@@ -1,6 +1,6 @@
 // lib/fetchEarningsTranscript.ts
 import { NonRetriableError } from "inngest";
-import { ensureEnv } from "./env";
+import { ensureEnv } from "../../../lib/env";
 
 const ALPHAVANTAGE_API_BASE_URL = "https://www.alphavantage.co/query";
 const ALPHAVANTAGE_API_KEY = ensureEnv("ALPHAVANTAGE_API_KEY");

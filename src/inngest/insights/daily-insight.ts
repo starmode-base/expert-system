@@ -1,9 +1,9 @@
 import { db } from "~/postgres/db";
-import { inngest } from "../client";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { invariant } from "@tanstack/react-router";
+import { inngest } from "../client";
 
 interface DailyInsightUser {
   id: string;

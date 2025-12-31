@@ -1,6 +1,6 @@
 import { invariant } from "@tanstack/react-router";
 import { and } from "drizzle-orm";
-import { fetchAlphaVantageEarningsTranscript } from "~/lib/earnings-transcripts";
+import { fetchAlphaVantageEarningsTranscript } from "~/inngest/importers/scrapers/earnings-transcripts";
 import { db, schema } from "~/postgres/db";
 
 export interface Document {
