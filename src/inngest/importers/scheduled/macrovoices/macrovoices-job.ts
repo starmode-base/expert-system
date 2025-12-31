@@ -70,18 +70,14 @@ export const macroVoicesScraper = inngest.createFunction(
       async () => {
         const results = await Promise.all(
           newCandidates.map(async (candidate) => {
-            try {
-              const articleText = await fetchMacroVoicesTranscript(
-                candidate.link,
-              );
-              if (!articleText) {
-                return null;
-              }
-
-              return { ...candidate, articleText };
-            } catch {
+            const articleText = await fetchMacroVoicesTranscript(
+              candidate.link,
+            );
+            if (!articleText) {
               return null;
             }
+
+            return { ...candidate, articleText };
           }),
         );
 
