@@ -179,7 +179,7 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
     });
 
     const existingLinkSet = new Set(existingLinks);
-    const cutoffDate = new Date("2024-01-01T00:00:00Z");
+    const cutoffDate = new Date("2025-09-01T00:00:00Z");
 
     const newCandidates = candidates.filter(
       (candidate) =>
@@ -195,7 +195,7 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
       "fetch-transcripts",
       async () => {
         const results = await Promise.all(
-          newCandidates.slice(0, 1).map(async (candidate) => {
+          newCandidates.map(async (candidate) => {
             const articleText = await fetchDwarkeshPodcastTranscript(
               candidate.link,
             );
