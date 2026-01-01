@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { InsightsFeed } from "~/components/insight-feed/insights-feed";
 import { queryInsightsFeed } from "~/server/queries";
 
-export const Route = createFileRoute("/feed")({
+export const Route = createFileRoute("/research-feed")({
   loader: async () => {
     const items = await queryInsightsFeed();
     return { items };

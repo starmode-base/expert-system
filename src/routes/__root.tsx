@@ -106,7 +106,7 @@ function RootDocument(props: React.PropsWithChildren) {
 function NavBar() {
   const auth = useAuth();
   const publicNavItems = [
-    { key: "feed", to: "/feed", label: "Feed" },
+    { key: "research", to: "/research-feed", label: "Research" },
     { key: "takeaways", to: "/search", label: "Takeaways" },
   ];
 
@@ -131,7 +131,7 @@ function NavBar() {
       <nav className="mx-auto flex max-w-4xl items-center gap-3 px-3 py-2 sm:px-6 sm:py-3">
         <div className="flex shrink-0 items-center gap-3">
           <Link
-            to="/feed"
+            to="/research-feed"
             className="group inline-flex flex-col items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-100"
           >
             <img
@@ -179,11 +179,11 @@ function SignedOutRouterGate(props: React.PropsWithChildren) {
 
   if (
     !(
-      location.pathname.startsWith("/guest/feed") ||
+      location.pathname.startsWith("/guest/research-feed") ||
       location.pathname.startsWith("/insight/")
     )
   ) {
-    return <Navigate to="/guest/feed" />;
+    return <Navigate to="/guest/research-feed" />;
   }
 
   return props.children;
@@ -192,8 +192,8 @@ function SignedOutRouterGate(props: React.PropsWithChildren) {
 function SignedInRouterGate(props: React.PropsWithChildren) {
   const location = useLocation();
 
-  if (location.pathname === "/guest/feed") {
-    return <Navigate to="/feed" replace />;
+  if (location.pathname === "/guest/research-feed") {
+    return <Navigate to="/research-feed" replace />;
   }
 
   return props.children;
