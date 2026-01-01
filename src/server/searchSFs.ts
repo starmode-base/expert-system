@@ -19,6 +19,7 @@ export interface TakeawaySearchResult {
   category: string | undefined;
   similarity: number;
   references: TakeawayReferenceSelect[];
+  documentLink: string;
 }
 
 export const searchTakeawaysSF = createServerFn({
@@ -72,6 +73,7 @@ export const searchTakeawaysSF = createServerFn({
         category: result.category,
         similarity: result.similarity,
         references: result.references,
+        documentLink: result.documentLink,
       }));
     },
   );
