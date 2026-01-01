@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { ArrowUpOnSquareIcon, CheckIcon } from "@heroicons/react/24/outline";
 import type { InsightsItem } from "~/server/queries";
-import { InsightReferences } from "~/components/insight-feed/insight-references";
+import { InsightReferences } from "~/components/shared/references";
 
 interface InsightCardProps {
   insightFeedItem: InsightsItem;
@@ -159,7 +159,15 @@ export function InsightCard(props: InsightCardProps) {
           <div className="mb-4" />
 
           <InsightReferences
-            insightReferences={props.insightFeedItem.insightReferences}
+            references={props.insightFeedItem.insightReferences.map((ref) => ({
+              referenceId: ref.referenceId,
+              referenceNumber: ref.insightReferenceNumber,
+              reference: ref.reference,
+              documentTitle: ref.documentTitle,
+              documentSource: ref.documentSource,
+              documentLink: ref.documentLink,
+              publicationDate: ref.documentPublicationDate,
+            }))}
           />
         </>
       ) : (

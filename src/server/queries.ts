@@ -49,6 +49,7 @@ export interface Takeaway {
   references: TakeawayReferenceSelect[];
   documentTitle?: string;
   documentSource?: string;
+  documentLink?: string;
 }
 
 export interface InsightReferenceItem {
@@ -57,6 +58,8 @@ export interface InsightReferenceItem {
   reference: string;
   documentTitle: string;
   documentSource: string;
+  documentLink: string;
+  documentPublicationDate: Date;
 }
 
 export interface InsightsItem {
@@ -92,6 +95,9 @@ export const queryPublicInsightsFeed = createServerFn({
       reference: row.takeawayReference.reference,
       documentTitle: row.takeawayReference.takeaway.document.title,
       documentSource: row.takeawayReference.takeaway.document.source,
+      documentLink: row.takeawayReference.takeaway.document.link,
+      documentPublicationDate:
+        row.takeawayReference.takeaway.document.publicationDate,
     })),
   }));
 });
@@ -130,6 +136,9 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
         reference: row.takeawayReference.reference,
         documentTitle: row.takeawayReference.takeaway.document.title,
         documentSource: row.takeawayReference.takeaway.document.source,
+        documentLink: row.takeawayReference.takeaway.document.link,
+        documentPublicationDate:
+          row.takeawayReference.takeaway.document.publicationDate,
       })),
     };
   });
@@ -165,6 +174,9 @@ export const queryInsightsFeed = createServerFn({ method: "GET" })
         reference: row.takeawayReference.reference,
         documentTitle: row.takeawayReference.takeaway.document.title,
         documentSource: row.takeawayReference.takeaway.document.source,
+        documentLink: row.takeawayReference.takeaway.document.link,
+        documentPublicationDate:
+          row.takeawayReference.takeaway.document.publicationDate,
       })),
     }));
   });
@@ -204,6 +216,9 @@ export const queryInsightReferences = createServerFn({ method: "GET" })
         reference: row.takeawayReference.reference,
         documentTitle: row.takeawayReference.takeaway.document.title,
         documentSource: row.takeawayReference.takeaway.document.source,
+        documentLink: row.takeawayReference.takeaway.document.link,
+        documentPublicationDate:
+          row.takeawayReference.takeaway.document.publicationDate,
       }));
     },
   );
@@ -248,6 +263,7 @@ export const queryDocument = createServerFn({
         references: takeaway.takeawayReferences,
         documentTitle: document.title,
         documentSource: document.source,
+        documentLink: document.link,
       })),
     };
 
@@ -315,6 +331,7 @@ export const queryDocumentByTakeaway = createServerFn({
         references: tw.takeawayReferences,
         documentTitle: document.title,
         documentSource: document.source,
+        documentLink: document.link,
       })),
       selectedTakeawayId: takeawayId,
       similarTakeaways,
@@ -373,6 +390,7 @@ export const queryTakeaways = createServerFn({
     category: takeaway.category?.name,
     similarity: 0,
     references: takeaway.takeawayReferences,
+    documentLink: takeaway.document.link,
   }));
 });
 
@@ -452,6 +470,7 @@ export const getinsightTakeawaysSF = createServerFn({
           (reference) => reference,
         ),
         type: takeaway.type,
+        documentLink: takeaway.takeaway.document.link,
       }));
       const takeawaysSummary = takeawaysWithType.filter(
         (takeaway) => takeaway.type === "takeaway",

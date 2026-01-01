@@ -105,6 +105,7 @@ export async function vectorTakeawaySearch(
       category: takeaway.takeaway.category?.name,
       similarity: cosineSimilarity(searchEmbedding, takeaway.embedding),
       references: takeaway.takeaway.takeawayReferences,
+      documentLink: takeaway.takeaway.document.link,
     };
   });
 }
@@ -163,6 +164,7 @@ export async function vectorConceptSearch(
       documentSource: concept.takeaway.document.source,
       similarity: cosineSimilarity(searchEmbedding, concept.embedding),
       references: concept.takeaway.takeawayReferences,
+      documentLink: concept.takeaway.document.link,
     };
   });
 }

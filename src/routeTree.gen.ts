@@ -11,9 +11,9 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as SearchImport } from './routes/search'
+import { Route as TakeawayFeedImport } from './routes/takeaway-feed'
+import { Route as ResearchFeedImport } from './routes/research-feed'
 import { Route as ImporterImport } from './routes/importer'
-import { Route as FeedImport } from './routes/feed'
 import { Route as IndexImport } from './routes/index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
 import { Route as KnowledgeGraphIndexImport } from './routes/knowledge-graph.index'
@@ -21,26 +21,26 @@ import { Route as InsightStudioIndexImport } from './routes/insight-studio.index
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
 import { Route as InsightInsightIdImport } from './routes/insight.$insightId'
 import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$insightId'
-import { Route as GuestFeedImport } from './routes/guest.feed'
+import { Route as GuestResearchFeedImport } from './routes/guest.research-feed'
 import { Route as KnowledgeGraphGraphTypeDocumentidImport } from './routes/knowledge-graph.$graphType.$documentid'
 
 // Create/Update Routes
 
-const SearchRoute = SearchImport.update({
-  id: '/search',
-  path: '/search',
+const TakeawayFeedRoute = TakeawayFeedImport.update({
+  id: '/takeaway-feed',
+  path: '/takeaway-feed',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ResearchFeedRoute = ResearchFeedImport.update({
+  id: '/research-feed',
+  path: '/research-feed',
   getParentRoute: () => rootRoute,
 } as any)
 
 const ImporterRoute = ImporterImport.update({
   id: '/importer',
   path: '/importer',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const FeedRoute = FeedImport.update({
-  id: '/feed',
-  path: '/feed',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -86,9 +86,9 @@ const InsightStudioInsightIdRoute = InsightStudioInsightIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const GuestFeedRoute = GuestFeedImport.update({
-  id: '/guest/feed',
-  path: '/guest/feed',
+const GuestResearchFeedRoute = GuestResearchFeedImport.update({
+  id: '/guest/research-feed',
+  path: '/guest/research-feed',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -110,13 +110,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/feed': {
-      id: '/feed'
-      path: '/feed'
-      fullPath: '/feed'
-      preLoaderRoute: typeof FeedImport
-      parentRoute: typeof rootRoute
-    }
     '/importer': {
       id: '/importer'
       path: '/importer'
@@ -124,18 +117,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImporterImport
       parentRoute: typeof rootRoute
     }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchImport
+    '/research-feed': {
+      id: '/research-feed'
+      path: '/research-feed'
+      fullPath: '/research-feed'
+      preLoaderRoute: typeof ResearchFeedImport
       parentRoute: typeof rootRoute
     }
-    '/guest/feed': {
-      id: '/guest/feed'
-      path: '/guest/feed'
-      fullPath: '/guest/feed'
-      preLoaderRoute: typeof GuestFeedImport
+    '/takeaway-feed': {
+      id: '/takeaway-feed'
+      path: '/takeaway-feed'
+      fullPath: '/takeaway-feed'
+      preLoaderRoute: typeof TakeawayFeedImport
+      parentRoute: typeof rootRoute
+    }
+    '/guest/research-feed': {
+      id: '/guest/research-feed'
+      path: '/guest/research-feed'
+      fullPath: '/guest/research-feed'
+      preLoaderRoute: typeof GuestResearchFeedImport
       parentRoute: typeof rootRoute
     }
     '/insight-studio/$insightId': {
@@ -194,10 +194,10 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/feed': typeof FeedRoute
   '/importer': typeof ImporterRoute
-  '/search': typeof SearchRoute
-  '/guest/feed': typeof GuestFeedRoute
+  '/research-feed': typeof ResearchFeedRoute
+  '/takeaway-feed': typeof TakeawayFeedRoute
+  '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -209,10 +209,10 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/feed': typeof FeedRoute
   '/importer': typeof ImporterRoute
-  '/search': typeof SearchRoute
-  '/guest/feed': typeof GuestFeedRoute
+  '/research-feed': typeof ResearchFeedRoute
+  '/takeaway-feed': typeof TakeawayFeedRoute
+  '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -225,10 +225,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/feed': typeof FeedRoute
   '/importer': typeof ImporterRoute
-  '/search': typeof SearchRoute
-  '/guest/feed': typeof GuestFeedRoute
+  '/research-feed': typeof ResearchFeedRoute
+  '/takeaway-feed': typeof TakeawayFeedRoute
+  '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -242,10 +242,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/feed'
     | '/importer'
-    | '/search'
-    | '/guest/feed'
+    | '/research-feed'
+    | '/takeaway-feed'
+    | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
@@ -256,10 +256,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/feed'
     | '/importer'
-    | '/search'
-    | '/guest/feed'
+    | '/research-feed'
+    | '/takeaway-feed'
+    | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
@@ -270,10 +270,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/feed'
     | '/importer'
-    | '/search'
-    | '/guest/feed'
+    | '/research-feed'
+    | '/takeaway-feed'
+    | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
@@ -286,10 +286,10 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  FeedRoute: typeof FeedRoute
   ImporterRoute: typeof ImporterRoute
-  SearchRoute: typeof SearchRoute
-  GuestFeedRoute: typeof GuestFeedRoute
+  ResearchFeedRoute: typeof ResearchFeedRoute
+  TakeawayFeedRoute: typeof TakeawayFeedRoute
+  GuestResearchFeedRoute: typeof GuestResearchFeedRoute
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   InsightInsightIdRoute: typeof InsightInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
@@ -301,10 +301,10 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  FeedRoute: FeedRoute,
   ImporterRoute: ImporterRoute,
-  SearchRoute: SearchRoute,
-  GuestFeedRoute: GuestFeedRoute,
+  ResearchFeedRoute: ResearchFeedRoute,
+  TakeawayFeedRoute: TakeawayFeedRoute,
+  GuestResearchFeedRoute: GuestResearchFeedRoute,
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   InsightInsightIdRoute: InsightInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
@@ -326,10 +326,10 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/feed",
         "/importer",
-        "/search",
-        "/guest/feed",
+        "/research-feed",
+        "/takeaway-feed",
+        "/guest/research-feed",
         "/insight-studio/$insightId",
         "/insight/$insightId",
         "/news-feed/$documentid",
@@ -342,17 +342,17 @@ export const routeTree = rootRoute
     "/": {
       "filePath": "index.tsx"
     },
-    "/feed": {
-      "filePath": "feed.tsx"
-    },
     "/importer": {
       "filePath": "importer.tsx"
     },
-    "/search": {
-      "filePath": "search.tsx"
+    "/research-feed": {
+      "filePath": "research-feed.tsx"
     },
-    "/guest/feed": {
-      "filePath": "guest.feed.tsx"
+    "/takeaway-feed": {
+      "filePath": "takeaway-feed.tsx"
+    },
+    "/guest/research-feed": {
+      "filePath": "guest.research-feed.tsx"
     },
     "/insight-studio/$insightId": {
       "filePath": "insight-studio.$insightId.tsx"

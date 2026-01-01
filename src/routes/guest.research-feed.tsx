@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SignedOutExperience } from "~/components/signed-out";
 import { queryPublicInsightsFeed } from "~/server/queries";
 
-export const Route = createFileRoute("/guest/feed")({
+export const Route = createFileRoute("/guest/research-feed")({
   loader: async () => {
     return await queryPublicInsightsFeed();
   },
