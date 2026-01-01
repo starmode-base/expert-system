@@ -12,13 +12,6 @@ const pickInsightSchema = z.object({
   insightId: z.string(),
 });
 
-const tweetSchema = z.object({
-  tweet: z
-    .string()
-    .max(280)
-    .describe("X-ready text under 280 chars. Keep facts unchanged."),
-});
-
 interface InsightCandidate {
   id: string;
   title: string;
@@ -36,7 +29,8 @@ export const dailyXPost = inngest.createFunction(
   async ({ step }) => {
     const jitterMinutes = Math.floor(Math.random() * 60);
     if (jitterMinutes > 0) {
-      await step.sleep("post-jitter", jitterMinutes * 60 * 1000);
+      console.log(`Sleeping for ${jitterMinutes} minutes`);
+      //   await step.sleep("post-jitter", jitterMinutes * 60 * 1000);
     }
 
     const insights = await step.run("fetch-insights-last-24h", async () => {
@@ -104,25 +98,25 @@ export const dailyXPost = inngest.createFunction(
     }
 
     const tweetText = await step.run("format-insight-for-x", async () => {
-      const res = await openAiClient.responses.parse({
+      const res = await openAiClient.responses.create({
         model: "gpt-5-mini",
         input: [
           {
             role: "system",
-            content:
-              "Rewrite the insight for X by removing markdown. Breaking the text into shorter paragraphs with newlines for readability. Other wise keep all text exactly the same including references e.g. (ref 1).",
+            content: `Remove markdown formatting and break the text into shorter paragraphs with newlines for readability.
+            Otherwise keep all text exactly the same including references e.g. (ref 1).`,
           },
           {
             role: "user",
-            content: chosenInsight.insight,
+            content: `Text:
+            ${chosenInsight.insight}`,
           },
         ],
-        text: { format: zodTextFormat(tweetSchema, "tweet") },
       });
 
-      const parsed = res.output_parsed;
-      invariant(parsed, "No tweet text");
-      return parsed.tweet;
+      const text = res.output_text;
+      invariant(text, "No tweet text");
+      return text;
     });
 
     const replyLink = `https://expert-system.starmode.dev/insight/${chosenInsight.id}`;
