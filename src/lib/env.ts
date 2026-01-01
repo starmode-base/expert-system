@@ -23,6 +23,10 @@ const rawEnv = {
   API_NINJA: process.env.API_NINJA,
   ALPHAVANTAGE_API_KEY: process.env.ALPHAVANTAGE_API_KEY,
   X_BEARER_TOKEN: process.env.X_BEARER_TOKEN,
+  X_API_KEY: process.env.X_API_KEY,
+  X_API_SECRET: process.env.X_API_SECRET,
+  X_ACCESS_TOKEN: process.env.X_ACCESS_TOKEN,
+  X_ACCESS_SECRET: process.env.X_ACCESS_SECRET,
 
   /**
    * Platform environment variables
