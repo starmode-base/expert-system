@@ -40,8 +40,6 @@ function buildHeadData(
       { name: "description", content: description },
       { name: "og:title", content: title },
       { name: "og:description", content: description },
-      { name: "og:image:width", content: "1200" },
-      { name: "og:image:height", content: "630" },
       { name: "og:image", content: imageUrl },
       { name: "og:url", content: pageUrl },
       { name: "twitter:card", content: "summary_large_image" },
