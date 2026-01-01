@@ -79,7 +79,8 @@ export const dailyInsight = inngest.createFunction(
     return {
       users: users.length,
       takeaways: takeaways.length,
-      sent: sentCount,
+      sent: sentCount.length,
+      seedTexts,
     };
   },
 );

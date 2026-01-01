@@ -119,15 +119,16 @@ After the opening insight:
 - Prefer explanation over evidence density.
 
 # Reference Citing Requirements:
-- When making a reference to a fact, quote or data, cite you source from the Takeaway References.
+- When making a reference to a fact, quote or data, always cite you source from the Takeaway References.
 - Issue a new reference number in the insight text e.g.  "(ref 1)". Starting at 1 and incrementing for each additional reference.
 - Then record the newly issued insight_reference_number and reference_id (alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y) for each cited reference in the references array.
-- References are **supporting evidence only**. Use them sparingly and only when they materially strengthen credibility or anchor a key claim.
-- Do NOT force citations. If a sentence is explanatory or conceptual, it does not need a reference.
+- References are **supporting evidence only**. Use them only when they materially strengthen credibility or anchor a key claim.
+- If a sentence is explanatory or conceptual, it does not need a reference.
 
 # Writing Style
 - Markdown format.
 - Natural flow, like a strong blog post.
+- Use formatting to make the insight more engaging and readable.
 - Clear, human, slightly entertaining.
 - Write like Morgan Housel: simple language, sharp ideas, calm confidence.`,
   }),
@@ -438,13 +439,15 @@ export const generateInsight = inngest.createFunction(
           })),
         );
 
-        await tx.insert(schema.insightReferences).values(
-          uniqueReferences.map((reference) => ({
-            insightId: result.id,
-            referenceId: reference.reference_id,
-            insightReferenceNumber: reference.insight_reference_number,
-          })),
-        );
+        if (uniqueReferences.length > 0) {
+          await tx.insert(schema.insightReferences).values(
+            uniqueReferences.map((reference) => ({
+              insightId: result.id,
+              referenceId: reference.reference_id,
+              insightReferenceNumber: reference.insight_reference_number,
+            })),
+          );
+        }
 
         return result.id;
       });
