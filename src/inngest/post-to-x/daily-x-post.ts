@@ -29,8 +29,7 @@ export const dailyXPost = inngest.createFunction(
   async ({ step }) => {
     const jitterMinutes = Math.floor(Math.random() * 60);
     if (jitterMinutes > 0) {
-      console.log(`Sleeping for ${jitterMinutes} minutes`);
-      //   await step.sleep("post-jitter", jitterMinutes * 60 * 1000);
+      await step.sleep("post-jitter", jitterMinutes * 60 * 1000);
     }
 
     const insights = await step.run("fetch-insights-last-24h", async () => {
