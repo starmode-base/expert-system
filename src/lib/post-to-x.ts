@@ -27,7 +27,7 @@ export async function postToX(text: string, replyLink: string) {
     console.log("Posted:", res.data);
 
     const replyRes = await rwClient.v2.tweet({
-      text: `References @ ${replyLink}`,
+      text: `References 📖\n${replyLink}`,
       reply: {
         in_reply_to_tweet_id: res.data.id,
       },
