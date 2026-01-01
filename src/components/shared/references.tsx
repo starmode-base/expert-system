@@ -1,16 +1,23 @@
 import { useState } from "react";
-import { InsightReferenceItem } from "~/server/queries";
+
+export interface ReferenceItem {
+  referenceId: string;
+  referenceNumber: number;
+  reference: string;
+  documentTitle?: string;
+  documentSource?: string;
+}
 
 interface InsightReferencesProps {
-  insightReferences: InsightReferenceItem[];
+  references: ReferenceItem[];
 }
 
 export function InsightReferences(props: InsightReferencesProps) {
   const [referencesExpanded, setReferencesExpanded] = useState(false);
 
-  const sortedReferences = props.insightReferences
+  const sortedReferences = props.references
     .slice()
-    .sort((a, b) => a.insightReferenceNumber - b.insightReferenceNumber);
+    .sort((a, b) => a.referenceNumber - b.referenceNumber);
 
   return (
     <div>
@@ -28,20 +35,22 @@ export function InsightReferences(props: InsightReferencesProps) {
           ▶
         </span>
         References{" "}
-        <span className="text-gray-400">
-          ({props.insightReferences.length})
-        </span>
+        <span className="text-gray-400">({props.references.length})</span>
       </button>
 
       {referencesExpanded ? (
-        props.insightReferences.length > 0 ? (
+        props.references.length > 0 ? (
           <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-800">
             {sortedReferences.map((ref) => (
               <li key={ref.referenceId}>
                 <span className="text-gray-800">{ref.reference}</span>
-                <div className="mt-0.5 text-xs text-gray-500">
-                  {ref.documentTitle} · {ref.documentSource}
-                </div>
+                {ref.documentTitle || ref.documentSource ? (
+                  <div className="mt-0.5 text-xs text-gray-500">
+                    {[ref.documentTitle, ref.documentSource]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ol>

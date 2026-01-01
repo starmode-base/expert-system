@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import {
+  InsightReferences,
+  type ReferenceItem,
+} from "~/components/shared/references";
 import { createInsightWithTakeawaySF } from "~/server/insights-studio-SFs";
 import { Takeaway } from "~/server/queries";
 
@@ -12,7 +16,6 @@ export function TakeawayTile(props: {
   const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [isCreatingInsight, setIsCreatingInsight] = useState(false);
   const [conceptExpanded, setConceptExpanded] = useState(false);
-  const [referencesExpanded, setReferencesExpanded] = useState(false);
   const createInsightWithTakeaway = useServerFn(createInsightWithTakeawaySF);
 
   const documentSource =
@@ -30,6 +33,14 @@ export function TakeawayTile(props: {
   ]
     .filter(Boolean)
     .join(" · ");
+
+  const references: ReferenceItem[] = takeaway.references.map((ref) => ({
+    referenceId: ref.id,
+    referenceNumber: ref.referenceNumber,
+    reference: ref.reference,
+    documentTitle: takeaway.documentTitle,
+    documentSource,
+  }));
 
   const handleCreateInsight = async () => {
     if (isCreatingInsight) return;
@@ -144,36 +155,7 @@ export function TakeawayTile(props: {
 
         <hr className="my-3 border-gray-200" />
 
-        <button
-          onClick={() => {
-            setReferencesExpanded((prev) => !prev);
-          }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-        >
-          <span
-            className={`inline-block text-[10px] transition-transform ${referencesExpanded ? "rotate-90" : ""}`}
-          >
-            ▶
-          </span>
-          References{" "}
-          <span className="text-gray-400">({takeaway.references.length})</span>
-        </button>
-        {referencesExpanded ? (
-          takeaway.references.length === 0 ? (
-            <p className="pl-4 text-gray-500">No references</p>
-          ) : (
-            <ol className="space-y-1 pl-6 text-sm leading-relaxed text-gray-700 sm:pl-8">
-              {takeaway.references
-                .slice()
-                .sort((a, b) => a.referenceNumber - b.referenceNumber)
-                .map((ref) => (
-                  <li key={ref.id} className="list-decimal">
-                    <span className="text-gray-700">{ref.reference}</span>
-                  </li>
-                ))}
-            </ol>
-          )
-        ) : null}
+        <InsightReferences references={references} />
       </div>
     </div>
   );
