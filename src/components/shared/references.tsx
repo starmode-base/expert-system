@@ -66,7 +66,7 @@ export function InsightReferences(props: InsightReferencesProps) {
                     href={ref.documentLink}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-900"
+                    className="text-blue-500 underline decoration-blue-300 underline-offset-2 hover:text-blue-800"
                   >
                     {ref.documentTitle}
                   </a>
