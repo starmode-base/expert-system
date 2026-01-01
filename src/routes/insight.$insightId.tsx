@@ -3,7 +3,7 @@ import { InsightCard } from "~/components/insight-feed/insight-card";
 import { queryPublicInsightById, type InsightsItem } from "~/server/queries";
 
 const SITE_ORIGIN = "https://expert-system.starmode.dev";
-const DEFAULT_IMAGE_URL = `${SITE_ORIGIN}/logo-x.png`;
+const DEFAULT_IMAGE_URL = `${SITE_ORIGIN}/logo-x.jpg`;
 
 function buildTitle(insightItem: InsightsItem | null) {
   return insightItem?.insight.title ?? "Expert System insight";
