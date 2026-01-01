@@ -77,7 +77,7 @@ const insightSchema = z.object({
     description: `Final insight output text (Markdown format).
 
 # Objective
-Produce ONE compelling, standalone insight that teaches the reader something non-obvious about the world. The primary goal is **clarity, explanation, and engagement**. Facts and references exist to *support* the insight, not to drive or dominate it.
+Produce ONE compelling, standalone insight that teaches the reader something non-obvious about the world. The primary goal is **clarity, explanation, and engagement**.
 
 # Insight Output Requirements
 - Produce ONE insight only.
@@ -102,7 +102,7 @@ Produce ONE compelling, standalone insight that teaches the reader something non
 - Do NOT do NOT include em dashes (—) anywhere in the insight.
 
 # Opening Requirement
-- Begin immediately with a **bolded core insight statement** on its own line.
+- Begin immediately with a **bolded core insight statement** on its own line in 1-2 sentences.
 - This statement should:
   - Use different phrasing than previous recent insights.
   - Be easy to understand and stand on its own.
@@ -130,7 +130,8 @@ After the opening insight:
 - Natural flow, like a strong blog post.
 - Use formatting to make the insight more engaging and readable.
 - Clear, human, slightly entertaining.
-- Write like Morgan Housel: simple language, sharp ideas, calm confidence.`,
+- Write like Morgan Housel: simple language, sharp ideas, calm confidence.
+- Explain the core concepts so anyone can understand them.`,
   }),
   title: z.string({
     description:
