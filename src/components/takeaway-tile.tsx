@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { InsightReferences, type ReferenceItem } from "~/components/shared/references";
+import {
+  InsightReferences,
+  type ReferenceItem,
+} from "~/components/shared/references";
 import { createInsightWithTakeawaySF } from "~/server/insights-studio-SFs";
 import { Takeaway } from "~/server/queries";
 
