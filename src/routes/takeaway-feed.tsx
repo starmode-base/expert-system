@@ -39,7 +39,7 @@ const denormalizeFilters = (filters: FilterParams, sources: string[]) => {
   };
 };
 
-export const Route = createFileRoute("/search")({
+export const Route = createFileRoute("/takeaway-feed")({
   validateSearch: (search: Record<string, unknown> | undefined) => {
     // validate and parse the search params into a typed state
     return {

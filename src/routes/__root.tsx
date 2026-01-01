@@ -107,7 +107,7 @@ function NavBar() {
   const auth = useAuth();
   const publicNavItems = [
     { key: "research", to: "/research-feed", label: "Research" },
-    { key: "takeaways", to: "/search", label: "Takeaways" },
+    { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
   ];
 
   const devNavItems = [
