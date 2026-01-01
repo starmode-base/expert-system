@@ -76,6 +76,9 @@ export const getInsightsSF = createServerFn({ method: "GET" })
           reference: refRow.takeawayReference.reference,
           documentTitle: refRow.takeawayReference.takeaway.document.title,
           documentSource: refRow.takeawayReference.takeaway.document.source,
+          documentLink: refRow.takeawayReference.takeaway.document.link,
+          documentPublicationDate:
+            refRow.takeawayReference.takeaway.document.publicationDate,
         })),
       };
     },

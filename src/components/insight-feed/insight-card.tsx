@@ -165,6 +165,8 @@ export function InsightCard(props: InsightCardProps) {
               reference: ref.reference,
               documentTitle: ref.documentTitle,
               documentSource: ref.documentSource,
+              documentLink: ref.documentLink,
+              publicationDate: ref.documentPublicationDate,
             }))}
           />
         </>

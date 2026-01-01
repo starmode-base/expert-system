@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  InsightReferences,
-  type ReferenceItem,
-} from "~/components/shared/references";
+import { InsightReferences, type ReferenceItem } from "~/components/shared/references";
 import { createInsightWithTakeawaySF } from "~/server/insights-studio-SFs";
 import { Takeaway } from "~/server/queries";
 
@@ -40,6 +37,8 @@ export function TakeawayTile(props: {
     reference: ref.reference,
     documentTitle: takeaway.documentTitle,
     documentSource,
+    publicationDate: takeaway.publicationDate,
+    documentLink: takeaway.documentLink,
   }));
 
   const handleCreateInsight = async () => {

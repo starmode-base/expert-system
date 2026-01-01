@@ -6,6 +6,8 @@ export interface ReferenceItem {
   reference: string;
   documentTitle?: string;
   documentSource?: string;
+  documentLink?: string;
+  publicationDate?: Date;
 }
 
 interface InsightReferencesProps {
@@ -41,18 +43,66 @@ export function InsightReferences(props: InsightReferencesProps) {
       {referencesExpanded ? (
         props.references.length > 0 ? (
           <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-800">
-            {sortedReferences.map((ref) => (
-              <li key={ref.referenceId}>
-                <span className="text-gray-800">{ref.reference}</span>
-                {ref.documentTitle || ref.documentSource ? (
-                  <div className="mt-0.5 text-xs text-gray-500">
-                    {[ref.documentTitle, ref.documentSource]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </div>
-                ) : null}
-              </li>
-            ))}
+            {sortedReferences.map((ref) => {
+              const publishedLabel = (() => {
+                if (!ref.publicationDate) return null;
+                const publishedDate = new Date(ref.publicationDate);
+                if (Number.isNaN(publishedDate.getTime())) {
+                  return null;
+                }
+                return `Published ${publishedDate.toLocaleDateString(
+                  undefined,
+                  {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  },
+                )}`;
+              })();
+
+              const documentTitleNode = ref.documentTitle ? (
+                ref.documentLink ? (
+                  <a
+                    href={ref.documentLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 underline decoration-blue-300 underline-offset-2 hover:text-blue-900"
+                  >
+                    {ref.documentTitle}
+                  </a>
+                ) : (
+                  <span>{ref.documentTitle}</span>
+                )
+              ) : null;
+
+              const documentSourceNode = ref.documentSource ? (
+                <span>{ref.documentSource}</span>
+              ) : null;
+
+              const metadataParts = [
+                documentTitleNode,
+                documentSourceNode,
+                publishedLabel ? <span>{publishedLabel}</span> : null,
+              ].filter(Boolean);
+
+              return (
+                <li key={ref.referenceId} className="space-y-1">
+                  <div className="text-gray-800">{ref.reference}</div>
+                  {metadataParts.length > 0 ? (
+                    <div className="text-xs text-gray-500">
+                      {metadataParts.map((part, index) => (
+                        <span key={index}>
+                          {index > 0 ? (
+                            <span className="px-1 text-gray-400">·</span>
+                          ) : null}
+                          {part}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
           </ol>
         ) : (
           <p className="mt-2 text-sm text-gray-500">No references yet.</p>
