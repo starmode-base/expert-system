@@ -18,7 +18,7 @@ interface TakeawaySummary {
 const openAiClient = new OpenAI();
 /**
  * Generate daily insights for each user based on takeaways created in the last 24 hours.
- * Runs daily at 9 AM Phoenix time.
+ * Runs daily at 7 AM Phoenix time.
  */
 export const dailyInsight = inngest.createFunction(
   { id: "scheduler.daily-insight" },
@@ -61,9 +61,12 @@ export const dailyInsight = inngest.createFunction(
         sent: 0,
       };
 
-    const sentCount = await Promise.all(
-      users.flatMap((user) =>
-        seedTexts.map(async (seedText, seedTextIndex) => {
+    // Process each user in parallel but throttle insights per user with a 5 minute gap
+    const sendCounts = await Promise.all(
+      users.map(async (user) => {
+        let userSentCount = 0;
+
+        for (const [seedTextIndex, seedText] of seedTexts.entries()) {
           await step.sendEvent(`generate-insight-${user.id}-${seedTextIndex}`, {
             name: "app/generate-insight",
             data: {
@@ -72,14 +75,32 @@ export const dailyInsight = inngest.createFunction(
             },
             user: { id: user.id, email: user.email },
           });
-        }),
-      ),
+
+          userSentCount += 1;
+
+          const hasMoreForUser = seedTextIndex < seedTexts.length - 1;
+          if (hasMoreForUser) {
+            // Add spacing so later insights see prior sends and avoid generating near-duplicates
+            await step.sleep(
+              `sleep-between-insights-${user.id}-${seedTextIndex}`,
+              5 * 60 * 1000,
+            );
+          }
+        }
+
+        return userSentCount;
+      }),
+    );
+
+    const totalInsightsSent = sendCounts.reduce(
+      (total, count) => total + count,
+      0,
     );
 
     return {
       users: users.length,
       takeaways: takeaways.length,
-      sent: sentCount.length,
+      totalInsightsSent,
       seedTexts,
     };
   },
