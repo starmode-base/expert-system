@@ -24,6 +24,7 @@ import {
   executeToolCallsForResponse,
   insightSchema,
 } from "./insight-prompts";
+import { getConcept } from "../takeaways/helpers/generate-concept";
 
 const client = new OpenAI();
 
@@ -77,8 +78,9 @@ export const generateInsight = inngest.createFunction(
         },
       );
 
+      const seedConcept = await getConcept(event.data.seedText);
       const similarConceptCandidates = await vectorConceptSearchTimeWeighted(
-        event.data.seedText,
+        seedConcept.concept,
         {
           limit: 10,
           halfLifeDays: 90, // 3 months relevance half life
