@@ -16,7 +16,7 @@ const schema = z.object({
 	•	Constraints (“capacity limits,” “latency,” “friction,” “regulation,” “cost”)
 	•	Mechanism (what causes what: feedback, diffusion, bottleneck, substitution, coordination, etc.)
 	•	Outcome (what changes in the system: growth, failure, delay, saturation, collapse, etc.)
-	•	Use 2–4 sentences, concise but precise.
+	•	Use 2-3 sentences, concise but precise.
 	•	Avoid analogy or metaphor; be literal about the causal structure.`,
   }),
 });
@@ -25,7 +25,7 @@ const responseFormat = zodResponseFormat(schema, "response");
 
 export async function getConcept(takeaway: string) {
   const completion = await client.beta.chat.completions.parse({
-    model: "gpt-5.1",
+    model: "gpt-5.2",
     response_format: responseFormat,
     messages: [
       {
@@ -39,7 +39,8 @@ You will be given a single Takeaway summarizing an event, finding, or situation 
 
         Your task is to:
       1.	Abstract the mechanism behind the takeaway into domain-agnostic language.
-      2.	Assign dynamic labels describing the underlying system dynamics.`,
+      `,
+        // 2.	Assign dynamic labels describing the underlying system dynamics.
       },
     ],
   });
