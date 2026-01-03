@@ -20,43 +20,48 @@ import {
   UserButton,
 } from "@clerk/tanstack-start";
 
+const SITE_ORIGIN = "https://expert-system.starmode.dev";
+const DEFAULT_IMAGE_URL = `${SITE_ORIGIN}/logo-x.jpg`;
+
+const head = {
+  meta: [
+    {
+      charSet: "utf-8",
+    },
+    {
+      name: "viewport",
+      content: "width=device-width, initial-scale=1",
+    },
+    { title: "ΞXPERT-SYSTΞM" },
+    {
+      name: "og:title",
+      content: "ΞXPERT-SYSTΞM",
+    },
+    { name: "og:image", content: DEFAULT_IMAGE_URL },
+    {
+      name: "description",
+      content: "STΛR MODΞ - ΞXPERT-SYSTΞM",
+    },
+
+    {
+      name: "og:description",
+      content: "STΛR MODΞ - ΞXPERT-SYSTΞM",
+    },
+  ],
+  links: [
+    {
+      rel: "stylesheet",
+      href: appCss,
+    },
+    {
+      rel: "icon",
+      href: "/icon.svg",
+    },
+  ],
+};
+
 export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      {
-        charSet: "utf-8",
-      },
-      {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
-      },
-      {
-        title: "ΞXPERT-SYSTΞM",
-      },
-      {
-        name: "description",
-        content: "STΛR MODΞ - ΞXPERT-SYSTΞM",
-      },
-      {
-        name: "og:title",
-        content: "STΛR MODΞ",
-      },
-      {
-        name: "og:description",
-        content: "STΛR MODΞ - ΞXPERT-SYSTΞM",
-      },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-      {
-        rel: "icon",
-        href: "/icon.svg",
-      },
-    ],
-  }),
+  head: () => head,
   errorComponent: (props) => {
     return (
       <RootDocument>
