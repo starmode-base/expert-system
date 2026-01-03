@@ -37,12 +37,20 @@ function extractDate(text: string): string | null {
   return parsed.toISOString();
 }
 
-function makeDescription(container: cheerio.Cheerio<AnyNode>) {
-  const paragraphText = container.find("p").first().html();
-  if (!paragraphText) {
+function makeDescription(
+  container: cheerio.Cheerio<AnyNode>,
+  root: cheerio.CheerioAPI,
+) {
+  const paragraphs = container.find("p").toArray();
+  const firstWithText = paragraphs.find(
+    (p) => root(p).text().trim().length > 0,
+  );
+  if (!firstWithText) {
     return "";
   }
 
+  const paragraph = root(firstWithText);
+  const paragraphText = paragraph.html() ?? paragraph.text();
   const plain = htmlToPlainText(paragraphText);
   const maxLength = 400;
   if (plain.length <= maxLength) {
@@ -59,8 +67,9 @@ export function parseMacroVoicesList(
   const $ = cheerio.load(listHtml);
   const items: MacroVoicesCandidate[] = [];
 
-  $('h2[itemprop="headline"] a').each((_, el) => {
-    const anchor = $(el);
+  $('div[itemprop="blogPost"]').each((_, containerEl) => {
+    const container = $(containerEl);
+    const anchor = container.find('h2[itemprop="headline"] a').first();
     const rawTitle = anchor.text().trim();
     const rawHref = anchor.attr("href")?.trim();
     if (!rawTitle || !rawHref) {
@@ -68,16 +77,12 @@ export function parseMacroVoicesList(
     }
 
     const link = new URL(rawHref, baseUrl).toString();
-    const container = anchor
-      .closest("article, .item-page, .blog, .items-leading")
-      .first();
-    const contextText = container.text();
-    const publicationDate = extractDate(contextText);
+    const publicationDate = extractDate(container.text());
     if (!publicationDate) {
       return;
     }
 
-    const description = makeDescription(container);
+    const description = makeDescription(container, $);
 
     items.push({
       link,
