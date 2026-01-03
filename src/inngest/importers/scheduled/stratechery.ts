@@ -217,7 +217,7 @@ export const stratecheryScraper = inngest.createFunction(
 
     const inserted = await step.run("insert-documents", async () => {
       const values = toInsert.map((doc) => ({
-        source: "Stratechery",
+        source: "Stratechery (Ben Thompson)",
         title: doc.title,
         description: doc.description,
         publicationDate: new Date(doc.publicationDate),
