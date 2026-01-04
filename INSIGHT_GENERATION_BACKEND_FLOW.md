@@ -19,8 +19,13 @@ This doc describes the backend pipelines that turn raw documents into shared tak
 **Inputs**
 
 - **Scraper/ingester events** (Inngest):
-  - `scheduler/stratechery-scraper` → Stratechery RSS fetch (daily cron)
-  - `scraper/earnings-calls` → AlphaVantage transcript fetch
+  - `scheduler.stratechery-scraper` → Stratechery RSS fetch (daily cron)
+  - `scheduler.dwarkesh-podcast-scraper` → Dwarkesh Podcast RSS + transcript fetch (daily 5 AM Phoenix)
+  - `scheduler.macrovoices-scraper` → MacroVoices transcript landing page scrape (daily 5 AM Phoenix)
+  - `scheduler.fed-speeches-scraper` → Federal Reserve speeches + testimony RSS scrape (daily 6:15 AM Phoenix)
+  - `scheduler.sync-earnings-calendar` → Weekly Alpha Vantage earnings calendar sync that seeds fetch jobs for tracked symbols
+  - `scheduler.process-earnings-jobs` → Daily runner that turns pending earnings fetch jobs into transcripts
+  - `scraper/earnings-calls` → Ad-hoc Alpha Vantage transcript fetch (manual/triggered with symbol + quarter)
 
 **Processing**
 
