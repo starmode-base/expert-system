@@ -1,33 +1,124 @@
 // Search Ticker
 
 import {
-  CompanyOverview,
+  companyOverviewMetrics,
+  fetchBalanceSheet,
   fetchCompanyOverview,
+  fetchIncomeStatement,
+  IncomeStatementReport,
+  incomeStatementReportMetrics,
+  BalanceSheetReport,
+  balanceSheetReportMetrics,
+  CashFlowReport,
+  fetchCashFlow,
+  cashFlowReportMetrics,
 } from "~/server/financial-data-api/alpha-vantage-api";
 
-// Fetch Company Overview by metric
-
+/**
+ * Fetch a single company overview metric for the provided ticker symbol.
+ *
+ * @param symbol Ticker symbol to look up.
+ * @param metric Metric key to return; constrained to `companyOverviewMetrics` derived from the Alpha Vantage company overview schema keys.
+ * @returns The requested metric value from the company overview response.
+ */
 export async function fetchCompanyOverviewByMetric(
   symbol: string,
-  metric: keyof CompanyOverview,
+  metric: (typeof companyOverviewMetrics)[number],
 ) {
-  try {
-    const overview = await fetchCompanyOverview(symbol);
-    return overview[metric];
-  } catch (error) {
-    console.log(
-      `Error fetching company overview for ${symbol}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return "Unable to fetch company overview";
-  }
+  const overview = await fetchCompanyOverview(symbol);
+  return overview[metric];
 }
 
-// Fetch Global Quote by Ticker by metric
+/**
+ * Fetch the most recent income statement reports and extract selected metrics keyed by fiscal period end date.
+ *
+ * @param symbol Ticker symbol to look up.
+ * @param lastNQuarters Number of most recent quarters to include from the API response (newest first).
+ * @param metrics Metric keys to extract; see `incomeStatementReportMetrics` derived from the Alpha Vantage income statement schema keys.
+ * @returns Map keyed by `fiscalDateEnding`, with each requested metric as a string or null when unavailable.
+ */
+export async function fetchLatestIncomeStatementByMetric(
+  symbol: string,
+  lastNQuarters: number,
+  metrics: (typeof incomeStatementReportMetrics)[number][],
+) {
+  const income = await fetchIncomeStatement(symbol);
 
-// Fetch Income Statement by Ticker by quarter by metric
+  const quarterlyReports = income.quarterlyReports.slice(0, lastNQuarters);
 
-// Fetch Balance Sheet by Ticker by quarter by metric
+  return quarterlyReports.reduce<
+    Record<string, Partial<IncomeStatementReport>>
+  >((accumulator, report) => {
+    const metricValues = metrics.reduce<
+      Partial<Record<keyof IncomeStatementReport, string | null>>
+    >((metricAccumulator, metric) => {
+      metricAccumulator[metric] = report[metric] ?? null;
+      return metricAccumulator;
+    }, {});
 
-// Fetch Cash Flow by Ticker by quarter by metric
+    accumulator[report.fiscalDateEnding] = metricValues;
+    return accumulator;
+  }, {});
+}
 
-// Fetch Treasury Yield Curve by date by metric
+/**
+ * Fetch the most recent balance sheet reports and extract selected metrics keyed by fiscal period end date.
+ *
+ * @param symbol Ticker symbol to look up.
+ * @param lastNQuarters Number of most recent quarters to include from the API response (newest first).
+ * @param metrics Metric keys to extract; see `balanceSheetReportMetrics` derived from the Alpha Vantage balance sheet schema keys.
+ * @returns Map keyed by `fiscalDateEnding`, with each requested metric as a string or null when unavailable.
+ */
+export async function fetchLatestBalanceSheetByMetric(
+  symbol: string,
+  lastNQuarters: number,
+  metrics: (typeof balanceSheetReportMetrics)[number][],
+) {
+  const balanceSheet = await fetchBalanceSheet(symbol);
+  return balanceSheet.quarterlyReports
+    .slice(0, lastNQuarters)
+    .reduce<
+      Record<string, Partial<BalanceSheetReport>>
+    >((accumulator, report) => {
+      const metricValues = metrics.reduce<
+        Partial<Record<keyof BalanceSheetReport, string | null>>
+      >((metricAccumulator, metric) => {
+        metricAccumulator[metric] = report[metric] ?? null;
+        return metricAccumulator;
+      }, {});
+
+      accumulator[report.fiscalDateEnding] = metricValues;
+      return accumulator;
+    }, {});
+}
+
+/**
+ * Fetch the most recent cash flow reports and extract selected metrics keyed by fiscal period end date.
+ *
+ * @param symbol Ticker symbol to look up.
+ * @param lastNQuarters Number of most recent quarters to include from the API response (newest first).
+ * @param metrics Metric keys to extract; see `cashFlowReportMetrics` derived from the Alpha Vantage cash flow schema keys.
+ * @returns Map keyed by `fiscalDateEnding`, with each requested metric as a string or null when unavailable.
+ */
+export async function fetchLatestCashFlowByMetric(
+  symbol: string,
+  lastNQuarters: number,
+  metrics: (typeof cashFlowReportMetrics)[number][],
+) {
+  const cashFlow = await fetchCashFlow(symbol);
+  return cashFlow.quarterlyReports
+    .slice(0, lastNQuarters)
+    .reduce<Record<string, Partial<CashFlowReport>>>((accumulator, report) => {
+      const metricValues = metrics.reduce<
+        Partial<Record<keyof CashFlowReport, string | null>>
+      >((metricAccumulator, metric) => {
+        metricAccumulator[metric] = report[metric] ?? null;
+        return metricAccumulator;
+      }, {});
+
+      accumulator[report.fiscalDateEnding] = metricValues;
+      return accumulator;
+    }, {});
+}
+
+// Treasury yield curve

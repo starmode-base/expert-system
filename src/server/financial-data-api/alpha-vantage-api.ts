@@ -247,6 +247,14 @@ const CashFlowSchema = z.object({
   quarterlyReports: z.array(CashFlowReportSchema),
 });
 
+export const companyOverviewMetrics = CompanyOverviewSchema.keyof().options;
+export const globalQuoteMetrics = GlobalQuoteSchema.keyof().options;
+export const incomeStatementReportMetrics =
+  IncomeStatementReportSchema.keyof().options;
+export const balanceSheetReportMetrics =
+  BalanceSheetReportSchema.keyof().options;
+export const cashFlowReportMetrics = CashFlowReportSchema.keyof().options;
+
 export type CompanyOverview = z.infer<typeof CompanyOverviewSchema>;
 export type GlobalQuote = z.infer<typeof GlobalQuoteSchema>;
 export type SymbolSearchMatch = z.infer<typeof SymbolSearchMatchSchema>;
