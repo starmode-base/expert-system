@@ -4,12 +4,7 @@ import type {
   ResponseFunctionToolCall,
   Response,
 } from "openai/resources/responses/responses";
-// import OpenAI from "openai";
-// import { zodTextFormat } from "openai/helpers/zod";
-// import {
-//   researchAndCompletionTools,
-//   researchTools,
-// } from "~/inngest/insights/tools/tool-map";
+
 import { invariant } from "@tanstack/react-router";
 
 import {
@@ -17,17 +12,9 @@ import {
   vectorTakeawaySearchTimeWeighted,
 } from "~/server/vector-queries";
 import { publishNotifyUI } from "~/lib/ably";
-import {
-  // agentParameters,
-  // buildInitialConversation,
-  buildTakeawayPreviews,
-  // executeToolCallsForResponse,
-  // insightSchema,
-} from "./insight-prompts";
+import { buildTakeawayPreviews } from "./insight-prompts";
 import { getConcept } from "../takeaways/helpers/generate-concept";
 import { runInsightAgent } from "./generate-insight-oai";
-
-// const client = new OpenAI();
 
 export interface InsightLoopState {
   response: Response;
