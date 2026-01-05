@@ -15,62 +15,62 @@ export const toolMap = {
 } as const;
 
 // ------------------------------------------------------------
-// INSIGHT TOOLS - Tools that are availible to the insight generator agent(generate-insight.ts)
+//  TOOLS Configuration - Tools that are availible to the insight generator and sub-agents
 // ------------------------------------------------------------
-export const researchTools: FunctionTool[] = [
-  // {
-  //   type: "function",
-  //   name: "fetchTakeawayPreviews",
-  //   description: `Fetch up to 10 relevant takeaway previews via vector search. Returns a single formatted preview string (title, publication date, source, summary) for each takeaway, separated by '------'. Set timeWeighted=false to disable recency re-ranking.
-  //     - use this tool when you need additional information that is not availible in the initial context.
-  //     - This is like a search query. Use fetchTakeawayById to "click through" to the full takeaway.`,
-  //   strict: true,
 
-  //   parameters: {
-  //     type: "object",
-  //     additionalProperties: false,
-  //     properties: {
-  //       query: {
-  //         type: "string",
-  //         description:
-  //           "Search query describing what you want to find takeaways about",
-  //       },
-  //       timeWeighted: {
-  //         type: "boolean",
-  //         description:
-  //           "Whether to weight results by recency. Defaults to true if omitted",
-  //       },
-  //     },
-  //     required: ["query", "timeWeighted"],
-  //   },
-  // },
-  {
-    type: "function",
-    name: "fetchTakeawayById",
-    description: `Fetch a single takeaway by its id and return it as a formatted string suitable for prompting. Includes title, publication date, source, full takeaway text, takeaway id, and references (with each reference_id).
+// const fetchTakeawayPreviewsTool: FunctionTool = {
+//   type: "function",
+//   name: "fetchTakeawayPreviews",
+//   description: `Fetch up to 10 relevant takeaway previews via vector search. Returns a single formatted preview string (title, publication date, source, summary) for each takeaway, separated by '------'. Set timeWeighted=false to disable recency re-ranking.
+//       - use this tool when you need additional information that is not availible in the initial context.
+//       - This is like a search query. Use fetchTakeawayById to "click through" to the full takeaway.`,
+//   strict: true,
+
+//   parameters: {
+//     type: "object",
+//     additionalProperties: false,
+//     properties: {
+//       query: {
+//         type: "string",
+//         description:
+//           "Search query describing what you want to find takeaways about",
+//       },
+//       timeWeighted: {
+//         type: "boolean",
+//         description:
+//           "Whether to weight results by recency. Defaults to true if omitted",
+//       },
+//     },
+//     required: ["query", "timeWeighted"],
+//   },
+// };
+
+const fetchTakeawayByIdTool: FunctionTool = {
+  type: "function",
+  name: "fetchTakeawayById",
+  description: `Fetch a single takeaway by its id and return it as a formatted string suitable for prompting. Includes title, publication date, source, full takeaway text, takeaway id, and references (with each reference_id).
       - use this tool when you need to do deeper reading into a specific takeaway.
       - This will return the full takeaway with specific facts and references`,
-    strict: true,
-    parameters: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        id: {
-          type: "string",
-          description: "The takeaway id to fetch",
-        },
+  strict: true,
+  parameters: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      id: {
+        type: "string",
+        description: "The takeaway id to fetch",
       },
-      required: ["id"],
     },
+    required: ["id"],
   },
-];
+};
 
-export const completionTool: FunctionTool = {
+const insightCompletionTool: FunctionTool = {
   type: "function",
   name: "buildFinalInsight",
   description: `Build the final insight from the given context and takeaways.
-    - use this tool when you have all the information you need to build the final insight.
-    - This will call another LLM agent to build the final insight.`,
+      - use this tool when you have all the information you need to build the final insight.
+      - This will call another LLM agent to build the final insight.`,
   strict: true,
   parameters: {
     type: "object",
@@ -86,22 +86,17 @@ export const completionTool: FunctionTool = {
         description:
           "key arguments to include in the final insight deliverable.",
       },
-      // references_ids: {
-      //   type: "array",
-      //   description:
-      //     "The ids of the references to use to build the final insight",
-      //   items: {
-      //     type: "string",
-      //     description:
-      //       "The id (reference_id) will be an alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y",
-      //   },
-      // },
     },
     required: ["insight", "key_arguments"],
   },
-} as FunctionTool;
+};
+
+// ------------------------------------------------------------
+// INSIGHT TOOLS - Tools that are availible to the insight generator agent(generate-insight.ts)
+// ------------------------------------------------------------
+export const researchTools: FunctionTool[] = [fetchTakeawayByIdTool];
 
 export const researchAndCompletionTools: FunctionTool[] = [
   ...researchTools,
-  completionTool,
+  insightCompletionTool,
 ];
