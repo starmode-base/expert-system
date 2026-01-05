@@ -1,8 +1,8 @@
 import { Agent, run, tool, type FunctionTool } from "@openai/agents";
 import { z } from "zod";
 
-import { insightSchema, systemPrompt } from "./insight-prompts";
-import { fetchTakeawayById } from "./tools/tools";
+import { insightSchema, systemPrompt } from "../insight-prompts";
+import { fetchTakeawayById } from "../tool-functions/tools";
 import { invariant } from "@tanstack/react-router";
 
 const fetchTakeawayByIdParams = z.object({
@@ -15,8 +15,9 @@ const fetchTakeawayByIdTool: FunctionTool<
   Awaited<ReturnType<typeof fetchTakeawayById>>
 > = tool({
   name: "fetchTakeawayById",
-  description:
-    "Fetch a single takeaway by id and return it as a formatted string with title, publication date, source, full takeaway text, id, and references.",
+  description: `Fetch a single takeaway by its id and return it as a formatted string suitable for prompting. Includes title, publication date, source, full takeaway text, takeaway id, and references (with each reference_id).
+      - use this tool when you need to do deeper reading into a specific takeaway.
+      - This will return the full takeaway with specific facts and references`,
   parameters: fetchTakeawayByIdParams,
   strict: true,
   execute: async (args: z.infer<typeof fetchTakeawayByIdParams>) => {

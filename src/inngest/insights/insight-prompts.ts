@@ -1,10 +1,6 @@
-import {
-  ResponseFunctionToolCall,
-  ResponseInput,
-} from "openai/resources/responses/responses.mjs";
+import { ResponseInput } from "openai/resources/responses/responses.mjs";
 import { z } from "zod";
 import { TakeawaySearchResult } from "~/server/searchSFs";
-import { executeToolCalls } from "./tools/tool-handling";
 
 export const agentParameters = {
   model: "gpt-5.2",
@@ -189,11 +185,4 @@ export function buildInitialConversation(
       ${customPrompt}`,
     },
   ] as ResponseInput;
-}
-
-export async function executeToolCallsForResponse(
-  functionCalls: ResponseFunctionToolCall[],
-) {
-  const { outputs } = await executeToolCalls(functionCalls);
-  return outputs;
 }

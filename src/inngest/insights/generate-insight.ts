@@ -14,7 +14,7 @@ import {
 import { publishNotifyUI } from "~/lib/ably";
 import { buildTakeawayPreviews } from "./insight-prompts";
 import { getConcept } from "../takeaways/helpers/generate-concept";
-import { runInsightAgent } from "./generate-insight-oai";
+import { runInsightAgent } from "./agents/insight-agent";
 
 export interface InsightLoopState {
   response: Response;
