@@ -45,12 +45,14 @@ console.log("Overview", {
   symbol: overview.Symbol,
   name: overview.Name,
   marketCap: overview.MarketCapitalization,
+  overview,
 });
 
 console.log("Quote", {
   symbol: quote["01. symbol"],
   price: quote["05. price"],
   change: quote["10. change percent"],
+  quote,
 });
 
 console.log("Income statement", {
