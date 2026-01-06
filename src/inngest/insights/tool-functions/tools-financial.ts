@@ -12,6 +12,9 @@ import {
   CashFlowReport,
   fetchCashFlow,
   cashFlowReportMetrics,
+  fetchTreasuryYield,
+  TreasuryYieldInterval,
+  TreasuryYieldMaturity,
 } from "~/server/financial-data-api/alpha-vantage-api";
 
 /**
@@ -30,7 +33,7 @@ export async function fetchCompanyOverviewByMetric(
 }
 
 /**
- * Fetch the most recent income statement reports and extract selected metrics keyed by fiscal period end date.
+ * Fetch the most recent income statement quarterly reports and extract selected metrics keyed by fiscal period end date.
  *
  * @param symbol Ticker symbol to look up.
  * @param lastNQuarters Number of most recent quarters to include from the API response (newest first).
@@ -62,7 +65,7 @@ export async function fetchLatestIncomeStatementByMetric(
 }
 
 /**
- * Fetch the most recent balance sheet reports and extract selected metrics keyed by fiscal period end date.
+ * Fetch the most recent balance sheet quarterly reports and extract selected metrics keyed by fiscal period end date.
  *
  * @param symbol Ticker symbol to look up.
  * @param lastNQuarters Number of most recent quarters to include from the API response (newest first).
@@ -93,7 +96,7 @@ export async function fetchLatestBalanceSheetByMetric(
 }
 
 /**
- * Fetch the most recent cash flow reports and extract selected metrics keyed by fiscal period end date.
+ * Fetch the most recent cash flow quarterly reports and extract selected metrics keyed by fiscal period end date.
  *
  * @param symbol Ticker symbol to look up.
  * @param lastNQuarters Number of most recent quarters to include from the API response (newest first).
@@ -121,4 +124,20 @@ export async function fetchLatestCashFlowByMetric(
     }, {});
 }
 
+/**
+ * Fetch the most recent treasury yield curve data for the given maturity and interval.
+ *
+ * @param interval Frequency of the data points (for example, "daily" | "weekly" | "monthly").   This is the frequency of the data points.
+ * @param maturity Maturity of the treasury yield (for example, "3month" | "2year" | "5year" | "7year" | "10year" | "30year").   This is the maturity of the treasury yield.
+ * @param lastNPoints Number of most recent data points to include from the API response (newest first).
+ * @returns Array of yield entries limited to the requested number of points.
+ */
 // Treasury yield curve
+export async function fetchLatestTreasuryYield(
+  interval: TreasuryYieldInterval,
+  maturity: TreasuryYieldMaturity,
+  lastNPoints: number,
+) {
+  const treasuryYield = await fetchTreasuryYield({ interval, maturity });
+  return treasuryYield.data.slice(0, lastNPoints);
+}

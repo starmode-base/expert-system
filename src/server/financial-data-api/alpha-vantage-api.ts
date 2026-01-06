@@ -5,6 +5,7 @@ const ALPHAVANTAGE_API_BASE_URL = "https://www.alphavantage.co/query";
 const ALPHAVANTAGE_API_KEY = ensureEnv("ALPHAVANTAGE_API_KEY");
 
 const TreasuryYieldIntervalSchema = z.enum(["daily", "weekly", "monthly"]);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const TreasuryYieldMaturitySchema = z.enum([
   "3month",
   "2year",
@@ -386,18 +387,16 @@ export async function fetchCashFlow(symbol: string): Promise<CashFlow> {
   return CashFlowSchema.parse(json);
 }
 
-export async function fetchTreasuryYield(params?: {
-  interval?: TreasuryYieldInterval;
-  maturity?: TreasuryYieldMaturity;
+export async function fetchTreasuryYield(params: {
+  interval: TreasuryYieldInterval;
+  maturity: TreasuryYieldMaturity;
 }): Promise<TreasuryYieldResponse> {
-  const { interval = "monthly", maturity = "10year" } = params ?? {};
-  const parsedInterval = TreasuryYieldIntervalSchema.parse(interval);
-  const parsedMaturity = TreasuryYieldMaturitySchema.parse(maturity);
+  const { interval, maturity } = params;
 
   const json = await fetchAlphaVantageJson({
     function: "TREASURY_YIELD",
-    interval: parsedInterval,
-    maturity: parsedMaturity,
+    interval,
+    maturity,
   });
 
   return TreasuryYieldResponseSchema.parse(json);
