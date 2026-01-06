@@ -86,7 +86,7 @@ export const insightSchema = z.object({
   After the opening insight:
   - Unpack *why* it is true using clear logic and intuitive examples.
   - Show how different forces interact (cause → effect → consequence).
-  - Use short, well-placed facts or quotes only where they sharpen the point.
+  - Use short, well-placed facts, data and/or quotes only where they sharpen the point.
   - Incorporate quantitative and/or financial data where relevant to support the insight.
   - Focus on implications for how people think, decide, or allocate money.
   - Include some practical advice or action item for the reader.
@@ -102,9 +102,8 @@ export const insightSchema = z.object({
 
   # Writing Style
   - Markdown format.
-  - Natural flow, like a strong blog post.
-  - Use formatting to make the insight more engaging and readable.
-  - Clear, human, slightly entertaining.
+  - Use formatting to make the insight more engaging and readable. Short paragraphs and bullet points.
+  - Clear, human and entertaining.
   - Write like Morgan Housel: simple language, sharp ideas, calm confidence.
   - Explain the core concepts so anyone can understand them.`,
   }),

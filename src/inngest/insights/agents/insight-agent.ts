@@ -7,7 +7,7 @@ import {
 } from "../insight-prompts";
 import { fetchTakeawayById } from "../tool-functions/tools-takeaways";
 import { invariant } from "@tanstack/react-router";
-import { createFinancialAnalysisAgent } from "./information-fetcher";
+import { createFinancialAnalysisAgent } from "./financial-analyst";
 
 // ---------------------------
 // Tools
