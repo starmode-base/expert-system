@@ -1,123 +1,143 @@
-import { ensureEnv } from "~/lib/env";
-import { z } from "zod";
+// import {
+//   fetchCompanyOverview,
+//   fetchGlobalQuote,
+//   fetchIncomeStatement,
+//   fetchBalanceSheet,
+//   fetchCashFlow,
+//   searchTickers,
+//   fetchTreasuryYield,
+// } from "~/server/financial-data-api/alpha-vantage-api";
+import {
+  fetchLatestBalanceSheetByMetric,
+  fetchLatestCashFlowByMetric,
+  fetchLatestIncomeStatementByMetric,
+  fetchLatestTreasuryYield,
+} from "~/inngest/insights/tool-functions/tools-financial";
 
-const API_KEY = ensureEnv("ALPHAVANTAGE_API_KEY");
+// const symbol = (process.argv[2] ?? "TSLA").toUpperCase();
+// const searchKeywords = process.argv[3];
 
-if (!API_KEY) {
-  throw new Error("Missing ALPHA_VANTAGE_API_KEY");
-}
+// const overview = await fetchCompanyOverview(symbol);
 
-const url = new URL("https://www.alphavantage.co/query");
-url.search = new URLSearchParams({
-  function: "OVERVIEW",
-  symbol: "TSLA",
-  apikey: API_KEY,
-}).toString();
+// // Alpha Vantage allows one request per second, so wait before the quote call
+// await new Promise((resolve) => setTimeout(resolve, 1100));
 
-const CompanyOverviewSchema = z.object({
-  Symbol: z.string(),
-  AssetType: z.string(),
-  Name: z.string(),
-  Description: z.string(),
-  CIK: z.string(),
-  Exchange: z.string(),
-  Currency: z.string(),
-  Country: z.string(),
-  Sector: z.string(),
-  Industry: z.string(),
-  Address: z.string(),
-  OfficialSite: z.string(),
-  FiscalYearEnd: z.string(),
-  LatestQuarter: z.string(),
-  MarketCapitalization: z.string(),
-  EBITDA: z.string(),
-  PERatio: z.string().nullable(),
-  PEGRatio: z.string().nullable(),
-  BookValue: z.string().nullable(),
-  DividendPerShare: z.string().nullable(),
-  DividendYield: z.string().nullable(),
-  EPS: z.string().nullable(),
-  RevenuePerShareTTM: z.string().nullable(),
-  ProfitMargin: z.string().nullable(),
-  OperatingMarginTTM: z.string().nullable(),
-  ReturnOnAssetsTTM: z.string().nullable(),
-  ReturnOnEquityTTM: z.string().nullable(),
-  RevenueTTM: z.string(),
-  GrossProfitTTM: z.string(),
-  DilutedEPSTTM: z.string(),
-  QuarterlyEarningsGrowthYOY: z.string().nullable(),
-  QuarterlyRevenueGrowthYOY: z.string().nullable(),
-  AnalystTargetPrice: z.string().nullable(),
-  AnalystRatingStrongBuy: z.string().nullable(),
-  AnalystRatingBuy: z.string().nullable(),
-  AnalystRatingHold: z.string().nullable(),
-  AnalystRatingSell: z.string().nullable(),
-  AnalystRatingStrongSell: z.string().nullable(),
-  TrailingPE: z.string().nullable(),
-  ForwardPE: z.string().nullable(),
-  PriceToSalesRatioTTM: z.string().nullable(),
-  PriceToBookRatio: z.string().nullable(),
-  EVToRevenue: z.string().nullable(),
-  EVToEBITDA: z.string().nullable(),
-  Beta: z.string().nullable(),
-  "52WeekHigh": z.string().nullable(),
-  "52WeekLow": z.string().nullable(),
-  "50DayMovingAverage": z.string().nullable(),
-  "200DayMovingAverage": z.string().nullable(),
-  SharesOutstanding: z.string().nullable(),
-  SharesFloat: z.string().nullable(),
-  PercentInsiders: z.string().nullable(),
-  PercentInstitutions: z.string().nullable(),
-  DividendDate: z.string().nullable(),
-  ExDividendDate: z.string().nullable(),
-});
+// const quote = await fetchGlobalQuote(symbol);
 
-export type CompanyOverview = z.infer<typeof CompanyOverviewSchema>;
+// // Sleep before income statement call to respect rate limits
+// await new Promise((resolve) => setTimeout(resolve, 1100));
 
-export async function fetchTeslaFundamentalsTyped(): Promise<CompanyOverview> {
-  const res = await fetch(url.toString());
-  const json = await res.json();
-  return CompanyOverviewSchema.parse(json);
-}
+// const income = await fetchIncomeStatement(symbol);
 
-// const GlobalQuoteSchema = z.object({
-//   "01. symbol": z.string(),
-//   "02. open": z.string(),
-//   "03. high": z.string(),
-//   "04. low": z.string(),
-//   "05. price": z.string(),
-//   "06. volume": z.string(),
-//   "07. latest trading day": z.string(),
-//   "08. previous close": z.string(),
-//   "09. change": z.string(),
-//   "10. change percent": z.string(),
+// // Sleep before balance sheet call to respect rate limits
+// await new Promise((resolve) => setTimeout(resolve, 1100));
+
+// const balanceSheet = await fetchBalanceSheet(symbol);
+
+// // Sleep before cash flow call to respect rate limits
+// await new Promise((resolve) => setTimeout(resolve, 1100));
+
+// const cashFlow = await fetchCashFlow(symbol);
+
+// // Sleep before treasury yield call to respect rate limits
+// await new Promise((resolve) => setTimeout(resolve, 1100));
+
+// const treasuryYield = await fetchTreasuryYield({
+//   interval: "monthly",
+//   maturity: "10year",
 // });
 
-// const GlobalQuoteResponseSchema = z.object({
-//   "Global Quote": GlobalQuoteSchema,
-// });
+// // console.log("Overview", {
+// //   symbol: overview.Symbol,
+// //   name: overview.Name,
+// //   marketCap: overview.MarketCapitalization,
+// //   overview,
+// // });
 
-// export type GlobalQuote = z.infer<typeof GlobalQuoteSchema>;
+// // console.log("Quote", {
+// //   symbol: quote["01. symbol"],
+// //   price: quote["05. price"],
+// //   change: quote["10. change percent"],
+// //   quote,
+// // });
 
-export async function fetchTeslaGlobalQuote() {
-  const quoteUrl = new URL("https://www.alphavantage.co/query");
-  quoteUrl.search = new URLSearchParams({
-    function: "GLOBAL_QUOTE",
-    symbol: "TSLA",
-    apikey: API_KEY,
-  }).toString();
+// // console.log("Income statement", {
+// //   symbol: income.symbol,
+// //   annualReports: income.annualReports.length,
+// //   quarterlyReports: income.quarterlyReports.length,
+// //   latestAnnual: income.annualReports[0]?.fiscalDateEnding,
+// //   latestQuarterly: income.quarterlyReports[0]?.fiscalDateEnding,
+// //   latestQuarterlyReport: income.quarterlyReports[0],
+// // });
 
-  const res = await fetch(quoteUrl.toString());
-  const json = await res.json();
-  //   const parsed = GlobalQuoteResponseSchema.parse(json);
-  return json;
-}
+// // console.log("Balance sheet", {
+// //   symbol: balanceSheet.symbol,
+// //   annualReports: balanceSheet.annualReports.length,
+// //   quarterlyReports: balanceSheet.quarterlyReports.length,
+// //   latestAnnual: balanceSheet.annualReports[0]?.fiscalDateEnding,
+// //   latestQuarterly: balanceSheet.quarterlyReports[0]?.fiscalDateEnding,
+// //   latestQuarterlyReport: balanceSheet.quarterlyReports[0],
+// // });
 
-const fundamentals = await fetchTeslaFundamentalsTyped();
-console.log(fundamentals);
+// // console.log("Cash flow", {
+// //   symbol: cashFlow.symbol,
+// //   annualReports: cashFlow.annualReports.length,
+// //   quarterlyReports: cashFlow.quarterlyReports.length,
+// //   latestAnnual: cashFlow.annualReports[0]?.fiscalDateEnding,
+// //   latestQuarterly: cashFlow.quarterlyReports[0]?.fiscalDateEnding,
+// //   latestQuarterlyReport: cashFlow.quarterlyReports[0],
+// // });
 
-// sleep 1 second
-await new Promise((resolve) => setTimeout(resolve, 1005));
+// // console.log("Treasury yield", {
+// //   interval: treasuryYield.interval,
+// //   maturity: treasuryYield.maturity,
+// //   name: treasuryYield.name,
+// //   firstThree: treasuryYield.data.slice(0, 3),
+// // });
 
-const quote = await fetchTeslaGlobalQuote();
-console.log(quote);
+// // if (searchKeywords) {
+// //   //sleep
+// //   await new Promise((resolve) => setTimeout(resolve, 1100));
+// //   // Optional search test to exercise the SYMBOL_SEARCH endpoint
+// //   const matches = await searchTickers(searchKeywords);
+// //   console.log("Search", {
+// //     keywords: searchKeywords,
+// //     count: matches.length,
+// //     top: matches.slice(0, 5),
+// //   });
+// // }
+
+const result = await fetchLatestIncomeStatementByMetric("TSLA", 4, [
+  "totalRevenue",
+  "grossProfit",
+]);
+
+console.log("Result", result);
+
+//sleep
+await new Promise((resolve) => setTimeout(resolve, 1100));
+
+const result2 = await fetchLatestBalanceSheetByMetric("TSLA", 4, [
+  "totalAssets",
+  "totalLiabilities",
+]);
+
+console.log("Result2", result2);
+
+//sleep
+await new Promise((resolve) => setTimeout(resolve, 1100));
+
+const result3 = await fetchLatestCashFlowByMetric("TSLA", 4, [
+  "operatingCashflow",
+  "cashflowFromInvestment",
+  "cashflowFromFinancing",
+  "profitLoss",
+]);
+
+console.log("Result3", result3);
+
+await new Promise((resolve) => setTimeout(resolve, 1100));
+
+const result4 = await fetchLatestTreasuryYield("monthly", "10year", 3);
+
+console.log("Result4", result4);

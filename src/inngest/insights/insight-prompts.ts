@@ -1,10 +1,7 @@
-import {
-  ResponseFunctionToolCall,
-  ResponseInput,
-} from "openai/resources/responses/responses.mjs";
 import { z } from "zod";
 import { TakeawaySearchResult } from "~/server/searchSFs";
-import { executeToolCalls } from "./tools/tool-handling";
+import { InsightAgentInput } from "./agents/insight-agent";
+import { invariant } from "@tanstack/react-router";
 
 export const agentParameters = {
   model: "gpt-5.2",
@@ -21,17 +18,17 @@ export const systemPrompt = `# Role
 
   Takeaways are key ideas from some source document (Public earnings calls, news articles, research reports, etc.).
   You are provided initial context including:
-  -- summaries of recent insights that have been generated for the user
   -- summaries of takeaways from recent published research, articles, blogs or public earnings calls
-  To read more about the takeaways, use the tools to fetch the full takeaways.
+  -- summaries of recent insights that have been generated for the user
   Generate an insight on a topic that is different than the listed recent insights.
 
   # Thinking & Research Guidelines
   - Use the takeaway summaries generate several candidate insights.
   - Identify the strongest initial hypothesis and treat it as provisional, not final.
-  - Use tools (e.g. fetching full takeaways or external data) to gather additional information to test, challenge, or deepen that hypothesis. Or searching for patterns in different domains or industries.
+  - Use tools to gather additional information to test, challenge, or deepen that hypothesis. Or searching for patterns in different domains or industries.
   - Be deliberate in your tool use. Only fetch the specific information that you need to support your research or exploration.
   - Use the complete takeaways and their references to support your research. NOT just the summaries.
+  - Use the financialAnalyst tool to gather quantitative financial data to support the or challenge the insight.
   - If newly fetched information suggests a more important, more surprising, or more defensible insight, abandon the original idea and pivot.
   - Search for patterns and relationships between the different takeaways and information you gather and include them in the insight.
   - Use information or data from at least 2 distinct Sources to support the insight.
@@ -89,23 +86,24 @@ export const insightSchema = z.object({
   After the opening insight:
   - Unpack *why* it is true using clear logic and intuitive examples.
   - Show how different forces interact (cause → effect → consequence).
-  - Use short, well-placed facts or quotes only where they sharpen the point.
+  - Use short, well-placed facts, data and/or quotes only where they sharpen the point.
+  - Incorporate quantitative and/or financial data where relevant to support the insight.
   - Focus on implications for how people think, decide, or allocate money.
   - Include some practical advice or action item for the reader.
   - Prefer explanation over evidence density.
 
   # Reference Citing Requirements:
-  - When making a reference to a fact, quote or data, always cite you source from the Takeaway References.
+  - When making a reference to a fact, quote or data from a takeaway, cite you source from the Takeaway References.
   - Issue a new reference number in the insight text e.g.  "(ref 1)". Starting at 1 and incrementing for each additional reference.
   - Then record the newly issued insight_reference_number and reference_id (alphanumeric string e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y) for each cited reference in the references array.
   - References are **supporting evidence only**. Use them only when they materially strengthen credibility or anchor a key claim.
   - If a sentence is explanatory or conceptual, it does not need a reference.
+  - You can use data and analysis from the financialAnalyst without citing it.
 
   # Writing Style
   - Markdown format.
-  - Natural flow, like a strong blog post.
-  - Use formatting to make the insight more engaging and readable.
-  - Clear, human, slightly entertaining.
+  - Use formatting to make the insight more engaging and readable. Short paragraphs and bullet points.
+  - Clear, human and entertaining.
   - Write like Morgan Housel: simple language, sharp ideas, calm confidence.
   - Explain the core concepts so anyone can understand them.`,
   }),
@@ -151,49 +149,32 @@ export function buildTakeawayPreviews(takeaways: TakeawaySearchResult[]) {
     .join("\n------\n");
 }
 
-export function buildInitialConversation(
-  takeawayPreviewFormatted: string,
-  takeawayConceptsPreviewFormatted: string,
-  recentInsights: string,
-  customPrompt: string,
-): ResponseInput {
-  return [
-    {
-      role: "system",
-      type: "message",
-      content: systemPrompt,
-    },
-    {
-      role: "user",
-      type: "message",
-      content: `
-  # Context:
-  ## Takeaways:
-      ${takeawayConceptsPreviewFormatted}
-      ${takeawayPreviewFormatted}
+export function buildUserPrompt(input: InsightAgentInput) {
+  const today = new Date().toISOString().split("T")[0];
+  invariant(today, "Today's date is not defined");
 
-  ## Recent Insights:
-      ${recentInsights}
+  return `# Context
+## Takeaways
+${input.takeawayConceptsPreviewFormatted}
+\n------\n
+${input.takeawayPreviewFormatted}
 
-  ## Reader Profile
-  Assume the reader is:
-  - In technology or adjacent industries
-  - Actively interested in markets, macro trends, business strategy, trading, and wealth creation
-  - Comfortable with nuance, but impatient with fluff
-  Education/sophistication level:
-  - Tech: Masters
-  - Macro Economics: High School
-  - Business: Undergraduate
+## Recent Insights
+${input.recentInsights}
 
-  ## User Prompt:
-      ${customPrompt}`,
-    },
-  ] as ResponseInput;
-}
+Today's date:
+${today}
 
-export async function executeToolCallsForResponse(
-  functionCalls: ResponseFunctionToolCall[],
-) {
-  const { outputs } = await executeToolCalls(functionCalls);
-  return outputs;
+## Reader Profile
+- In technology or adjacent industries
+- Actively interested in markets, macro trends, business strategy, trading, and wealth creation
+- Comfortable with nuance, but impatient with fluff
+Education/sophistication level:
+- Tech: Masters
+- Macro Economics: High School
+- Business: Undergraduate
+
+## User Prompt
+${input.insightPrompt}
+`;
 }
