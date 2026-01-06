@@ -28,6 +28,7 @@ export async function fetchCompanyOverviewByMetric(
   symbol: string,
   metric: (typeof companyOverviewMetrics)[number],
 ) {
+  await new Promise((resolve) => setTimeout(resolve, 1100));
   const overview = await fetchCompanyOverview(symbol);
   return overview[metric];
 }
@@ -45,6 +46,7 @@ export async function fetchLatestIncomeStatementByMetric(
   lastNQuarters: number,
   metrics: (typeof incomeStatementReportMetrics)[number][],
 ) {
+  await new Promise((resolve) => setTimeout(resolve, 1100));
   const income = await fetchIncomeStatement(symbol);
 
   const quarterlyReports = income.quarterlyReports.slice(0, lastNQuarters);
@@ -77,6 +79,7 @@ export async function fetchLatestBalanceSheetByMetric(
   lastNQuarters: number,
   metrics: (typeof balanceSheetReportMetrics)[number][],
 ) {
+  await new Promise((resolve) => setTimeout(resolve, 1100));
   const balanceSheet = await fetchBalanceSheet(symbol);
   return balanceSheet.quarterlyReports
     .slice(0, lastNQuarters)
@@ -108,6 +111,7 @@ export async function fetchLatestCashFlowByMetric(
   lastNQuarters: number,
   metrics: (typeof cashFlowReportMetrics)[number][],
 ) {
+  await new Promise((resolve) => setTimeout(resolve, 1100));
   const cashFlow = await fetchCashFlow(symbol);
   return cashFlow.quarterlyReports
     .slice(0, lastNQuarters)
@@ -138,6 +142,7 @@ export async function fetchLatestTreasuryYield(
   maturity: TreasuryYieldMaturity,
   lastNPoints: number,
 ) {
+  await new Promise((resolve) => setTimeout(resolve, 1100));
   const treasuryYield = await fetchTreasuryYield({ interval, maturity });
   return treasuryYield.data.slice(0, lastNPoints);
 }

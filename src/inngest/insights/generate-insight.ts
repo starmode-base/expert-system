@@ -15,6 +15,7 @@ import { publishNotifyUI } from "~/lib/ably";
 import { buildTakeawayPreviews } from "./insight-prompts";
 import { getConcept } from "../takeaways/helpers/generate-concept";
 import { runInsightAgent } from "./agents/insight-agent";
+import { getSummary } from "../takeaways/helpers/get-summary";
 
 export interface InsightLoopState {
   response: Response;
@@ -44,11 +45,7 @@ export const generateInsight = inngest.createFunction(
       });
 
       return insights
-        .map(
-          (insight) => `
-        - ${insight.summary ?? insight.title}
-        `,
-        )
+        .map((insight) => `- ${insight.summary ?? insight.title}`)
         .join("\n");
     });
 
@@ -106,6 +103,12 @@ export const generateInsight = inngest.createFunction(
       });
     });
 
+    // Summarize the final insight
+    const summarizedInsight = await step.run(`summarize-insight`, async () => {
+      const summary = await getSummary(finalInsight.insight);
+      return summary.summary;
+    });
+
     // Step 6: Save the final insight text
     const insightId = await step.run(`save-insight`, async () => {
       console.log("##### INSIGHT RESPONSE PARSED #####");
@@ -125,7 +128,7 @@ export const generateInsight = inngest.createFunction(
             userId: event.user.id,
             title: finalInsight.title,
             insight: finalInsight.insight,
-            summary: finalInsight.core_insight_statement,
+            summary: summarizedInsight,
             seedText: event.data.seedText,
             insightPrompt: event.data.insightPrompt,
           })
