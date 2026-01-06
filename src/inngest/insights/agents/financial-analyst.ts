@@ -1,6 +1,3 @@
-// Sub-agent to fetch information from the web
-// Tools
-
 //--------------------------------
 // Tools
 //--------------------------------
