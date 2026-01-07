@@ -2,7 +2,12 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
-import { ArrowUpOnSquareIcon, CheckIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUpOnSquareIcon,
+  CheckIcon,
+  ClipboardDocumentCheckIcon,
+  ClipboardDocumentIcon,
+} from "@heroicons/react/24/outline";
 import type { InsightsItem } from "~/server/queries";
 import { InsightReferences } from "~/components/shared/references";
 
@@ -89,10 +94,53 @@ function getMarkdownPreview(markdown: string, limit: number) {
   };
 }
 
+function formatInsightClipboardText(insightFeedItem: InsightsItem) {
+  const sections: string[] = [];
+  const insightText = insightFeedItem.insight.insight?.trim();
+
+  if (insightText) {
+    sections.push(`Insight:\n${insightText}`);
+  }
+
+  const references = insightFeedItem.insightReferences
+    .slice()
+    .sort((a, b) => a.insightReferenceNumber - b.insightReferenceNumber);
+
+  if (references.length > 0) {
+    const formattedRefs = references.map((ref) => {
+      const publishedDate = new Date(ref.documentPublicationDate);
+      const publishedLabel = Number.isNaN(publishedDate.getTime())
+        ? null
+        : `Published ${publishedDate.toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}`;
+
+      const metaParts = [
+        ref.documentTitle,
+        ref.documentSource,
+        publishedLabel,
+        ref.documentLink,
+      ].filter(Boolean);
+
+      const metaSuffix =
+        metaParts.length > 0 ? ` (${metaParts.join(" · ")})` : "";
+
+      return `${ref.insightReferenceNumber}. ${ref.reference}${metaSuffix}`;
+    });
+
+    sections.push(`References:\n${formattedRefs.join("\n")}`);
+  }
+
+  return sections.join("\n\n");
+}
+
 export function InsightCard(props: InsightCardProps) {
   const [insightExpanded, setInsightExpanded] = useState(props.expanded);
   const router = useRouter();
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [insightCopied, setInsightCopied] = useState(false);
 
   const { preview: insightPreviewMarkdown } = getMarkdownPreview(
     props.insightFeedItem.insight.insight ?? "",
@@ -101,41 +149,80 @@ export function InsightCard(props: InsightCardProps) {
 
   return (
     <div className="bg-white p-4">
-      <div className="mb-2 flex items-center justify-end gap-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <div className="shrink-0 text-xs text-gray-500">
           {props.insightFeedItem.insight.createdAt.toLocaleDateString()}
         </div>
-        <button
-          type="button"
-          className={
-            shareLinkCopied
-              ? "inline-flex cursor-pointer items-center gap-1.5 px-2 py-1 text-xs font-medium"
-              : "inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-slate-700"
-          }
-          aria-label={shareLinkCopied ? "Copied share link" : "Copy share link"}
-          onClick={async () => {
-            const href = router.buildLocation({
-              to: "/insight/$insightId",
-              params: { insightId: props.insightFeedItem.insight.id },
-            }).href;
-
-            const fullUrl = new URL(href, window.location.origin).toString();
-            const copied = await copyToClipboard(fullUrl);
-            if (copied) {
-              setShareLinkCopied(true);
-              window.setTimeout(() => {
-                setShareLinkCopied(false);
-              }, 2000);
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={
+              insightCopied
+                ? "inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs text-emerald-800"
+                : "inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs text-gray-500"
             }
-          }}
-        >
-          {shareLinkCopied ? (
-            <CheckIcon className="h-4 w-4" aria-hidden="true" />
-          ) : (
-            <ArrowUpOnSquareIcon className="h-4 w-4" aria-hidden="true" />
-          )}
-          <span>{shareLinkCopied ? "Copied" : ""}</span>
-        </button>
+            aria-label={
+              insightCopied
+                ? "Copied insight to clipboard"
+                : "Copy insight text and references"
+            }
+            onClick={async () => {
+              const clipboardText = formatInsightClipboardText(
+                props.insightFeedItem,
+              );
+              const copied = await copyToClipboard(clipboardText);
+              if (!copied) return;
+
+              setInsightCopied(true);
+              window.setTimeout(() => {
+                setInsightCopied(false);
+              }, 2000);
+            }}
+          >
+            {insightCopied ? (
+              <ClipboardDocumentCheckIcon
+                className="h-4 w-4"
+                aria-hidden="true"
+              />
+            ) : (
+              <ClipboardDocumentIcon className="h-4 w-4" aria-hidden="true" />
+            )}
+            <span>{insightCopied ? "Copied" : "Copy"}</span>
+          </button>
+          <button
+            type="button"
+            className={
+              shareLinkCopied
+                ? "inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs text-emerald-800"
+                : "inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs text-gray-500"
+            }
+            aria-label={
+              shareLinkCopied ? "Copied share link" : "Copy share link"
+            }
+            onClick={async () => {
+              const href = router.buildLocation({
+                to: "/insight/$insightId",
+                params: { insightId: props.insightFeedItem.insight.id },
+              }).href;
+
+              const fullUrl = new URL(href, window.location.origin).toString();
+              const copied = await copyToClipboard(fullUrl);
+              if (copied) {
+                setShareLinkCopied(true);
+                window.setTimeout(() => {
+                  setShareLinkCopied(false);
+                }, 2000);
+              }
+            }}
+          >
+            {shareLinkCopied ? (
+              <CheckIcon className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ArrowUpOnSquareIcon className="h-4 w-4" aria-hidden="true" />
+            )}
+            <span>{shareLinkCopied ? "Copied" : "Share"}</span>
+          </button>
+        </div>
       </div>
       {props.loading ? (
         <div className="flex items-center justify-center py-8">
