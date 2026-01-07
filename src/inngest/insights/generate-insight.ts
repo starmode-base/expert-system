@@ -14,7 +14,7 @@ import {
 import { publishNotifyUI } from "~/lib/ably";
 import { buildTakeawayPreviews } from "./insight-prompts";
 import { getConcept } from "../takeaways/helpers/generate-concept";
-// import { runInsightAgent } from "./agents/insight-agent";
+import { runInsightAgent } from "./agents/insight-agent";
 
 export interface InsightLoopState {
   response: Response;
@@ -97,32 +97,14 @@ export const generateInsight = inngest.createFunction(
       };
     });
 
-    // const finalInsight = await step.run(`run-insight-agent`, async () => {
-    //   return await runInsightAgent({
-    //     takeawayPreviewFormatted,
-    //     takeawayConceptsPreviewFormatted,
-    //     recentInsights,
-    //     insightPrompt: event.data.insightPrompt,
-    //   });
-    // });
-
-    console.log(
-      takeawayPreviewFormatted,
-      takeawayConceptsPreviewFormatted,
-      recentInsights,
-    );
-    const finalInsight = {
-      title: "Test Insight",
-      core_insight_statement: "This is a test core insight statement",
-      insight: "This is a test insight",
-      summary: "This is a test summary",
-      references: [
-        {
-          reference_id: "123",
-          insight_reference_number: 1,
-        },
-      ],
-    };
+    const finalInsight = await step.run(`run-insight-agent`, async () => {
+      return await runInsightAgent({
+        takeawayPreviewFormatted,
+        takeawayConceptsPreviewFormatted,
+        recentInsights,
+        insightPrompt: event.data.insightPrompt,
+      });
+    });
 
     // Step 6: Save the final insight text
     const insightId = await step.run(`save-insight`, async () => {
