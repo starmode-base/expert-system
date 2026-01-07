@@ -1,3 +1,4 @@
+// bun run scripts/stock-call.ts TSLA
 import {
   fetchCompanyOverview,
   fetchGlobalQuote,
