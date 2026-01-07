@@ -102,7 +102,7 @@ export const insightSchema = z.object({
 
   # Writing Style
   - Markdown format.
-  - Use formatting to make the insight more engaging and readable. Short paragraphs and bullet points.
+  - Use formatting (e.g. Short paragraphs and bullet points.) to make the insight more engaging and readable.
   - Clear, human and entertaining.
   - Write like Morgan Housel: simple language, sharp ideas, calm confidence.
   - Explain the core concepts so anyone can understand them.`,
