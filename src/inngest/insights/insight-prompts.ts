@@ -1,10 +1,6 @@
-import {
-  ResponseFunctionToolCall,
-  ResponseInput,
-} from "openai/resources/responses/responses.mjs";
 import { z } from "zod";
 import { TakeawaySearchResult } from "~/server/searchSFs";
-import { executeToolCalls } from "./tools/tool-handling";
+import { InsightAgentInput } from "./agents/insight-agent";
 
 export const agentParameters = {
   model: "gpt-5.2",
@@ -151,49 +147,26 @@ export function buildTakeawayPreviews(takeaways: TakeawaySearchResult[]) {
     .join("\n------\n");
 }
 
-export function buildInitialConversation(
-  takeawayPreviewFormatted: string,
-  takeawayConceptsPreviewFormatted: string,
-  recentInsights: string,
-  customPrompt: string,
-): ResponseInput {
-  return [
-    {
-      role: "system",
-      type: "message",
-      content: systemPrompt,
-    },
-    {
-      role: "user",
-      type: "message",
-      content: `
-  # Context:
-  ## Takeaways:
-      ${takeawayConceptsPreviewFormatted}
-      ${takeawayPreviewFormatted}
+export function buildUserPrompt(input: InsightAgentInput) {
+  return `
+# Context
+## Takeaways
+${input.takeawayConceptsPreviewFormatted}
+${input.takeawayPreviewFormatted}
 
-  ## Recent Insights:
-      ${recentInsights}
+## Recent Insights
+${input.recentInsights}
 
-  ## Reader Profile
-  Assume the reader is:
-  - In technology or adjacent industries
-  - Actively interested in markets, macro trends, business strategy, trading, and wealth creation
-  - Comfortable with nuance, but impatient with fluff
-  Education/sophistication level:
-  - Tech: Masters
-  - Macro Economics: High School
-  - Business: Undergraduate
+## Reader Profile
+- In technology or adjacent industries
+- Actively interested in markets, macro trends, business strategy, trading, and wealth creation
+- Comfortable with nuance, but impatient with fluff
+Education/sophistication level:
+- Tech: Masters
+- Macro Economics: High School
+- Business: Undergraduate
 
-  ## User Prompt:
-      ${customPrompt}`,
-    },
-  ] as ResponseInput;
-}
-
-export async function executeToolCallsForResponse(
-  functionCalls: ResponseFunctionToolCall[],
-) {
-  const { outputs } = await executeToolCalls(functionCalls);
-  return outputs;
+## User Prompt
+${input.insightPrompt}
+`;
 }

@@ -86,15 +86,3 @@ export async function fetchTakeawayById(args: { id: string }) {
     Takeaway References: ${takeaway.takeawayReferences.map((reference) => `${reference.referenceNumber}. (reference_id: ${reference.id}) ${reference.reference}`).join("\n")}
 `;
 }
-
-export function buildFinalInsight(args: {
-  insight: string;
-  key_arguments: string;
-  references_ids: string[];
-}) {
-  return `
-    Core Insight: ${args.insight}
-    Key Arguments: ${args.key_arguments}
-    References: ${args.references_ids.map((reference_id) => `(reference_id: ${reference_id})`).join("\n")}
-  `;
-}
