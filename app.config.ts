@@ -7,10 +7,10 @@ export default defineConfig({
     appDirectory: "src",
   },
   vite: {
-    // ssr: {
-    //   // Ensure these deps are bundled into serverless output for Vercel
-    //   noExternal: ["zod", "@openai/agents"],
-    // },
+    ssr: {
+      // Ensure these deps are bundled into serverless output for Vercel
+      noExternal: ["zod", "@openai/agents"],
+    },
     plugins: [
       tsConfigPaths({
         projects: ["./tsconfig.json"],
