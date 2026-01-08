@@ -1,6 +1,6 @@
 import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
+import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 
 const client = new OpenAI();
@@ -22,17 +22,17 @@ const schema = z.object({
 
         # Style & Formatting Constraints:
         - Standalone Thoughts: Each takeaway must be completely self-contained. The reader should require zero context from the original text or other takeaways to understand it.
-        - Deep & Dense: Write 6-12 sentences per takeaway. Be very thorough but concise (no fluff). Every sentence must add value.
-        - Factual Accuracy: Prioritize truths and facts over emotions or opinions. Do not embellish.
+        - Deep & Dense: “Max 140–220 words per takeaway”. Be very thorough but concise (no fluff). Every sentence must add value.
+        - Factual Accuracy: Prioritize truths and facts over emotions or opinions. Do not embellish. No outside knowledge. Use only articleText.
         - Neutral Tone: Strictly avoid promotional language (e.g., "groundbreaking," "revolutionary").
         - Direct Start: Do not start with "The takeaway is..." or "This article discusses...". Jump straight into the facts.
         - References:
           - when making a claim, provide a reference number and the relevant fact, quote or data to support the claim. e.g.  "(ref 1)"
           - For direct quotes, include the exact excerpt from the text and attribute the quote to the person.
           - If no direct quote exists, cite the exact sentence(s) that state the fact (still verbatim). Don’t invent a quote.
-        - Start at 1 and increment for each reference.
-        - References should only be used for the current takeaway.
-        - Do not use the same reference across takeaways.
+          - Start at 1 and increment for each reference.
+          - References should only be used for the current takeaway.
+          - Do not use the same reference across takeaways.
         - Independence: Each takeaway must be unique and unrelated to the others. Do not reference previous points.`,
       }),
       references: z.array(
@@ -45,7 +45,7 @@ const schema = z.object({
           }),
           reference: z.string({
             description: `Relevant facts, quotes and data to support the takeaway.
-              - When quoting a speaker, provide the attribution whenever possible. e.g. "[text]" - Jermome Powel
+              - When quoting a speaker, provide the attribution in the following format: '"[text]" - <Speaker Name>'
               - The reference should be an exact excerpt from the text. Never use a summary of the text.
               - The reference should be able to stand alone, such that it could be reused in a different context.
               - Err on over referencing to ensure the takeaways are well supported by the text.
@@ -57,37 +57,46 @@ const schema = z.object({
   ),
 });
 
-const responseFormat = zodResponseFormat(schema, "response");
-
 export async function getTakeaways(
   articleText: string,
   takeawayInstructions?: string,
   model = "gpt-5.2",
 ) {
-  const completion = await client.beta.chat.completions.parse({
+  const response = await client.responses.parse({
     model,
-    response_format: responseFormat,
-    messages: [
+    text: { format: zodTextFormat(schema, "takeaways") },
+    input: [
       {
         role: "user",
+        type: "message",
         content: `
         # Role
-        You are a Lead Systems Analyst. Your job is to compress raw information into high-signal takeaways. You are processing a mix of Financial News, Earnings Transcripts, and Scientific Research.
+        You are a Lead Systems Analyst. Your job is to compress raw information into high-signal and evidence-backed findings. You are processing a mix of Financial News, Earnings Transcripts, and Scientific Research.
 
-        Text:
+        Document Text:
         ${articleText}
 
-        Create a structured list of the 1-3 most novel and important takeaways from the text below.
+        ${
+          takeawayInstructions
+            ? `Instructions:
+        ${takeawayInstructions}`
+            : ""
+        }
+
+        Create a structured list of the 1-5 most novel and important findings from the document.
+          - Novelty = contradicts consensus / non-obvious second-order effect / new quantified datapoint / new mechanism / changes expected distribution.
         Make sure to heavily reference the text to support the facts, quotes, claims and data.
-        Better to have more references to support the takeaways.
-        It is better to have less takeaways, if they are not unique and unrelated.`,
+        Better to have more references to support the findings.
+        It is better to have less findings, if they are not unique and unrelated.
+        `,
       },
     ],
   });
 
-  invariant(completion.choices[0]?.message.parsed, "No content");
+  const parsed = response.output_parsed;
+  invariant(parsed?.takeaways, "No content");
 
-  const takeaways = completion.choices[0].message.parsed.takeaways;
+  const takeaways = parsed.takeaways;
 
   const takeawaysReturn = await Promise.all(
     takeaways.map(async (takeaway) => {

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Document } from "~/server/queries";
-import { TakeawaySearchResult } from "~/server/searchSFs";
 import { TakeawayTile } from "./takeaway-tile";
 
 export function TakeawaysSection(props: { selectedDoc: Document }) {
@@ -39,59 +38,7 @@ export function ArticleSection(props: { selectedDoc: Document }) {
   );
 }
 
-export function SimilarTakeawaysSection(props: {
-  similarTakeaways: TakeawaySearchResult[];
-}) {
-  const similarTakeaways = props.similarTakeaways;
-
-  if (similarTakeaways.length === 0) {
-    return (
-      <div className="flex h-full items-center justify-center p-4">
-        <p className="text-gray-500">No similar takeaways found</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="border-t border-gray-200">
-      {similarTakeaways.map((takeaway) => {
-        return (
-          <div key={takeaway.id} className="border-b border-gray-200">
-            <TakeawayTile takeaway={takeaway} />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-export function SimilarConceptsSection(props: {
-  similarConcepts: TakeawaySearchResult[];
-}) {
-  const similarConcepts = props.similarConcepts;
-
-  if (similarConcepts.length === 0) {
-    return (
-      <div className="flex h-full items-center justify-center p-4">
-        <p className="text-gray-500">No similar concepts found</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="border-t border-gray-200">
-      {similarConcepts.map((takeaway) => {
-        return (
-          <div key={takeaway.id} className="border-b border-gray-200">
-            <TakeawayTile takeaway={takeaway} />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-type TabType = "takeaways" | "article" | "similarTakeaways" | "similarConcepts";
+type TabType = "takeaways" | "article";
 
 export function DocumentContent(props: { selectedDoc: Document | null }) {
   const selectedDoc = props.selectedDoc;
@@ -111,18 +58,6 @@ export function DocumentContent(props: { selectedDoc: Document | null }) {
         return <TakeawaysSection selectedDoc={selectedDoc} />;
       case "article":
         return <ArticleSection selectedDoc={selectedDoc} />;
-      case "similarTakeaways":
-        return (
-          <SimilarTakeawaysSection
-            similarTakeaways={selectedDoc.similarTakeaways ?? []}
-          />
-        );
-      case "similarConcepts":
-        return (
-          <SimilarConceptsSection
-            similarConcepts={selectedDoc.similarConcepts ?? []}
-          />
-        );
     }
   };
 
@@ -158,30 +93,6 @@ export function DocumentContent(props: { selectedDoc: Document | null }) {
             }`}
           >
             Article
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("similarTakeaways");
-            }}
-            className={`border-b-2 px-3 py-2 text-sm font-medium ${
-              activeTab === "similarTakeaways"
-                ? "border-black-500 text-black-600"
-                : "hover:text-black-600 border-transparent text-gray-500"
-            }`}
-          >
-            Similar Takeaways
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("similarConcepts");
-            }}
-            className={`border-b-2 px-3 py-2 text-sm font-medium ${
-              activeTab === "similarConcepts"
-                ? "border-black-500 text-black-600"
-                : "hover:text-black-600 border-transparent text-gray-500"
-            }`}
-          >
-            Similar Concepts
           </button>
         </nav>
       </div>

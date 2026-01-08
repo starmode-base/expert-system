@@ -5,9 +5,7 @@ import { and, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { TakeawaySearchResult } from "./searchSFs";
 import {
-  vectorConceptSearch,
   vectorConceptSearchTimeWeighted,
-  vectorTakeawaySearch,
   vectorTakeawaySearchTimeWeighted,
 } from "./vector-queries";
 import { InsightSelect, TakeawayReferenceSelect } from "~/postgres/schema";
@@ -34,12 +32,11 @@ export interface Document {
   articleText: string;
   takeaways: Takeaway[];
   selectedTakeawayId?: string;
-  similarTakeaways?: TakeawaySearchResult[];
-  similarConcepts?: TakeawaySearchResult[];
 }
 
 export interface Takeaway {
   id: string;
+  documentId?: string;
   title: string;
   publicationDate: Date;
   takeaway: string;
@@ -265,77 +262,6 @@ export const queryDocument = createServerFn({
         documentSource: document.source,
         documentLink: document.link,
       })),
-    };
-
-    return flatDc;
-  });
-
-export const queryDocumentByTakeaway = createServerFn({
-  method: "GET",
-})
-  .validator(z.string()) // takeawayId
-  .handler(async ({ data: takeawayId }) => {
-    const takeaway = await db.query.takeaways.findFirst({
-      where: eq(schema.takeaways.id, takeawayId),
-      with: {
-        document: {
-          with: {
-            takeaways: {
-              with: { category: true, takeawayReferences: true },
-            },
-          },
-        },
-      },
-    });
-
-    // Either the ID is bad, or the FK was severed
-    if (!takeaway?.document) {
-      return null;
-    }
-
-    const { document } = takeaway;
-
-    // Fetch similar takeaways and concepts in parallel
-    // Fetch 11 to ensure we have 10 after filtering out the current takeaway
-    const [similarTakeawaysRaw, similarConceptsRaw] = await Promise.all([
-      vectorTakeawaySearch(takeaway.takeaway, 11),
-      vectorConceptSearch(takeaway.concept, 11),
-    ]);
-
-    // Filter out the current takeaway and limit to top 10
-    const similarTakeaways = similarTakeawaysRaw.filter(
-      (t) => t.id !== takeawayId,
-    );
-
-    const similarConcepts = similarConceptsRaw.filter(
-      (c) => c.id !== takeawayId,
-    );
-
-    // Same flattened response object used in `queryDocument`
-    const flatDc: Document = {
-      id: document.id,
-      title: document.title,
-      description: document.description,
-      publicationDate: document.publicationDate,
-      link: document.link,
-      source: document.source,
-      articleText: document.articleText,
-      takeaways: document.takeaways.map((tw) => ({
-        id: tw.id,
-        title: tw.title,
-        publicationDate: document.publicationDate,
-        takeaway: tw.takeaway,
-        summary: tw.summary,
-        concept: tw.concept,
-        category: tw.category?.name,
-        references: tw.takeawayReferences,
-        documentTitle: document.title,
-        documentSource: document.source,
-        documentLink: document.link,
-      })),
-      selectedTakeawayId: takeawayId,
-      similarTakeaways,
-      similarConcepts,
     };
 
     return flatDc;

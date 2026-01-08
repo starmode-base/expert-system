@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -20,9 +21,6 @@ export function TakeawayTile(props: {
 
   const documentSource =
     takeaway.documentSource ?? (takeaway as { source?: string }).source;
-  const documentMeta = [takeaway.documentTitle, documentSource]
-    .filter(Boolean)
-    .join(" · ");
   const secondaryMeta = [
     takeaway.category,
     takeaway.publicationDate.toLocaleDateString(undefined, {
@@ -71,9 +69,23 @@ export function TakeawayTile(props: {
           <h2 className="text-base leading-tight font-semibold break-words text-gray-900 sm:text-lg">
             {takeaway.title}
           </h2>
-          {documentMeta ? (
+          {takeaway.documentTitle || documentSource ? (
             <p className="text-sm break-words text-gray-500 sm:truncate">
-              {documentMeta}
+              {takeaway.documentTitle ? (
+                takeaway.documentId ? (
+                  <Link
+                    to="/news-feed/$documentid"
+                    params={{ documentid: takeaway.documentId }}
+                    className="hover:underline"
+                  >
+                    {takeaway.documentTitle}
+                  </Link>
+                ) : (
+                  takeaway.documentTitle
+                )
+              ) : null}
+              {takeaway.documentTitle && documentSource ? " · " : ""}
+              {documentSource ?? null}
             </p>
           ) : null}
           <p className="text-xs text-gray-500">{secondaryMeta}</p>
