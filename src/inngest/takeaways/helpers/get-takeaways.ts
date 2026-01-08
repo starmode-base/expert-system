@@ -1,6 +1,6 @@
 import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
+import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 
 const client = new OpenAI();
@@ -22,7 +22,7 @@ const schema = z.object({
 
         # Style & Formatting Constraints:
         - Standalone Thoughts: Each takeaway must be completely self-contained. The reader should require zero context from the original text or other takeaways to understand it.
-        - Deep & Dense: “Max 140–220 words per takeaway” + “Any uncited sentence must start with Inference:”. Be very thorough but concise (no fluff). Every sentence must add value.
+        - Deep & Dense: “Max 140–220 words per takeaway”. Be very thorough but concise (no fluff). Every sentence must add value.
         - Factual Accuracy: Prioritize truths and facts over emotions or opinions. Do not embellish. No outside knowledge. Use only articleText.
         - Neutral Tone: Strictly avoid promotional language (e.g., "groundbreaking," "revolutionary").
         - Direct Start: Do not start with "The takeaway is..." or "This article discusses...". Jump straight into the facts.
@@ -57,20 +57,18 @@ const schema = z.object({
   ),
 });
 
-const responseFormat = zodResponseFormat(schema, "response");
-
 export async function getTakeaways(
   articleText: string,
   takeawayInstructions?: string,
   model = "gpt-5.2",
 ) {
-  const completion = await client.beta.chat.completions.parse({
+  const response = await client.responses.parse({
     model,
-    response_format: responseFormat,
-    reasoning: { effort: "high" },
-    messages: [
+    text: { format: zodTextFormat(schema, "takeaways") },
+    input: [
       {
         role: "user",
+        type: "message",
         content: `
         # Role
         You are a Lead Systems Analyst. Your job is to compress raw information into high-signal and evidence-backed findings. You are processing a mix of Financial News, Earnings Transcripts, and Scientific Research.
@@ -95,9 +93,10 @@ export async function getTakeaways(
     ],
   });
 
-  invariant(completion.choices[0]?.message.parsed, "No content");
+  const parsed = response.output_parsed;
+  invariant(parsed?.takeaways, "No content");
 
-  const takeaways = completion.choices[0].message.parsed.takeaways;
+  const takeaways = parsed.takeaways;
 
   const takeawaysReturn = await Promise.all(
     takeaways.map(async (takeaway) => {
