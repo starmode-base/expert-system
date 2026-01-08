@@ -126,7 +126,7 @@ export function InsightCreator() {
           ) : null}
         </div>
 
-        <div className="sticky right-0 bottom-0 left-0 z-10 -mx-4 mt-2 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent px-4 pt-4 pb-2 md:static md:mx-0 md:bg-transparent md:px-0 md:pt-0 md:pb-0">
+        <div className="sticky right-0 bottom-0 left-0 z-10 -mx-4 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent px-4 md:static md:mx-0 md:bg-transparent md:px-0 md:pt-0 md:pb-0">
           <button
             disabled={!prompt.trim() || loading}
             className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition ${
