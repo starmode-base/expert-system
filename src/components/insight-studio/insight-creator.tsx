@@ -1,11 +1,6 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { TakeawayTile } from "~/components/takeaway-tile";
-import {
-  MODEL_OPTIONS,
-  ModelSelector,
-  type ModelValue,
-} from "~/components/model-selector";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { type TakeawaySearchResult } from "~/server/searchSFs";
 import {
@@ -25,7 +20,6 @@ export function InsightCreator() {
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [seedText, setSeedText] = useState("");
-  const [model, setModel] = useState<ModelValue>(MODEL_OPTIONS[0].value);
   const [error, setError] = useState<string | null>(null);
   const [similarItemsTab, setSimilarItemsTab] =
     useState<SimilarItemsTab>("takeaways");
@@ -56,7 +50,7 @@ export function InsightCreator() {
             }),
           ]);
 
-          // ignore stale responses
+          // Ignore stale responses
           if (myRequestId !== requestIdRef.current) return;
 
           setSummaryTakeaways(summary);
@@ -72,15 +66,22 @@ export function InsightCreator() {
 
   useDebouncedSearch(seedText);
 
+  const formCardClasses =
+    "rounded-xl border border-gray-200 bg-white shadow-sm ring-1 ring-gray-50";
+
   return (
-    <div className="flex h-[calc(100dvh-64px)] w-full overflow-hidden bg-white">
-      <div className="flex h-full w-1/3 flex-col overflow-y-auto border-r border-gray-200 p-4">
-        {/* Seed text input */}
-        <div className="mb-6">
-          <h2 className="text-lg font-medium text-gray-600">Seed text</h2>
+    <div className="flex min-h-[calc(100dvh-64px)] w-full flex-col bg-gray-50 md:flex-row">
+      <div className="flex w-full flex-col gap-4 border-b border-gray-200 px-4 pt-6 pb-4 md:h-[calc(100dvh-64px)] md:max-w-[380px] md:border-r md:border-b-0 md:bg-white md:px-6 md:py-6 md:shadow-sm">
+        <div className={`${formCardClasses} p-4`}>
+          <h2 className="text-base font-semibold text-gray-700">
+            Research Context
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Provide a few sentences to anchor the research context
+          </p>
           <textarea
-            placeholder="Enter seed text..."
-            className="mt-2 min-h-32 w-full resize-y rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+            placeholder="Enter research context..."
+            className="mt-3 min-h-32 w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-inner focus:border-gray-400 focus:ring-2 focus:ring-gray-300 focus:outline-none"
             value={seedText}
             onChange={(e) => {
               setSeedText(e.target.value);
@@ -88,39 +89,44 @@ export function InsightCreator() {
           />
         </div>
 
-        {/* Prompt Input */}
-        <div className="mb-6">
-          <h2 className="text-lg font-medium text-gray-600">Enter Prompt</h2>
+        <div className={`${formCardClasses} p-4`}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-gray-700">
+                Enter Research Question
+              </h2>
+              <p className="text-sm text-gray-500">
+                What is the research question you want to answer?
+              </p>
+            </div>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+              Required
+            </span>
+          </div>
           <input
             type="text"
             placeholder="Enter your insight prompt..."
-            className="mt-2 w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+            className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-inner focus:border-gray-400 focus:ring-2 focus:ring-gray-300 focus:outline-none"
             value={prompt}
             onChange={(e) => {
               setPrompt(e.target.value);
             }}
+            aria-describedby={error ? "prompt-error" : undefined}
           />
-          {error ? <p className="mt-1 text-sm text-red-500">{error}</p> : null}
+          {error ? (
+            <p id="prompt-error" className="mt-2 text-sm text-red-500">
+              {error}
+            </p>
+          ) : null}
         </div>
 
-        {/* Model Selector */}
-        <div className="mb-6">
-          <h2 className="text-lg font-medium text-gray-600">Select Model</h2>
-          <ModelSelector
-            value={model}
-            onChange={setModel}
-            className="mb-6" // keeps existing margin‑bottom
-          />
-        </div>
-
-        {/* Generate Insight Button */}
-        <div className="mb-6">
+        <div className="sticky right-0 bottom-0 left-0 z-10 -mx-4 mt-2 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent px-4 pt-4 pb-2 md:static md:mx-0 md:bg-transparent md:px-0 md:pt-0 md:pb-0">
           <button
             disabled={!prompt.trim() || loading}
-            className={`w-full rounded px-4 py-2 transition ${
+            className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition ${
               prompt.trim() && !loading
                 ? "cursor-pointer bg-gray-900 text-white hover:bg-gray-800"
-                : "cursor-not-allowed bg-gray-300 text-gray-500"
+                : "cursor-not-allowed bg-gray-300 text-gray-600"
             }`}
             onClick={async () => {
               if (!prompt.trim()) {
@@ -137,18 +143,18 @@ export function InsightCreator() {
               setLoading(true);
             }}
           >
-            Generate Insight
+            {loading ? "Generating..." : "Generate Insight"}
           </button>
         </div>
       </div>
 
-      <div className="flex h-full min-w-0 flex-1 flex-col">
+      <div className="flex h-full min-h-[420px] flex-1 flex-col bg-white md:h-[calc(100dvh-64px)] md:rounded-l-xl md:border-l md:border-gray-200 md:shadow-inner">
         <div
-          className="border-b border-gray-200"
+          className="sticky top-0 z-10 border-b border-gray-200 bg-white/90 backdrop-blur"
           role="tablist"
           aria-label="Similar items"
         >
-          <nav className="flex space-x-4 px-4">
+          <nav className="flex overflow-x-auto px-4">
             <button
               type="button"
               role="tab"
@@ -158,7 +164,7 @@ export function InsightCreator() {
               onClick={() => {
                 setSimilarItemsTab("takeaways");
               }}
-              className={`border-b-2 px-3 py-3 text-sm font-medium ${
+              className={`border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap ${
                 similarItemsTab === "takeaways"
                   ? "border-gray-900 text-gray-900"
                   : "border-transparent text-gray-500 hover:text-gray-900"
@@ -175,7 +181,7 @@ export function InsightCreator() {
               onClick={() => {
                 setSimilarItemsTab("concepts");
               }}
-              className={`border-b-2 px-3 py-3 text-sm font-medium ${
+              className={`border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap ${
                 similarItemsTab === "concepts"
                   ? "border-gray-900 text-gray-900"
                   : "border-transparent text-gray-500 hover:text-gray-900"
@@ -186,55 +192,63 @@ export function InsightCreator() {
           </nav>
         </div>
 
-        <div
-          role="tabpanel"
-          id="similar-items-panel-takeaways"
-          aria-labelledby="similar-items-tab-takeaways"
-          hidden={similarItemsTab !== "takeaways"}
-          className="min-h-0 flex-1"
-        >
-          <div className="h-full overflow-y-auto">
-            {summaryTakeaways.length === 0 ? (
-              <p className="p-4 text-sm text-gray-500">
-                No similar takeaways found.
-              </p>
-            ) : (
-              <div className="border-t border-gray-200">
-                {summaryTakeaways.map((takeaway) => {
-                  return (
-                    <div key={takeaway.id} className="border-b border-gray-200">
-                      <TakeawayTile takeaway={takeaway} />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+        <div className="min-h-0 flex-1">
+          <div
+            role="tabpanel"
+            id="similar-items-panel-takeaways"
+            aria-labelledby="similar-items-tab-takeaways"
+            hidden={similarItemsTab !== "takeaways"}
+            className="h-full"
+          >
+            <div className="h-full overflow-y-auto">
+              {summaryTakeaways.length === 0 ? (
+                <p className="p-4 text-sm text-gray-500">
+                  No similar takeaways found.
+                </p>
+              ) : (
+                <div className="border-t border-gray-200">
+                  {summaryTakeaways.map((takeaway) => {
+                    return (
+                      <div
+                        key={takeaway.id}
+                        className="border-b border-gray-200"
+                      >
+                        <TakeawayTile takeaway={takeaway} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div
-          role="tabpanel"
-          id="similar-items-panel-concepts"
-          aria-labelledby="similar-items-tab-concepts"
-          hidden={similarItemsTab !== "concepts"}
-          className="min-h-0 flex-1"
-        >
-          <div className="h-full overflow-y-auto">
-            {conceptTakeaways.length === 0 ? (
-              <p className="p-4 text-sm text-gray-500">
-                No similar concepts found.
-              </p>
-            ) : (
-              <div className="border-t border-gray-200">
-                {conceptTakeaways.map((takeaway) => {
-                  return (
-                    <div key={takeaway.id} className="border-b border-gray-200">
-                      <TakeawayTile takeaway={takeaway} />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+          <div
+            role="tabpanel"
+            id="similar-items-panel-concepts"
+            aria-labelledby="similar-items-tab-concepts"
+            hidden={similarItemsTab !== "concepts"}
+            className="h-full"
+          >
+            <div className="h-full overflow-y-auto">
+              {conceptTakeaways.length === 0 ? (
+                <p className="p-4 text-sm text-gray-500">
+                  No similar concepts found.
+                </p>
+              ) : (
+                <div className="border-t border-gray-200">
+                  {conceptTakeaways.map((takeaway) => {
+                    return (
+                      <div
+                        key={takeaway.id}
+                        className="border-b border-gray-200"
+                      >
+                        <TakeawayTile takeaway={takeaway} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
