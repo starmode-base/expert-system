@@ -33,7 +33,7 @@ const schema = z.object({
           - Start at 1 and increment for each reference.
           - References should only be used for the current takeaway.
           - Do not use the same reference across takeaways.
-          - Independence: Each takeaway must be unique and unrelated to the others. Do not reference previous points.`,
+        - Independence: Each takeaway must be unique and unrelated to the others. Do not reference previous points.`,
       }),
       references: z.array(
         z.object({
