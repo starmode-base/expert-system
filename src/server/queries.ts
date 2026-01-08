@@ -40,6 +40,7 @@ export interface Document {
 
 export interface Takeaway {
   id: string;
+  documentId?: string;
   title: string;
   publicationDate: Date;
   takeaway: string;
@@ -322,6 +323,7 @@ export const queryDocumentByTakeaway = createServerFn({
       articleText: document.articleText,
       takeaways: document.takeaways.map((tw) => ({
         id: tw.id,
+        documentId: document.id,
         title: tw.title,
         publicationDate: document.publicationDate,
         takeaway: tw.takeaway,

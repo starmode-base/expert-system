@@ -45,7 +45,7 @@ const schema = z.object({
           }),
           reference: z.string({
             description: `Relevant facts, quotes and data to support the takeaway.
-              - When quoting a speaker, provide the attribution. e.g. '"[text]" - <Speaker Name>'
+              - When quoting a speaker, provide the attribution in the following format: '"[text]" - <Speaker Name>'
               - The reference should be an exact excerpt from the text. Never use a summary of the text.
               - The reference should be able to stand alone, such that it could be reused in a different context.
               - Err on over referencing to ensure the takeaways are well supported by the text.
