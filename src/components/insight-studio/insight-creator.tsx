@@ -73,9 +73,14 @@ export function InsightCreator() {
     <div className="flex min-h-[calc(100dvh-64px)] w-full flex-col bg-gray-50 md:flex-row">
       <div className="flex w-full flex-col gap-4 border-b border-gray-200 px-4 pt-6 pb-4 md:h-[calc(100dvh-64px)] md:max-w-[380px] md:border-r md:border-b-0 md:bg-white md:px-6 md:py-6 md:shadow-sm">
         <div className={`${formCardClasses} p-4`}>
-          <h2 className="text-base font-semibold text-gray-700">
-            Research Context
-          </h2>
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="text-base font-semibold text-gray-700">
+              Research Context
+            </h2>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+              Required
+            </span>
+          </div>
           <p className="mt-1 text-sm text-gray-500">
             Provide a few sentences to anchor the research context
           </p>
@@ -90,19 +95,20 @@ export function InsightCreator() {
         </div>
 
         <div className={`${formCardClasses} p-4`}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
+          <div>
+            <div className="flex items-start justify-between gap-3">
               <h2 className="text-base font-semibold text-gray-700">
                 Enter Research Question
               </h2>
-              <p className="text-sm text-gray-500">
-                What is the research question you want to answer?
-              </p>
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                Required
+              </span>
             </div>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-              Required
-            </span>
+            <p className="mt-1 text-sm text-gray-500">
+              What is the research question you want to answer?
+            </p>
           </div>
+
           <input
             type="text"
             placeholder="Enter your insight prompt..."
@@ -124,7 +130,7 @@ export function InsightCreator() {
           <button
             disabled={!prompt.trim() || loading}
             className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition ${
-              prompt.trim() && !loading
+              prompt.trim() && seedText.trim() && !loading
                 ? "cursor-pointer bg-gray-900 text-white hover:bg-gray-800"
                 : "cursor-not-allowed bg-gray-300 text-gray-600"
             }`}
