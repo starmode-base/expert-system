@@ -240,7 +240,7 @@ const CashFlowReportSchema = z
     changeInExchangeRate: z.string().nullable(),
     netIncome: z.string().nullable(),
   })
-      .loose();
+  .loose();
 
 const CashFlowSchema = z.object({
   symbol: z.string(),
