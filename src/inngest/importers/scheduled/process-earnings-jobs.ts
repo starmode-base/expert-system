@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import { inngest } from "../../client";
 import { fetchAndSaveTranscript } from "../scrapers/save-content";
@@ -30,6 +30,7 @@ function parseFiscalQuarter(fiscalDateEnding: string) {
 /**
  * Process pending earnings fetch jobs.
  * Runs daily at 8 AM Phoenix time (day after reports).
+ * Retries failed jobs for up to 7 days after report date.
  */
 export const processEarningsJobs = inngest.createFunction(
   { id: "scheduler.process-earnings-jobs" },
@@ -42,9 +43,13 @@ export const processEarningsJobs = inngest.createFunction(
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Retry window for failed jobs, inclusive of the last 7 days
+    const retryWindowStart = new Date(today);
+    retryWindowStart.setDate(retryWindowStart.getDate() - 7);
+
     const pendingJobs = await step.run("get-pending-jobs", async () => {
       const jobs = await db.query.earningsFetchJobs.findMany({
-        where: eq(schema.earningsFetchJobs.status, "pending"),
+        where: inArray(schema.earningsFetchJobs.status, ["pending", "failed"]),
         with: { earningsSchedule: true },
       });
 
@@ -52,7 +57,13 @@ export const processEarningsJobs = inngest.createFunction(
         .filter((job) => {
           const reportDate = new Date(job.earningsSchedule.reportDate);
           reportDate.setHours(0, 0, 0, 0);
-          return reportDate >= yesterday && reportDate < today;
+          // Pending jobs only run for earnings reported yesterday
+          if (job.status === "pending") {
+            return reportDate >= yesterday && reportDate < today;
+          }
+
+          // Failed jobs retry daily for up to 7 days after report date
+          return reportDate >= retryWindowStart && reportDate < today;
         })
         .map(
           (job): PendingJob => ({
