@@ -1,5 +1,5 @@
 import { EventSchemas, Inngest } from "inngest";
-import { z } from "zod";
+import { z } from "zod-v3";
 
 const userSchema = z.object({
   id: z.string(),

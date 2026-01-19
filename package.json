@@ -41,10 +41,10 @@
     "cheerio": "^1.0.0",
     "csv-parse": "^5.6.0",
     "drizzle-orm": "^0.41.0",
-    "inngest": "^3.32.9",
+    "inngest": "^3.49.3",
     "lucide-react": "^0.483.0",
     "node-fetch": "^3.3.2",
-    "openai": "^4.89.0",
+    "openai": "^6.16.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-force-graph-2d": "^1.27.1",
@@ -54,7 +54,8 @@
     "twitter-api-v2": "^1.28.0",
     "vinxi": "0.5.3",
     "xml2js": "^0.6.2",
-    "zod": "3.25.67"
+    "zod": "^4.3.5",
+    "zod-v3": "npm:zod@^3.24.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",

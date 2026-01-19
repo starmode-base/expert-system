@@ -1,13 +1,14 @@
 import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod.mjs";
+import { zodTextFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod";
 
 const client = new OpenAI();
 
 const schema = z.object({
-  concept: z.string({
-    description: `Rewrite the Takeaway as a short, domain-agnostic mechanism description:
+  concept: z
+    .string()
+    .describe(`Rewrite the Takeaway as a short, domain-agnostic mechanism description:
 	•	Remove all proper nouns, tickers, company names, product names, and field-specific jargon.
 	•	Do not mention specific industries (e.g., “biotech,” “social media”) unless absolutely necessary.
 	•	Focus on:
@@ -17,17 +18,15 @@ const schema = z.object({
 	•	Mechanism (what causes what: feedback, diffusion, bottleneck, substitution, coordination, etc.)
 	•	Outcome (what changes in the system: growth, failure, delay, saturation, collapse, etc.)
 	•	Use 2-3 sentences, concise but precise.
-	•	Avoid analogy or metaphor; be literal about the causal structure.`,
-  }),
+	•	Avoid analogy or metaphor; be literal about the causal structure.`),
 });
 
-const responseFormat = zodResponseFormat(schema, "response");
+const responseFormat = zodTextFormat(schema, "response");
 
 export async function getConcept(takeaway: string) {
-  const completion = await client.beta.chat.completions.parse({
+  const response = await client.responses.parse({
     model: "gpt-5.2",
-    response_format: responseFormat,
-    messages: [
+    input: [
       {
         role: "user",
         content: `
@@ -43,9 +42,11 @@ You will be given a single Takeaway summarizing an event, finding, or situation 
         // 2.	Assign dynamic labels describing the underlying system dynamics.
       },
     ],
+    text: { format: responseFormat },
   });
 
-  invariant(completion.choices[0]?.message.parsed, "No content");
+  const parsed = response.output_parsed;
+  invariant(parsed, "No content");
 
-  return completion.choices[0].message.parsed;
+  return parsed;
 }

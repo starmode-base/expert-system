@@ -46,8 +46,9 @@ export const systemPrompt = `# Role
   `;
 
 export const insightSchema = z.object({
-  insight: z.string({
-    description: `Final insight output text (Markdown format).
+  insight: z
+    .string()
+    .describe(`Final insight output text (Markdown format).
 
   # Objective
   Produce ONE compelling, standalone insight that teaches the reader something non-obvious about the world. The primary goal is **clarity, explanation, and engagement**.
@@ -105,25 +106,27 @@ export const insightSchema = z.object({
   - Use formatting (e.g. Short paragraphs and bullet points.) to make the insight more engaging and readable.
   - Clear, human and entertaining.
   - Write like Morgan Housel: simple language, sharp ideas, calm confidence.
-  - Explain the core concepts so anyone can understand them.`,
-  }),
-  title: z.string({
-    description:
+  - Explain the core concepts so anyone can understand them.`),
+  title: z
+    .string()
+    .describe(
       "The title of the insight. Include a nod to the domain. Should be short, several words to capture the essence of the insight. Return text, not markdown.",
-  }),
-  core_insight_statement: z.string({
-    description:
+    ),
+  core_insight_statement: z
+    .string()
+    .describe(
       "The core insight statement as text. This should be the same text as the core insight statement (at beginning of insight text) in the insight text. This should be text, not markdown.",
-  }),
+    ),
   references: z.array(
     z.object({
-      insight_reference_number: z.number({
-        description: "The number of the reference cited in the insight.",
-      }),
-      reference_id: z.string({
-        description:
+      insight_reference_number: z
+        .number()
+        .describe("The number of the reference cited in the insight."),
+      reference_id: z
+        .string()
+        .describe(
           "The id (reference_id) of the reference from the Takeaway References. These will always be alphanumeric strings. e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y",
-      }),
+        ),
     }),
   ),
 });
