@@ -39,7 +39,7 @@ export const generateInsight = inngest.createFunction(
     const recentInsights = await step.run(`get-recent-insights`, async () => {
       const insights = await db.query.insights.findMany({
         where: (insights, { and, eq }) =>
-          and(eq(insights.userId, event.user.id)),
+          and(eq(insights.userId, event.data.user.id)),
         orderBy: (insights, { desc }) => [desc(insights.createdAt)],
         limit: 15,
       });
@@ -125,7 +125,7 @@ export const generateInsight = inngest.createFunction(
         const [result] = await tx
           .insert(schema.insights)
           .values({
-            userId: event.user.id,
+            userId: event.data.user.id,
             title: finalInsight.title,
             insight: finalInsight.insight,
             summary: summarizedInsight,
@@ -165,7 +165,7 @@ export const generateInsight = inngest.createFunction(
     await step.run(
       `notify-ui`,
       publishNotifyUI,
-      event.user.id,
+      event.data.user.id,
       `Insight generated for id: ${insightId}`,
     );
 

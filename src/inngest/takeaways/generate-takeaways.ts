@@ -40,7 +40,7 @@ export const generateTakeaways = inngest.createFunction(
     // If takeaways already exist, early return
     if (existingTakeaways.length > 0) {
       await publishNotifyUI(
-        event.user.id,
+        event.data.user.id,
         `Takeaways already exist for document ${event.data.documentId}`,
       );
       return "Takeaways already exist";
@@ -73,7 +73,7 @@ export const generateTakeaways = inngest.createFunction(
       })
       .catch(async () => {
         await publishNotifyUI(
-          event.user.id,
+          event.data.user.id,
           "Error: There was an error generating takeaways.",
         );
         throw new NonRetriableError(`Error generating takeaways.`);
@@ -82,7 +82,7 @@ export const generateTakeaways = inngest.createFunction(
     await step.run(
       "publish-invalidate",
       publishNotifyUI,
-      event.user.id,
+      event.data.user.id,
       `Generated takeaways: ${takeaways.map((t) => t.title).join(", ")} takeaways`,
     );
 

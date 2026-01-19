@@ -239,8 +239,8 @@ export const stratecheryScraper = inngest.createFunction(
             documentId: doc.id,
             takeawayPrompt: stratecheryTakeawayPrompt,
             model: "gpt-5.2",
+            user: { id: "", email: "" },
           },
-          user: { id: "", email: "" },
         });
       }),
     );

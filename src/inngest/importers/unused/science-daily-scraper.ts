@@ -2,13 +2,13 @@
 
 import { extractRssItems, scrapeLink } from "../scrapers/scientific-daily";
 import { inngest } from "../../client";
-import { publishNotifyUI } from "~/lib/ably";
 
 export const scienceDailyScraper = inngest.createFunction(
   { id: "scraper.daily-science" },
   { event: "scraper/daily-science" },
   async ({ step, event }) => {
-    console.log("Scraper started: ", event.user);
+    console.log("Scraper started: ", event.data.user);
+
     // Scrape and save content
     const items = await step.run("get-rss-feed", async () => {
       // ######
@@ -39,20 +39,10 @@ export const scienceDailyScraper = inngest.createFunction(
             takeawayPrompt:
               "Focus on takeaways that are relevant on its potential for real impact to peoples lives.",
             model: "gpt-5-mini",
+            user: { id: "", email: "" },
           },
-          user: event.user,
         });
       }),
-    );
-
-    /**
-     * Step 3: Publish to the Ably channel
-     */
-    await step.run(
-      "publish-invalidate",
-      publishNotifyUI,
-      event.user.id,
-      "Complete",
     );
   },
 );

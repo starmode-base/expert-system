@@ -10,6 +10,7 @@ export const sendEventScienceDailyScraperSF = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await inngest.send({
       name: "scraper/daily-science",
+      data: {},
       user: {
         id: context.viewer.id,
         email: context.viewer.email,
@@ -35,10 +36,10 @@ export const sendEventEarningsCallscraperSF = createServerFn({ method: "POST" })
         symbols: data.symbols,
         year: data.year,
         quarter: data.quarter,
-      },
-      user: {
-        id: context.viewer.id,
-        email: context.viewer.email,
+        user: {
+          id: context.viewer.id,
+          email: context.viewer.email,
+        },
       },
     });
 
@@ -61,7 +62,13 @@ export const sendEventGenerateTakeawaysSF = createServerFn({ method: "POST" })
     );
     await inngest.send({
       name: "app/generate-takeaways",
-      data,
+      data: {
+        ...data,
+        user: {
+          id: context.viewer.id,
+          email: context.viewer.email,
+        },
+      },
       user: {
         id: context.viewer.id,
         email: context.viewer.email,
@@ -87,7 +94,13 @@ export const sendEventGenerateInsightSF = createServerFn({ method: "POST" })
 
     await inngest.send({
       name: "app/generate-insight",
-      data,
+      data: {
+        ...data,
+        user: {
+          id: context.viewer.id,
+          email: context.viewer.email,
+        },
+      },
       user: {
         id: context.viewer.id,
         email: context.viewer.email,

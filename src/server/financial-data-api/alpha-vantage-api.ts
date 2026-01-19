@@ -27,7 +27,7 @@ const TreasuryYieldResponseSchema = z
     unit: z.string(),
     data: z.array(TreasuryYieldPointSchema),
   })
-  .passthrough();
+  .loose();
 
 const CompanyOverviewSchema = z.object({
   Symbol: z.string(),
@@ -149,7 +149,7 @@ const IncomeStatementReportSchema = z
     ebitda: z.string().nullable(),
     netIncome: z.string().nullable(),
   })
-  .passthrough();
+  .loose();
 
 const IncomeStatementSchema = z.object({
   symbol: z.string(),
@@ -198,7 +198,7 @@ const BalanceSheetReportSchema = z
     commonStock: z.string().nullable(),
     commonStockSharesOutstanding: z.string().nullable(),
   })
-  .passthrough();
+  .loose();
 
 const BalanceSheetSchema = z.object({
   symbol: z.string(),
@@ -240,7 +240,7 @@ const CashFlowReportSchema = z
     changeInExchangeRate: z.string().nullable(),
     netIncome: z.string().nullable(),
   })
-  .passthrough();
+  .loose();
 
 const CashFlowSchema = z.object({
   symbol: z.string(),
