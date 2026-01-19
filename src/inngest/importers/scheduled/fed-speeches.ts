@@ -251,8 +251,9 @@ export const fedSpeechesScraper = inngest.createFunction(
             documentId: doc.id,
             takeawayPrompt: fedSpeechesTakeawayPrompt,
             model: "gpt-5.1",
+            user: { id: "", email: "" },
           },
-          user: { id: "", email: "" },
+
         });
       }),
     );

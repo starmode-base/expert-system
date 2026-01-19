@@ -72,8 +72,9 @@ export const dailyInsight = inngest.createFunction(
             data: {
               seedText,
               insightPrompt: "",
+              user: { id: user.id, email: user.email },
             },
-            user: { id: user.id, email: user.email },
+
           });
 
           userSentCount += 1;

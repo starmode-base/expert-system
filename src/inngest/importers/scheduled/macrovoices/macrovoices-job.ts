@@ -117,8 +117,9 @@ export const macroVoicesScraper = inngest.createFunction(
             documentId: doc.id,
             takeawayPrompt: macroVoicesTakeawayPrompt,
             model: "gpt-5.2",
+            user: { id: "", email: "" },
           },
-          user: { id: "", email: "" },
+
         });
       }),
     );

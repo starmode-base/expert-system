@@ -95,8 +95,9 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
             documentId: doc.id,
             takeawayPrompt: dwarkeshPodcastTakeawayPrompt,
             model: "gpt-5.2",
+            user: { id: "", email: "" },
           },
-          user: { id: "", email: "" },
+
         });
       }),
     );

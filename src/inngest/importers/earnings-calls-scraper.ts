@@ -49,7 +49,7 @@ export const earningsCallsScraper = inngest.createFunction(
 
             console.log("error", error);
             await publishNotifyUI(
-              event.user.id,
+              event.data.user.id,
               `There was an Error fetching ${symbol.symbol} transcript`,
             );
 
@@ -71,7 +71,7 @@ export const earningsCallsScraper = inngest.createFunction(
 
     if (documentIds.length === 0 && symbols.length > 0) {
       await step.run("publish-invalidate", async () => {
-        await publishNotifyUI(event.user.id, `Complete`);
+        await publishNotifyUI(event.data.user.id, `Complete`);
       });
 
       return;
@@ -80,7 +80,7 @@ export const earningsCallsScraper = inngest.createFunction(
     await step.run(
       "publish-invalidate",
       publishNotifyUI,
-      event.user.id,
+      event.data.user.id,
       `Scrape Complete. Generating takeways for ${documentIds.length} Transcripts`,
     );
 
@@ -97,8 +97,9 @@ export const earningsCallsScraper = inngest.createFunction(
             documentId,
             takeawayPrompt: earningsCallTakeawayPrompt,
             model: "gpt-5.1",
+            user: event.data.user,
           },
-          user: event.user,
+
         });
       }),
     );
@@ -110,7 +111,7 @@ export const earningsCallsScraper = inngest.createFunction(
     await step.run(
       "publish-invalidate",
       publishNotifyUI,
-      event.user.id,
+      event.data.user.id,
       "Complete",
     );
   },

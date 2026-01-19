@@ -136,8 +136,9 @@ export const processEarningsJobs = inngest.createFunction(
             documentId: result.documentId,
             takeawayPrompt: earningsCallTakeawayPrompt,
             model: "gpt-5.2",
+            user: { id: "", email: "" },
           },
-          user: { id: "", email: "" },
+
         }),
       ),
     );
