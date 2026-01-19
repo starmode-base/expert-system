@@ -99,7 +99,6 @@ export const earningsCallsScraper = inngest.createFunction(
             model: "gpt-5.1",
             user: event.data.user,
           },
-
         });
       }),
     );

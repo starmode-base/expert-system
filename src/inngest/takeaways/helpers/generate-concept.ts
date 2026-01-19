@@ -6,8 +6,7 @@ import { z } from "zod";
 const client = new OpenAI();
 
 const schema = z.object({
-  concept: z
-    .string()
+  concept: z.string()
     .describe(`Rewrite the Takeaway as a short, domain-agnostic mechanism description:
 	•	Remove all proper nouns, tickers, company names, product names, and field-specific jargon.
 	•	Do not mention specific industries (e.g., “biotech,” “social media”) unless absolutely necessary.

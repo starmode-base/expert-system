@@ -253,7 +253,6 @@ export const fedSpeechesScraper = inngest.createFunction(
             model: "gpt-5.1",
             user: { id: "", email: "" },
           },
-
         });
       }),
     );

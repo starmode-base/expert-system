@@ -6,8 +6,6 @@ const userSchema = z.object({
   email: z.string(),
 });
 
-
-
 // /**
 //      * Daily Science Scrapper
 //      */
@@ -59,7 +57,6 @@ const userSchema = z.object({
 //   data: z.object({}),
 // },
 
-
 const eventSchemas = {
   /**
    * Daily Science Scrapper
@@ -90,7 +87,6 @@ const eventSchemas = {
     data: z.object({}),
   }),
 };
-
 
 // Create a client to send and receive events
 export const inngest = new Inngest({

@@ -74,7 +74,6 @@ export const dailyInsight = inngest.createFunction(
               insightPrompt: "",
               user: { id: user.id, email: user.email },
             },
-
           });
 
           userSentCount += 1;

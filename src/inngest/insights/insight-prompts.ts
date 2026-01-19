@@ -46,9 +46,7 @@ export const systemPrompt = `# Role
   `;
 
 export const insightSchema = z.object({
-  insight: z
-    .string()
-    .describe(`Final insight output text (Markdown format).
+  insight: z.string().describe(`Final insight output text (Markdown format).
 
   # Objective
   Produce ONE compelling, standalone insight that teaches the reader something non-obvious about the world. The primary goal is **clarity, explanation, and engagement**.

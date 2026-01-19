@@ -11,9 +11,7 @@ const client = new OpenAI();
 const schema = z.object({
   takeaways: z.array(
     z.object({
-      takeaway: z
-        .string()
-        .describe(`
+      takeaway: z.string().describe(`
         # Content Requirements:
         - Prioritize Novelty: Focus on the most interesting, new, or important insights. Ignore generic updates.
         - For each takeaway, you must capture three distinct dimensions:
@@ -37,14 +35,11 @@ const schema = z.object({
         - Independence: Each takeaway must be unique and unrelated to the others. Do not reference previous points.`),
       references: z.array(
         z.object({
-          number: z
-            .number()
-            .describe(`The number of the reference.
+          number: z.number().describe(`The number of the reference.
             -Start at 1 and increment for each reference.
             -References should only be used for the current takeaway.
             -Do not use the same reference across takeaways.`),
-          reference: z
-            .string()
+          reference: z.string()
             .describe(`Relevant facts, quotes and data to support the takeaway.
               - When quoting a speaker, provide the attribution in the following format: '"[text]" - <Speaker Name>'
               - The reference should be an exact excerpt from the text. Never use a summary of the text.

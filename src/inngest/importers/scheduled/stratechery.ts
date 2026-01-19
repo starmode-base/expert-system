@@ -241,7 +241,6 @@ export const stratecheryScraper = inngest.createFunction(
             model: "gpt-5.2",
             user: { id: "", email: "" },
           },
-
         });
       }),
     );

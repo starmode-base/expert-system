@@ -41,7 +41,6 @@ export const sendEventEarningsCallscraperSF = createServerFn({ method: "POST" })
           email: context.viewer.email,
         },
       },
-
     });
 
     return context.viewer.email;

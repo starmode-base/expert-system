@@ -39,12 +39,10 @@ export const scienceDailyScraper = inngest.createFunction(
             takeawayPrompt:
               "Focus on takeaways that are relevant on its potential for real impact to peoples lives.",
             model: "gpt-5-mini",
-            user: {id: "", email: ""},
+            user: { id: "", email: "" },
           },
-
         });
       }),
     );
-
   },
 );
