@@ -62,7 +62,7 @@ export const a16zNewsScraper = inngest.createFunction(
       "fetch-articles",
       async () => {
         const results = await Promise.all(
-          newCandidates.map(async (candidate) => {
+          newCandidates.slice(0, 20).map(async (candidate) => {
             const articleText = await fetchA16zArticleText(candidate.link);
             if (!articleText) {
               return null;
