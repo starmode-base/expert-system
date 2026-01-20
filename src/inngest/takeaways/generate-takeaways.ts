@@ -190,15 +190,24 @@ export const generateTakeaways = inngest.createFunction(
       }),
     );
 
-    await Promise.all(
-      takeawaysWrites.map(async (takeawaysWrite) => {
-        await step.run(`save-embedding-${takeawaysWrite.id}`, async () => {
+    for (const takeawaysWrite of takeawaysWrites) {
+      const takeawayEmbedding = await step.run(
+        `generate-takeaway-embedding-${takeawaysWrite.id}`,
+        async () => {
           // ######
-          console.log(`Saving embedding for document ${takeawaysWrite.id}`);
-
-          const takeawayEmbedding = await generateEmbedding(
-            takeawaysWrite.summary,
+          console.log(
+            `Generating takeaway embedding for ${takeawaysWrite.id}`,
           );
+
+          return await generateEmbedding(takeawaysWrite.summary);
+        },
+      );
+
+      await step.run(
+        `save-takeaway-embedding-${takeawaysWrite.id}`,
+        async () => {
+          // ######
+          console.log(`Saving takeaway embedding for ${takeawaysWrite.id}`);
 
           await db
             .insert(schema.takeawayEmbeddings)
@@ -210,10 +219,26 @@ export const generateTakeaways = inngest.createFunction(
               target: schema.takeawayEmbeddings.takeawayId,
               set: { embedding: takeawayEmbedding },
             });
+        },
+      );
 
-          const conceptEmbedding = await generateEmbedding(
-            takeawaysWrite.concept,
+      const conceptEmbedding = await step.run(
+        `generate-concept-embedding-${takeawaysWrite.id}`,
+        async () => {
+          // ######
+          console.log(
+            `Generating concept embedding for ${takeawaysWrite.id}`,
           );
+
+          return await generateEmbedding(takeawaysWrite.concept);
+        },
+      );
+
+      await step.run(
+        `save-concept-embedding-${takeawaysWrite.id}`,
+        async () => {
+          // ######
+          console.log(`Saving concept embedding for ${takeawaysWrite.id}`);
 
           await db
             .insert(schema.conceptEmbeddings)
@@ -225,8 +250,8 @@ export const generateTakeaways = inngest.createFunction(
               target: schema.conceptEmbeddings.takeawayId,
               set: { embedding: conceptEmbedding },
             });
-        });
-      }),
-    );
+        },
+      );
+    }
   },
 );
