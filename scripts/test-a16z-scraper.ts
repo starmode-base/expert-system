@@ -4,10 +4,7 @@ import {
   fetchA16zArticleText,
 } from "~/inngest/importers/scheduled/a16z/a16z-helpers";
 
-const archivePath = 'https://www.a16z.news/archive?sort=new'
-
-
-
+const archivePath = "https://www.a16z.news/archive?sort=new";
 
 try {
   // Archive test
@@ -15,7 +12,7 @@ try {
   const candidates = parseA16zArchiveList(archiveHtml);
   console.log("Parsed archive candidates:", candidates);
 
-  const latest = candidates[0];
+  const latest = candidates[1];
   if (!latest) {
     console.log("No candidates found in archive HTML");
     process.exit(0);

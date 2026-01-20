@@ -37,7 +37,6 @@ function normalizeLink(href: string, baseUrl: string) {
 }
 
 function extractArchiveDescription(container: cheerio.Cheerio<AnyNode>) {
-
   const descriptionAnchor = container
     .find('a[href^="https://www.a16z.news/p/"]:not([data-testid])')
     .first();
@@ -69,7 +68,9 @@ export function parseA16zArchiveList(
   $('div[role="article"][aria-label^="Post preview"]').each(
     (_, containerEl) => {
       const container = $(containerEl);
-      const anchor = container.find('a[data-testid="post-preview-title"]').first();
+      const anchor = container
+        .find('a[data-testid="post-preview-title"]')
+        .first();
       const rawTitle = anchor.text().trim();
       const rawHref = anchor.attr("href")?.trim();
       if (!rawTitle || !rawHref) {
@@ -110,9 +111,11 @@ function stripNonArticleNodes(container: cheerio.Cheerio<AnyNode>) {
   container.find("form, input, textarea, select, button").remove();
   container.find("figure, picture, img, video, audio, iframe").remove();
   container.find("hr").remove();
-  container.find(
-    ".subscription-widget-wrap, .subscribe-widget, .post-ufi, #discussion",
-  ).remove();
+  container
+    .find(
+      ".subscription-widget-wrap, .subscribe-widget, .post-ufi, #discussion",
+    )
+    .remove();
 }
 
 export function parseA16zArticleHtml(html: string) {
@@ -122,11 +125,7 @@ export function parseA16zArticleHtml(html: string) {
     return "";
   }
 
-  const author = $(".post-header")
-    .find(".meta-EgzBVA a")
-    .first()
-    .text()
-    .trim();
+  const author = $(".post-header").find(".meta-EgzBVA a").first().text().trim();
 
   const fallbackAuthor =
     author ||
