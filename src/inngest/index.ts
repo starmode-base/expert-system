@@ -9,6 +9,7 @@ import { stratecheryScraper } from "./importers/scheduled/stratechery";
 import { syncEarningsCalendar } from "./importers/scheduled/sync-earnings-calendar";
 import { dwarkeshPodcastScraper } from "./importers/scheduled/dwarkesh/dwarkesh-job";
 import { macroVoicesScraper } from "./importers/scheduled/macrovoices/macrovoices-job";
+import { a16zNewsScraper } from "./importers/scheduled/a16z/a16z-job";
 import { dailyXPost } from "./post-to-x/daily-x-post";
 
 export const inngestFunctions = [
@@ -23,5 +24,6 @@ export const inngestFunctions = [
   dailyInsight,
   dwarkeshPodcastScraper,
   macroVoicesScraper,
+  a16zNewsScraper,
   dailyXPost,
 ];
