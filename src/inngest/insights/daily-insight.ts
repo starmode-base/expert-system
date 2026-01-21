@@ -142,7 +142,10 @@ async function generateResearchObjectives(
     text: { format: zodTextFormat(outputSchema, "research_objectives") },
   });
 
-  invariant(response.output_parsed?.researchObjectives, "No research objectives");
+  invariant(
+    response.output_parsed?.researchObjectives,
+    "No research objectives",
+  );
 
   return response.output_parsed.researchObjectives;
 }

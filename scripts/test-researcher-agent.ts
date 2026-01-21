@@ -1,8 +1,10 @@
 import { run } from "@openai/agents";
 import { createResearcherAgent } from "~/inngest/insights/agents/researcher";
 
-const objective =  "Find recent takeaways about enterprise AI adoption and productivity gains.";
-const context =  "Focus on software vendors, CIO surveys, or case studies from 2024 onward.";
+const objective =
+  "Find recent takeaways about enterprise AI adoption and productivity gains.";
+const context =
+  "Focus on software vendors, CIO surveys, or case studies from 2024 onward.";
 
 const agent = createResearcherAgent();
 
@@ -13,15 +15,15 @@ ${objective}
 Context:
 ${context}`;
 
-  console.log("Running researcher agent with prompt:", prompt);
-  const result = await run(agent, prompt);
+console.log("Running researcher agent with prompt:", prompt);
+const result = await run(agent, prompt);
 
-  if (!result.finalOutput) {
-    throw new Error("No final output returned by researcher agent.");
-  }
+if (!result.finalOutput) {
+  throw new Error("No final output returned by researcher agent.");
+}
 
-  const output = result.finalOutput;
+const output = result.finalOutput;
 
-  console.log("Researcher agent output:");
-  console.log(output);
-  process.exit(0);
+console.log("Researcher agent output:");
+console.log(output);
+process.exit(0);

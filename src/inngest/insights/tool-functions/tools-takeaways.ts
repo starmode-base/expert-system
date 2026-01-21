@@ -84,11 +84,7 @@ export async function fetchTakeawayById(args: { id: string }) {
 `;
 }
 
-
-
-export async function fetchFormattedTakeawaysByIds(args: {
-  ids: string[];
-}){
+export async function fetchFormattedTakeawaysByIds(args: { ids: string[] }) {
   const dateFormatter = new Intl.DateTimeFormat("en-US");
 
   const takeaways = await db.query.takeaways.findMany({

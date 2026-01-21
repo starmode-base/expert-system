@@ -3,7 +3,8 @@ import { db, schema } from "~/postgres/db";
 import { generateEmbedding } from "~/postgres/generate-embedding";
 import { vectorTakeawaySearch } from "~/server/vector-queries";
 
-const query ="What is the latest news on AI in enterprise adoption and productivity?";
+const query =
+  "What is the latest news on AI in enterprise adoption and productivity?";
 const iterations = Number.parseInt(process.argv[3] ?? "3", 10);
 
 if (!Number.isFinite(iterations) || iterations < 1) {

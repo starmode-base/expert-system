@@ -2,7 +2,7 @@ import { Agent, tool, type FunctionTool } from "@openai/agents";
 import { z } from "zod";
 import {
   fetchTakeawayPreviews,
-    fetchFormattedTakeawaysByIds,
+  fetchFormattedTakeawaysByIds,
 } from "../tool-functions/tools-takeaways";
 
 // ---------------------------
@@ -47,13 +47,15 @@ const fetchFormattedTakeawayPreviewsByIdsParams = z.object({
     .describe("Takeaway ids to fetch previews for"),
 });
 
-const fetchFormattedTakeawayPreviewsByIdsTool: FunctionTool= tool({
+const fetchFormattedTakeawayPreviewsByIdsTool: FunctionTool = tool({
   name: "fetchFormattedTakeawayPreviewsByIds",
   description:
     "Fetch and format takeaway previews for a specific list of takeaway ids.",
   parameters: fetchFormattedTakeawayPreviewsByIdsParams,
   strict: true,
-  execute: async (args: z.infer<typeof fetchFormattedTakeawayPreviewsByIdsParams>) => {
+  execute: async (
+    args: z.infer<typeof fetchFormattedTakeawayPreviewsByIdsParams>,
+  ) => {
     return await fetchFormattedTakeawaysByIds(args);
   },
 });
@@ -85,6 +87,8 @@ export function createResearcherAgent() {
     instructions: researcherSystemPrompt,
     model: "gpt-5.2",
     tools: [fetchTakeawayPreviewsTool, fetchFormattedTakeawayPreviewsByIdsTool],
-    toolUseBehavior:  { stopAtToolNames: ["fetchFormattedTakeawayPreviewsByIdsTool"]  } ,
+    toolUseBehavior: {
+      stopAtToolNames: ["fetchFormattedTakeawayPreviewsByIdsTool"],
+    },
   });
 }

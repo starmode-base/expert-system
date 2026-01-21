@@ -26,7 +26,6 @@ export const generateInsight = inngest.createFunction(
   { id: "app/generate-insight" },
   { event: "app/generate-insight" },
   async ({ step, event }) => {
-
     // Step 1: Load the seed takeaway (the one we are writing an insight about)
 
     // get recent insights to feed into the prompt
@@ -64,7 +63,6 @@ export const generateInsight = inngest.createFunction(
         };
       },
     );
-
 
     const finalInsight = await step.run(`run-insight-agent`, async () => {
       return await runInsightAgent({
