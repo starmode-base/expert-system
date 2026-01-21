@@ -8,6 +8,7 @@ import {
 import { fetchTakeawayById } from "../tool-functions/tools-takeaways";
 import { invariant } from "@tanstack/react-router";
 import { createFinancialAnalysisAgent } from "./financial-analyst";
+import { createResearcherAgent } from "./researcher";
 
 // ---------------------------
 // Tools
@@ -59,6 +60,26 @@ Provide the following sructured information to the financialAnalyst:
   Constraints: (no speculation, cite numbers, handle missing data)`,
 });
 
+const researcher = createResearcherAgent();
+const researcherTool = researcher.asTool({
+  toolName: "researcher",
+  toolDescription: `This tool provides autonomous research and data retrieval for tech and business news, poducasts, fed reserve speeches, articles, blog posts, and public companies and macro context from a large corpus of documents.
+
+Capabilities:
+- Query for new and innovative ideas, frameworks, and trends in economics, technology and business.
+- Retrieve information that is relevant to the research objective.
+
+Usage:
+- Use this tool whenever you need to find more supporting information for the research objective.
+
+Provide the following sructured information to the researcher:
+
+  Today's date:
+  Research Objective:
+  Context:
+`,
+});
+
 // ---------------------------
 // Agent
 // ---------------------------
@@ -68,7 +89,7 @@ function createInsightAgent() {
     name: "Insight Generator",
     instructions: systemPrompt,
     model: "gpt-5.2",
-    tools: [financialAnalystTool, fetchTakeawayByIdTool],
+    tools: [financialAnalystTool, researcherTool, fetchTakeawayByIdTool],
     outputType: insightSchema,
     modelSettings: {
       parallelToolCalls: false,
@@ -83,7 +104,6 @@ function createInsightAgent() {
 
 export interface InsightAgentInput {
   takeawayPreviewFormatted: string;
-  takeawayConceptsPreviewFormatted: string;
   recentInsights: string;
   insightPrompt: string;
 }

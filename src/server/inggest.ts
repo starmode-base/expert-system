@@ -1,4 +1,3 @@
-import { invariant } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { inngest } from "~/inngest/client";
@@ -84,14 +83,11 @@ export const sendEventGenerateInsightSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(
     z.object({
-      seedText: z.string(),
       insightPrompt: z.string(),
       model: z.string().optional(),
     }),
   )
   .handler(async ({ context, data }) => {
-    invariant(data.seedText, "seedText is required");
-
     await inngest.send({
       name: "app/generate-insight",
       data: {

@@ -1,5 +1,5 @@
 import { db, schema } from "~/postgres/db";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { buildTakeawayPreviews } from "~/inngest/insights/insight-prompts";
 import { vectorTakeawaySearchTimeWeighted } from "~/server/vector-queries";
 
@@ -12,7 +12,7 @@ import { vectorTakeawaySearchTimeWeighted } from "~/server/vector-queries";
  */
 export interface FetchTakeawayPreviewsArgs {
   query: string;
-  count?: number;
+  count: number;
 }
 
 function normalizeTakeawayCount(count: number | undefined) {
@@ -24,13 +24,10 @@ function normalizeTakeawayCount(count: number | undefined) {
 }
 
 /**
- * Fetch up to 10 relevant takeaway previews via vector search
+ * Fetch up to 10 relevant time-weighted takeaway previews via vector search
  *
  * This tool is intended for quickly expanding context (summaries only), not for
  * retrieving full takeaway bodies or references.
- *
- * - If `timeWeighted` is omitted or true, results are re-ranked to prefer newer sources.
- * - If `timeWeighted` is false, results are returned in pure similarity order.
  *
  * Returns a single formatted preview string (title, publication date, source, summary)
  * for each takeaway, separated by `------`.
@@ -85,4 +82,32 @@ export async function fetchTakeawayById(args: { id: string }) {
     Takeaway ID: ${takeaway.id}
     Takeaway References: ${takeaway.takeawayReferences.map((reference) => `${reference.referenceNumber}. (reference_id: ${reference.id}) ${reference.reference}`).join("\n")}
 `;
+}
+
+export async function fetchFormattedTakeawaysByIds(args: { ids: string[] }) {
+  const dateFormatter = new Intl.DateTimeFormat("en-US");
+
+  const takeaways = await db.query.takeaways.findMany({
+    where: inArray(schema.takeaways.id, args.ids),
+    with: {
+      document: true,
+      takeawayReferences: true,
+    },
+  });
+
+  const formattedTakeaways = takeaways
+    .map(
+      (takeaway) => `
+  ${takeaway.title}
+  Takeaway ID: ${takeaway.id}
+  Publication Date: ${dateFormatter.format(new Date(takeaway.document.publicationDate))}
+  Source: ${takeaway.document.source}
+  Source Document Title: ${takeaway.document.title}
+  Key Takeaway:
+  ${takeaway.summary}
+  `,
+    )
+    .join("\n------\n");
+
+  return formattedTakeaways;
 }

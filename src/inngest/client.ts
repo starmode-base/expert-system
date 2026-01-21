@@ -36,7 +36,6 @@ const userSchema = z.object({
 
 // "app/generate-insight": {
 //   data: z.object({
-//     seedText: z.string(),
 //     insightPrompt: z.string(),
 //     model: z.string().optional(),
 //   }),
@@ -75,9 +74,7 @@ const eventSchemas = {
     user: userSchema,
   }),
   "app/generate-insight": z.object({
-    seedText: z.string(),
     insightPrompt: z.string(),
-    model: z.string().optional(),
     user: userSchema,
   }),
   "scheduler/sync-earnings-calendar": z.object({

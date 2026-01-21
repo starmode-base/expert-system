@@ -1,4 +1,4 @@
-import { cosineDistance, desc, gt, sql } from "drizzle-orm";
+import { asc, cosineDistance, sql } from "drizzle-orm";
 import { cosineSimilarity } from "~/lib/vector-similarity";
 import { db, schema } from "~/postgres/db";
 import { generateEmbedding } from "~/postgres/generate-embedding";
@@ -72,7 +72,7 @@ export async function vectorTakeawaySearch(
   limit = 10,
 ): Promise<TakeawaySearchResult[]> {
   const searchEmbedding = await generateEmbedding(searchInput);
-  const similarity = sql<number>`1 - (${cosineDistance(schema.takeawayEmbeddings.embedding, searchEmbedding)})`;
+  const distance = sql<number>`${cosineDistance(schema.takeawayEmbeddings.embedding, searchEmbedding)}`;
 
   const similarTakeaways = await db.query.takeawayEmbeddings.findMany({
     with: {
@@ -84,11 +84,9 @@ export async function vectorTakeawaySearch(
         },
       },
     },
-    where: gt(similarity, 0.2),
-    orderBy: [desc(similarity)],
+    orderBy: [asc(distance)],
     limit,
   });
-
   return similarTakeaways.map((takeaway) => {
     return {
       id: takeaway.takeaway.id,
@@ -131,7 +129,7 @@ export async function vectorConceptSearch(
   limit = 10,
 ): Promise<TakeawaySearchResult[]> {
   const searchEmbedding = await generateEmbedding(searchInput);
-  const similarity = sql<number>`1 - (${cosineDistance(schema.conceptEmbeddings.embedding, searchEmbedding)})`;
+  const distance = sql<number>`${cosineDistance(schema.conceptEmbeddings.embedding, searchEmbedding)}`;
 
   const similarConcepts = await db.query.conceptEmbeddings.findMany({
     with: {
@@ -143,8 +141,8 @@ export async function vectorConceptSearch(
         },
       },
     },
-    //order by similarity
-    orderBy: [desc(similarity)],
+    // Order by vector distance to allow index usage
+    orderBy: [asc(distance)],
     limit,
   });
 
