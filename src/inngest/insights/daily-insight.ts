@@ -44,8 +44,8 @@ export const dailyInsight = inngest.createFunction(
       return rows satisfies TakeawaySummary[];
     });
 
-    const seedTexts = await step.run(
-      "get-generate-insight-seed-texts",
+    const insightPrompts = await step.run(
+      "get-generate-insight-prompts",
       async () => {
         if (takeaways.length <= 3) return takeaways.map((t) => t.summary);
 
@@ -54,7 +54,7 @@ export const dailyInsight = inngest.createFunction(
     );
 
     // If no seed texts, don't send any insights
-    if (seedTexts.length === 0)
+    if (insightPrompts.length === 0)
       return {
         users: users.length,
         takeaways: takeaways.length,
@@ -66,23 +66,22 @@ export const dailyInsight = inngest.createFunction(
       users.map(async (user) => {
         let userSentCount = 0;
 
-        for (const [seedTextIndex, seedText] of seedTexts.entries()) {
-          await step.sendEvent(`generate-insight-${user.id}-${seedTextIndex}`, {
+        for (const [promptIndex, insightPrompt] of insightPrompts.entries()) {
+          await step.sendEvent(`generate-insight-${user.id}-${promptIndex}`, {
             name: "app/generate-insight",
             data: {
-              seedText,
-              insightPrompt: "",
+              insightPrompt,
               user: { id: user.id, email: user.email },
             },
           });
 
           userSentCount += 1;
 
-          const hasMoreForUser = seedTextIndex < seedTexts.length - 1;
+          const hasMoreForUser = promptIndex < insightPrompts.length - 1;
           if (hasMoreForUser) {
             // Add spacing so later insights see prior sends and avoid generating near-duplicates
             await step.sleep(
-              `sleep-between-insights-${user.id}-${seedTextIndex}`,
+              `sleep-between-insights-${user.id}-${promptIndex}`,
               5 * 60 * 1000,
             );
           }
@@ -101,7 +100,7 @@ export const dailyInsight = inngest.createFunction(
       users: users.length,
       takeaways: takeaways.length,
       totalInsightsSent,
-      seedTexts,
+      insightPrompts,
     };
   },
 );

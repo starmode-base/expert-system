@@ -19,17 +19,16 @@ export function InsightCreator() {
   >([]);
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
-  const [seedText, setSeedText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [similarItemsTab, setSimilarItemsTab] =
     useState<SimilarItemsTab>("takeaways");
   const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
 
-  function useDebouncedSearch(seedText: string | null | undefined) {
+  function useDebouncedSearch(searchText: string | null | undefined) {
     const requestIdRef = useRef(0);
 
     useEffect(() => {
-      const q = (seedText ?? "").trim();
+      const q = (searchText ?? "").trim();
 
       if (q.length < 8) {
         setSummaryTakeaways([]);
@@ -61,10 +60,10 @@ export function InsightCreator() {
       return () => {
         window.clearTimeout(t);
       };
-    }, [seedText]);
+    }, [searchText]);
   }
 
-  useDebouncedSearch(seedText);
+  useDebouncedSearch(prompt);
 
   const formCardClasses =
     "rounded-xl border border-gray-200 bg-white shadow-sm ring-1 ring-gray-50";
@@ -72,28 +71,6 @@ export function InsightCreator() {
   return (
     <div className="flex min-h-[calc(100dvh-64px)] w-full flex-col bg-gray-50 md:flex-row">
       <div className="flex w-full flex-col gap-4 border-b border-gray-200 px-4 pt-6 pb-4 md:h-[calc(100dvh-64px)] md:max-w-[380px] md:border-r md:border-b-0 md:bg-white md:px-6 md:py-6 md:shadow-sm">
-        <div className={`${formCardClasses} p-4`}>
-          <div className="flex items-start justify-between gap-3">
-            <h2 className="text-base font-semibold text-gray-700">
-              Research Context
-            </h2>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-              Required
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-gray-500">
-            Provide a few sentences to anchor the research context
-          </p>
-          <textarea
-            placeholder="Enter research context..."
-            className="mt-3 min-h-32 w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-inner focus:border-gray-400 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-            value={seedText}
-            onChange={(e) => {
-              setSeedText(e.target.value);
-            }}
-          />
-        </div>
-
         <div className={`${formCardClasses} p-4`}>
           <div>
             <div className="flex items-start justify-between gap-3">
@@ -130,7 +107,7 @@ export function InsightCreator() {
           <button
             disabled={!prompt.trim() || loading}
             className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition ${
-              prompt.trim() && seedText.trim() && !loading
+              prompt.trim() && !loading
                 ? "cursor-pointer bg-gray-900 text-white hover:bg-gray-800"
                 : "cursor-not-allowed bg-gray-300 text-gray-600"
             }`}
@@ -142,7 +119,6 @@ export function InsightCreator() {
               setError(null);
               await sendEventGenerateInsight({
                 data: {
-                  seedText,
                   insightPrompt: prompt,
                 },
               });

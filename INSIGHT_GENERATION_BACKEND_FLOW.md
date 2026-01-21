@@ -124,16 +124,16 @@ flowchart TD
 
 ### Inputs / triggers
 
-- `app/generate-insight` events supply `seedText`, optional `insightPrompt`, and the target user.
+- `app/generate-insight` events supply `insightPrompt` and the target user.
 - **Daily automation** (`scheduler.daily-insight`, cron `TZ=America/Phoenix 0 7 * * *`):
   - Fetches takeaways created in the last 24 hours (system-wide).
   - If more than three exist, clusters them into three seed summaries via `generateTakeawaySummaries`; otherwise uses the raw summaries.
-  - Fans out one `app/generate-insight` event per user × seed text (prompt empty).
+- Fans out one `app/generate-insight` event per user × insight prompt.
 
 ### Processing (Inngest function: `app/generate-insight`)
 
 - Load the user’s recent insights to avoid duplication in the prompt.
-- Find similar takeaways and concept neighbors with `vectorTakeawaySearchTimeWeighted` and `vectorConceptSearchTimeWeighted` using the `seedText`.
+- Find similar takeaways and concept neighbors with `vectorTakeawaySearchTimeWeighted` and `vectorConceptSearchTimeWeighted` using the `insightPrompt`.
 - Build the initial conversation and run OpenAI Responses with research tools; execute the tool loop (including fetching takeaways) until the model requests the final output.
 - Parse the structured result, then persist:
   - `insights` (per-user insight text + summary)
@@ -151,9 +151,9 @@ flowchart TD
 flowchart TD
   T["System takeaways + embeddings\n(shared across users)"]
   A["Daily cron\nscheduler.daily-insight"] --> B["Takeaways last 24h\n(optional 3 seed summaries)"]
-  B --> C["Send app/generate-insight events\nper user × seedText"]
+  B --> C["Send app/generate-insight events\nper user × insightPrompt"]
   C --> D["Load user recent insights"]
-  C --> E["vectorTakeawaySearchTimeWeighted\nvectorConceptSearchTimeWeighted (seedText)"]
+  C --> E["vectorTakeawaySearchTimeWeighted\nvectorConceptSearchTimeWeighted (insightPrompt)"]
   T --> E
   D --> F["OpenAI Responses agent\n+ research tools"]
   E --> F

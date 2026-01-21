@@ -59,19 +59,6 @@ function InsightDetails(props: InsightProps) {
         <div className="w-1/3 border-r border-gray-200 p-4">
           <div className="mb-6">
             <h2 className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-              Seed text
-            </h2>
-            <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
-              <p className="break-words whitespace-pre-wrap">
-                {insight.insight.seedText?.trim()
-                  ? insight.insight.seedText
-                  : "—"}
-              </p>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <h2 className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
               Prompt
             </h2>
             <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">

@@ -26,7 +26,6 @@ export const generateInsight = inngest.createFunction(
   { id: "app/generate-insight" },
   { event: "app/generate-insight" },
   async ({ step, event }) => {
-    console.log(`Generating insight for ${event.data.seedText}`);
 
     // Step 1: Load the seed takeaway (the one we are writing an insight about)
 
@@ -55,7 +54,7 @@ export const generateInsight = inngest.createFunction(
           `# Context
 
         ## Research Objective
-        ${event.data.seedText}
+        ${event.data.insightPrompt}
 
         return 20 takeaway preview ids`,
         );
@@ -103,11 +102,12 @@ export const generateInsight = inngest.createFunction(
             title: finalInsight.title,
             insight: finalInsight.insight,
             summary: summarizedInsight,
-            seedText: event.data.seedText,
             insightPrompt: event.data.insightPrompt,
           })
           .returning();
         invariant(result, "Failed to create insight");
+
+        // TODO: fine a solution to store the takeaways and concepts used in the insight
 
         // await tx.insert(schema.insightTakeaways).values(
         //   takeawayAndConceptIds.map(({ id, type }) => ({
