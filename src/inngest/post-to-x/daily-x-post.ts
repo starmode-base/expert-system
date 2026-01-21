@@ -21,11 +21,13 @@ interface InsightCandidate {
 
 /**
  * Choose the most interesting insight from the last 24h and post to X between
- * 7:30-8:30 AM AZ.
  */
+
+// DEACTIVATED
 export const dailyXPost = inngest.createFunction(
   { id: "scheduler.daily-x-post" },
-  { cron: "TZ=America/Phoenix 30 7 * * *" },
+  { event: "scheduler/daily-x-post" },
+  // { cron: "TZ=America/Phoenix 30 7 * * *" },
   async ({ step }) => {
     const jitterMinutes = Math.floor(Math.random() * 60);
     if (jitterMinutes > 0) {
