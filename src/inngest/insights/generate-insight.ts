@@ -51,12 +51,10 @@ export const generateInsight = inngest.createFunction(
 
         const output = await run(
           researcher,
-          `# Context
-
-        ## Research Objective
+          `## Research Objective
         ${event.data.insightPrompt}
 
-        return 20 takeaway preview ids`,
+        return 20 takeaways`,
         );
 
         invariant(output.finalOutput, "No final output");

@@ -34,7 +34,7 @@ export const dailyInsight = inngest.createFunction(
     });
 
     const takeaways = await step.run("get-takeaways-last-24h", async () => {
-      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
 
       const rows = await db.query.takeaways.findMany({
         columns: { id: true, summary: true },
@@ -47,9 +47,7 @@ export const dailyInsight = inngest.createFunction(
     const insightPrompts = await step.run(
       "get-generate-insight-prompts",
       async () => {
-        if (takeaways.length <= 3) return takeaways.map((t) => t.summary);
-
-        return await generateTakeawaySummaries(takeaways);
+        return await generateResearchObjectives(takeaways);
       },
     );
 
@@ -61,34 +59,21 @@ export const dailyInsight = inngest.createFunction(
         sent: 0,
       };
 
-    // Process each user in parallel but throttle insights per user with a 5 minute gap
+    // Send all user/prompt combinations in parallel
     const sendCounts = await Promise.all(
-      users.map(async (user) => {
-        let userSentCount = 0;
-
-        for (const [promptIndex, insightPrompt] of insightPrompts.entries()) {
-          await step.sendEvent(`generate-insight-${user.id}-${promptIndex}`, {
-            name: "app/generate-insight",
-            data: {
-              insightPrompt,
-              user: { id: user.id, email: user.email },
-            },
-          });
-
-          userSentCount += 1;
-
-          const hasMoreForUser = promptIndex < insightPrompts.length - 1;
-          if (hasMoreForUser) {
-            // Add spacing so later insights see prior sends and avoid generating near-duplicates
-            await step.sleep(
-              `sleep-between-insights-${user.id}-${promptIndex}`,
-              5 * 60 * 1000,
-            );
-          }
-        }
-
-        return userSentCount;
-      }),
+      users.map((user) =>
+        Promise.all(
+          insightPrompts.map((insightPrompt, promptIndex) =>
+            step.sendEvent(`generate-insight-${user.id}-${promptIndex}`, {
+              name: "app/generate-insight",
+              data: {
+                insightPrompt,
+                user: { id: user.id, email: user.email },
+              },
+            }),
+          ),
+        ).then((results) => results.length),
+      ),
     );
 
     const totalInsightsSent = sendCounts.reduce(
@@ -105,23 +90,18 @@ export const dailyInsight = inngest.createFunction(
   },
 );
 
-async function generateTakeawaySummaries(
+async function generateResearchObjectives(
   takeaways: TakeawaySummary[],
 ): Promise<string[]> {
-  const takeawaySummaries = takeaways
-    .map((t) => t.summary)
-    .filter((summary) => summary.trim().length > 0);
-
-  if (takeawaySummaries.length === 0) return [];
+  if (takeaways.length === 0) return [];
 
   const outputSchema = z.object({
-    summaries: z
+    researchObjectives: z
       .array(
         z
           .string()
-          .min(1)
           .describe(
-            "A distinct 1-2 sentence summary capturing an important topic cluster",
+            "A distinct 1-2 sentence research objective capturing an important topic cluster. This objective should be capable of producing a defensible, potentially investable insight.",
           ),
       )
       .length(3),
@@ -135,26 +115,34 @@ async function generateTakeawaySummaries(
         role: "system",
         type: "message",
         content:
-          "You synthesize many short takeaway summaries into a small set of distinct, high-signal topic summaries.",
+          "You are a research director designing high-leverage research agendas for an insight generation system focused on business, technology, and investing.",
       },
       {
         role: "user",
         type: "message",
-        content: `Given the takeaway summaries below, generate exactly 3 distinct summaries (each 1-2 sentences) that capture the most important or interesting topics across the set.
+        content: `Given the recent takeaway summaries below, generate exactly 3 distinct research objectives for the insight generator.
 
-Rules:
-- Each of the 3 summaries should cover a different topic cluster
-- Be specific, not generic
-- Do not quote the input directly
+    Each research objective should:
+    - Be framed as a concrete investigation or question, not a summary
+    - Focus on business and/or technology dynamics with clear investment relevance
+    - Be specific and directional (not generic trend-watching)
+    - Be novel or non-obvious based on the takeaways
+    - Be capable of producing a defensible, potentially investable insight
 
-Takeaway summaries:
-${takeawaySummaries.map((s) => `- ${s}`).join("\n")}`,
+    Constraints:
+    - Each objective must target a different topic cluster
+    - Do not restate or quote the takeaways
+    - Do not hedge or list multiple sub-questions
+    - Write 1–2 sentences per objective
+
+    Takeaway summaries:
+    ${takeaways.map((takeaway) => `- ${takeaway.summary}`).join("\n")}`,
       },
     ],
-    text: { format: zodTextFormat(outputSchema, "takeaway_summaries") },
+    text: { format: zodTextFormat(outputSchema, "research_objectives") },
   });
 
-  invariant(response.output_parsed?.summaries, "No summaries");
+  invariant(response.output_parsed?.researchObjectives, "No research objectives");
 
-  return response.output_parsed.summaries;
+  return response.output_parsed.researchObjectives;
 }

@@ -105,7 +105,7 @@ async function scrapePageText(url: string) {
  */
 export const fedSpeechesScraper = inngest.createFunction(
   { id: "scheduler.fed-speeches-scraper" },
-  { cron: "TZ=America/Phoenix 15 6 * * *" },
+  { cron: "TZ=America/Phoenix 15 5 * * *" },
   async ({ step }) => {
     const rssItems: FedRssItem[] = await step.run(
       "fetch-and-parse-rss",
