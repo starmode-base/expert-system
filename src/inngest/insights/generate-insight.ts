@@ -6,16 +6,11 @@ import type {
 } from "openai/resources/responses/responses";
 
 import { invariant } from "@tanstack/react-router";
-
-import {
-  vectorConceptSearchTimeWeighted,
-  vectorTakeawaySearchTimeWeighted,
-} from "~/server/vector-queries";
 import { publishNotifyUI } from "~/lib/ably";
-import { buildTakeawayPreviews } from "./insight-prompts";
-import { getConcept } from "../takeaways/helpers/generate-concept";
 import { runInsightAgent } from "./agents/insight-agent";
 import { getSummary } from "../takeaways/helpers/get-summary";
+import { createResearcherAgent } from "./agents/researcher";
+import { run } from "@openai/agents";
 
 export interface InsightLoopState {
   response: Response;
@@ -50,54 +45,33 @@ export const generateInsight = inngest.createFunction(
     });
 
     // Step 2: Gather context (similar takeaways and concept-neighbors) to ground the agent’s first pass
-    const {
-      takeawayPreviewFormatted,
-      takeawayConceptsPreviewFormatted,
-      takeawayAndConceptIds,
-    } = await step.run(`get-similar-takeaways-and-concepts`, async () => {
-      const similarTakeaways = await vectorTakeawaySearchTimeWeighted(
-        event.data.seedText,
-        {
-          limit: 10,
-          halfLifeDays: 90, // 3 months relevance half life
-        },
-      );
+    const { takeawayPreviewFormatted } = await step.run(
+      `get-similar-takeaways-and-concepts`,
+      async () => {
+        const researcher = createResearcherAgent();
 
-      const seedConcept = await getConcept(event.data.seedText);
-      const similarConceptCandidates = await vectorConceptSearchTimeWeighted(
-        seedConcept.concept,
-        {
-          limit: 10,
-          halfLifeDays: 90, // 3 months relevance half life
-        },
-      );
+        const output = await run(
+          researcher,
+          `# Context
 
-      const takeawayIds = new Set(similarTakeaways.map((t) => t.id));
-      const similarConcepts = similarConceptCandidates.filter(
-        (concept) => !takeawayIds.has(concept.id),
-      );
+        ## Research Objective
+        ${event.data.seedText}
 
-      const takeawayAndConceptIds = [
-        ...Array.from(takeawayIds).map((id) => {
-          return { id, type: "takeaway" };
-        }),
-        ...similarConcepts.map((c) => {
-          return { id: c.id, type: "concept" };
-        }),
-      ];
+        return 20 takeaway preview ids`,
+        );
 
-      return {
-        takeawayPreviewFormatted: buildTakeawayPreviews(similarTakeaways),
-        takeawayConceptsPreviewFormatted:
-          buildTakeawayPreviews(similarConcepts),
-        takeawayAndConceptIds,
-      };
-    });
+        invariant(output.finalOutput, "No final output");
+
+        return {
+          takeawayPreviewFormatted: output.finalOutput,
+        };
+      },
+    );
+
 
     const finalInsight = await step.run(`run-insight-agent`, async () => {
       return await runInsightAgent({
         takeawayPreviewFormatted,
-        takeawayConceptsPreviewFormatted,
         recentInsights,
         insightPrompt: event.data.insightPrompt,
       });
@@ -135,13 +109,13 @@ export const generateInsight = inngest.createFunction(
           .returning();
         invariant(result, "Failed to create insight");
 
-        await tx.insert(schema.insightTakeaways).values(
-          takeawayAndConceptIds.map(({ id, type }) => ({
-            insightId: result.id,
-            takeawayId: id,
-            type: type as "takeaway" | "concept",
-          })),
-        );
+        // await tx.insert(schema.insightTakeaways).values(
+        //   takeawayAndConceptIds.map(({ id, type }) => ({
+        //     insightId: result.id,
+        //     takeawayId: id,
+        //     type: type as "takeaway" | "concept",
+        //   })),
+        // );
 
         if (uniqueReferences.length > 0) {
           await tx.insert(schema.insightReferences).values(

@@ -26,7 +26,8 @@ export const systemPrompt = `# Role
   - Use the takeaway summaries generate several candidate insights.
   - Identify the strongest initial hypothesis and treat it as provisional, not final.
   - Use tools to gather additional information to test, challenge, or deepen that hypothesis. Or searching for patterns in different domains or industries.
-  - Be deliberate in your tool use. Only fetch the specific information that you need to support your research or exploration.
+  - Be deliberate in your tool use.
+  - use the researcher agent to get more takeaways and information to support your research.
   - Use the complete takeaways and their references to support your research. NOT just the summaries.
   - Use the financialAnalyst tool to gather quantitative financial data to support the or challenge the insight.
   - If newly fetched information suggests a more important, more surprising, or more defensible insight, abandon the original idea and pivot.
@@ -43,6 +44,8 @@ export const systemPrompt = `# Role
   - Aim for something that would make a sharp reader pause and rethink their assumptions.
   - Include patterns and analogies from different domains and industries to support the insight where relevant. But be sure not to reach to far.
   - The insight should be written for the reader profile described.
+
+
   `;
 
 export const insightSchema = z.object({
@@ -156,8 +159,6 @@ export function buildUserPrompt(input: InsightAgentInput) {
 
   return `# Context
 ## Takeaways
-${input.takeawayConceptsPreviewFormatted}
-\n------\n
 ${input.takeawayPreviewFormatted}
 
 ## Recent Insights

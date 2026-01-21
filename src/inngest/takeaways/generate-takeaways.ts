@@ -195,9 +195,7 @@ export const generateTakeaways = inngest.createFunction(
         `generate-takeaway-embedding-${takeawaysWrite.id}`,
         async () => {
           // ######
-          console.log(
-            `Generating takeaway embedding for ${takeawaysWrite.id}`,
-          );
+          console.log(`Generating takeaway embedding for ${takeawaysWrite.id}`);
 
           return await generateEmbedding(takeawaysWrite.summary);
         },
@@ -226,9 +224,7 @@ export const generateTakeaways = inngest.createFunction(
         `generate-concept-embedding-${takeawaysWrite.id}`,
         async () => {
           // ######
-          console.log(
-            `Generating concept embedding for ${takeawaysWrite.id}`,
-          );
+          console.log(`Generating concept embedding for ${takeawaysWrite.id}`);
 
           return await generateEmbedding(takeawaysWrite.concept);
         },
