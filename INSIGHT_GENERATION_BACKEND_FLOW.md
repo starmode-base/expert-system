@@ -126,9 +126,10 @@ flowchart TD
 
 - `app/generate-insight` events supply `insightPrompt` and the target user.
 - **Daily automation** (`scheduler.daily-insight`, cron `TZ=America/Phoenix 0 7 * * *`):
-  - Fetches takeaways created in the last 24 hours (system-wide).
-  - If more than three exist, clusters them into three seed summaries via `generateTakeawaySummaries`; otherwise uses the raw summaries.
-- Fans out one `app/generate-insight` event per user × insight prompt.
+  - Fetches takeaways created in the last 3 days (system-wide).
+  - Generates research objectives from the takeaway set via `generateResearchObjectives`.
+- Fans out one `app/generate-insight` event per user × research objective.
+- Current daily runner targets `spencer@starmode.app` only (single-user run).
 
 ### Processing (Inngest function: `app/generate-insight`)
 
@@ -150,8 +151,8 @@ flowchart TD
 ```mermaid
 flowchart TD
   T["System takeaways + embeddings\n(shared across users)"]
-  A["Daily cron\nscheduler.daily-insight"] --> B["Takeaways last 24h\n(optional 3 seed summaries)"]
-  B --> C["Send app/generate-insight events\nper user × insightPrompt"]
+  A["Daily cron\nscheduler.daily-insight"] --> B["Takeaways last 3 days\nresearch objectives via generateResearchObjectives"]
+  B --> C["Send app/generate-insight events\nper user × research objective"]
   C --> D["Load user recent insights"]
   C --> E["vectorTakeawaySearchTimeWeighted\nvectorConceptSearchTimeWeighted (insightPrompt)"]
   T --> E
