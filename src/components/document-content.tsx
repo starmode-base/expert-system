@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Document } from "~/server/queries";
 import { TakeawayTile } from "./takeaway-tile";
@@ -76,6 +77,14 @@ export function DocumentContent(props: { selectedDoc: Document | null }) {
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="border-b border-gray-200 p-4 sm:p-6">
+        {/* Mobile back button */}
+        <Link
+          to="/news-feed"
+          className="mb-3 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 md:hidden"
+        >
+          <span aria-hidden="true">&larr;</span>
+          Back to feed
+        </Link>
         <h2 className="text-xl font-semibold text-gray-900 sm:text-2xl">
           {selectedDoc.title}
         </h2>

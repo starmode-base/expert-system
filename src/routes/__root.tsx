@@ -113,6 +113,7 @@ function NavBar() {
   const publicNavItems = [
     { key: "research", to: "/research-feed", label: "Research" },
     { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
+    { key: "news-feed", to: "/news-feed", label: "News" },
   ];
 
   const devNavItems = [
