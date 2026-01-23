@@ -213,6 +213,7 @@ export const queryDocument = createServerFn({
       articleText: document.articleText,
       takeaways: document.takeaways.map((takeaway) => ({
         id: takeaway.id,
+        documentId: document.id,
         title: takeaway.title,
         takeaway: takeaway.takeaway,
         summary: takeaway.summary,
