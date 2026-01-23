@@ -5,6 +5,7 @@ import * as cheerio from "cheerio";
 import { invariant } from "@tanstack/react-router";
 import { db, schema } from "~/postgres/db";
 import { inArray } from "drizzle-orm";
+import { getDocumentSummary } from "../helpers/get-document-summary";
 
 interface StratecheryCandidate {
   link: string;
@@ -215,11 +216,20 @@ export const stratecheryScraper = inngest.createFunction(
       return { inserted: 0, skipped: candidates.length };
     }
 
+    // Generate summaries for each document
+    const summaries = await Promise.all(
+      toInsert.map(async (doc, index) => {
+        return await step.run(`generate-summary-${index}`, async () => {
+          return await getDocumentSummary(doc.articleText, doc.title);
+        });
+      }),
+    );
+
     const inserted = await step.run("insert-documents", async () => {
-      const values = toInsert.map((doc) => ({
+      const values = toInsert.map((doc, index) => ({
         source: "Stratechery (Ben Thompson)",
         title: doc.title,
-        description: doc.description,
+        description: summaries[index] ?? doc.description,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,

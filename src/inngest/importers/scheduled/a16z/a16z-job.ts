@@ -8,6 +8,7 @@ import {
   fetchA16zArticleText,
   parseA16zArchiveList,
 } from "./a16z-helpers";
+import { getDocumentSummary } from "../../helpers/get-document-summary";
 
 type A16zCandidateWithArticle = A16zCandidate & {
   articleText: string;
@@ -80,11 +81,20 @@ export const a16zNewsScraper = inngest.createFunction(
       return { inserted: 0, skipped: newCandidates.length };
     }
 
+    // Generate summaries for each document
+    const summaries = await Promise.all(
+      candidatesWithArticles.map(async (doc, index) => {
+        return await step.run(`generate-summary-${index}`, async () => {
+          return await getDocumentSummary(doc.articleText, doc.title);
+        });
+      }),
+    );
+
     const inserted = await step.run("insert-documents", async () => {
-      const values = candidatesWithArticles.map((doc) => ({
+      const values = candidatesWithArticles.map((doc, index) => ({
         source: "a16z News",
         title: doc.title,
-        description: doc.description,
+        description: summaries[index] ?? doc.description,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,
