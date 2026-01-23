@@ -4,7 +4,7 @@ import { inngest } from "../client";
 import { generateResearchObjectives } from "./helpers/generate-research-objectives";
 
 /**
- * Generate daily insights for each user based on takeaways created in the last 24 hours.
+ * Generate daily insights for each user based on takeaways created in the last 3 days.
  * Runs daily at 7 AM Phoenix time.
  */
 export const dailyInsight = inngest.createFunction(
@@ -20,7 +20,7 @@ export const dailyInsight = inngest.createFunction(
       return rows;
     });
 
-    const takeaways = await step.run("get-takeaways-last-24h", async () => {
+    const takeaways = await step.run("get-takeaways-last-3d", async () => {
       const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
 
       const rows = await db.query.takeaways.findMany({
