@@ -20,8 +20,7 @@ export function NewsFeedList(props: NewsFeedListProps) {
       {documents
         .slice()
         .sort(
-          (a, b) =>
-            b.publicationDate.getTime() - a.publicationDate.getTime(),
+          (a, b) => b.publicationDate.getTime() - a.publicationDate.getTime(),
         )
         .map((document) => {
           const isSelected = selectedDocId === document.id;

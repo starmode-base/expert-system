@@ -28,6 +28,6 @@ When asked to update `INSIGHT_GENERATION_BACKEND_FLOW.md`:
 **Change request**: "Add a new daily scraper trigger to Stage 1 ingestion."
 
 **Edit pattern**:
+
 - Add a new bullet in “Stage 1: Document ingestion” under **Inputs**.
 - If the trigger affects the diagram, add a new Mermaid node/edge.
-

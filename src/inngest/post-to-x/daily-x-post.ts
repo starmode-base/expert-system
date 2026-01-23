@@ -30,7 +30,6 @@ export const dailyXPost = inngest.createFunction(
   { event: "scheduler/daily-x-post" },
   // { cron: "TZ=America/Phoenix 30 7 * * *" },
   async ({ step }) => {
-
     // If not production, don't post
     if (!isProduction()) {
       return { posted: false, reason: "non-production-environment" };

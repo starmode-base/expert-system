@@ -3,7 +3,6 @@ import { db } from "~/postgres/db";
 import { inngest } from "../client";
 import { generateResearchObjectives } from "./helpers/generate-research-objectives";
 
-
 /**
  * Generate daily insights for each user based on takeaways created in the last 24 hours.
  * Runs daily at 7 AM Phoenix time.
