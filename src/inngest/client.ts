@@ -83,6 +83,9 @@ const eventSchemas = {
   "scheduler/process-earnings-jobs": z.object({
     data: z.object({}),
   }),
+  "scheduler/daily-x-post": z.object({
+    data: z.object({}),
+  }),
 };
 
 // Create a client to send and receive events

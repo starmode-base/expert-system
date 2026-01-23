@@ -126,19 +126,29 @@ flowchart TD
 
 - `app/generate-insight` events supply `insightPrompt` and the target user.
 - **Daily automation** (`scheduler.daily-insight`, cron `TZ=America/Phoenix 0 7 * * *`):
-  - Fetches takeaways created in the last 24 hours (system-wide).
-  - If more than three exist, clusters them into three seed summaries via `generateTakeawaySummaries`; otherwise uses the raw summaries.
-- Fans out one `app/generate-insight` event per user × insight prompt.
+  - Fetches takeaways created in the last 3 days (system-wide).
+  - Generates exactly 3 research objectives from the takeaway summaries via `generateResearchObjectives` (OpenAI Responses structured output).
+- Fans out one `app/generate-insight` event per user × research objective.
+- Current daily runner targets `spencer@starmode.app` only (single-user run).
 
 ### Processing (Inngest function: `app/generate-insight`)
 
-- Load the user’s recent insights to avoid duplication in the prompt.
-- Find similar takeaways and concept neighbors with `vectorTakeawaySearchTimeWeighted` and `vectorConceptSearchTimeWeighted` using the `insightPrompt`.
-- Build the initial conversation and run OpenAI Responses with research tools; execute the tool loop (including fetching takeaways) until the model requests the final output.
-- Parse the structured result, then persist:
-  - `insights` (per-user insight text + summary)
-  - `insight_takeaways` (join to takeaways/concepts used)
-  - `insight_references` (citations back to takeaway references)
+- Load the user’s recent insights (last 15) to avoid duplication in the prompt.
+- Run the **researcher agent** to expand context:
+  - Uses `fetchTakeawayPreviews` (time-weighted vector search) to find relevant takeaways.
+  - Uses `fetchFormattedTakeawayPreviewsByIds` to return formatted takeaway previews.
+- Run the **insight agent** with:
+  - Context: formatted takeaway previews + recent insights + `insightPrompt`
+  - Tools:
+    - `researcher` (the same sub-agent for additional takeaway retrieval)
+    - `financialAnalyst` (Alpha Vantage-backed financial data tools)
+    - `fetchTakeawayById` (full takeaway text + references)
+  - Structured output enforced by `insightSchema`
+- Summarize the final insight via `getSummary` (OpenAI Responses structured output).
+- Persist:
+  - `insights` row with `title`, `insight`, `summary`, and `insightPrompt` for the user
+  - `insight_references` (deduped references mapped to insight reference numbers)
+  - `insight_takeaways` is currently not written (commented out)
 - Notify the UI when the insight is generated.
 
 **Output (storage)**
@@ -150,16 +160,17 @@ flowchart TD
 ```mermaid
 flowchart TD
   T["System takeaways + embeddings\n(shared across users)"]
-  A["Daily cron\nscheduler.daily-insight"] --> B["Takeaways last 24h\n(optional 3 seed summaries)"]
-  B --> C["Send app/generate-insight events\nper user × insightPrompt"]
+  A["Daily cron\nscheduler.daily-insight"] --> B["Takeaways last 3 days\nresearch objectives via generateResearchObjectives"]
+  B --> C["Send app/generate-insight events\nper user × research objective"]
   C --> D["Load user recent insights"]
-  C --> E["vectorTakeawaySearchTimeWeighted\nvectorConceptSearchTimeWeighted (insightPrompt)"]
+  C --> E["Researcher agent\nfetchTakeawayPreviews + fetchFormattedTakeawayPreviewsByIds"]
   T --> E
-  D --> F["OpenAI Responses agent\n+ research tools"]
+  D --> F["Insight agent\ninsightSchema structured output"]
   E --> F
-  F --> G[("Postgres: insights (user-specific)")]
-  G --> H[("insight_takeaways + insight_references")]
-  H --> I["publishNotifyUI"]
+  F --> G["Tools: researcher + financialAnalyst + fetchTakeawayById"]
+  G --> H[("Postgres: insights (user-specific)")]
+  H --> I[("Postgres: insight_references")]
+  I --> J["publishNotifyUI"]
 ```
 
 ---
@@ -182,5 +193,8 @@ flowchart TD
 - **Insights (user-specific)**
   - `src/inngest/insights/daily-insight.ts`
   - `src/inngest/insights/generate-insight.ts`
-  - `src/inngest/insights/tools/tools.ts`
-  - `src/inngest/insights/tools/tool-handling.ts`
+  - `src/inngest/insights/agents/insight-agent.ts`
+  - `src/inngest/insights/agents/researcher.ts`
+  - `src/inngest/insights/agents/financial-analyst.ts`
+  - `src/inngest/insights/insight-prompts.ts`
+  - `src/inngest/insights/tool-functions/tools-takeaways.ts`

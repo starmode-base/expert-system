@@ -2,6 +2,7 @@ import { invariant } from "@tanstack/react-router";
 import { and } from "drizzle-orm";
 import { fetchAlphaVantageEarningsTranscript } from "~/inngest/importers/scrapers/earnings-transcripts";
 import { db, schema } from "~/postgres/db";
+import { getDocumentSummary } from "../helpers/get-document-summary";
 
 export interface Document {
   publicationDate: Date;
@@ -97,22 +98,28 @@ export async function fetchAndSaveTranscript({
     .map((entry) => `${entry.speaker} (${entry.title}): "${entry.content}"`)
     .join("\n");
 
+  // Check if transcript already exists
+  const existingDocumentId = await transcriptExists({
+    source: "Public Earnings Transcripts",
+    title,
+  });
+
+  if (existingDocumentId) {
+    console.log(`Transcript already exists for ${symbol}`);
+    return existingDocumentId;
+  }
+
+  // Generate summary for the transcript
+  const description = await getDocumentSummary(articleText, title);
+
   const document = {
     source: "Public Earnings Transcripts",
     title,
-    description: title,
+    description,
     publicationDate,
     link: "",
     articleText,
-    tags: [], // TODO - add tags
   };
 
-  const documentId = await transcriptExists(document);
-
-  if (documentId) {
-    console.log(`Transcript already exists for ${symbol}`);
-    return documentId;
-  } else {
-    return await saveContent(document);
-  }
+  return await saveContent(document);
 }

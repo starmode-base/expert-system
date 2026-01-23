@@ -8,6 +8,7 @@ import {
   macroVoicesTakeawayPrompt,
   parseMacroVoicesList,
 } from "./macrovoices-helpers";
+import { getDocumentSummary } from "../../helpers/get-document-summary";
 
 type MacroVoicesCandidateWithTranscript = MacroVoicesCandidate & {
   articleText: string;
@@ -92,12 +93,21 @@ export const macroVoicesScraper = inngest.createFunction(
       return { inserted: 0, skipped: newCandidates.length };
     }
 
+    // Generate summaries for each document
+    const summaries = await Promise.all(
+      candidatesWithTranscripts.map(async (doc, index) => {
+        return await step.run(`generate-summary-${index}`, async () => {
+          return await getDocumentSummary(doc.articleText, doc.title);
+        });
+      }),
+    );
+
     // Persist new transcripts to the documents table
     const inserted = await step.run("insert-documents", async () => {
-      const values = candidatesWithTranscripts.map((doc) => ({
+      const values = candidatesWithTranscripts.map((doc, index) => ({
         source: "MacroVoices",
         title: doc.title,
-        description: doc.description,
+        description: summaries[index] ?? doc.description,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,

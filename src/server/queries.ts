@@ -53,6 +53,7 @@ export interface InsightReferenceItem {
   insightReferenceNumber: number;
   referenceId: string;
   reference: string;
+  documentId: string;
   documentTitle: string;
   documentSource: string;
   documentLink: string;
@@ -90,6 +91,7 @@ export const queryPublicInsightsFeed = createServerFn({
       insightReferenceNumber: row.insightReferenceNumber,
       referenceId: row.referenceId,
       reference: row.takeawayReference.reference,
+      documentId: row.takeawayReference.takeaway.document.id,
       documentTitle: row.takeawayReference.takeaway.document.title,
       documentSource: row.takeawayReference.takeaway.document.source,
       documentLink: row.takeawayReference.takeaway.document.link,
@@ -131,6 +133,7 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
         insightReferenceNumber: row.insightReferenceNumber,
         referenceId: row.referenceId,
         reference: row.takeawayReference.reference,
+        documentId: row.takeawayReference.takeaway.document.id,
         documentTitle: row.takeawayReference.takeaway.document.title,
         documentSource: row.takeawayReference.takeaway.document.source,
         documentLink: row.takeawayReference.takeaway.document.link,
@@ -169,6 +172,7 @@ export const queryInsightsFeed = createServerFn({ method: "GET" })
         insightReferenceNumber: row.insightReferenceNumber,
         referenceId: row.referenceId,
         reference: row.takeawayReference.reference,
+        documentId: row.takeawayReference.takeaway.document.id,
         documentTitle: row.takeawayReference.takeaway.document.title,
         documentSource: row.takeawayReference.takeaway.document.source,
         documentLink: row.takeawayReference.takeaway.document.link,
@@ -177,48 +181,6 @@ export const queryInsightsFeed = createServerFn({ method: "GET" })
       })),
     }));
   });
-
-export const queryInsightReferences = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .validator(z.string()) // insightId
-  .handler(
-    async ({ data: insightId, context }): Promise<InsightReferenceItem[]> => {
-      const insight = await db.query.insights.findFirst({
-        where: and(
-          eq(schema.insights.id, insightId),
-          eq(schema.insights.userId, context.viewer.id),
-        ),
-        columns: { id: true },
-      });
-
-      if (!insight) {
-        return [];
-      }
-
-      const insightReferences = await db.query.insightReferences.findMany({
-        where: eq(schema.insightReferences.insightId, insightId),
-        with: {
-          takeawayReference: {
-            with: { takeaway: { with: { document: true } } },
-          },
-        },
-        orderBy: (insightReferences, { asc }) => [
-          asc(insightReferences.insightReferenceNumber),
-        ],
-      });
-
-      return insightReferences.map((row) => ({
-        insightReferenceNumber: row.insightReferenceNumber,
-        referenceId: row.referenceId,
-        reference: row.takeawayReference.reference,
-        documentTitle: row.takeawayReference.takeaway.document.title,
-        documentSource: row.takeawayReference.takeaway.document.source,
-        documentLink: row.takeawayReference.takeaway.document.link,
-        documentPublicationDate:
-          row.takeawayReference.takeaway.document.publicationDate,
-      }));
-    },
-  );
 
 export const queryDocument = createServerFn({
   method: "GET",
@@ -251,6 +213,7 @@ export const queryDocument = createServerFn({
       articleText: document.articleText,
       takeaways: document.takeaways.map((takeaway) => ({
         id: takeaway.id,
+        documentId: document.id,
         title: takeaway.title,
         takeaway: takeaway.takeaway,
         summary: takeaway.summary,

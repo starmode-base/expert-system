@@ -5,6 +5,7 @@ import { db } from "~/postgres/db";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import { isProduction, origin } from "~/lib/env";
 
 const openAiClient = new OpenAI();
 
@@ -21,12 +22,19 @@ interface InsightCandidate {
 
 /**
  * Choose the most interesting insight from the last 24h and post to X between
- * 7:30-8:30 AM AZ.
  */
+
+// DEACTIVATED
 export const dailyXPost = inngest.createFunction(
   { id: "scheduler.daily-x-post" },
-  { cron: "TZ=America/Phoenix 30 7 * * *" },
+  { event: "scheduler/daily-x-post" },
+  // { cron: "TZ=America/Phoenix 30 7 * * *" },
   async ({ step }) => {
+    // If not production, don't post
+    if (!isProduction()) {
+      return { posted: false, reason: "non-production-environment" };
+    }
+
     const jitterMinutes = Math.floor(Math.random() * 60);
     if (jitterMinutes > 0) {
       await step.sleep("post-jitter", jitterMinutes * 60 * 1000);
@@ -118,7 +126,7 @@ export const dailyXPost = inngest.createFunction(
       return text;
     });
 
-    const replyLink = `https://expert-system.starmode.dev/insight/${chosenInsight.id}`;
+    const replyLink = `${origin()}/insight/${chosenInsight.id}`;
 
     const postResult = await step.run("post-to-x", async () => {
       return await postToX(tweetText, replyLink);

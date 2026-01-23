@@ -8,6 +8,7 @@ import {
   fetchDwarkeshCandidatesWithTranscripts,
   parseDwarkeshPodcastCandidates,
 } from "./dwarkesh-helpers";
+import { getDocumentSummary } from "../../helpers/get-document-summary";
 
 type DwarkeshPodcastCandidateWithTranscript = DwarkeshPodcastCandidate & {
   articleText: string;
@@ -72,11 +73,20 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
       return { inserted: 0, skipped: newCandidates.length };
     }
 
+    // Generate summaries for each document
+    const summaries = await Promise.all(
+      candidatesWithTranscripts.map(async (doc, index) => {
+        return await step.run(`generate-summary-${index}`, async () => {
+          return await getDocumentSummary(doc.articleText, doc.title);
+        });
+      }),
+    );
+
     const inserted = await step.run("insert-documents", async () => {
-      const values = candidatesWithTranscripts.map((doc) => ({
+      const values = candidatesWithTranscripts.map((doc, index) => ({
         source: "Dwarkesh Podcast",
         title: doc.title,
-        description: doc.description,
+        description: summaries[index] ?? doc.description,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,
