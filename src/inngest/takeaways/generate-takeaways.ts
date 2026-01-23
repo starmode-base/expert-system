@@ -114,7 +114,11 @@ export const generateTakeaways = inngest.createFunction(
           `generate-summary-${event.data.documentId}`,
           async () => {
             const summary = await getSummary(takeawayWithConcept.takeaway);
-            return { ...takeawayWithConcept, summary: summary.summary };
+            return {
+              ...takeawayWithConcept,
+              summary: summary.summary,
+              retrievalSummary: summary.retrieval_summary,
+            };
           },
         );
       }),
@@ -197,7 +201,9 @@ export const generateTakeaways = inngest.createFunction(
           // ######
           console.log(`Generating takeaway embedding for ${takeawaysWrite.id}`);
 
-          return await generateEmbedding(takeawaysWrite.summary);
+          return await generateEmbedding(
+            takeawaysWrite.retrievalSummary ?? takeawaysWrite.summary,
+          );
         },
       );
 

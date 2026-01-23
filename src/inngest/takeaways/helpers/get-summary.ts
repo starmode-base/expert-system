@@ -12,7 +12,12 @@ const schema = z.object({
   summary: z
     .string()
     .describe(
-      "A 1 sentence summary of the text. This will be used to determine if the takeaway is relevant to a research question. If it is then it will be retrieved for additional analysis.",
+      "A 1 sentence human readable summary of the text. This will be used to display the takeaway to the user.",
+    ),
+  retrieval_summary: z
+    .string()
+    .describe(
+      "Produce a dense,  words, query-shaped summary that maximizes future semantic (embedding search) matchability. This will be used to retrieve the takeaway for additional analysis.",
     ),
 });
 const responseFormat = zodTextFormat(schema, "response");
@@ -23,7 +28,8 @@ export async function getSummary(text: string) {
     input: [
       {
         role: "user",
-        content: `Provide a 1-2 sentence summary of the text.
+        content: `You are a helpful assistant that summarizes text. Summarize the text into two summaries: 1) for display to the user and 2) for semantic retrieval.
+
         Text:
         ${text}`,
       },
