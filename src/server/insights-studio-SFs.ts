@@ -74,6 +74,7 @@ export const getInsightsSF = createServerFn({ method: "GET" })
           insightReferenceNumber: refRow.insightReferenceNumber,
           referenceId: refRow.referenceId,
           reference: refRow.takeawayReference.reference,
+          documentId: refRow.takeawayReference.takeaway.document.id,
           documentTitle: refRow.takeawayReference.takeaway.document.title,
           documentSource: refRow.takeawayReference.takeaway.document.source,
           documentLink: refRow.takeawayReference.takeaway.document.link,
