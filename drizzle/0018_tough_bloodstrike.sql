@@ -1,0 +1,1 @@
+ALTER TABLE "takeaways" ADD COLUMN "retrieval_summary" text;
