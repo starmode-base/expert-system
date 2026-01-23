@@ -53,6 +53,7 @@ export interface InsightReferenceItem {
   insightReferenceNumber: number;
   referenceId: string;
   reference: string;
+  documentId: string;
   documentTitle: string;
   documentSource: string;
   documentLink: string;
@@ -90,6 +91,7 @@ export const queryPublicInsightsFeed = createServerFn({
       insightReferenceNumber: row.insightReferenceNumber,
       referenceId: row.referenceId,
       reference: row.takeawayReference.reference,
+      documentId: row.takeawayReference.takeaway.document.id,
       documentTitle: row.takeawayReference.takeaway.document.title,
       documentSource: row.takeawayReference.takeaway.document.source,
       documentLink: row.takeawayReference.takeaway.document.link,
@@ -131,6 +133,7 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
         insightReferenceNumber: row.insightReferenceNumber,
         referenceId: row.referenceId,
         reference: row.takeawayReference.reference,
+        documentId: row.takeawayReference.takeaway.document.id,
         documentTitle: row.takeawayReference.takeaway.document.title,
         documentSource: row.takeawayReference.takeaway.document.source,
         documentLink: row.takeawayReference.takeaway.document.link,
@@ -169,6 +172,7 @@ export const queryInsightsFeed = createServerFn({ method: "GET" })
         insightReferenceNumber: row.insightReferenceNumber,
         referenceId: row.referenceId,
         reference: row.takeawayReference.reference,
+        documentId: row.takeawayReference.takeaway.document.id,
         documentTitle: row.takeawayReference.takeaway.document.title,
         documentSource: row.takeawayReference.takeaway.document.source,
         documentLink: row.takeawayReference.takeaway.document.link,
@@ -211,6 +215,7 @@ export const queryInsightReferences = createServerFn({ method: "GET" })
         insightReferenceNumber: row.insightReferenceNumber,
         referenceId: row.referenceId,
         reference: row.takeawayReference.reference,
+        documentId: row.takeawayReference.takeaway.document.id,
         documentTitle: row.takeawayReference.takeaway.document.title,
         documentSource: row.takeawayReference.takeaway.document.source,
         documentLink: row.takeawayReference.takeaway.document.link,

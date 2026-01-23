@@ -250,6 +250,7 @@ export function InsightCard(props: InsightCardProps) {
               referenceId: ref.referenceId,
               referenceNumber: ref.insightReferenceNumber,
               reference: ref.reference,
+              documentId: ref.documentId,
               documentTitle: ref.documentTitle,
               documentSource: ref.documentSource,
               documentLink: ref.documentLink,

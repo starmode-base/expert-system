@@ -36,6 +36,7 @@ export function TakeawayTile(props: {
     referenceId: ref.id,
     referenceNumber: ref.referenceNumber,
     reference: ref.reference,
+    documentId: takeaway.documentId,
     documentTitle: takeaway.documentTitle,
     documentSource,
     publicationDate: takeaway.publicationDate,
@@ -72,7 +73,16 @@ export function TakeawayTile(props: {
           {takeaway.documentTitle || documentSource ? (
             <p className="text-sm break-words text-gray-500 sm:truncate">
               {takeaway.documentTitle ? (
-                takeaway.documentId ? (
+                takeaway.documentLink ? (
+                  <a
+                    href={takeaway.documentLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:underline"
+                  >
+                    {takeaway.documentTitle}
+                  </a>
+                ) : takeaway.documentId ? (
                   <Link
                     to="/news-feed/$documentid"
                     params={{ documentid: takeaway.documentId }}

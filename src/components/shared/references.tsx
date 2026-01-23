@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 export interface ReferenceItem {
   referenceId: string;
   referenceNumber: number;
   reference: string;
+  documentId?: string;
   documentTitle?: string;
   documentSource?: string;
   documentLink?: string;
@@ -70,6 +72,14 @@ export function InsightReferences(props: InsightReferencesProps) {
                   >
                     {ref.documentTitle}
                   </a>
+                ) : ref.documentId ? (
+                  <Link
+                    to="/news-feed/$documentid"
+                    params={{ documentid: ref.documentId }}
+                    className="text-blue-500 underline decoration-blue-300 underline-offset-2 hover:text-blue-800"
+                  >
+                    {ref.documentTitle}
+                  </Link>
                 ) : (
                   <span>{ref.documentTitle}</span>
                 )
