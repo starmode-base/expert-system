@@ -17,7 +17,7 @@ const schema = z.object({
   retrieval_summary: z
     .string()
     .describe(
-      "Produce a dense,  words, query-shaped summary that maximizes future semantic (embedding search) matchability. This will be used to retrieve the takeaway for additional analysis.",
+      "Produce a dense, query-shaped summary that maximizes future semantic (embedding search) matchability. This will be used to retrieve the takeaway for additional analysis.",
     ),
 });
 const responseFormat = zodTextFormat(schema, "response");
