@@ -74,7 +74,7 @@ export default tseslint.config(
       "no-duplicate-imports": "error",
       "no-useless-rename": "error",
       "object-shorthand": "error",
-      "react/jsx-no-leaked-render": "error",
+      "react/jsx-no-leaked-render": ["error", { validStrategies: ["ternary"] }],
       "react/no-unescaped-entities": "off",
       "react/self-closing-comp": "error",
     },
