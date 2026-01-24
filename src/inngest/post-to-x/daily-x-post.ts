@@ -106,7 +106,7 @@ export const dailyXPost = inngest.createFunction(
 
     const tweetText = await step.run("format-insight-for-x", async () => {
       const res = await openAiClient.responses.create({
-        model: "gpt-5-mini",
+        model: "gpt-5.2",
         input: [
           {
             role: "system",
