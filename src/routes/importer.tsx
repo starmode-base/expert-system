@@ -225,7 +225,7 @@ function RouteComponent() {
   };
 
   return (
-    <div className="h-[calc(100dvh-96px)] overflow-hidden">
+    <div className="h-[calc(100dvh-64px)] overflow-hidden">
       <div className="mx-auto flex h-full max-w-4xl flex-col gap-4 px-2 py-4 sm:px-4">
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white p-1 text-sm">

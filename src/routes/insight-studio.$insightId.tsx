@@ -208,7 +208,7 @@ export function RouteComponent() {
     Route.useLoaderData();
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-white">
+    <div className="flex h-[calc(100dvh-64px)] overflow-hidden bg-white">
       {/* Left Pane */}
       <InsightList insights={insights} />
 

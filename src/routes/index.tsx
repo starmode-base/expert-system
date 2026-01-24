@@ -31,10 +31,7 @@ function RouteComponentProvider() {
  */
 function RouteComponent() {
   return (
-    <div
-      className="justify-center_ items-center_ flex h-dvh flex-col gap-8 bg-slate-100 p-8"
-      style={{ height: "calc(100vh - 48px)" }}
-    >
+    <div className="justify-center_ items-center_ flex h-[calc(100dvh-64px)] flex-col gap-8 bg-slate-100 p-8">
       <img
         src="/starmode-logo.svg"
         alt="STΛR MODΞ logo"

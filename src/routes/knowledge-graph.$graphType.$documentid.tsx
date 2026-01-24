@@ -199,7 +199,7 @@ function RouteComponent() {
   }
   invariant(graphData, "No graph data");
   return (
-    <div className="flex bg-white" style={{ height: "calc(100vh - 96px)" }}>
+    <div className="flex h-[calc(100dvh-64px)] bg-white">
       <div className="m-4 w-1/2 overflow-y-hidden border-r border-gray-200">
         <h1 className="mb-4 text-2xl font-semibold">Knowledge Graph</h1>
         <div className="flex border-b border-gray-200 pb-4">
