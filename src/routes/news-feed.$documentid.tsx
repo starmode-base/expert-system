@@ -20,7 +20,7 @@ function RouteComponent() {
   invariant(selectedDoc, "No document selected");
 
   return (
-    <div className="flex h-[calc(100dvh-64px)] overflow-hidden bg-gray-50">
+    <div className="flex h-[calc(100dvh-96px)] overflow-hidden bg-gray-50">
       {/* Left Feed - hidden on mobile when document is selected */}
       <div className="hidden w-1/3 flex-col border-r border-gray-200 bg-white md:flex">
         <div className="border-b border-gray-200 p-4 sm:p-6">

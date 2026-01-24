@@ -19,7 +19,7 @@ function RouteComponent() {
   // const { insights } = Route.useLoaderData();
 
   return (
-    <div className="flex h-[calc(100dvh-64px)] w-full overflow-hidden bg-white">
+    <div className="flex h-[calc(100dvh-96px)] w-full overflow-hidden bg-white">
       {/* <InsightList insights={insights} /> */}
       <div className="flex h-full min-w-0 flex-1">
         <InsightCreator />
