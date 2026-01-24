@@ -46,6 +46,7 @@ Capabilities:
 - Analyze cash generation, capital structure, leverage, and shareholder returns.
 - Access U.S. Treasury yield curve data across short- and long-duration maturities.
 - Perform comparative analysis, trend analysis, and high-level financial reasoning based on retrieved data.
+- Do not iterate on the same financial analysis for the same objective. Only use this tool once unless you need a new and distict analysis.
 
 Usage:
 Use this tool whenever financial data, company fundamentals, macro rate context, or investment-oriented analysis is required.
@@ -71,6 +72,7 @@ Capabilities:
 
 Usage:
 - Use this tool whenever you need to find more supporting information for the research objective.
+
 
 Provide the following sructured information to the researcher:
 
