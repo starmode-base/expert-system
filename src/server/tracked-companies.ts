@@ -12,6 +12,8 @@ interface TrackedCompanyResult {
   nextEarningsDate: Date | null;
 }
 
+const normalizeSymbol = (symbol: string) => symbol.trim().toUpperCase();
+
 /**
  * List user's tracked companies with next earnings date
  */
@@ -32,10 +34,9 @@ export const listTrackedCompaniesSF = createServerFn({ method: "GET" })
     }
 
     // Get symbols from tracked companies
-    const symbols: string[] = [];
-    for (const tc of trackedCompanies) {
-      symbols.push(tc.stockSymbol.symbol);
-    }
+    const symbols = trackedCompanies.map((tc) =>
+      normalizeSymbol(tc.stockSymbol.symbol),
+    );
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -50,9 +51,10 @@ export const listTrackedCompaniesSF = createServerFn({ method: "GET" })
     // Create a map of symbol to next earnings date
     const earningsMap = new Map<string, Date>();
     for (const earnings of upcomingEarnings) {
-      const existing = earningsMap.get(earnings.symbol);
+      const normalizedSymbol = normalizeSymbol(earnings.symbol);
+      const existing = earningsMap.get(normalizedSymbol);
       if (!existing || earnings.reportDate < existing) {
-        earningsMap.set(earnings.symbol, earnings.reportDate);
+        earningsMap.set(normalizedSymbol, earnings.reportDate);
       }
     }
 
@@ -61,7 +63,8 @@ export const listTrackedCompaniesSF = createServerFn({ method: "GET" })
       stockSymbolId: tc.stockSymbolId,
       symbol: tc.stockSymbol.symbol,
       name: tc.stockSymbol.name,
-      nextEarningsDate: earningsMap.get(tc.stockSymbol.symbol) ?? null,
+      nextEarningsDate:
+        earningsMap.get(normalizeSymbol(tc.stockSymbol.symbol)) ?? null,
     }));
 
     results.sort((a, b) => {

@@ -71,35 +71,47 @@ export const syncEarningsCalendar = inngest.createFunction(
           `Deduped ${calendarEntries.length} entries to ${uniqueEntries.length}`,
         );
 
-        // Process in batches
-        await Promise.all(
-          toBatches(uniqueEntries, 500).map((batch) =>
-            db
-              .insert(schema.earningsSchedule)
-              .values(
-                batch.map((entry) => ({
-                  symbol: entry.symbol,
-                  name: entry.name,
-                  reportDate: new Date(entry.reportDate),
-                  fiscalDateEnding: entry.fiscalDateEnding,
-                  estimate: entry.estimate,
-                  currency: entry.currency,
-                })),
-              )
-              .onConflictDoUpdate({
-                target: [
-                  schema.earningsSchedule.symbol,
-                  schema.earningsSchedule.fiscalDateEnding,
-                ],
-                set: {
-                  name: sql`excluded.name`,
-                  reportDate: sql`excluded.report_date`,
-                  estimate: sql`excluded.estimate`,
-                  currency: sql`excluded.currency`,
-                },
-              }),
-          ),
-        );
+        // Process in batches with limited concurrency to avoid DB overload
+        const batchSize = 1000;
+        const concurrency = 4;
+        const batches = toBatches(uniqueEntries, batchSize);
+
+        for (const group of toBatches(batches, concurrency)) {
+          await Promise.all(
+            group.map((batch) =>
+              db
+                .insert(schema.earningsSchedule)
+                .values(
+                  batch.map((entry) => ({
+                    symbol: entry.symbol,
+                    name: entry.name,
+                    reportDate: new Date(entry.reportDate),
+                    fiscalDateEnding: entry.fiscalDateEnding,
+                    estimate: entry.estimate,
+                    currency: entry.currency,
+                  })),
+                )
+                .onConflictDoUpdate({
+                  target: [
+                    schema.earningsSchedule.symbol,
+                    schema.earningsSchedule.fiscalDateEnding,
+                  ],
+                  set: {
+                    name: sql`excluded.name`,
+                    reportDate: sql`excluded.report_date`,
+                    estimate: sql`excluded.estimate`,
+                    currency: sql`excluded.currency`,
+                  },
+                  where: sql`
+                    ${schema.earningsSchedule.name} is distinct from excluded.name
+                    or ${schema.earningsSchedule.reportDate} is distinct from excluded.report_date
+                    or ${schema.earningsSchedule.estimate} is distinct from excluded.estimate
+                    or ${schema.earningsSchedule.currency} is distinct from excluded.currency
+                  `,
+                }),
+            ),
+          );
+        }
 
         return uniqueEntries.length;
       },
