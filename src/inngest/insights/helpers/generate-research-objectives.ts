@@ -7,6 +7,11 @@ const openAiClient = new OpenAI();
 
 export async function generateResearchObjectives(
   takeaways: { id: string; summary: string }[],
+  recentInsights: {
+    id: string;
+    title: string;
+    summary: string | null;
+  }[],
 ): Promise<string[]> {
   if (takeaways.length === 0) return [];
 
@@ -35,13 +40,14 @@ export async function generateResearchObjectives(
       {
         role: "user",
         type: "message",
-        content: `Given the recent takeaway summaries below, generate exactly 3 distinct research objectives for the insight generator.
+        content: `Given the recent takeaway summaries and recent insights below, generate exactly 3 distinct research objectives for the insight generator.
 
       Each research objective should:
       - Be framed as a concrete investigation or question, not a summary
       - Focus on business and/or technology dynamics with clear investment relevance
       - Be specific and directional (not generic trend-watching)
       - Be novel or non-obvious based on the takeaways
+      - Not overlap with the recent insights; you may build on them, but each objective must be meaningfully new
       - Be capable of producing a defensible, potentially investable insight
 
       Constraints:
@@ -51,7 +57,19 @@ export async function generateResearchObjectives(
       - Write 1–2 sentences per objective
 
       Takeaway summaries:
-      ${takeaways.map((takeaway) => `- ${takeaway.summary}`).join("\n")}`,
+      ${takeaways.map((takeaway) => `- ${takeaway.summary}`).join("\n")}
+
+      Recent insights (avoid overlap):
+      ${recentInsights
+        .map((insight) =>
+          [
+            `- ${insight.title}`,
+            insight.summary ? `  Summary: ${insight.summary}` : null,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        )
+        .join("\n")}`,
       },
     ],
     text: { format: zodTextFormat(outputSchema, "research_objectives") },

@@ -21,11 +21,21 @@ export const dailyInsight = inngest.createFunction(
     });
 
     const takeaways = await step.run("get-takeaways-last-3d", async () => {
-      const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
-
+      // Query the 20 most recently created takeaways
       const rows = await db.query.takeaways.findMany({
         columns: { id: true, summary: true },
-        where: (takeaways, { gte }) => gte(takeaways.createdAt, cutoff),
+        orderBy: (takeaways, { desc }) => desc(takeaways.createdAt),
+        limit: 20,
+      });
+
+      return rows;
+    });
+
+    const recentInsights = await step.run("get-recent-insights", async () => {
+      const rows = await db.query.insights.findMany({
+        columns: { id: true, title: true, summary: true },
+        orderBy: (insights, { desc }) => desc(insights.createdAt),
+        limit: 20,
       });
 
       return rows;
@@ -34,7 +44,7 @@ export const dailyInsight = inngest.createFunction(
     const insightPrompts = await step.run(
       "get-generate-insight-prompts",
       async () => {
-        return await generateResearchObjectives(takeaways);
+        return await generateResearchObjectives(takeaways, recentInsights);
       },
     );
 
