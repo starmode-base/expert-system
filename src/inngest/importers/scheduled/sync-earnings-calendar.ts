@@ -19,7 +19,7 @@ const getDateRange = (daysFromNow: number, rangeDays: number) => {
 
 /**
  * Sync earnings calendar from Alpha Vantage.
- * Runs weekly at 6 AM Phoenix time.
+ * Runs weekly at 9:35 AM Phoenix time.
  * - Fetches 3-month earnings calendar
  * - Upserts into earningsSchedule table
  * - Creates earningsFetchJobs for tracked companies reporting in the next week
@@ -122,9 +122,10 @@ export const syncEarningsCalendar = inngest.createFunction(
     const jobsCreated = await step.run("create-fetch-jobs", async () => {
       const { start: tomorrow, end: oneWeekFromTomorrow } = getDateRange(1, 7);
 
-      // Get tracked companies (need userId for job ownership)
+      // Get tracked symbols for the earnings lookup
       const trackedCompanies = await db.query.trackedCompanies.findMany({
-        with: { stockSymbol: true },
+        columns: { stockSymbolId: true },
+        with: { stockSymbol: { columns: { symbol: true } } },
       });
 
       if (trackedCompanies.length === 0) {
@@ -132,14 +133,19 @@ export const syncEarningsCalendar = inngest.createFunction(
         return 0;
       }
 
+      const trackedSymbols = [
+        ...new Set(trackedCompanies.map((tc) => tc.stockSymbol.symbol)),
+      ];
+
       // Find earnings scheduled for the next week for tracked symbols
       const earningsNextWeek = await db.query.earningsSchedule.findMany({
+        columns: { id: true },
         where: and(
           gte(schema.earningsSchedule.reportDate, tomorrow),
           lt(schema.earningsSchedule.reportDate, oneWeekFromTomorrow),
           inArray(
             schema.earningsSchedule.symbol,
-            trackedCompanies.map((tc) => tc.stockSymbol.symbol),
+            trackedSymbols,
           ),
         ),
       });
