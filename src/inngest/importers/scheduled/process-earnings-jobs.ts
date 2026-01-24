@@ -42,9 +42,13 @@ export const processEarningsJobs = inngest.createFunction(
     // Allow a few days of date drift in the calendar.
     const pendingToleranceDays = 3;
     const pendingWindowStart = new Date(today);
-    pendingWindowStart.setDate(pendingWindowStart.getDate() - pendingToleranceDays);
+    pendingWindowStart.setDate(
+      pendingWindowStart.getDate() - pendingToleranceDays,
+    );
     const pendingWindowEnd = new Date(today);
-    pendingWindowEnd.setDate(pendingWindowEnd.getDate() + pendingToleranceDays + 1);
+    pendingWindowEnd.setDate(
+      pendingWindowEnd.getDate() + pendingToleranceDays + 1,
+    );
 
     // Retry window for failed jobs, inclusive of the last 7 days plus tolerance.
     const retryWindowStart = new Date(today);
@@ -64,11 +68,15 @@ export const processEarningsJobs = inngest.createFunction(
           reportDate.setHours(0, 0, 0, 0);
           // Pending jobs run within a tolerance window around today.
           if (job.status === "pending") {
-            return reportDate >= pendingWindowStart && reportDate < pendingWindowEnd;
+            return (
+              reportDate >= pendingWindowStart && reportDate < pendingWindowEnd
+            );
           }
 
           // Failed jobs retry daily for up to 7 days after report date.
-          return reportDate >= retryWindowStart && reportDate < pendingWindowEnd;
+          return (
+            reportDate >= retryWindowStart && reportDate < pendingWindowEnd
+          );
         })
         .map(
           (job): PendingJob => ({

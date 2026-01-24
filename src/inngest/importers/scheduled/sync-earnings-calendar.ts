@@ -143,10 +143,7 @@ export const syncEarningsCalendar = inngest.createFunction(
         where: and(
           gte(schema.earningsSchedule.reportDate, tomorrow),
           lt(schema.earningsSchedule.reportDate, oneWeekFromTomorrow),
-          inArray(
-            schema.earningsSchedule.symbol,
-            trackedSymbols,
-          ),
+          inArray(schema.earningsSchedule.symbol, trackedSymbols),
         ),
       });
 
