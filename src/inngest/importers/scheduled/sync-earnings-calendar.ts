@@ -19,7 +19,7 @@ const getDateRange = (daysFromNow: number, rangeDays: number) => {
 
 /**
  * Sync earnings calendar from Alpha Vantage.
- * Runs weekly at 6 AM Phoenix time.
+ * Runs weekly at 9:35 AM Phoenix time.
  * - Fetches 3-month earnings calendar
  * - Upserts into earningsSchedule table
  * - Creates earningsFetchJobs for tracked companies reporting in the next week
@@ -71,35 +71,47 @@ export const syncEarningsCalendar = inngest.createFunction(
           `Deduped ${calendarEntries.length} entries to ${uniqueEntries.length}`,
         );
 
-        // Process in batches
-        await Promise.all(
-          toBatches(uniqueEntries, 500).map((batch) =>
-            db
-              .insert(schema.earningsSchedule)
-              .values(
-                batch.map((entry) => ({
-                  symbol: entry.symbol,
-                  name: entry.name,
-                  reportDate: new Date(entry.reportDate),
-                  fiscalDateEnding: entry.fiscalDateEnding,
-                  estimate: entry.estimate,
-                  currency: entry.currency,
-                })),
-              )
-              .onConflictDoUpdate({
-                target: [
-                  schema.earningsSchedule.symbol,
-                  schema.earningsSchedule.fiscalDateEnding,
-                ],
-                set: {
-                  name: sql`excluded.name`,
-                  reportDate: sql`excluded.report_date`,
-                  estimate: sql`excluded.estimate`,
-                  currency: sql`excluded.currency`,
-                },
-              }),
-          ),
-        );
+        // Process in batches with limited concurrency to avoid DB overload
+        const batchSize = 1000;
+        const concurrency = 4;
+        const batches = toBatches(uniqueEntries, batchSize);
+
+        for (const group of toBatches(batches, concurrency)) {
+          await Promise.all(
+            group.map((batch) =>
+              db
+                .insert(schema.earningsSchedule)
+                .values(
+                  batch.map((entry) => ({
+                    symbol: entry.symbol,
+                    name: entry.name,
+                    reportDate: new Date(entry.reportDate),
+                    fiscalDateEnding: entry.fiscalDateEnding,
+                    estimate: entry.estimate,
+                    currency: entry.currency,
+                  })),
+                )
+                .onConflictDoUpdate({
+                  target: [
+                    schema.earningsSchedule.symbol,
+                    schema.earningsSchedule.fiscalDateEnding,
+                  ],
+                  set: {
+                    name: sql`excluded.name`,
+                    reportDate: sql`excluded.report_date`,
+                    estimate: sql`excluded.estimate`,
+                    currency: sql`excluded.currency`,
+                  },
+                  where: sql`
+                    ${schema.earningsSchedule.name} is distinct from excluded.name
+                    or ${schema.earningsSchedule.reportDate} is distinct from excluded.report_date
+                    or ${schema.earningsSchedule.estimate} is distinct from excluded.estimate
+                    or ${schema.earningsSchedule.currency} is distinct from excluded.currency
+                  `,
+                }),
+            ),
+          );
+        }
 
         return uniqueEntries.length;
       },
@@ -110,9 +122,10 @@ export const syncEarningsCalendar = inngest.createFunction(
     const jobsCreated = await step.run("create-fetch-jobs", async () => {
       const { start: tomorrow, end: oneWeekFromTomorrow } = getDateRange(1, 7);
 
-      // Get tracked companies (need userId for job ownership)
+      // Get tracked symbols for the earnings lookup
       const trackedCompanies = await db.query.trackedCompanies.findMany({
-        with: { stockSymbol: true },
+        columns: { stockSymbolId: true },
+        with: { stockSymbol: { columns: { symbol: true } } },
       });
 
       if (trackedCompanies.length === 0) {
@@ -120,15 +133,17 @@ export const syncEarningsCalendar = inngest.createFunction(
         return 0;
       }
 
+      const trackedSymbols = [
+        ...new Set(trackedCompanies.map((tc) => tc.stockSymbol.symbol)),
+      ];
+
       // Find earnings scheduled for the next week for tracked symbols
       const earningsNextWeek = await db.query.earningsSchedule.findMany({
+        columns: { id: true },
         where: and(
           gte(schema.earningsSchedule.reportDate, tomorrow),
           lt(schema.earningsSchedule.reportDate, oneWeekFromTomorrow),
-          inArray(
-            schema.earningsSchedule.symbol,
-            trackedCompanies.map((tc) => tc.stockSymbol.symbol),
-          ),
+          inArray(schema.earningsSchedule.symbol, trackedSymbols),
         ),
       });
 

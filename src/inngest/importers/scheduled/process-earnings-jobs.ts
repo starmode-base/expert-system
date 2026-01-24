@@ -36,16 +36,25 @@ export const processEarningsJobs = inngest.createFunction(
   { id: "scheduler.process-earnings-jobs" },
   { cron: "TZ=America/Phoenix 0 5 * * *" },
   async ({ step }) => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Retry window for failed jobs, inclusive of the last 7 days
+    // Allow a few days of date drift in the calendar.
+    const pendingToleranceDays = 3;
+    const pendingWindowStart = new Date(today);
+    pendingWindowStart.setDate(
+      pendingWindowStart.getDate() - pendingToleranceDays,
+    );
+    const pendingWindowEnd = new Date(today);
+    pendingWindowEnd.setDate(
+      pendingWindowEnd.getDate() + pendingToleranceDays + 1,
+    );
+
+    // Retry window for failed jobs, inclusive of the last 7 days plus tolerance.
     const retryWindowStart = new Date(today);
-    retryWindowStart.setDate(retryWindowStart.getDate() - 7);
+    retryWindowStart.setDate(
+      retryWindowStart.getDate() - (7 + pendingToleranceDays),
+    );
 
     const pendingJobs = await step.run("get-pending-jobs", async () => {
       const jobs = await db.query.earningsFetchJobs.findMany({
@@ -57,13 +66,17 @@ export const processEarningsJobs = inngest.createFunction(
         .filter((job) => {
           const reportDate = new Date(job.earningsSchedule.reportDate);
           reportDate.setHours(0, 0, 0, 0);
-          // Pending jobs only run for earnings reported yesterday
+          // Pending jobs run within a tolerance window around today.
           if (job.status === "pending") {
-            return reportDate >= yesterday && reportDate < today;
+            return (
+              reportDate >= pendingWindowStart && reportDate < pendingWindowEnd
+            );
           }
 
-          // Failed jobs retry daily for up to 7 days after report date
-          return reportDate >= retryWindowStart && reportDate < today;
+          // Failed jobs retry daily for up to 7 days after report date.
+          return (
+            reportDate >= retryWindowStart && reportDate < pendingWindowEnd
+          );
         })
         .map(
           (job): PendingJob => ({
