@@ -94,6 +94,28 @@ function getMarkdownPreview(markdown: string, limit: number) {
   };
 }
 
+interface ResearchQuestionProps {
+  prompt: string | null | undefined;
+}
+
+function ResearchQuestion(props: ResearchQuestionProps) {
+  return (
+    <details className="group mt-4 rounded-md border border-gray-200 bg-gray-50">
+      <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold tracking-wide text-gray-600 uppercase">
+        <span className="mr-2 inline-flex h-4 w-4 items-center justify-center border-gray-300 text-[10px] text-gray-500 group-open:rotate-90">
+          ▶
+        </span>
+        Research Question
+      </summary>
+      <div className="border-t border-gray-200 px-3 py-2 text-sm text-gray-800">
+        <p className="break-words whitespace-pre-wrap">
+          {props.prompt?.trim() ? props.prompt : "—"}
+        </p>
+      </div>
+    </details>
+  );
+}
+
 function formatInsightClipboardText(insightFeedItem: InsightsItem) {
   const sections: string[] = [];
   const insightText = insightFeedItem.insight.insight?.trim();
@@ -141,6 +163,8 @@ export function InsightCard(props: InsightCardProps) {
   const router = useRouter();
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [insightCopied, setInsightCopied] = useState(false);
+  const insightPrompt = props.insightFeedItem.insight.insightPrompt;
+  const hasInsightPrompt = Boolean(insightPrompt?.trim());
 
   const { preview: insightPreviewMarkdown } = getMarkdownPreview(
     props.insightFeedItem.insight.insight ?? "",
@@ -257,6 +281,9 @@ export function InsightCard(props: InsightCardProps) {
               publicationDate: ref.documentPublicationDate,
             }))}
           />
+          {hasInsightPrompt ? (
+            <ResearchQuestion prompt={insightPrompt} />
+          ) : null}
         </>
       ) : (
         <InsightMarkdownToggle
