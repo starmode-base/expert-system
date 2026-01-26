@@ -1,5 +1,4 @@
 import { publishNotifyUI } from "~/lib/ably";
-import { generateTakeaways } from "../takeaways/generate-takeaways";
 import { AlphaVantageRateLimitError } from "~/inngest/importers/scrapers/earnings-transcripts";
 import { earningsCallTakeawayPrompt } from "./scheduled/process-earnings-jobs";
 import { inngest } from "../client";
@@ -91,12 +90,12 @@ export const earningsCallsScraper = inngest.createFunction(
           return;
         }
 
-        await step.invoke("generate-takeaways", {
-          function: generateTakeaways,
+        await step.sendEvent(`generate-takeaways-${documentId}`, {
+          name: "app/generate-takeaways",
           data: {
             documentId,
             takeawayPrompt: earningsCallTakeawayPrompt,
-            model: "gpt-5.1",
+            model: "gpt-5.2",
             user: event.data.user,
           },
         });
