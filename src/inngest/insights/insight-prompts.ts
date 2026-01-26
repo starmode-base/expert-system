@@ -92,8 +92,8 @@ Citations rules (strict):
 - Conceptual or explanatory sentences do not need citations.
 - You may use data, calculations, or analysis from financialAnalyst without citing it.
 
-Do not include references that were not cited in the text.
-Do not cite references purely for completeness.
+Make sure to include all the references that were used to support the insight.
+Citation can be in all sections where it makes sense, not just the evidence section. But, dont force them.
 
 ---
 
