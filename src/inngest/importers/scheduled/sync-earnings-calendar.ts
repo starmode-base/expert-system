@@ -19,14 +19,14 @@ const getDateRange = (daysFromNow: number, rangeDays: number) => {
 
 /**
  * Sync earnings calendar from Alpha Vantage.
- * Runs weekly at 9:35 AM Phoenix time.
+ * Runs daily at 9:35 AM Phoenix time.
  * - Fetches 3-month earnings calendar
  * - Upserts into earningsSchedule table
  * - Creates earningsFetchJobs for tracked companies reporting in the next week
  */
 export const syncEarningsCalendar = inngest.createFunction(
   { id: "scheduler.sync-earnings-calendar" },
-  { cron: "TZ=America/Phoenix 35 9 * * 3" }, // Weekly on Wednesdays at 9:35 AM
+  { cron: "TZ=America/Phoenix 35 9 * * *" }, // Daily at 9:35 AM
   // { event: "scheduler/sync-earnings-calendar" },
   async ({ step }) => {
     // Step 1: Fetch earnings calendar from Alpha Vantage
