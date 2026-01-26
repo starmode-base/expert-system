@@ -127,8 +127,9 @@ flowchart TD
 - `app/generate-insight` events supply `insightPrompt` and the target user.
 - **Daily automation** (`scheduler.daily-insight`, cron `TZ=America/Phoenix 0 7 * * *`):
   - Fetches takeaways created in the last 3 days (system-wide).
-  - Generates exactly 3 research objectives from the takeaway summaries via `generateResearchObjectives` (OpenAI Responses structured output).
-- Fans out one `app/generate-insight` event per user × research objective.
+  - Generates research objectives from the takeaway summaries via `generateResearchObjectives` (OpenAI Responses structured output).
+- Fans out `app/generate-insight` events per user × selected research objective.
+- Current daily runner only sends the third objective (`insightPrompts.slice(2, 3)`).
 - Current daily runner targets `spencer@starmode.app` only (single-user run).
 
 ### Processing (Inngest function: `app/generate-insight`)
@@ -144,16 +145,16 @@ flowchart TD
     - `financialAnalyst` (Alpha Vantage-backed financial data tools)
     - `fetchTakeawayById` (full takeaway text + references)
   - Structured output enforced by `insightSchema`
-- Summarize the final insight via `getSummary` (OpenAI Responses structured output).
+- Summarize the research note into a user-facing post via `getInsightSummary` (OpenAI Responses structured output).
 - Persist:
-  - `insights` row with `title`, `insight`, `summary`, and `insightPrompt` for the user
+  - `insights` row with `title`, `insight` (summary post), `research` (raw research note), `summary` (core insight statement), and `insightPrompt`
   - `insight_references` (deduped references mapped to insight reference numbers)
   - `insight_takeaways` is currently not written (commented out)
 - Notify the UI when the insight is generated.
 
 **Output (storage)**
 
-- `insights.insight` and `insights.summary`, keyed by `insights.userId` (user-specific)
+- `insights.insight` (summary post), `insights.summary` (core statement), and `insights.research` (research note), keyed by `insights.userId` (user-specific)
 
 ### User-specific flow diagram
 
@@ -168,9 +169,10 @@ flowchart TD
   D --> F["Insight agent\ninsightSchema structured output"]
   E --> F
   F --> G["Tools: researcher + financialAnalyst + fetchTakeawayById"]
-  G --> H[("Postgres: insights (user-specific)")]
-  H --> I[("Postgres: insight_references")]
-  I --> J["publishNotifyUI"]
+  G --> H["Summarize research note\ngetInsightSummary"]
+  H --> I[("Postgres: insights (user-specific)\ninsight + research + summary + title + prompt")]
+  I --> J[("Postgres: insight_references")]
+  J --> K["publishNotifyUI"]
 ```
 
 ---
@@ -193,6 +195,7 @@ flowchart TD
 - **Insights (user-specific)**
   - `src/inngest/insights/daily-insight.ts`
   - `src/inngest/insights/generate-insight.ts`
+  - `src/inngest/insights/helpers/get-insight-summary.ts`
   - `src/inngest/insights/agents/insight-agent.ts`
   - `src/inngest/insights/agents/researcher.ts`
   - `src/inngest/insights/agents/financial-analyst.ts`
