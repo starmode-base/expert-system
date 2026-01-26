@@ -194,66 +194,44 @@ export const generateTakeaways = inngest.createFunction(
       }),
     );
 
-    for (const takeawaysWrite of takeawaysWrites) {
-      const takeawayEmbedding = await step.run(
-        `generate-takeaway-embedding-${takeawaysWrite.id}`,
-        async () => {
-          // ######
-          console.log(`Generating takeaway embedding for ${takeawaysWrite.id}`);
+    await Promise.all(
+      takeawaysWrites.map(async (takeawaysWrite) => {
+        await step.run(
+          `generate-save-takeaway-embedding-${takeawaysWrite.id}`,
+          async () => {
+            // ######
+            console.log(
+              `Generating takeaway embedding for ${takeawaysWrite.id}`,
+            );
 
-          return await generateEmbedding(
-            takeawaysWrite.retrievalSummary ?? takeawaysWrite.summary,
-          );
-        },
-      );
+            const embedding = await generateEmbedding(
+              takeawaysWrite.retrievalSummary ?? takeawaysWrite.summary,
+            );
 
-      await step.run(
-        `save-takeaway-embedding-${takeawaysWrite.id}`,
-        async () => {
-          // ######
-          console.log(`Saving takeaway embedding for ${takeawaysWrite.id}`);
-
-          await db
-            .insert(schema.takeawayEmbeddings)
-            .values({
+            return await db.insert(schema.takeawayEmbeddings).values({
               takeawayId: takeawaysWrite.id,
-              embedding: takeawayEmbedding,
-            })
-            .onConflictDoUpdate({
-              target: schema.takeawayEmbeddings.takeawayId,
-              set: { embedding: takeawayEmbedding },
+              embedding,
             });
-        },
-      );
+          },
+        );
 
-      const conceptEmbedding = await step.run(
-        `generate-concept-embedding-${takeawaysWrite.id}`,
-        async () => {
-          // ######
-          console.log(`Generating concept embedding for ${takeawaysWrite.id}`);
+        await step.run(
+          `generate-save-concept-embedding-${takeawaysWrite.id}`,
+          async () => {
+            // ######
+            console.log(
+              `Generating concept embedding for ${takeawaysWrite.id}`,
+            );
 
-          return await generateEmbedding(takeawaysWrite.concept);
-        },
-      );
+            const embedding = await generateEmbedding(takeawaysWrite.concept);
 
-      await step.run(
-        `save-concept-embedding-${takeawaysWrite.id}`,
-        async () => {
-          // ######
-          console.log(`Saving concept embedding for ${takeawaysWrite.id}`);
-
-          await db
-            .insert(schema.conceptEmbeddings)
-            .values({
+            return await db.insert(schema.conceptEmbeddings).values({
               takeawayId: takeawaysWrite.id,
-              embedding: conceptEmbedding,
-            })
-            .onConflictDoUpdate({
-              target: schema.conceptEmbeddings.takeawayId,
-              set: { embedding: conceptEmbedding },
+              embedding,
             });
-        },
-      );
-    }
+          },
+        );
+      }),
+    );
   },
 );

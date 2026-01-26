@@ -29,7 +29,7 @@ function parseFiscalQuarter(fiscalDateEnding: string) {
 
 /**
  * Process pending earnings fetch jobs.
- * Runs daily at 8 AM Phoenix time (day after reports).
+ * Runs daily at 5 AM Phoenix time (day after reports).
  * Retries failed jobs for up to 7 days after report date.
  */
 export const processEarningsJobs = inngest.createFunction(
