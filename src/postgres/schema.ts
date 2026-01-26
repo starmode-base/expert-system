@@ -288,6 +288,7 @@ export const insights = pgTable("insights", {
   title: text().notNull(),
   summary: text(),
   insight: text(),
+  research: text(),
   seedText: text(),
   insightPrompt: text(),
 });

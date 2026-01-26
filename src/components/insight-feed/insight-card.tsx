@@ -116,6 +116,43 @@ function ResearchQuestion(props: ResearchQuestionProps) {
   );
 }
 
+interface InsightResearchProps {
+  markdown: string;
+}
+
+function InsightResearch(props: InsightResearchProps) {
+  const [researchExpanded, setResearchExpanded] = useState(false);
+
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          setResearchExpanded((prev) => !prev);
+        }}
+        className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+      >
+        <span
+          className={`inline-block transition-transform ${researchExpanded ? "rotate-90" : ""}`}
+        >
+          ▶
+        </span>
+        Research
+      </button>
+      {researchExpanded ? (
+        <div className="mt-2">
+          <div className="prose prose-slate prose-sm sm:prose-base max-w-none break-words">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
+              {props.markdown}
+            </ReactMarkdown>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function formatInsightClipboardText(insightFeedItem: InsightsItem) {
   const sections: string[] = [];
   const insightText = insightFeedItem.insight.insight?.trim();
@@ -165,6 +202,8 @@ export function InsightCard(props: InsightCardProps) {
   const [insightCopied, setInsightCopied] = useState(false);
   const insightPrompt = props.insightFeedItem.insight.insightPrompt;
   const hasInsightPrompt = Boolean(insightPrompt?.trim());
+  const researchMarkdown = props.insightFeedItem.insight.research?.trim() ?? "";
+  const hasResearchMarkdown = Boolean(researchMarkdown);
 
   const { preview: insightPreviewMarkdown } = getMarkdownPreview(
     props.insightFeedItem.insight.insight ?? "",
@@ -269,6 +308,9 @@ export function InsightCard(props: InsightCardProps) {
           {/* Add margin below the expanded insight content */}
           <div className="mb-4" />
 
+          {hasResearchMarkdown ? (
+            <InsightResearch markdown={researchMarkdown} />
+          ) : null}
           <InsightReferences
             references={props.insightFeedItem.insightReferences.map((ref) => ({
               referenceId: ref.referenceId,

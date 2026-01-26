@@ -85,7 +85,7 @@ export function createResearcherAgent() {
   return new Agent({
     name: "Researcher Agent",
     instructions: researcherSystemPrompt,
-    model: "gpt-5.2",
+    model: "gpt-5.2-mini",
     tools: [fetchTakeawayPreviewsTool, fetchFormattedTakeawayPreviewsByIdsTool],
     toolUseBehavior: {
       stopAtToolNames: ["fetchFormattedTakeawayPreviewsByIdsTool"],
