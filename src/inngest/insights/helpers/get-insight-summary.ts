@@ -14,27 +14,36 @@ const schema = z.object({
   core_insight_statement: z
     .string()
     .describe(
-      "One decisive sentence capturing the core insight in plain text. No markdown.",
+      "One decisive sentence capturing the non-obvious, surprising claim. This is the 'aha' moment. Plain text, no markdown.",
     ),
-  blog_post: z.string().describe(
-    `A X post for easy, entertaining reading. Use short paragraphs and light markdown. Do not include a title or headings.
+  post: z.string().describe(
+    `A post that makes the reader stop and think "I never considered that."
 
-    Rules:
+    The goal is not to summarize—it's to make someone reconsider their assumptions.
+
+    # Rules
     - Do not add new facts or claims.
     - Preserve the causal logic and conclusions.
     - Avoid hedging (may/might/could).
-    - No title or headings inside the X post.
+    - No title or headings inside the post.
+
+    # Structure
+    - Lead with the surprising part, not the setup. Open with the non-obvious insight or counterintuitive observation.
+    - Use a concrete example, company, or anecdote to make it tangible.
+    - Explain the mechanism briefly—why this is happening.
+    - End with the implication: what changes if this is true?
 
     # Guidelines
-    - Assume the reader is an intelligent investor or business person, but does not have a background in the domain. So, provide context and/or definitions for the deeper domain knowledge if necessary to help them understand the insight. Keep industry specific jargon to a minimum.
-    - Start with a hook that is engaging and interesting to the reader. Using reconizable names helps.
-    - Dont just rewrite the research, craft a post that is worth stopping to read.
+    - Assume the reader is intelligent but not an expert in the domain. Provide context for specialized knowledge.
+    - Use recognizable names (companies, people, products) to anchor abstract ideas.
+    - Don't just rewrite the research—distill it into the most interesting version of itself.
+    - make it brief. Just a few paragraphs.
 
     # Writing Style
-    - Use formatting (e.g. Short paragraphs, bolded text, and optionally bullet points) to make the insight more engaging and readable.
-    - Clear, human and entertaining.
-    - Write in simple language, sharp ideas, calm confidence.
-    - Explain the core concepts in an intuitive way, that anyone can understand.
+    - Short paragraphs, bolded key phrases, occasional bullets for clarity.
+    - Write like you're telling a smart friend something you just figured out.
+    - Simple language, sharp ideas, calm confidence.
+    - If the insight is genuinely surprising, let it speak for itself—don't oversell.
       `,
   ),
 });
@@ -47,12 +56,12 @@ export async function getInsightSummary(researchText: string) {
     input: [
       {
         role: "user",
-        content: `You are a sharp editor for an investing insights newsletter.
+        content: `You are a sharp editor who distills research into its most interesting, non-obvious form.
 
 Based on the research below, create:
-1) A short title.
-2) A single-sentence core insight statement.
-3) A X post that is easy and entertaining to read.
+1) A short title that hints at the surprising insight (not a generic topic label).
+2) A single-sentence core insight statement—the "aha" moment that makes someone stop and think.
+3) A post that makes the reader reconsider their assumptions.
 
 Research:
 ${researchText}`,

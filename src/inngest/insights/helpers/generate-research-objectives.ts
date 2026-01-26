@@ -21,7 +21,7 @@ export async function generateResearchObjectives(
         z
           .string()
           .describe(
-            "A distinct 1-2 sentence research objective capturing an important topic cluster. This objective should be capable of producing a defensible, potentially investable insight.",
+            "A distinct 1-2 sentence research question pointing toward a non-obvious, surprising, or counterintuitive insight. Should connect multiple ideas and challenge conventional thinking.",
           ),
       )
       .length(3),
@@ -35,7 +35,7 @@ export async function generateResearchObjectives(
         role: "system",
         type: "message",
         content:
-          "You are a research director for an investing-oriented insight engine. Your job is to propose research questions that are falsifiable, decision-relevant, and likely to surface non-obvious winners/losers. Optimize for novelty, specificity, and the ability to be supported with evidence.",
+          "You are a research director for a discovery-oriented insight engine. Your job is to propose research questions that surface non-obvious, surprising, and consequential ideas about how the world is changing. Optimize for novelty, cross-domain connections, and the potential to shift mental models.",
       },
       {
         role: "user",
@@ -43,14 +43,28 @@ export async function generateResearchObjectives(
         content: `Given the recent takeaway summaries and recent insights below, generate exactly 3 distinct research objectives for the insight generator.
 
       Output rules (strict):
-      - Each objective must be phrased as a single concrete research question (end with a “?”).
+      - Each objective must be phrased as a single concrete research question (end with a "?").
       - 1–2 sentences per objective (no bullets, no colons, no sub-questions).
 
       Quality bar:
-      - Falsifiable: it should be possible to be wrong, and the objective should imply what evidence would confirm/disconfirm.
-      - Investment-relevant: it should point to a tradeable implication (winner/loser, margin/volatility shift, multiple re-rating, or structural demand/supply shift).
-      - Specific: include (a) a clear unit of analysis (company/sector/value-chain node), (b) at least 1 measurable outcome (e.g., pricing, margins, adoption, CAC, churn, capex, yields, utilization), and (c) a time horizon.
-      - Novel: it should not be a generic trend; it should connect at least two ideas from the takeaways into a non-obvious mechanism.
+      - Non-obvious: connects at least two ideas from different sources or domains in a way that reveals something hidden or counterintuitive.
+      - Consequential: if the answer is "yes," it changes how we should think about a company, sector, technology, or economic dynamic.
+      - Testable: there is some observable evidence that would confirm or refute this.
+      - Surprising: a smart generalist would say "I hadn't thought of that" or "that's counterintuitive."
+
+      What makes a research objective interesting:
+      - It challenges a widely-held assumption
+      - It connects two things people don't usually connect
+      - It identifies an emerging pattern before it's obvious
+      - It explains something confusing or counterintuitive
+      - It reveals a hidden constraint or bottleneck
+      - It surfaces a second-order effect of a known trend
+
+      What is NOT interesting:
+      - Restating what the takeaways already say
+      - Obvious trend extrapolation ("AI will keep growing")
+      - Generic sector analysis ("cloud is competitive")
+      - Questions with obvious answers
 
       Novelty constraints:
       - Do not overlap with the recent insights. Avoid the same central claim, same primary entities, or same mechanism.
@@ -58,9 +72,8 @@ export async function generateResearchObjectives(
 
       Style constraints:
       - Do not restate or quote the takeaways.
-      - Do not hedge (avoid words like “may”, “might”, “could”).
-      - Do not ask for a literature review.
-      - Write like you expect an analyst to go gather evidence and publish a decisive take.
+      - Do not hedge (avoid words like "may", "might", "could").
+      - Write like you're pointing an analyst toward something genuinely surprising that deserves investigation.
 
       Takeaway summaries:
       ${takeaways.map((takeaway) => `- ${takeaway.summary}`).join("\n")}

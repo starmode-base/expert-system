@@ -95,7 +95,7 @@ export const generateInsight = inngest.createFunction(
           .values({
             userId: event.data.user.id,
             title: summarizedInsight.title,
-            insight: summarizedInsight.blog_post,
+            insight: summarizedInsight.post,
             research: finalInsight.insight,
             summary: summarizedInsight.core_insight_statement,
             insightPrompt: event.data.insightPrompt,
@@ -143,7 +143,7 @@ export const generateInsight = inngest.createFunction(
       ...finalInsight,
       title: summarizedInsight.title,
       core_insight_statement: summarizedInsight.core_insight_statement,
-      insight: summarizedInsight.blog_post,
+      insight: summarizedInsight.post,
     };
   },
 );

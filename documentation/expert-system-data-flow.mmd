@@ -1,0 +1,43 @@
+flowchart TD
+  %% Expert system breadth-to-insight flow
+  subgraph Sources["Sources (wide breadth)"]
+    S1["Public earnings calls + transcripts"]
+    S2["SEC filings (10-K, 10-Q, 8-K)"]
+    S3["Company press releases + blogs"]
+    S4["Market data (prices, volume, options)"]
+    S5["Macro data (inflation, jobs, rates)"]
+    S6["Industry research reports"]
+    S7["Expert commentary + social feeds"]
+  end
+
+  subgraph Takeaways["Takeaways (with citations)"]
+    T1["Gross margin expanded 240 bps due to input cost declines [Earnings Call Q3]"]
+    T2["Capex guide raised to $1.2B for data center buildout [10-Q Note 7]"]
+    T3["Price increases of 3%–5% announced for enterprise SKUs [Press Release 01/18]"]
+    T4["Demand elasticity visible in churn uptick within SMB segment [Research Report]"]
+    T5["Implied volatility suggests market pricing for higher downside risk [Options Data]"]
+  end
+
+  subgraph InsightGen["Insight generation module (agent + tools)"]
+    A1["Research agent"]
+    A2["Tooling: web research"]
+    A3["Tooling: financial analysis"]
+    A4["Tooling: dataset lookups"]
+    A5["Cross-source synthesis + validation"]
+  end
+
+  subgraph Insights["Insights (examples)"]
+    O1["Margin gains likely temporary as capacity expansion shifts cost mix in H2"]
+    O2["Capex surge signals medium-term cash flow compression despite revenue tailwinds"]
+    O3["Pricing power remains in enterprise, but SMB churn limits near-term ARPA uplift"]
+    O4["Market is underpricing demand volatility relative to guidance variance history"]
+  end
+
+  Sources --> Takeaways
+  Takeaways --> InsightGen
+  InsightGen --> Insights
+
+  A1 --> A5
+  A2 --> A5
+  A3 --> A5
+  A4 --> A5
