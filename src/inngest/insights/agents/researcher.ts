@@ -98,7 +98,7 @@ export function createResearcherAgent() {
     model: "gpt-5-mini",
     tools: [fetchTakeawayPreviewsTool, fetchFormattedTakeawayPreviewsByIdsTool],
     toolUseBehavior: {
-      stopAtToolNames: ["fetchFormattedTakeawayPreviewsByIdsTool"],
+      stopAtToolNames: ["fetchFormattedTakeawayPreviewsByIds"],
     },
   });
 }
