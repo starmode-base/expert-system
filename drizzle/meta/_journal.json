@@ -134,6 +134,13 @@
       "when": 1769201386453,
       "tag": "0018_tough_bloodstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1769448366145,
+      "tag": "0019_lucky_mulholland_black",
+      "breakpoints": true
     }
   ]
 }

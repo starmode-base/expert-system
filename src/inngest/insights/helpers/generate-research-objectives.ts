@@ -21,7 +21,7 @@ export async function generateResearchObjectives(
         z
           .string()
           .describe(
-            "A distinct 1-2 sentence research objective capturing an important topic cluster. This objective should be capable of producing a defensible, potentially investable insight.",
+            "A distinct 1-2 sentence research question pointing toward a non-obvious, surprising, or counterintuitive insight. Should connect multiple ideas and challenge conventional thinking.",
           ),
       )
       .length(3),
@@ -35,26 +35,45 @@ export async function generateResearchObjectives(
         role: "system",
         type: "message",
         content:
-          "You are a research director designing high-leverage research agendas for an insight generation system focused on business, technology, and investing.",
+          "You are a research director for a discovery-oriented insight engine. Your job is to propose research questions that surface non-obvious, surprising, and consequential ideas about how the world is changing. Optimize for novelty, cross-domain connections, and the potential to shift mental models.",
       },
       {
         role: "user",
         type: "message",
         content: `Given the recent takeaway summaries and recent insights below, generate exactly 3 distinct research objectives for the insight generator.
 
-      Each research objective should:
-      - Be framed as a concrete investigation or question, not a summary
-      - Focus on business and/or technology dynamics with clear investment relevance
-      - Be specific and directional (not generic trend-watching)
-      - Be novel or non-obvious based on the takeaways
-      - Not overlap with the recent insights; you may build on them, but each objective must be meaningfully new
-      - Be capable of producing a defensible, potentially investable insight
+      Output rules (strict):
+      - Each objective must be phrased as a single concrete research question (end with a "?").
+      - 1–2 sentences per objective (no bullets, no colons, no sub-questions).
 
-      Constraints:
-      - Each objective must target a different topic cluster
-      - Do not restate or quote the takeaways
-      - Do not hedge or list multiple sub-questions
-      - Write 1–2 sentences per objective
+      Quality bar:
+      - Non-obvious: connects at least two ideas from different sources or domains in a way that reveals something hidden or counterintuitive.
+      - Consequential: if the answer is "yes," it changes how we should think about a company, sector, technology, or economic dynamic.
+      - Testable: there is some observable evidence that would confirm or refute this.
+      - Surprising: a smart generalist would say "I hadn't thought of that" or "that's counterintuitive."
+
+      What makes a research objective interesting:
+      - It challenges a widely-held assumption
+      - It connects two things people don't usually connect
+      - It identifies an emerging pattern before it's obvious
+      - It explains something confusing or counterintuitive
+      - It reveals a hidden constraint or bottleneck
+      - It surfaces a second-order effect of a known trend
+
+      What is NOT interesting:
+      - Restating what the takeaways already say
+      - Obvious trend extrapolation ("AI will keep growing")
+      - Generic sector analysis ("cloud is competitive")
+      - Questions with obvious answers
+
+      Novelty constraints:
+      - Do not overlap with the recent insights. Avoid the same central claim, same primary entities, or same mechanism.
+      - Each of the 3 objectives must target a different topic cluster and different primary entities.
+
+      Style constraints:
+      - Do not restate or quote the takeaways.
+      - Do not hedge (avoid words like "may", "might", "could").
+      - Write like you're pointing an analyst toward something genuinely surprising that deserves investigation.
 
       Takeaway summaries:
       ${takeaways.map((takeaway) => `- ${takeaway.summary}`).join("\n")}

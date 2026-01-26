@@ -105,11 +105,11 @@ This doc describes the backend pipelines that turn raw documents into shared tak
 
 ```mermaid
 flowchart TD
-  A["Stratechery RSS\nscheduler.stratechery-scraper"] --> B["Normalize + saveContent"]
-  A2["Earnings call import\nscraper/earnings-calls"] --> B
+  A["Stratechery RSS<br/>scheduler.stratechery-scraper"] --> B["Normalize + saveContent"]
+  A2["Earnings call import<br/>scraper/earnings-calls"] --> B
   B --> C[("Postgres: documents")]
-  C --> D["Inngest: app/generate-takeaways\ndocumentId + prompt + model"]
-  D --> E[("Postgres: takeaways\n(title, takeaway, summary, concept, categoryId, documentId)")]
+  C --> D["Inngest: app/generate-takeaways<br/>documentId + prompt + model"]
+  D --> E[("Postgres: takeaways<br/>(title, takeaway, summary, concept, categoryId, documentId)")]
   E --> F["generateEmbedding(takeaway)"]
   E --> G["generateEmbedding(concept)"]
   F --> H[("Postgres + pgvector: takeaway_embeddings")]
@@ -127,8 +127,9 @@ flowchart TD
 - `app/generate-insight` events supply `insightPrompt` and the target user.
 - **Daily automation** (`scheduler.daily-insight`, cron `TZ=America/Phoenix 0 7 * * *`):
   - Fetches takeaways created in the last 3 days (system-wide).
-  - Generates exactly 3 research objectives from the takeaway summaries via `generateResearchObjectives` (OpenAI Responses structured output).
-- Fans out one `app/generate-insight` event per user × research objective.
+  - Generates research objectives from the takeaway summaries via `generateResearchObjectives` (OpenAI Responses structured output).
+- Fans out `app/generate-insight` events per user × selected research objective.
+- Current daily runner only sends the third objective (`insightPrompts.slice(2, 3)`).
 - Current daily runner targets `spencer@starmode.app` only (single-user run).
 
 ### Processing (Inngest function: `app/generate-insight`)
@@ -144,33 +145,34 @@ flowchart TD
     - `financialAnalyst` (Alpha Vantage-backed financial data tools)
     - `fetchTakeawayById` (full takeaway text + references)
   - Structured output enforced by `insightSchema`
-- Summarize the final insight via `getSummary` (OpenAI Responses structured output).
+- Summarize the research note into a user-facing post via `getInsightSummary` (OpenAI Responses structured output).
 - Persist:
-  - `insights` row with `title`, `insight`, `summary`, and `insightPrompt` for the user
+  - `insights` row with `title`, `insight` (summary post), `research` (raw research note), `summary` (core insight statement), and `insightPrompt`
   - `insight_references` (deduped references mapped to insight reference numbers)
   - `insight_takeaways` is currently not written (commented out)
 - Notify the UI when the insight is generated.
 
 **Output (storage)**
 
-- `insights.insight` and `insights.summary`, keyed by `insights.userId` (user-specific)
+- `insights.insight` (summary post), `insights.summary` (core statement), and `insights.research` (research note), keyed by `insights.userId` (user-specific)
 
 ### User-specific flow diagram
 
 ```mermaid
 flowchart TD
-  T["System takeaways + embeddings\n(shared across users)"]
-  A["Daily cron\nscheduler.daily-insight"] --> B["Takeaways last 3 days\nresearch objectives via generateResearchObjectives"]
-  B --> C["Send app/generate-insight events\nper user × research objective"]
+  T["System takeaways + embeddings<br/>(shared across users)"]
+  A["Daily cron<br/>scheduler.daily-insight"] --> B["Takeaways last 3 days<br/>research objectives via generateResearchObjectives"]
+  B --> C["Send app/generate-insight events<br/>per user × research objective"]
   C --> D["Load user recent insights"]
-  C --> E["Researcher agent\nfetchTakeawayPreviews + fetchFormattedTakeawayPreviewsByIds"]
+  C --> E["Researcher agent<br/>fetchTakeawayPreviews + fetchFormattedTakeawayPreviewsByIds"]
   T --> E
-  D --> F["Insight agent\ninsightSchema structured output"]
+  D --> F["Insight agent<br/>insightSchema structured output"]
   E --> F
   F --> G["Tools: researcher + financialAnalyst + fetchTakeawayById"]
-  G --> H[("Postgres: insights (user-specific)")]
-  H --> I[("Postgres: insight_references")]
-  I --> J["publishNotifyUI"]
+  G --> H["Summarize research note<br/>getInsightSummary"]
+  H --> I[("Postgres: insights (user-specific)<br/>insight + research + summary + title + prompt")]
+  I --> J[("Postgres: insight_references")]
+  J --> K["publishNotifyUI"]
 ```
 
 ---
@@ -193,6 +195,7 @@ flowchart TD
 - **Insights (user-specific)**
   - `src/inngest/insights/daily-insight.ts`
   - `src/inngest/insights/generate-insight.ts`
+  - `src/inngest/insights/helpers/get-insight-summary.ts`
   - `src/inngest/insights/agents/insight-agent.ts`
   - `src/inngest/insights/agents/researcher.ts`
   - `src/inngest/insights/agents/financial-analyst.ts`

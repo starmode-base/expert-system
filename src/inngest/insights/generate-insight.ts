@@ -8,7 +8,7 @@ import type {
 import { invariant } from "@tanstack/react-router";
 import { publishNotifyUI } from "~/lib/ably";
 import { runInsightAgent } from "./agents/insight-agent";
-import { getSummary } from "../takeaways/helpers/get-summary";
+import { getInsightSummary } from "./helpers/get-insight-summary";
 import { createResearcherAgent } from "./agents/researcher";
 import { run } from "@openai/agents";
 
@@ -74,8 +74,7 @@ export const generateInsight = inngest.createFunction(
 
     // Summarize the final insight
     const summarizedInsight = await step.run(`summarize-insight`, async () => {
-      const summary = await getSummary(finalInsight.insight);
-      return summary.summary;
+      return await getInsightSummary(finalInsight.insight);
     });
 
     // Step 6: Save the final insight text
@@ -95,9 +94,10 @@ export const generateInsight = inngest.createFunction(
           .insert(schema.insights)
           .values({
             userId: event.data.user.id,
-            title: finalInsight.title,
-            insight: finalInsight.insight,
-            summary: summarizedInsight,
+            title: summarizedInsight.title,
+            insight: summarizedInsight.post,
+            research: finalInsight.insight,
+            summary: summarizedInsight.core_insight_statement,
             insightPrompt: event.data.insightPrompt,
           })
           .returning();
@@ -139,6 +139,11 @@ export const generateInsight = inngest.createFunction(
       `Insight generated for id: ${insightId}`,
     );
 
-    return finalInsight;
+    return {
+      ...finalInsight,
+      title: summarizedInsight.title,
+      core_insight_statement: summarizedInsight.core_insight_statement,
+      insight: summarizedInsight.post,
+    };
   },
 );

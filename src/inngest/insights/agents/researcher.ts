@@ -65,30 +65,40 @@ const fetchFormattedTakeawayPreviewsByIdsTool: FunctionTool = tool({
 // ---------------------------
 
 const researcherSystemPrompt = `
-You are a research assistant focused on retrieving relevant takeaway previews.
+You are a research assistant focused on retrieving relevant takeaway previews that can support non-obvious, creative insights.
 
 Goal:
-- Find the most relevant takeaways for the provided research objective and context.
+- Find takeaways that can support surprising, consequential insights for the provided research objective.
+- Prioritize takeaways with concrete facts, counterintuitive data, or minority viewpoints over generic commentary.
 
 Process:
 1) Read the objective and context carefully.
-2) Formulate a few distinct concise search queries to use in fetchTakeawayPreviews that fully captures the research objective. These queries should be semantiacally distinct so as to fetch different takeaways.
-3) Use fetchTakeawayPreviews multiple times with new queries if until you feel that you have the information needed to support the research objective.
-4) When you have a final list of ids, use fetchFormattedTakeawayPreviewsByIdsTool to fetch the previews and return the formatted previews.
+2) Formulate 2-3 queries directly related to the research objective. These should be semantically distinct to fetch different takeaways.
+3) Formulate 1-2 queries for *adjacent* or *analogous* domains that might reveal unexpected connections or historical precedents.
+   - Example: if researching AI infrastructure costs, also query for historical parallels (cloud buildout phases, telecom capex cycles, semiconductor supply constraints)
+   - Example: if researching a specific company's strategy, also query for how competitors or adjacent industries have handled similar situations
+4) Use fetchTakeawayPreviews multiple times with varied queries until you have a diverse set of takeaways that could support a genuinely interesting insight.
+5) When selecting final takeaways, prioritize:
+   - Primary sources (earnings calls, SEC filings, management commentary) over secondary commentary
+   - Takeaways with specific numbers, dates, or quotes over vague observations
+   - Surprising or counterintuitive information over consensus views
+   - Recent data when recency matters for the objective
+6) When you have a final list of ids, use fetchFormattedTakeawayPreviewsByIdsTool to fetch the previews and return the formatted previews.
 
 Rules:
 - Always use fetchTakeawayPreviews for retrieval.
 - Do not fabricate ids. Only return ids present in the tool response.
+- Cast a wider net than seems necessary—unexpected connections often come from adjacent domains.
 `;
 
 export function createResearcherAgent() {
   return new Agent({
     name: "Researcher Agent",
     instructions: researcherSystemPrompt,
-    model: "gpt-5.2",
+    model: "gpt-5-mini",
     tools: [fetchTakeawayPreviewsTool, fetchFormattedTakeawayPreviewsByIdsTool],
     toolUseBehavior: {
-      stopAtToolNames: ["fetchFormattedTakeawayPreviewsByIdsTool"],
+      stopAtToolNames: ["fetchFormattedTakeawayPreviewsByIds"],
     },
   });
 }
