@@ -60,7 +60,7 @@ export const dailyInsight = inngest.createFunction(
     const sendCounts = await Promise.all(
       users.map((user) =>
         Promise.all(
-          insightPrompts.slice(2, 3).map((insightPrompt, promptIndex) =>
+          insightPrompts.map((insightPrompt, promptIndex) =>
             step.sendEvent(`generate-insight-${user.id}-${promptIndex}`, {
               name: "app/generate-insight",
               data: {
