@@ -27,6 +27,8 @@ const rawEnv = {
   X_API_SECRET: process.env.X_API_SECRET,
   X_ACCESS_TOKEN: process.env.X_ACCESS_TOKEN,
   X_ACCESS_SECRET: process.env.X_ACCESS_SECRET,
+  ALPACA_API_KEY: process.env.ALPACA_API_KEY,
+  ALPACA_SECRET_KEY: process.env.ALPACA_SECRET_KEY,
 
   /**
    * Platform environment variables
