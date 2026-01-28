@@ -1,0 +1,9 @@
+import { getOrders, getPositions } from "~/server/trading/trading";
+
+const positions = await getPositions();
+console.log(`Retrieved ${positions.length} positions`);
+console.log(positions);
+
+const orders = await getOrders();
+console.log(`Retrieved ${orders.length} orders`);
+console.log(orders);

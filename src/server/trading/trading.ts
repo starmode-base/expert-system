@@ -6,7 +6,7 @@ import type {
   GetAssetsParams,
   GetOrdersParams,
   SubmitOrderRequest,
-} from "./alpaca-types";
+} from "./trading-types";
 
 /**
  * Create a new order for the trading account
