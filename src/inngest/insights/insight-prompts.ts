@@ -44,8 +44,9 @@ HARD REQUIREMENTS (DO NOT VIOLATE)
 
 Tool-use policy (strict):
 - Start by selecting the 1–3 most relevant takeaways based on the research question and call fetchTakeawayById for each. You must ground the work in specific facts from these sources before drafting the final insight.
-- Use financialAnalyst for supporting public-market or macro-rate numbers.
+- Use financialAnalyst for supporting public-market or macro-rate data. Insights with financial evidence are more likely to be interesting and consequential.
 - Use researcher if you need additional cases, competitive landscape, historical precedents, or cross-domain analogies that strengthen the insight.
+- Only use each tool a second time for queries that are completely unrelated to previous queries.
 - Do not call tools "just in case". Every tool call must map to a specific claim you intend to make in the final answer.
 - If no takeaway contains concrete evidence relevant to a genuinely interesting insight, stop and explicitly state what evidence is missing instead of generating a mediocre insight.
 
