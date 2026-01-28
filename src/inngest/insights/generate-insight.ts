@@ -11,6 +11,7 @@ import { runInsightAgent } from "./agents/insight-agent";
 import { getInsightSummary } from "./helpers/get-insight-summary";
 import { createResearcherAgent } from "./agents/researcher";
 import { run } from "@openai/agents";
+import { NonRetriableError } from "inngest";
 
 export interface InsightLoopState {
   response: Response;
@@ -65,11 +66,18 @@ export const generateInsight = inngest.createFunction(
     );
 
     const finalInsight = await step.run(`run-insight-agent`, async () => {
-      return await runInsightAgent({
-        takeawayPreviewFormatted,
-        recentInsights,
-        insightPrompt: event.data.insightPrompt,
-      });
+      try {
+        return await runInsightAgent({
+          takeawayPreviewFormatted,
+          recentInsights,
+          insightPrompt: event.data.insightPrompt,
+        });
+      } catch (error) {
+        console.error("Error running insight agent:", error);
+        throw new NonRetriableError("Error running insight agent:", {
+          cause: error,
+        });
+      }
     });
 
     // Summarize the final insight
