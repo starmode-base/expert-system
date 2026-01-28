@@ -15,7 +15,7 @@ interface AlphaVantageTranscriptEntry {
 interface AlphaVantageEarningsTranscriptResponse {
   symbol: string;
   quarter: string;
-  transcript: AlphaVantageTranscriptEntry[];
+  transcript: AlphaVantageTranscriptEntry[] | [];
 }
 
 interface FetchAlphaVantageTranscriptParams {
@@ -28,6 +28,20 @@ export class AlphaVantageRateLimitError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "AlphaVantageRateLimitError";
+  }
+}
+
+export class AlphaVantageTranscriptParseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AlphaVantageTranscriptParseError";
+  }
+}
+
+export class AlphaVantageTranscriptMissingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AlphaVantageTranscriptMissingError";
   }
 }
 
@@ -64,7 +78,7 @@ function isTranscriptResponse(
     return false;
   }
 
-  return payload.transcript.length > 0;
+  return true;
 }
 
 export async function fetchAlphaVantageEarningsTranscript({
@@ -99,8 +113,14 @@ export async function fetchAlphaVantageEarningsTranscript({
     console.log("Typed data", typedData);
     console.log("raw data", data);
 
-    throw new Error(
+    throw new AlphaVantageTranscriptParseError(
       `Alpha Vantage API response parsing error: ${JSON.stringify(typedData)}`,
+    );
+  }
+
+  if (typedData.transcript.length === 0) {
+    throw new AlphaVantageTranscriptMissingError(
+      `No transcript found for ${symbol} ${year}Q${quarter}`,
     );
   }
 

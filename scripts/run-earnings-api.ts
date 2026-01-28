@@ -3,7 +3,7 @@ import { fetchAlphaVantageEarningsTranscript } from "~/inngest/importers/scraper
 const result = await fetchAlphaVantageEarningsTranscript({
   symbol: "META",
   year: 2025,
-  quarter: 3,
+  quarter: 4,
 });
 
 console.log(result);
