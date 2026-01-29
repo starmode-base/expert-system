@@ -11,6 +11,7 @@ import { runInsightAgent } from "./agents/insight-agent";
 import { getInsightSummary } from "./helpers/get-insight-summary";
 import { createResearcherAgent } from "./agents/researcher";
 import { run } from "@openai/agents";
+import { NonRetriableError } from "inngest";
 
 export interface InsightLoopState {
   response: Response;
@@ -65,11 +66,18 @@ export const generateInsight = inngest.createFunction(
     );
 
     const finalInsight = await step.run(`run-insight-agent`, async () => {
-      return await runInsightAgent({
-        takeawayPreviewFormatted,
-        recentInsights,
-        insightPrompt: event.data.insightPrompt,
-      });
+      try {
+        return await runInsightAgent({
+          takeawayPreviewFormatted,
+          recentInsights,
+          insightPrompt: event.data.insightPrompt,
+        });
+      } catch (error) {
+        console.error("Error running insight agent:", error);
+        throw new NonRetriableError("Error running insight agent:", {
+          cause: error,
+        });
+      }
     });
 
     // Summarize the final insight
@@ -103,15 +111,13 @@ export const generateInsight = inngest.createFunction(
           .returning();
         invariant(result, "Failed to create insight");
 
-        // TODO: fine a solution to store the takeaways and concepts used in the insight
-
-        // await tx.insert(schema.insightTakeaways).values(
-        //   takeawayAndConceptIds.map(({ id, type }) => ({
-        //     insightId: result.id,
-        //     takeawayId: id,
-        //     type: type as "takeaway" | "concept",
-        //   })),
-        // );
+        await tx.insert(schema.insightTakeaways).values(
+          finalInsight.takeaways_used.map((takeawayId) => ({
+            insightId: result.id,
+            takeawayId,
+            type: "takeaway" as const,
+          })),
+        );
 
         if (uniqueReferences.length > 0) {
           await tx.insert(schema.insightReferences).values(

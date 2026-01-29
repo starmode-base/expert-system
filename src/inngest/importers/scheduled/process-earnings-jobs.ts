@@ -3,12 +3,19 @@ import { db, schema } from "~/postgres/db";
 import { inngest } from "../../client";
 import { fetchAndSaveTranscript } from "../scrapers/save-content";
 import type { EarningsScheduleSelect } from "~/postgres/schema";
-import { AlphaVantageRateLimitError } from "~/inngest/importers/scrapers/earnings-transcripts";
+import {
+  AlphaVantageRateLimitError,
+  AlphaVantageTranscriptMissingError,
+} from "~/inngest/importers/scrapers/earnings-transcripts";
 
 interface PendingJob {
   id: string;
   earningsSchedule: EarningsScheduleSelect;
 }
+
+type JobResult =
+  | { success: true; documentId: string; jobId: string }
+  | { success: false; error: string };
 
 export const earningsCallTakeawayPrompt = `
   Focus on articulating the most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Only include financial performance of the company to the extent that it supports insights about any of the afore mentioned themes.
@@ -93,59 +100,79 @@ export const processEarningsJobs = inngest.createFunction(
 
     console.log(`Processing ${pendingJobs.length} pending earnings jobs`);
 
-    const results = await Promise.all(
-      pendingJobs.map((job) =>
-        step.run(`process-job-${job.id}`, async () => {
+    const results: JobResult[] = [];
+
+    for (const job of pendingJobs) {
+      const result = await step.run(`process-job-${job.id}`, async () => {
+        await db
+          .update(schema.earningsFetchJobs)
+          .set({ status: "processing" })
+          .where(eq(schema.earningsFetchJobs.id, job.id));
+
+        const { earningsSchedule } = job;
+        const { year, quarter } = parseFiscalQuarter(
+          earningsSchedule.fiscalDateEnding,
+        );
+
+        try {
+          const documentId = await fetchAndSaveTranscript({
+            symbol: earningsSchedule.symbol,
+            name: earningsSchedule.name,
+            year,
+            quarter,
+            earningsDate: new Date(earningsSchedule.reportDate),
+          });
+
           await db
             .update(schema.earningsFetchJobs)
-            .set({ status: "processing" })
+            .set({ status: "completed", processedAt: new Date() })
             .where(eq(schema.earningsFetchJobs.id, job.id));
 
-          const { earningsSchedule } = job;
-          const { year, quarter } = parseFiscalQuarter(
-            earningsSchedule.fiscalDateEnding,
-          );
+          return { success: true as const, documentId, jobId: job.id };
+        } catch (error) {
+          if (error instanceof AlphaVantageRateLimitError) {
+            throw error;
+          }
 
-          try {
-            const documentId = await fetchAndSaveTranscript({
-              symbol: earningsSchedule.symbol,
-              name: earningsSchedule.name,
-              year,
-              quarter,
-              earningsDate: new Date(earningsSchedule.reportDate),
-            });
-
-            await db
-              .update(schema.earningsFetchJobs)
-              .set({ status: "completed", processedAt: new Date() })
-              .where(eq(schema.earningsFetchJobs.id, job.id));
-
-            return { success: true as const, documentId, jobId: job.id };
-          } catch (error) {
-            if (error instanceof AlphaVantageRateLimitError) {
-              throw error;
-            }
-
-            console.error(`Failed to process job ${job.id}:`, error);
-
+          if (error instanceof AlphaVantageTranscriptMissingError) {
             await db
               .update(schema.earningsFetchJobs)
               .set({
-                status: "failed",
+                status: "pending",
                 processedAt: new Date(),
-                errorMessage:
-                  error instanceof Error ? error.message : "Unknown error",
+                errorMessage: error.message,
               })
               .where(eq(schema.earningsFetchJobs.id, job.id));
 
             return {
               success: false as const,
-              error: error instanceof Error ? error.message : "Unknown error",
+              error: error.message,
             };
           }
-        }),
-      ),
-    );
+
+          console.error(`Failed to process job ${job.id}:`, error);
+
+          await db
+            .update(schema.earningsFetchJobs)
+            .set({
+              status: "failed",
+              processedAt: new Date(),
+              errorMessage:
+                error instanceof Error ? error.message : "Unknown error",
+            })
+            .where(eq(schema.earningsFetchJobs.id, job.id));
+
+          return {
+            success: false as const,
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
+        }
+      });
+
+      results.push(result);
+
+      await step.sleep(`sleep-1-second-${job.id}`, 1000);
+    }
 
     const successfulResults = results.filter(
       (r): r is { success: true; documentId: string; jobId: string } =>

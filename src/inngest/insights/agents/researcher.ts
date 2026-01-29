@@ -73,16 +73,13 @@ Goal:
 
 Process:
 1) Read the objective and context carefully.
-2) Formulate 2-3 queries directly related to the research objective. These should be semantically distinct to fetch different takeaways.
+2) Formulate a single query directly related to the research objective.
 3) Formulate 1-2 queries for *adjacent* or *analogous* domains that might reveal unexpected connections or historical precedents.
    - Example: if researching AI infrastructure costs, also query for historical parallels (cloud buildout phases, telecom capex cycles, semiconductor supply constraints)
    - Example: if researching a specific company's strategy, also query for how competitors or adjacent industries have handled similar situations
+   - Each new query should be semantically distinct from the previous queries.
 4) Use fetchTakeawayPreviews multiple times with varied queries until you have a diverse set of takeaways that could support a genuinely interesting insight.
-5) When selecting final takeaways, prioritize:
-   - Primary sources (earnings calls, SEC filings, management commentary) over secondary commentary
-   - Takeaways with specific numbers, dates, or quotes over vague observations
-   - Surprising or counterintuitive information over consensus views
-   - Recent data when recency matters for the objective
+5) When selecting final takeaways, prioritize takeaways that are most relevant to the research objective.
 6) When you have a final list of ids, use fetchFormattedTakeawayPreviewsByIdsTool to fetch the previews and return the formatted previews.
 
 Rules:
