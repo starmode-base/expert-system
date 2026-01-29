@@ -171,7 +171,7 @@ export const processEarningsJobs = inngest.createFunction(
 
       results.push(result);
 
-      await step.sleep("sleep-1-second", 1000);
+      await step.sleep(`sleep-1-second-${job.id}`, 1000);
     }
 
     const successfulResults = results.filter(
