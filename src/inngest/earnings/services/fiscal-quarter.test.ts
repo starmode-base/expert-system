@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { parseFiscalQuarter } from "./process-earnings-jobs-helpers";
+import { parseFiscalQuarter } from "./fiscal-quarter";
 
 const toUtcDate = (value: string) => new Date(`${value}T00:00:00.000Z`);
 

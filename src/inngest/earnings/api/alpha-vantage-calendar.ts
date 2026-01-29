@@ -1,4 +1,4 @@
-import { ensureEnv } from "../../../lib/env";
+import { ensureEnv } from "~/lib/env";
 
 const ALPHAVANTAGE_API_BASE_URL = "https://www.alphavantage.co/query";
 const ALPHAVANTAGE_API_KEY = ensureEnv("ALPHAVANTAGE_API_KEY");
@@ -12,7 +12,7 @@ export interface EarningsCalendarEntry {
   currency: string | null;
 }
 
-type Horizon = "3month" | "6month" | "12month";
+export type Horizon = "3month" | "6month" | "12month";
 
 /**
  * Fetches the earnings calendar from Alpha Vantage API.

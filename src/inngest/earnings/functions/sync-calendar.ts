@@ -1,7 +1,8 @@
 import { and, gte, lt, inArray, sql } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
-import { inngest } from "../../client";
-import { fetchEarningsCalendar } from "~/inngest/importers/scrapers/earnings-calendar";
+import { inngest } from "~/inngest/client";
+import { fetchEarningsCalendar } from "../api/alpha-vantage-calendar";
+import { CONFIG } from "../constants";
 
 const toBatches = <T>(arr: T[], size: number): T[][] =>
   Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
@@ -25,8 +26,8 @@ const getDateRange = (daysFromNow: number, rangeDays: number) => {
  * - Creates earningsFetchJobs for tracked companies reporting in the next week
  */
 export const syncEarningsCalendar = inngest.createFunction(
-  { id: "scheduler.sync-earnings-calendar" },
-  { cron: "TZ=America/Phoenix 35 9 * * *" }, // Daily at 9:35 AM
+  { id: "earnings.sync-calendar" },
+  { cron: "TZ=America/Phoenix 35 9 * * *" },
   async ({ step }) => {
     // Step 1: Fetch earnings calendar from Alpha Vantage
     const calendarEntries = await step.run(
@@ -71,11 +72,9 @@ export const syncEarningsCalendar = inngest.createFunction(
         );
 
         // Process in batches with limited concurrency to avoid DB overload
-        const batchSize = 1000;
-        const concurrency = 4;
-        const batches = toBatches(uniqueEntries, batchSize);
+        const batches = toBatches(uniqueEntries, CONFIG.UPSERT_BATCH_SIZE);
 
-        for (const group of toBatches(batches, concurrency)) {
+        for (const group of toBatches(batches, CONFIG.UPSERT_CONCURRENCY)) {
           await Promise.all(
             group.map((batch) =>
               db
