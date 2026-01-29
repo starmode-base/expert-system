@@ -181,7 +181,7 @@ flowchart TD
 
 - **Ingestion**
   - `src/inngest/importers/scheduled/stratechery.ts`
-  - `src/inngest/importers/earnings-calls-scraper.ts`
+  - `src/inngest/earnings/` (earnings call system)
   - `src/inngest/importers/scrapers/save-content.ts`
 - **Takeaways + concepts + categorization**
   - `src/inngest/takeaways/generate-takeaways.ts`
