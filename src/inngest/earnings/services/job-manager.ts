@@ -50,7 +50,13 @@ export async function createJob(
  */
 export type ManualFetchTarget =
   | { type: "job"; job: PendingJob }
-  | { type: "direct"; symbol: string; name: string; year: number; quarter: number };
+  | {
+      type: "direct";
+      symbol: string;
+      name: string;
+      year: number;
+      quarter: number;
+    };
 
 /**
  * Finds existing earnings schedule entries and creates jobs for the given symbols.

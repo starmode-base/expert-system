@@ -80,7 +80,9 @@ export const fetchEarningsTranscripts = inngest.createFunction(
 
     for (const target of targets) {
       const symbol =
-        target.type === "job" ? target.job.earningsSchedule.symbol : target.symbol;
+        target.type === "job"
+          ? target.job.earningsSchedule.symbol
+          : target.symbol;
 
       const result = await step.run(`fetch-transcript-${symbol}`, async () => {
         try {
@@ -126,7 +128,11 @@ export const fetchEarningsTranscripts = inngest.createFunction(
       await step.run("notify-complete-no-results", async () => {
         await publishNotifyUI(user.id, "Complete");
       });
-      return { processed: targets.length, succeeded: 0, failed: targets.length };
+      return {
+        processed: targets.length,
+        succeeded: 0,
+        failed: targets.length,
+      };
     }
 
     // Step 4: Notify user of progress
