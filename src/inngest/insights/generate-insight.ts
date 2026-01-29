@@ -111,8 +111,6 @@ export const generateInsight = inngest.createFunction(
           .returning();
         invariant(result, "Failed to create insight");
 
-        // TODO: fine a solution to store the takeaways and concepts used in the insight
-
         await tx.insert(schema.insightTakeaways).values(
           finalInsight.takeaways_used.map((takeawayId) => ({
             insightId: result.id,
