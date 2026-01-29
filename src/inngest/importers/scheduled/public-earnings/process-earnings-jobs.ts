@@ -1,38 +1,17 @@
 import { eq, inArray } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
-import { inngest } from "../../client";
-import { fetchAndSaveTranscript } from "../scrapers/save-content";
-import type { EarningsScheduleSelect } from "~/postgres/schema";
+import { inngest } from "../../../client";
+import { fetchAndSaveTranscript } from "../../scrapers/save-content";
 import {
   AlphaVantageRateLimitError,
   AlphaVantageTranscriptMissingError,
 } from "~/inngest/importers/scrapers/earnings-transcripts";
-
-interface PendingJob {
-  id: string;
-  earningsSchedule: EarningsScheduleSelect;
-}
-
-type JobResult =
-  | { success: true; documentId: string; jobId: string }
-  | { success: false; error: string };
-
-export const earningsCallTakeawayPrompt = `
-  Focus on articulating the most notable insight that can be drawn about markets, the economy, new technologies, consumer demand or the business environment at large. Only include financial performance of the company to the extent that it supports insights about any of the afore mentioned themes.
-  - The takeaway itself should NOT be earnings results or financial performance.
-`;
-
-/**
- * Parses fiscalDateEnding (e.g., "2024-12-31") to determine year and quarter.
- */
-function parseFiscalQuarter(fiscalDateEnding: string) {
-  const date = new Date(fiscalDateEnding);
-  const month = date.getMonth() + 1;
-  return {
-    year: date.getFullYear(),
-    quarter: Math.ceil(month / 3),
-  };
-}
+import {
+  earningsCallTakeawayPrompt,
+  JobResult,
+  parseFiscalQuarter,
+  PendingJob,
+} from "./process-earnings-jobs-helpers";
 
 /**
  * Process pending earnings fetch jobs.
@@ -110,9 +89,10 @@ export const processEarningsJobs = inngest.createFunction(
           .where(eq(schema.earningsFetchJobs.id, job.id));
 
         const { earningsSchedule } = job;
-        const { year, quarter } = parseFiscalQuarter(
-          earningsSchedule.fiscalDateEnding,
-        );
+        const { year, quarter } = parseFiscalQuarter({
+          reportDate: new Date(earningsSchedule.reportDate),
+          fiscalYearEnd: new Date(earningsSchedule.fiscalDateEnding),
+        });
 
         try {
           const documentId = await fetchAndSaveTranscript({
