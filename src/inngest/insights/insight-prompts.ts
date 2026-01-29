@@ -121,6 +121,11 @@ export const insightSchema = z.object({
         ),
     }),
   ),
+  takeaways_used: z
+    .array(z.string())
+    .describe(
+      "The alphanumeric IDs for takeaways that were used to inform the insight. These will always be alphanumeric strings. e.g. p7LmQ4ZxN1tV8aCjR0uHkS9y",
+    ),
 });
 
 // ------------------------------------------------------------

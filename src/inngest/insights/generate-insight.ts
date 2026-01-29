@@ -113,13 +113,13 @@ export const generateInsight = inngest.createFunction(
 
         // TODO: fine a solution to store the takeaways and concepts used in the insight
 
-        // await tx.insert(schema.insightTakeaways).values(
-        //   takeawayAndConceptIds.map(({ id, type }) => ({
-        //     insightId: result.id,
-        //     takeawayId: id,
-        //     type: type as "takeaway" | "concept",
-        //   })),
-        // );
+        await tx.insert(schema.insightTakeaways).values(
+          finalInsight.takeaways_used.map((takeawayId) => ({
+            insightId: result.id,
+            takeawayId,
+            type: "takeaway" as const,
+          })),
+        );
 
         if (uniqueReferences.length > 0) {
           await tx.insert(schema.insightReferences).values(
