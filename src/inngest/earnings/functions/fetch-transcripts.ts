@@ -1,7 +1,11 @@
 import { publishNotifyUI } from "~/lib/ably";
 import { inngest } from "~/inngest/client";
-import { AlphaVantageRateLimitError } from "../api/alpha-vantage-transcripts";
-import { createJobsForSymbols, processJob } from "../services/job-manager";
+import {
+  AlphaVantageRateLimitError,
+  AlphaVantageTranscriptMissingError,
+} from "../api/alpha-vantage-transcripts";
+import { findOrPrepareForFetch, processJob } from "../services/job-manager";
+import { fetchAndSaveTranscript } from "../services/transcript-service";
 import {
   CONFIG,
   EARNINGS_TAKEAWAY_MODEL,
@@ -15,11 +19,41 @@ interface FetchResult {
 }
 
 /**
+ * Processes a direct fetch (no job tracking) for symbols not in earningsSchedule.
+ */
+async function processDirectFetch(target: {
+  symbol: string;
+  name: string;
+  year: number;
+  quarter: number;
+}): Promise<ProcessResult> {
+  try {
+    const documentId = await fetchAndSaveTranscript({
+      symbol: target.symbol,
+      name: target.name,
+      year: target.year,
+      quarter: target.quarter,
+    });
+    return { status: "completed", documentId };
+  } catch (error) {
+    if (error instanceof AlphaVantageRateLimitError) {
+      throw error;
+    }
+    if (error instanceof AlphaVantageTranscriptMissingError) {
+      return { status: "pending", reason: "transcript_not_available" };
+    }
+    return {
+      status: "failed",
+      reason: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
  * Manual trigger for fetching earnings transcripts.
- * Creates jobs for tracking, then processes them.
  *
- * This replaces the old earnings-calls-scraper and unifies
- * manual fetches with the job tracking system.
+ * If a matching earningsSchedule exists, uses job tracking.
+ * Otherwise, fetches directly without creating fake schedule entries.
  */
 export const fetchEarningsTranscripts = inngest.createFunction(
   { id: "earnings.fetch-transcripts" },
@@ -29,27 +63,32 @@ export const fetchEarningsTranscripts = inngest.createFunction(
 
     const { symbols, year, quarter, user } = event.data;
 
-    // Step 1: Create jobs for requested symbols
-    const jobs = await step.run("create-jobs", async () => {
-      return createJobsForSymbols(symbols, year, quarter);
+    // Step 1: Find existing jobs or prepare for direct fetch
+    const targets = await step.run("find-targets", async () => {
+      return findOrPrepareForFetch(symbols, year, quarter);
     });
 
-    if (jobs.length === 0) {
-      await step.run("notify-no-jobs", async () => {
+    if (targets.length === 0) {
+      await step.run("notify-no-targets", async () => {
         await publishNotifyUI(user.id, "No valid symbols to process");
       });
       return { processed: 0, succeeded: 0, failed: 0 };
     }
 
-    // Step 2: Process each job
+    // Step 2: Process each target (job or direct)
     const results: FetchResult[] = [];
 
-    for (const job of jobs) {
-      const symbol = job.earningsSchedule.symbol;
+    for (const target of targets) {
+      const symbol =
+        target.type === "job" ? target.job.earningsSchedule.symbol : target.symbol;
 
       const result = await step.run(`fetch-transcript-${symbol}`, async () => {
         try {
-          return await processJob(job.id);
+          if (target.type === "job") {
+            return await processJob(target.job.id);
+          } else {
+            return await processDirectFetch(target);
+          }
         } catch (error) {
           // Re-throw rate limit errors for Inngest retry
           if (error instanceof AlphaVantageRateLimitError) {
@@ -87,7 +126,7 @@ export const fetchEarningsTranscripts = inngest.createFunction(
       await step.run("notify-complete-no-results", async () => {
         await publishNotifyUI(user.id, "Complete");
       });
-      return { processed: jobs.length, succeeded: 0, failed: jobs.length };
+      return { processed: targets.length, succeeded: 0, failed: targets.length };
     }
 
     // Step 4: Notify user of progress
@@ -119,9 +158,9 @@ export const fetchEarningsTranscripts = inngest.createFunction(
     });
 
     return {
-      processed: jobs.length,
+      processed: targets.length,
       succeeded: successful.length,
-      failed: jobs.length - successful.length,
+      failed: targets.length - successful.length,
     };
   },
 );

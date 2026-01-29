@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import {
   AlphaVantageRateLimitError,
@@ -45,71 +45,61 @@ export async function createJob(
 }
 
 /**
- * Creates or gets earnings schedule entries and jobs for the given symbols.
- * Used by manual fetch to ensure jobs exist before processing.
+ * Result of looking up a symbol for manual fetch.
+ * Either has a job (if earningsSchedule exists) or just symbol info for direct fetch.
  */
-export async function createJobsForSymbols(
+export type ManualFetchTarget =
+  | { type: "job"; job: PendingJob }
+  | { type: "direct"; symbol: string; name: string; year: number; quarter: number };
+
+/**
+ * Finds existing earnings schedule entries and creates jobs for the given symbols.
+ * If no matching earningsSchedule exists, returns the symbol for direct fetch.
+ *
+ * This avoids creating fake earningsSchedule entries with incorrect fiscalDateEnding.
+ */
+export async function findOrPrepareForFetch(
   symbols: SymbolInfo[],
   year: number,
   quarter: number,
-): Promise<PendingJob[]> {
-  const jobs: PendingJob[] = [];
+): Promise<ManualFetchTarget[]> {
+  const results: ManualFetchTarget[] = [];
 
   for (const { symbol, name } of symbols) {
-    // Build a fiscalDateEnding from year and quarter
-    // This is approximate since we don't know the exact fiscal year end
-    const quarterEndMonth = quarter * 3;
-    const fiscalDateEnding = `${year}-${String(quarterEndMonth).padStart(2, "0")}-30`;
-
-    // Check if earnings schedule exists, create if not
-    let scheduleEntry = await db.query.earningsSchedule.findFirst({
-      where: and(
-        eq(schema.earningsSchedule.symbol, symbol),
-        eq(schema.earningsSchedule.fiscalDateEnding, fiscalDateEnding),
-      ),
+    // Find all earningsSchedule entries for this symbol
+    const scheduleEntries = await db.query.earningsSchedule.findMany({
+      where: eq(schema.earningsSchedule.symbol, symbol),
     });
 
-    if (!scheduleEntry) {
-      // Create a minimal earnings schedule entry for manual fetches
-      const result = await db
-        .insert(schema.earningsSchedule)
-        .values({
-          symbol,
-          name,
-          fiscalDateEnding,
-          reportDate: new Date(), // Use today as report date for manual fetches
-          estimate: null,
-          currency: null,
-        })
-        .onConflictDoNothing()
-        .returning();
+    // Find one that matches the requested year/quarter
+    const matchingEntry = scheduleEntries.find((entry) => {
+      const { year: entryYear, quarter: entryQuarter } = parseFiscalQuarter({
+        reportDate: new Date(entry.reportDate),
+        fiscalYearEnd: new Date(entry.fiscalDateEnding),
+      });
+      return entryYear === year && entryQuarter === quarter;
+    });
 
-      // Re-fetch in case of race condition
-      scheduleEntry =
-        result[0] ??
-        (await db.query.earningsSchedule.findFirst({
-          where: and(
-            eq(schema.earningsSchedule.symbol, symbol),
-            eq(schema.earningsSchedule.fiscalDateEnding, fiscalDateEnding),
-          ),
-        }));
-
-      if (!scheduleEntry) {
-        console.error(`Failed to create/find earnings schedule for ${symbol}`);
-        continue;
-      }
+    if (matchingEntry) {
+      // Create or get job for the matching entry
+      const { jobId } = await createJob(matchingEntry.id);
+      results.push({
+        type: "job",
+        job: { id: jobId, earningsSchedule: matchingEntry },
+      });
+    } else {
+      // No matching schedule - will need direct fetch
+      results.push({
+        type: "direct",
+        symbol,
+        name,
+        year,
+        quarter,
+      });
     }
-
-    // Create or get job
-    const { jobId } = await createJob(scheduleEntry.id);
-
-    jobs.push({
-      id: jobId,
-      earningsSchedule: scheduleEntry,
-    });
   }
 
-  return jobs;
+  return results;
 }
 
 /**
