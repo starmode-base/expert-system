@@ -50,6 +50,15 @@ export const getInsightsSF = createServerFn({ method: "GET" })
           eq(schema.insights.id, insightId),
         ),
         with: {
+          insightTakeaways: {
+            with: {
+              takeaway: {
+                with: {
+                  document: true,
+                },
+              },
+            },
+          },
           insightReferences: {
             with: {
               takeawayReference: {
@@ -67,7 +76,7 @@ export const getInsightsSF = createServerFn({ method: "GET" })
         return null;
       }
 
-      const { insightReferences, ...insight } = row;
+      const { insightReferences, insightTakeaways, ...insight } = row;
       return {
         insight,
         insightReferences: insightReferences.map((refRow) => ({
@@ -81,6 +90,18 @@ export const getInsightsSF = createServerFn({ method: "GET" })
           documentPublicationDate:
             refRow.takeawayReference.takeaway.document.publicationDate,
         })),
+        insightTakeaways: insightTakeaways
+          .filter((row) => row.type === "takeaway")
+          .map((row) => ({
+            takeawayId: row.takeawayId,
+            title: row.takeaway.title,
+            summary: row.takeaway.summary,
+            documentId: row.takeaway.document.id,
+            documentTitle: row.takeaway.document.title,
+            documentSource: row.takeaway.document.source,
+            documentLink: row.takeaway.document.link,
+            documentPublicationDate: row.takeaway.document.publicationDate,
+          })),
       };
     },
   );

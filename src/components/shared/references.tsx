@@ -18,7 +18,6 @@ interface InsightReferencesProps {
 
 export function InsightReferences(props: InsightReferencesProps) {
   const [referencesExpanded, setReferencesExpanded] = useState(false);
-
   const sortedReferences = props.references
     .slice()
     .sort((a, b) => a.referenceNumber - b.referenceNumber);
@@ -31,7 +30,7 @@ export function InsightReferences(props: InsightReferencesProps) {
           e.stopPropagation();
           setReferencesExpanded((prev) => !prev);
         }}
-        className="flex w-full cursor-pointer items-center gap-1 text-left font-medium text-gray-500"
+        className="flex w-full cursor-pointer items-center gap-1 text-left text-sm font-medium text-amber-700"
       >
         <span
           className={`inline-block transition-transform ${referencesExpanded ? "rotate-90" : ""}`}
@@ -39,9 +38,8 @@ export function InsightReferences(props: InsightReferencesProps) {
           ▶
         </span>
         References{" "}
-        <span className="text-gray-400">({props.references.length})</span>
+        <span className="text-amber-400">({props.references.length})</span>
       </button>
-
       {referencesExpanded ? (
         props.references.length > 0 ? (
           <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-800">

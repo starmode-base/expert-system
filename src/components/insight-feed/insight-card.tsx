@@ -1,7 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useState } from "react";
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import {
   ArrowUpOnSquareIcon,
   CheckIcon,
@@ -9,7 +9,10 @@ import {
   ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import type { InsightsItem } from "~/server/queries";
-import { InsightReferences } from "~/components/shared/references";
+import {
+  InsightReferences,
+  type ReferenceItem,
+} from "~/components/shared/references";
 
 interface InsightCardProps {
   insightFeedItem: InsightsItem;
@@ -100,28 +103,30 @@ interface ResearchQuestionProps {
 
 function ResearchQuestion(props: ResearchQuestionProps) {
   return (
-    <details className="group mt-4 rounded-md border border-gray-200 bg-gray-50">
-      <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold tracking-wide text-gray-600 uppercase">
-        <span className="mr-2 inline-flex h-4 w-4 items-center justify-center border-gray-300 text-[10px] text-gray-500 group-open:rotate-90">
-          ▶
-        </span>
+    <div className="mt-4 rounded-md border border-gray-200 bg-gray-50">
+      <div className="px-3 py-2 text-xs font-semibold tracking-wide text-gray-600 uppercase">
         Research Question
-      </summary>
+      </div>
       <div className="border-t border-gray-200 px-3 py-2 text-sm text-gray-800">
         <p className="break-words whitespace-pre-wrap">
           {props.prompt?.trim() ? props.prompt : "—"}
         </p>
       </div>
-    </details>
+    </div>
   );
 }
 
 interface InsightResearchProps {
   markdown: string;
+  prompt: string | null | undefined;
+  references: ReferenceItem[];
+  takeaways: InsightsItem["insightTakeaways"];
 }
 
 function InsightResearch(props: InsightResearchProps) {
   const [researchExpanded, setResearchExpanded] = useState(false);
+  const hasPrompt = Boolean(props.prompt?.trim());
+  const hasMarkdown = Boolean(props.markdown.trim());
 
   return (
     <div className="mt-4">
@@ -141,15 +146,143 @@ function InsightResearch(props: InsightResearchProps) {
         Research
       </button>
       {researchExpanded ? (
-        <div className="mt-2">
-          <div className="prose prose-slate prose-sm sm:prose-base max-w-none break-words">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
-              {props.markdown}
-            </ReactMarkdown>
-          </div>
+        <div className="mt-2 space-y-4">
+          {hasPrompt ? <ResearchQuestion prompt={props.prompt} /> : null}
+          {hasMarkdown ? (
+            <div className="prose prose-slate prose-sm sm:prose-base max-w-none break-words">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml>
+                {props.markdown}
+              </ReactMarkdown>
+            </div>
+          ) : null}
+          <ProvidenceSection
+            references={props.references}
+            takeaways={props.takeaways}
+          />
         </div>
       ) : null}
     </div>
+  );
+}
+
+interface InsightTakeawaysProps {
+  takeaways: InsightsItem["insightTakeaways"];
+}
+
+function InsightTakeaways(props: InsightTakeawaysProps) {
+  if (props.takeaways.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <div className="text-sm font-medium text-amber-700">
+        Takeaways{" "}
+        <span className="text-amber-400">({props.takeaways.length})</span>
+      </div>
+      <ul className="mt-2 space-y-2">
+        {props.takeaways.map((takeaway) => {
+          const publishedLabel = (() => {
+            if (!takeaway.documentPublicationDate) return null;
+            const publishedDate = new Date(takeaway.documentPublicationDate);
+            if (Number.isNaN(publishedDate.getTime())) {
+              return null;
+            }
+            return `Published ${publishedDate.toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}`;
+          })();
+
+          const documentTitleNode = takeaway.documentTitle ? (
+            takeaway.documentLink ? (
+              <a
+                href={takeaway.documentLink}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-500 underline decoration-blue-300 underline-offset-2 hover:text-blue-800"
+              >
+                {takeaway.documentTitle}
+              </a>
+            ) : takeaway.documentId ? (
+              <Link
+                to="/news-feed/$documentid"
+                params={{ documentid: takeaway.documentId }}
+                className="text-blue-500 underline decoration-blue-300 underline-offset-2 hover:text-blue-800"
+              >
+                {takeaway.documentTitle}
+              </Link>
+            ) : (
+              <span>{takeaway.documentTitle}</span>
+            )
+          ) : null;
+
+          const documentSourceNode = takeaway.documentSource ? (
+            <span>{takeaway.documentSource}</span>
+          ) : null;
+
+          const metadataParts = [
+            documentTitleNode,
+            documentSourceNode,
+            publishedLabel ? <span>{publishedLabel}</span> : null,
+          ].filter(Boolean);
+
+          return (
+            <li key={takeaway.takeawayId} className="rounded-md px-3 py-2">
+              <p className="text-sm font-semibold text-gray-900">
+                {takeaway.title}
+              </p>
+              {metadataParts.length > 0 ? (
+                <div className="mt-1 text-xs text-gray-500">
+                  {metadataParts.map((part, index) => (
+                    <span key={index}>
+                      {index > 0 ? (
+                        <span className="px-1 text-gray-400">·</span>
+                      ) : null}
+                      {part}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <p className="mt-1 text-xs text-gray-600">{takeaway.summary}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+interface ProvidenceSectionProps {
+  references: ReferenceItem[];
+  takeaways: InsightsItem["insightTakeaways"];
+}
+
+function ProvidenceSection(props: ProvidenceSectionProps) {
+  return (
+    <section className="mt-5 rounded-xl border border-amber-100 bg-amber-50/80">
+      <div className="flex flex-wrap items-center justify-between px-3 py-2">
+        <p className="text-[11px] font-semibold tracking-[0.3em] text-amber-600 uppercase">
+          Provenance
+        </p>
+        <span className="rounded-full border border-amber-200 bg-white px-2 py-1 text-[10px] font-semibold tracking-[0.2em] text-amber-500 uppercase">
+          Sources
+        </span>
+      </div>
+      <div className="border-t border-amber-100">
+        <div>
+          {props.takeaways.length > 0 ? (
+            <div className="bg-white/70 px-2 py-2 ring-1 ring-amber-100">
+              <InsightTakeaways takeaways={props.takeaways} />
+            </div>
+          ) : null}
+          <div className="bg-white/70 px-3 py-2 ring-1 ring-amber-100">
+            <InsightReferences references={props.references} />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -204,11 +337,30 @@ export function InsightCard(props: InsightCardProps) {
   const hasInsightPrompt = Boolean(insightPrompt?.trim());
   const researchMarkdown = props.insightFeedItem.insight.research?.trim() ?? "";
   const hasResearchMarkdown = Boolean(researchMarkdown);
+  const insightTakeaways = props.insightFeedItem.insightTakeaways;
+  const insightReferences = props.insightFeedItem.insightReferences.map(
+    (ref) => ({
+      referenceId: ref.referenceId,
+      referenceNumber: ref.insightReferenceNumber,
+      reference: ref.reference,
+      documentId: ref.documentId,
+      documentTitle: ref.documentTitle,
+      documentSource: ref.documentSource,
+      documentLink: ref.documentLink,
+      publicationDate: ref.documentPublicationDate,
+    }),
+  );
 
   const { preview: insightPreviewMarkdown } = getMarkdownPreview(
     props.insightFeedItem.insight.insight ?? "",
     INSIGHT_PREVIEW_CHAR_LIMIT,
   );
+
+  const hasResearchSection =
+    hasResearchMarkdown ||
+    hasInsightPrompt ||
+    insightReferences.length > 0 ||
+    insightTakeaways.length > 0;
 
   return (
     <div className="bg-white p-4">
@@ -308,23 +460,13 @@ export function InsightCard(props: InsightCardProps) {
           {/* Add margin below the expanded insight content */}
           <div className="mb-4" />
 
-          {hasResearchMarkdown ? (
-            <InsightResearch markdown={researchMarkdown} />
-          ) : null}
-          <InsightReferences
-            references={props.insightFeedItem.insightReferences.map((ref) => ({
-              referenceId: ref.referenceId,
-              referenceNumber: ref.insightReferenceNumber,
-              reference: ref.reference,
-              documentId: ref.documentId,
-              documentTitle: ref.documentTitle,
-              documentSource: ref.documentSource,
-              documentLink: ref.documentLink,
-              publicationDate: ref.documentPublicationDate,
-            }))}
-          />
-          {hasInsightPrompt ? (
-            <ResearchQuestion prompt={insightPrompt} />
+          {hasResearchSection ? (
+            <InsightResearch
+              markdown={researchMarkdown}
+              prompt={insightPrompt}
+              references={insightReferences}
+              takeaways={insightTakeaways}
+            />
           ) : null}
         </>
       ) : (

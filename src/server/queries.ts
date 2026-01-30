@@ -60,9 +60,21 @@ export interface InsightReferenceItem {
   documentPublicationDate: Date;
 }
 
+export interface InsightTakeawayItem {
+  takeawayId: string;
+  title: string;
+  summary: string;
+  documentId?: string;
+  documentTitle?: string;
+  documentSource?: string;
+  documentLink?: string;
+  documentPublicationDate?: Date;
+}
+
 export interface InsightsItem {
   insight: InsightSelect;
   insightReferences: InsightReferenceItem[];
+  insightTakeaways: InsightTakeawayItem[];
 }
 
 export const queryPublicInsightsFeed = createServerFn({
@@ -71,6 +83,15 @@ export const queryPublicInsightsFeed = createServerFn({
   const insights = await db.query.insights.findMany({
     where: isNotNull(schema.insights.insight),
     with: {
+      insightTakeaways: {
+        with: {
+          takeaway: {
+            with: {
+              document: true,
+            },
+          },
+        },
+      },
       insightReferences: {
         with: {
           takeawayReference: {
@@ -98,6 +119,18 @@ export const queryPublicInsightsFeed = createServerFn({
       documentPublicationDate:
         row.takeawayReference.takeaway.document.publicationDate,
     })),
+    insightTakeaways: insight.insightTakeaways
+      .filter((row) => row.type === "takeaway")
+      .map((row) => ({
+        takeawayId: row.takeawayId,
+        title: row.takeaway.title,
+        summary: row.takeaway.summary,
+        documentId: row.takeaway.document.id,
+        documentTitle: row.takeaway.document.title,
+        documentSource: row.takeaway.document.source,
+        documentLink: row.takeaway.document.link,
+        documentPublicationDate: row.takeaway.document.publicationDate,
+      })),
   }));
 });
 
@@ -110,6 +143,15 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
         isNotNull(schema.insights.insight),
       ),
       with: {
+      insightTakeaways: {
+        with: {
+          takeaway: {
+            with: {
+              document: true,
+            },
+          },
+        },
+      },
         insightReferences: {
           with: {
             takeawayReference: {
@@ -140,6 +182,18 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
         documentPublicationDate:
           row.takeawayReference.takeaway.document.publicationDate,
       })),
+      insightTakeaways: insight.insightTakeaways
+        .filter((row) => row.type === "takeaway")
+        .map((row) => ({
+          takeawayId: row.takeawayId,
+          title: row.takeaway.title,
+          summary: row.takeaway.summary,
+          documentId: row.takeaway.document.id,
+          documentTitle: row.takeaway.document.title,
+          documentSource: row.takeaway.document.source,
+          documentLink: row.takeaway.document.link,
+          documentPublicationDate: row.takeaway.document.publicationDate,
+        })),
     };
   });
 
@@ -152,6 +206,15 @@ export const queryInsightsFeed = createServerFn({ method: "GET" })
         isNotNull(schema.insights.insight),
       ),
       with: {
+        insightTakeaways: {
+          with: {
+            takeaway: {
+              with: {
+                document: true,
+              },
+            },
+          },
+        },
         insightReferences: {
           with: {
             takeawayReference: {
@@ -179,6 +242,18 @@ export const queryInsightsFeed = createServerFn({ method: "GET" })
         documentPublicationDate:
           row.takeawayReference.takeaway.document.publicationDate,
       })),
+      insightTakeaways: insight.insightTakeaways
+        .filter((row) => row.type === "takeaway")
+        .map((row) => ({
+          takeawayId: row.takeawayId,
+          title: row.takeaway.title,
+          summary: row.takeaway.summary,
+          documentId: row.takeaway.document.id,
+          documentTitle: row.takeaway.document.title,
+          documentSource: row.takeaway.document.source,
+          documentLink: row.takeaway.document.link,
+          documentPublicationDate: row.takeaway.document.publicationDate,
+        })),
     }));
   });
 
