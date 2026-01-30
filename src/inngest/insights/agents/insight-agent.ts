@@ -24,7 +24,7 @@ const fetchTakeawayByIdTool: FunctionTool<
   Awaited<ReturnType<typeof fetchTakeawayById>>
 > = tool({
   name: "fetchTakeawayById",
-  description: `Fetch a single takeaway by its id and return it as a formatted string suitable for prompting. Includes title, publication date, source, full takeaway text, takeaway id, and references (with each reference_id).
+  description: `Fetch a single takeaway by its id and return it as a formatted string. Includes title, publication date, source, full takeaway text, takeaway id, and references (with each reference_id).
       - use this tool when you need to do deeper reading into a specific takeaway.
       - This will return the full takeaway with specific facts and references`,
   parameters: fetchTakeawayByIdParams,
@@ -49,7 +49,7 @@ Capabilities:
 - Do not iterate on the same financial analysis for the same objective. Only use this tool once unless you need a new and distict analysis.
 
 Usage:
-Use this tool whenever financial data, company fundamentals, macro rate context, or investment-oriented analysis is required.
+Use this tool whenever financial data, company fundamentals, macro rate context, or investment-oriented analysis will add value to the insight.
 
 Provide the following sructured information to the financialAnalyst:
 
@@ -67,12 +67,10 @@ const researcherTool = researcher.asTool({
   toolDescription: `This tool provides autonomous research and data retrieval for tech and business news, poducasts, fed reserve speeches, articles, blog posts, and public companies and macro context from a large corpus of documents.
 
 Capabilities:
-- Query for new and innovative ideas, frameworks, and trends in economics, technology and business.
-- Retrieve information that is relevant to the research objective.
+- Retrieves a new list of takeaways based on the query.
 
 Usage:
-- Use this tool whenever you need to find more supporting information for the research objective.
-
+- Use this tool whenever you need to find more supporting information (takeaways) for the research objective.
 
 Provide the following sructured information to the researcher:
 
