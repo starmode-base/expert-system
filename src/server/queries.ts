@@ -143,15 +143,15 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
         isNotNull(schema.insights.insight),
       ),
       with: {
-      insightTakeaways: {
-        with: {
-          takeaway: {
-            with: {
-              document: true,
+        insightTakeaways: {
+          with: {
+            takeaway: {
+              with: {
+                document: true,
+              },
             },
           },
         },
-      },
         insightReferences: {
           with: {
             takeawayReference: {

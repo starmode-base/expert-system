@@ -105,7 +105,7 @@ function createInsightAgent() {
 export interface InsightAgentInput {
   takeawayPreviewFormatted: string;
   recentInsights: string;
-  insightPrompt: string;
+  insightPrompt?: string;
 }
 
 export type InsightStructuredOutput = z.infer<typeof insightSchema>;

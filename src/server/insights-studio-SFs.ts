@@ -126,6 +126,8 @@ export const createInsightWithTakeawaySF = createServerFn({ method: "POST" })
     invariant(takeaway, "Takeaway not found");
 
     void sendEventGenerateInsightSF({
-      data: { insightPrompt: takeaway.summary },
+      data: {
+        seedText: takeaway.summary,
+      },
     });
   });

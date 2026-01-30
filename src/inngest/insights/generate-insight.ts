@@ -52,7 +52,7 @@ export const generateInsight = inngest.createFunction(
         const output = await run(
           researcher,
           `## Research Objective
-        ${event.data.insightPrompt}
+        ${event.data.seedText}
 
         return 20 takeaways`,
         );
@@ -107,6 +107,7 @@ export const generateInsight = inngest.createFunction(
             research: finalInsight.insight,
             summary: summarizedInsight.core_insight_statement,
             insightPrompt: event.data.insightPrompt,
+            seedText: event.data.seedText,
           })
           .returning();
         invariant(result, "Failed to create insight");

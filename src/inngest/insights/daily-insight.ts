@@ -7,9 +7,14 @@ import { generateResearchObjectives } from "./helpers/generate-research-objectiv
  * Generate daily insights for each user based on takeaways created in the last 3 days.
  * Runs daily at 7 AM Phoenix time.
  */
+const trigger =
+  process.env.NODE_ENV === "production"
+    ? ({ cron: "TZ=America/Phoenix 0 7 * * *" } as const)
+    : ({ event: "dev/scheduler.daily-insight.manual" } as const);
+
 export const dailyInsight = inngest.createFunction(
   { id: "scheduler.daily-insight" },
-  { cron: "TZ=America/Phoenix 0 7 * * *" },
+  trigger,
   async ({ step }) => {
     const users = await step.run("get-all-users", async () => {
       const rows = await db.query.users.findMany({
@@ -64,7 +69,7 @@ export const dailyInsight = inngest.createFunction(
             step.sendEvent(`generate-insight-${user.id}-${promptIndex}`, {
               name: "app/generate-insight",
               data: {
-                insightPrompt,
+                seedText: insightPrompt,
                 user: { id: user.id, email: user.email },
               },
             }),

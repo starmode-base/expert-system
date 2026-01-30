@@ -16,9 +16,14 @@ import type { JobResult } from "../types";
  * Runs daily at 5 AM Phoenix time (day after reports).
  * Retries failed jobs for up to 7 days after report date.
  */
+const trigger =
+  process.env.NODE_ENV === "production"
+    ? ({ cron: "TZ=America/Phoenix 0 5 * * *" } as const)
+    : ({ event: "dev/earnings.process-jobs.manual" } as const);
+
 export const processEarningsJobs = inngest.createFunction(
   { id: "earnings.process-jobs" },
-  { cron: "TZ=America/Phoenix 0 5 * * *" },
+  trigger,
   async ({ step }) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
