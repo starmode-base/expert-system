@@ -148,7 +148,11 @@ ${input.recentInsights}
 Today's date:
 ${today}
 
-## Research Question
-${input.insightPrompt}
+${
+  input.insightPrompt
+    ? `## Research Question
+${input.insightPrompt}`
+    : ""
+}
 `;
 }

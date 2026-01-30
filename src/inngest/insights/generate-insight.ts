@@ -52,7 +52,7 @@ export const generateInsight = inngest.createFunction(
         const output = await run(
           researcher,
           `## Research Objective
-        ${event.data.insightPrompt}
+        ${event.data.seedText}
 
         return 20 takeaways`,
         );

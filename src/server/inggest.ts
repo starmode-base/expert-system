@@ -83,7 +83,8 @@ export const sendEventGenerateInsightSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(
     z.object({
-      insightPrompt: z.string(),
+      seedText: z.string(),
+      insightPrompt: z.string().optional(),
       model: z.string().optional(),
     }),
   )

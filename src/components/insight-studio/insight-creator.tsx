@@ -119,6 +119,7 @@ export function InsightCreator() {
               setError(null);
               await sendEventGenerateInsight({
                 data: {
+                  seedText: prompt,
                   insightPrompt: prompt,
                 },
               });

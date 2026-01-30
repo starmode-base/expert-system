@@ -64,7 +64,7 @@ export const dailyInsight = inngest.createFunction(
             step.sendEvent(`generate-insight-${user.id}-${promptIndex}`, {
               name: "app/generate-insight",
               data: {
-                insightPrompt,
+                seedText: insightPrompt,
                 user: { id: user.id, email: user.email },
               },
             }),

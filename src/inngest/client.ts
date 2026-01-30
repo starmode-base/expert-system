@@ -74,7 +74,8 @@ const eventSchemas = {
     user: userSchema,
   }),
   "app/generate-insight": z.object({
-    insightPrompt: z.string(),
+    insightPrompt: z.string().optional(),
+    seedText: z.string(),
     user: userSchema,
   }),
   "scheduler/sync-earnings-calendar": z.object({
