@@ -25,9 +25,14 @@ const getDateRange = (daysFromNow: number, rangeDays: number) => {
  * - Upserts into earningsSchedule table
  * - Creates earningsFetchJobs for tracked companies reporting in the next week
  */
+const trigger =
+  process.env.NODE_ENV === "production"
+    ? ({ cron: "TZ=America/Phoenix 35 9 * * *" } as const)
+    : ({ event: "dev/earnings.sync-calendar.manual" } as const);
+
 export const syncEarningsCalendar = inngest.createFunction(
   { id: "earnings.sync-calendar" },
-  { cron: "TZ=America/Phoenix 35 9 * * *" },
+  trigger,
   async ({ step }) => {
     // Step 1: Fetch earnings calendar from Alpha Vantage
     const calendarEntries = await step.run(

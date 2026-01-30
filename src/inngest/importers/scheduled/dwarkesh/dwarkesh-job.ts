@@ -18,9 +18,14 @@ type DwarkeshPodcastCandidateWithTranscript = DwarkeshPodcastCandidate & {
  * Scrape Dwarkesh Podcast RSS and ingest new episodes with transcripts.
  * Runs daily at 5 AM Phoenix time.
  */
+const trigger =
+  process.env.NODE_ENV === "production"
+    ? ({ cron: "TZ=America/Phoenix 0 5 * * *" } as const)
+    : ({ event: "dev/scheduler.dwarkesh-podcast-scraper.manual" } as const);
+
 export const dwarkeshPodcastScraper = inngest.createFunction(
   { id: "scheduler.dwarkesh-podcast-scraper" },
-  { cron: "TZ=America/Phoenix 0 5 * * *" },
+  trigger,
   async ({ step }) => {
     const rssXml = await step.run("fetch-rss", async () => {
       const res = await fetch(

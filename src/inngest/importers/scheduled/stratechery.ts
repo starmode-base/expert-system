@@ -109,9 +109,14 @@ Guidelines:
  * Scrape Stratechery daily.
  * Runs daily at 9 AM Phoenix time.
  */
+const trigger =
+  process.env.NODE_ENV === "production"
+    ? ({ cron: "TZ=America/Phoenix 0 5 * * *" } as const)
+    : ({ event: "dev/scheduler.stratechery-scraper.manual" } as const);
+
 export const stratecheryScraper = inngest.createFunction(
   { id: "scheduler.stratechery-scraper" },
-  { cron: "TZ=America/Phoenix 0 5 * * *" },
+  trigger,
   async ({ step }) => {
     const rssItems: StratecheryRssItem[] = await step.run(
       "fetch-and-parse-rss",

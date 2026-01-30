@@ -18,9 +18,14 @@ type A16zCandidateWithArticle = A16zCandidate & {
  * Scrape a16z news archive for new posts.
  * Runs daily at 5 AM Phoenix time.
  */
+const trigger =
+  process.env.NODE_ENV === "production"
+    ? ({ cron: "TZ=America/Phoenix 0 5 * * *" } as const)
+    : ({ event: "dev/scheduler.a16z-news-scraper.manual" } as const);
+
 export const a16zNewsScraper = inngest.createFunction(
   { id: "scheduler.a16z-news-scraper" },
-  { cron: "TZ=America/Phoenix 0 5 * * *" },
+  trigger,
   async ({ step }) => {
     const listUrl = "https://www.a16z.news/archive?sort=new";
 

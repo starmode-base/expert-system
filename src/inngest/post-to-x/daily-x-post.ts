@@ -106,28 +106,11 @@ export const dailyXPost = inngest.createFunction(
 
     const tweetText = await step.run("format-insight-for-x", async () => {
       const res = await openAiClient.responses.create({
-        model: "gpt-5.2",
+        model: "gpt-5-mini",
         input: [
           {
             role: "system",
-            content: `You are an experienced operator and investor who writes sharp, high-signal posts on X. You are loves and celebrated for you sharp insights and charismatic and engaging writing style.
-
-Convert the insight below into a single X post that is:
-	•	Very clearly articulated and easy to understand on first read
-	•	Concise, punchy, and readable on mobile
-	•	Written in confident, affirmative language
-	•	In a natural human voice, not polished or corporate
-
-Style rules:
-- No em dashes
-- No emojis
-- No hashtags
-- Short sentences are preferred
-- Allow subtle imperfections or slightly informal phrasing so it feels human, not AI-written
-- Do not hedge or over-qualify
-
-Goal:
-Translate a complex business or technical insight into something that feels obvious in hindsight and worth stopping to read.
+            content: `remove all markdown formatting. Keep everything else the same.
 `,
           },
           {

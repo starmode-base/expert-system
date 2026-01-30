@@ -104,9 +104,14 @@ async function scrapePageText(url: string) {
  * Scrape Federal Reserve speeches and testimony RSS feed.
  * Runs daily.
  */
+const trigger =
+  process.env.NODE_ENV === "production"
+    ? ({ cron: "TZ=America/Phoenix 15 5 * * *" } as const)
+    : ({ event: "dev/scheduler.fed-speeches-scraper.manual" } as const);
+
 export const fedSpeechesScraper = inngest.createFunction(
   { id: "scheduler.fed-speeches-scraper" },
-  { cron: "TZ=America/Phoenix 15 5 * * *" },
+  trigger,
   async ({ step }) => {
     const rssItems: FedRssItem[] = await step.run(
       "fetch-and-parse-rss",

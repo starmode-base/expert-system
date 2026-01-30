@@ -87,6 +87,14 @@ const eventSchemas = {
   "scheduler/daily-x-post": z.object({
     data: z.object({}),
   }),
+  "dev/scheduler.daily-insight.manual": z.object({}),
+  "dev/earnings.sync-calendar.manual": z.object({}),
+  "dev/earnings.process-jobs.manual": z.object({}),
+  "dev/scheduler.stratechery-scraper.manual": z.object({}),
+  "dev/scheduler.macrovoices-scraper.manual": z.object({}),
+  "dev/scheduler.fed-speeches-scraper.manual": z.object({}),
+  "dev/scheduler.dwarkesh-podcast-scraper.manual": z.object({}),
+  "dev/scheduler.a16z-news-scraper.manual": z.object({}),
 };
 
 // Create a client to send and receive events

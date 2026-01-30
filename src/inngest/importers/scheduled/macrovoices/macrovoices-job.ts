@@ -18,9 +18,14 @@ type MacroVoicesCandidateWithTranscript = MacroVoicesCandidate & {
  * Scrape MacroVoices transcripts landing page (first page) daily.
  * Runs daily at 5 AM Phoenix time.
  */
+const trigger =
+  process.env.NODE_ENV === "production"
+    ? ({ cron: "TZ=America/Phoenix 0 5 * * *" } as const)
+    : ({ event: "dev/scheduler.macrovoices-scraper.manual" } as const);
+
 export const macroVoicesScraper = inngest.createFunction(
   { id: "scheduler.macrovoices-scraper" },
-  { cron: "TZ=America/Phoenix 0 5 * * *" },
+  trigger,
   async ({ step }) => {
     const baseUrl = "https://www.macrovoices.com";
     const listUrl = `${baseUrl}/podcast-transcripts`;
