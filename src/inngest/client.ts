@@ -95,6 +95,7 @@ const eventSchemas = {
   "dev/scheduler.fed-speeches-scraper.manual": z.object({}),
   "dev/scheduler.dwarkesh-podcast-scraper.manual": z.object({}),
   "dev/scheduler.a16z-news-scraper.manual": z.object({}),
+  "dev/scheduler.x-bookmarks-sync.manual": z.object({}),
 };
 
 // Create a client to send and receive events

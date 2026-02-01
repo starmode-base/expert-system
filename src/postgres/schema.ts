@@ -332,3 +332,21 @@ export const insightTakeaways = pgTable(
 
 export type InsightTakeawaySelect = typeof insightTakeaways.$inferSelect;
 export type InsightTakeawayInsert = typeof insightTakeaways.$inferInsert;
+
+/**
+ * X Bookmarks Auth - OAuth tokens for X Bookmarks importer
+ */
+export const xBookmarksAuth = pgTable("x_bookmarks_auth", {
+  ...baseSchema,
+  userId: text()
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  xUserId: text().notNull(),
+  refreshToken: text().notNull(),
+  accessToken: text().notNull(),
+  expiresAt: timestamp().notNull(),
+  lastSyncCursor: text(),
+});
+
+export type XBookmarksAuthSelect = typeof xBookmarksAuth.$inferSelect;
+export type XBookmarksAuthInsert = typeof xBookmarksAuth.$inferInsert;

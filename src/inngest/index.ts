@@ -7,6 +7,7 @@ import { stratecheryScraper } from "./importers/scheduled/stratechery";
 import { dwarkeshPodcastScraper } from "./importers/scheduled/dwarkesh/dwarkesh-job";
 import { macroVoicesScraper } from "./importers/scheduled/macrovoices/macrovoices-job";
 import { a16zNewsScraper } from "./importers/scheduled/a16z/a16z-job";
+import { xBookmarksSync } from "./importers/scheduled/x-bookmarks/x-bookmarks-job";
 import { dailyXPost } from "./post-to-x/daily-x-post";
 
 // Earnings call functions (refactored)
@@ -29,5 +30,6 @@ export const inngestFunctions = [
   dwarkeshPodcastScraper,
   macroVoicesScraper,
   a16zNewsScraper,
+  xBookmarksSync,
   dailyXPost,
 ];
