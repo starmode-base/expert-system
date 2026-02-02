@@ -12,6 +12,7 @@
         "@tanstack/react-router": "^1.114.27",
         "@tanstack/react-router-devtools": "^1.114.27",
         "@tanstack/react-start": "^1.114.27",
+        "@xdevplatform/xdk": "^0.4.0",
         "ably": "^2.6.4",
         "cheerio": "^1.0.0",
         "csv-parse": "^5.6.0",
@@ -755,6 +756,8 @@
     "@vitest/spy": ["@vitest/spy@3.0.9", "", { "dependencies": { "tinyspy": "^3.0.2" } }, "sha512-/CcK2UDl0aQ2wtkp3YVWldrpLRNCfVcIOFGlVGKO4R5eajsH393Z1yiXLVQ7vWsj26JOEjeZI0x5sm5P4OGUNQ=="],
 
     "@vitest/utils": ["@vitest/utils@3.0.9", "", { "dependencies": { "@vitest/pretty-format": "3.0.9", "loupe": "^3.1.3", "tinyrainbow": "^2.0.0" } }, "sha512-ilHM5fHhZ89MCp5aAaM9uhfl1c2JdxVxl3McqsdVyVNN6JffnEen8UMCdRTzOhGXNQGo5GNL9QugHrz727Wnng=="],
+
+    "@xdevplatform/xdk": ["@xdevplatform/xdk@0.4.0", "", { "peerDependencies": { "node-fetch": "^3.3.0" }, "optionalPeers": ["node-fetch"] }, "sha512-jl0lPyMYVFaQOWvG2D4i8vC72/CMh/bOcMbjZA2jP5gUMV2MztC5zTEsF3I76VS8wxdDrtrOTiX2BRzKsua6LA=="],
 
     "abbrev": ["abbrev@3.0.0", "", {}, "sha512-+/kfrslGQ7TNV2ecmQwMJj/B65g5KVq1/L3SGVZ3tCYGqlzFuFCGBZJtMP99wH3NpEUyAjn0zPdPUg0D+DwrOA=="],
 
