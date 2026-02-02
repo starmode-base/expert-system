@@ -74,7 +74,7 @@ export const APIRoute = createAPIFileRoute("/api/x-bookmarks-callback")({
 
     // Get viewerId from session (we stored it during start because Clerk
     // auth doesn't work on callbacks from external redirects)
-    const viewerId = session.viewerId as string;
+    const viewerId = session.viewerId;
     if (!viewerId) {
       return new Response("Missing viewerId in session", {
         status: 400,
