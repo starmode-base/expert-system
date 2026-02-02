@@ -81,3 +81,22 @@ export interface XUser {
 export interface XUserMeResponse {
   data: XUser;
 }
+
+/**
+ * X bookmark folder object
+ */
+export interface XBookmarkFolder {
+  id: string;
+  name: string;
+}
+
+/**
+ * Response from getBookmarkFolders endpoint
+ */
+export interface XBookmarkFoldersResponse {
+  data?: XBookmarkFolder[];
+  meta?: {
+    next_token?: string;
+    result_count?: number;
+  };
+}

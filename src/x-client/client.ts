@@ -10,7 +10,7 @@
  */
 
 import { Client } from "@xdevplatform/xdk";
-import type { XUser, XUserMeResponse } from "./types";
+import type { XUser, XUserMeResponse, XBookmarkFolder } from "./types";
 
 /**
  * Create an XDK Client configured with an access token.
@@ -53,4 +53,35 @@ export async function getMe(accessToken: string): Promise<XUser> {
 
   const data = (await response.json()) as XUserMeResponse;
   return data.data;
+}
+
+/**
+ * Get the user's bookmark folders.
+ *
+ * X allows users to organize bookmarks into folders. This fetches
+ * the list of folders so the user can select which one to sync.
+ *
+ * @param accessToken - OAuth2 access token
+ * @param xUserId - The X user ID
+ * @returns Array of bookmark folders (id and name)
+ */
+export async function getBookmarkFolders(
+  accessToken: string,
+  xUserId: string,
+): Promise<XBookmarkFolder[]> {
+  const client = createXClient(accessToken);
+
+  // Use the XDK client to fetch folders
+  const response = await client.users.getBookmarkFolders(xUserId);
+
+  // Return empty array if no folders exist
+  if (!response.data) {
+    return [];
+  }
+
+  // Map to our simpler type (XDK returns Record<string, any>)
+  return response.data.map((folder) => ({
+    id: folder.id as string,
+    name: folder.name as string,
+  }));
 }

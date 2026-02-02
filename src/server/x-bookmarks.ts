@@ -5,6 +5,7 @@
  * They allow users to:
  * - Check if their X account is connected
  * - View connection status and token expiry
+ * - Fetch and select bookmark folders
  * - Disconnect their X account
  *
  * The actual OAuth flow is handled by the API routes:
@@ -14,8 +15,15 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
+import {
+  getBookmarkFolders,
+  isTokenExpired,
+  refreshAccessToken,
+  calculateExpiresAt,
+} from "~/x-client";
 
 /**
  * Status information about a user's X bookmarks connection.
@@ -30,6 +38,18 @@ export interface XBookmarksAuthStatus {
   expiresAt: Date | null;
   /** Pagination cursor from last sync (for incremental fetching) */
   lastSyncCursor: string | null;
+  /** Selected folder ID for syncing (null = all bookmarks) */
+  selectedFolderId: string | null;
+  /** Selected folder name for display */
+  selectedFolderName: string | null;
+}
+
+/**
+ * Bookmark folder info returned to the UI
+ */
+export interface XBookmarkFolderInfo {
+  id: string;
+  name: string;
 }
 
 /**
@@ -39,7 +59,7 @@ export interface XBookmarksAuthStatus {
  * - Whether X is connected
  * - The connected X user ID
  * - Token expiration time
- * - Last sync cursor (if any)
+ * - Selected folder (if any)
  */
 export const getXBookmarksAuthStatusSF = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
@@ -56,6 +76,8 @@ export const getXBookmarksAuthStatusSF = createServerFn({ method: "GET" })
         xUserId: null,
         expiresAt: null,
         lastSyncCursor: null,
+        selectedFolderId: null,
+        selectedFolderName: null,
       };
     }
 
@@ -64,7 +86,90 @@ export const getXBookmarksAuthStatusSF = createServerFn({ method: "GET" })
       xUserId: auth.xUserId,
       expiresAt: auth.expiresAt,
       lastSyncCursor: auth.lastSyncCursor,
+      selectedFolderId: auth.selectedFolderId,
+      selectedFolderName: auth.selectedFolderName,
     };
+  });
+
+/**
+ * Fetch the user's bookmark folders from X.
+ *
+ * This requires a valid access token. If the token is expired,
+ * it will be refreshed automatically.
+ *
+ * @returns Array of folder objects with id and name
+ */
+export const getXBookmarkFoldersSF = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }): Promise<XBookmarkFolderInfo[]> => {
+    const viewer = context.ensureViewer();
+
+    const auth = await db.query.xBookmarksAuth.findFirst({
+      where: eq(schema.xBookmarksAuth.userId, viewer.id),
+    });
+
+    if (!auth) {
+      throw new Error("X account not connected");
+    }
+
+    // Refresh token if expired
+    let accessToken = auth.accessToken;
+    if (isTokenExpired(auth.expiresAt)) {
+      const tokens = await refreshAccessToken(auth.refreshToken);
+      accessToken = tokens.access_token;
+
+      // Update stored tokens
+      await db
+        .update(schema.xBookmarksAuth)
+        .set({
+          accessToken: tokens.access_token,
+          expiresAt: calculateExpiresAt(tokens.expires_in),
+          // Update refresh token if rotated
+          ...(tokens.refresh_token && { refreshToken: tokens.refresh_token }),
+        })
+        .where(eq(schema.xBookmarksAuth.id, auth.id));
+    }
+
+    // Fetch folders from X API
+    const folders = await getBookmarkFolders(accessToken, auth.xUserId);
+
+    return folders;
+  });
+
+/**
+ * Save the user's selected bookmark folder.
+ *
+ * The daily sync job will use this folder instead of fetching all bookmarks.
+ * Pass null/empty to clear the selection and sync all bookmarks.
+ */
+export const setSelectedFolderSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    z.object({
+      folderId: z.string().nullable(),
+      folderName: z.string().nullable(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    const viewer = context.ensureViewer();
+
+    const auth = await db.query.xBookmarksAuth.findFirst({
+      where: eq(schema.xBookmarksAuth.userId, viewer.id),
+    });
+
+    if (!auth) {
+      throw new Error("X account not connected");
+    }
+
+    await db
+      .update(schema.xBookmarksAuth)
+      .set({
+        selectedFolderId: data.folderId,
+        selectedFolderName: data.folderName,
+      })
+      .where(eq(schema.xBookmarksAuth.id, auth.id));
+
+    return { success: true };
   });
 
 /**

@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import {
   getXBookmarksAuthStatusSF,
   disconnectXBookmarksSF,
+  getXBookmarkFoldersSF,
+  setSelectedFolderSF,
+  type XBookmarkFolderInfo,
 } from "~/server/x-bookmarks";
 
 export const Route = createFileRoute("/settings")({
@@ -23,8 +26,20 @@ function SettingsPage() {
   const router = useRouter();
   const [disconnecting, setDisconnecting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(x_connected);
+  const [folders, setFolders] = useState<XBookmarkFolderInfo[] | null>(null);
+  const [foldersLoading, setFoldersLoading] = useState(false);
+  const [foldersError, setFoldersError] = useState<string | null>(null);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(
+    xBookmarksStatus.selectedFolderId,
+  );
+  const [selectedFolderName, setSelectedFolderName] = useState<string | null>(
+    xBookmarksStatus.selectedFolderName,
+  );
+  const [savingFolder, setSavingFolder] = useState(false);
 
   const disconnectXBookmarks = useServerFn(disconnectXBookmarksSF);
+  const getXBookmarkFolders = useServerFn(getXBookmarkFoldersSF);
+  const setSelectedFolder = useServerFn(setSelectedFolderSF);
 
   // Auto-hide success message after 5 seconds
   useEffect(() => {
@@ -51,6 +66,40 @@ function SettingsPage() {
   const formatDate = (date: Date | null) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleString();
+  };
+
+  const handleLoadFolders = async () => {
+    setFoldersLoading(true);
+    setFoldersError(null);
+    try {
+      const data = await getXBookmarkFolders();
+      setFolders(data);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to load folders";
+      setFoldersError(message);
+    } finally {
+      setFoldersLoading(false);
+    }
+  };
+
+  const handleSelectFolder = async (folderId: string | null) => {
+    if (!folders) return;
+    const selectedFolder = folders.find((folder) => folder.id === folderId);
+    const folderName = selectedFolder ? selectedFolder.name : null;
+    setSavingFolder(true);
+    try {
+      await setSelectedFolder({
+        data: {
+          folderId,
+          folderName,
+        },
+      });
+      setSelectedFolderId(folderId);
+      setSelectedFolderName(folderName);
+    } finally {
+      setSavingFolder(false);
+    }
   };
 
   return (
@@ -101,7 +150,69 @@ function SettingsPage() {
                     {xBookmarksStatus.lastSyncCursor ?? "None"}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Daily Folder:</span>
+                  <span className="text-gray-900">
+                    {selectedFolderName ?? "All bookmarks"}
+                  </span>
+                </div>
               </div>
+            </div>
+
+            <div className="rounded-md border border-gray-200 p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">
+                    Bookmark folders
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Load folders on demand. This endpoint is rate limited.
+                  </p>
+                </div>
+                <button
+                  onClick={handleLoadFolders}
+                  disabled={foldersLoading}
+                  className="cursor-pointer rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {foldersLoading ? "Loading..." : "Load folders"}
+                </button>
+              </div>
+
+              {foldersError ? (
+                <div className="mt-3 text-sm text-red-600">{foldersError}</div>
+              ) : null}
+
+              {folders ? (
+                <div className="mt-4 grid gap-3">
+                  <label className="text-sm font-medium text-gray-700">
+                    Folder used in daily query
+                  </label>
+                  <select
+                    value={selectedFolderId ?? ""}
+                    onChange={(event) =>
+                      handleSelectFolder(
+                        event.target.value ? event.target.value : null,
+                      )
+                    }
+                    disabled={savingFolder}
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:ring-2 focus:ring-gray-200 focus:outline-none disabled:opacity-50"
+                  >
+                    <option value="">All bookmarks</option>
+                    {folders.map((folder) => (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500">
+                    Changes are saved immediately.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4 text-sm text-gray-500">
+                  Folders are not loaded yet.
+                </div>
+              )}
             </div>
 
             <button

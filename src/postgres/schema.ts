@@ -329,6 +329,8 @@ export type InsightReferenceInsert = typeof insightReferences.$inferInsert;
  * - accessToken: Current token for API calls (expires after ~2 hours)
  * - expiresAt: When the access token expires (refresh before this time)
  * - lastSyncCursor: Pagination token for incremental bookmark fetching
+ * - selectedFolderId: X bookmark folder ID to sync (null = all bookmarks)
+ * - selectedFolderName: Display name of selected folder (for UI)
  */
 export const xBookmarksAuth = pgTable("x_bookmarks_auth", {
   ...baseSchema,
@@ -340,6 +342,8 @@ export const xBookmarksAuth = pgTable("x_bookmarks_auth", {
   accessToken: text().notNull(),
   expiresAt: timestamp().notNull(),
   lastSyncCursor: text(),
+  selectedFolderId: text(),
+  selectedFolderName: text(),
 });
 
 export type XBookmarksAuthSelect = typeof xBookmarksAuth.$inferSelect;
