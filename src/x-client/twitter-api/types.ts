@@ -1,7 +1,14 @@
+/**
+ * Types for the Twitter API
+ */
+
+/**
+ * Response for the Twitter API article endpoint
+ */
 export interface TwitterApiArticleResponse {
   article: Article;
   status: string;
-  msg: string;
+  message: string;
 }
 
 export interface Article {
@@ -99,4 +106,84 @@ export interface EntityUrl {
   expanded_url: string;
   url: string;
   indices: [number, number];
+}
+
+/**
+ * Response for the Twitter API tweets endpoint
+ */
+export interface TweetsResponse {
+  tweets: Tweet[];
+  status: string;
+  message: string;
+}
+
+export interface Tweet {
+  type: string;
+  id: string;
+  url: string;
+  text: string;
+  source: string;
+
+  retweetCount: number;
+  replyCount: number;
+  likeCount: number;
+  quoteCount: number;
+  viewCount: number;
+  bookmarkCount: number;
+
+  createdAt: string;
+  lang: string;
+
+  isReply: boolean;
+  inReplyToId: string;
+  conversationId: string;
+  displayTextRange: number[];
+
+  inReplyToUserId: string;
+  inReplyToUsername: string;
+
+  author: Author;
+
+  entities: Entities;
+
+  quoted_tweet: unknown;
+  retweeted_tweet: unknown;
+
+  isLimitedReply: boolean;
+}
+
+export interface ProfileBio {
+  description: string;
+  entities: {
+    description: {
+      urls: BioUrl[];
+    };
+    url: {
+      urls: BioUrl[];
+    };
+  };
+}
+
+export interface BioUrl {
+  display_url: string;
+  expanded_url: string;
+  indices: number[];
+  url: string;
+}
+
+export interface Entities {
+  hashtags: Hashtag[];
+  urls: EntityUrl[];
+  user_mentions: UserMention[];
+}
+
+export interface Hashtag {
+  indices: number[];
+  text: string;
+}
+
+export interface UserMention {
+  id_str: string;
+  name: string;
+  screen_name: string;
 }

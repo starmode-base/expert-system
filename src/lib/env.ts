@@ -32,6 +32,7 @@ const rawEnv = {
   X_REDIRECT_URI: process.env.X_REDIRECT_URI,
   ALPACA_API_KEY: process.env.ALPACA_API_KEY,
   ALPACA_SECRET_KEY: process.env.ALPACA_SECRET_KEY,
+  TWITTER_API_IO_KEY: process.env.TWITTER_API_IO_KEY,
 
   /**
    * Platform environment variables

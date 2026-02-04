@@ -276,6 +276,22 @@ export async function getBookmarksByFolder(
 
   if (!response.ok) {
     const errorText = await response.text();
+
+    // Log rate limit headers for 429 errors
+    if (response.status === 429) {
+      const limit = response.headers.get("x-rate-limit-limit");
+      const remaining = response.headers.get("x-rate-limit-remaining");
+      const reset = response.headers.get("x-rate-limit-reset");
+      const resetDate = reset ? new Date(Number(reset) * 1000) : null;
+
+      console.error("Rate limit exceeded:");
+      console.error(`  Limit: ${limit ?? "unknown"}`);
+      console.error(`  Remaining: ${remaining ?? "unknown"}`);
+      console.error(
+        `  Reset: ${reset ?? "unknown"} (${resetDate?.toISOString() ?? "unknown"})`,
+      );
+    }
+
     throw new Error(
       `Failed to get bookmarks from folder: ${response.status} ${errorText}`,
     );
