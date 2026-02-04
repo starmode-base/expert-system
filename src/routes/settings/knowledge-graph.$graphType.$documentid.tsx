@@ -14,24 +14,24 @@ import { useEffect, useRef, useState } from "react";
 import { Edge, GraphData, loadGraphData, Node } from "~/server/build-graph";
 import { FilterBar, FilterParams } from "~/components/filter-bar";
 
-export const Route = createFileRoute("/settings/knowledge-graph/$graphType/$documentid")(
-  {
-    loader: async ({ params: { graphType, documentid } }) => {
-      const graphData = await loadGraphData({ data: graphType });
-      const selectedDoc = (await queryDocument({ data: documentid })) ?? null;
-      const { sources, categories } = await getFilterValues();
+export const Route = createFileRoute(
+  "/settings/knowledge-graph/$graphType/$documentid",
+)({
+  loader: async ({ params: { graphType, documentid } }) => {
+    const graphData = await loadGraphData({ data: graphType });
+    const selectedDoc = (await queryDocument({ data: documentid })) ?? null;
+    const { sources, categories } = await getFilterValues();
 
-      return {
-        graphType,
-        graphData,
-        selectedDoc,
-        sources,
-        categories,
-      };
-    },
-    component: RouteComponent,
+    return {
+      graphType,
+      graphData,
+      selectedDoc,
+      sources,
+      categories,
+    };
   },
-);
+  component: RouteComponent,
+});
 
 function KnowledgeGraph({
   graphType,

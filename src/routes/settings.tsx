@@ -27,7 +27,11 @@ function SettingsLayout() {
   const subNavItems = [
     { key: "importer", to: "/settings/importer", label: "Importer" },
     { key: "x", to: "/settings/x", label: "X Settings" },
-    { key: "knowledge-graph", to: "/settings/knowledge-graph", label: "Knowledge Graph" },
+    {
+      key: "knowledge-graph",
+      to: "/settings/knowledge-graph",
+      label: "Knowledge Graph",
+    },
   ];
 
   return (
