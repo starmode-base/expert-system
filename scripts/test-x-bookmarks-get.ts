@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { eq } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
-import { getBookmarks } from "~/x-client/bookmarks";
+import { getBookmarks } from "../src/x-client/x-sdk/bookmarks";
 
 interface CachedBookmarks {
   cachedAt: string;

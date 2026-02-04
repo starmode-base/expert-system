@@ -26,7 +26,7 @@ import {
   createOAuthSession,
   getAuthorizationUrl,
   createSessionCookie,
-} from "~/x-client";
+} from "src/x-client/x-sdk/";
 
 export const APIRoute = createAPIFileRoute("/api/x-bookmarks-start")({
   GET: async ({ request }) => {

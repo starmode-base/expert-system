@@ -29,7 +29,7 @@ import {
   exchangeCodeForTokens,
   calculateExpiresAt,
   getMe,
-} from "~/x-client";
+} from "src/x-client/x-sdk/";
 import { origin } from "~/lib/env";
 
 export const APIRoute = createAPIFileRoute("/api/x-bookmarks-callback")({

@@ -106,6 +106,8 @@ export function getArticleId(tweet: XTweet): string | null {
  * A labeled tweet bookmark with extracted content
  */
 export interface LabeledTweet {
+  /** The tweet's ID */
+  id: string;
   type: "tweet";
   /** URL to the tweet on X */
   tweetUrl: string;
@@ -205,6 +207,7 @@ export function labelTweet(
   const links = extractExternalLinks(tweet);
 
   return {
+    id: tweet.id,
     type: "tweet",
     tweetUrl,
     text: tweet.text,

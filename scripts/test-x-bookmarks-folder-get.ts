@@ -5,13 +5,13 @@ import { db, schema } from "~/postgres/db";
 import {
   getBookmarksByFolderWithDetails,
   XBookmarksResponse,
-} from "~/x-client/bookmarks";
+} from "../src/x-client/x-sdk/bookmarks";
 import {
   isTokenExpired,
   refreshAccessToken,
   calculateExpiresAt,
   labelBookmarks,
-} from "~/x-client";
+} from "../src/x-client/x-sdk/";
 
 interface CachedBookmarks {
   cachedAt: string;

@@ -23,8 +23,7 @@ import {
   isTokenExpired,
   refreshAccessToken,
   calculateExpiresAt,
-} from "~/x-client";
-
+} from "src/x-client/x-sdk/";
 /**
  * Status information about a user's X bookmarks connection.
  * Used by the settings UI to display connection state.
