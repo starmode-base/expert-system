@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import {
   getBookmarksByFolder,
-  type XBookmarksResponse,
+  type BookmarksFolderResponse,
 } from "../src/x-client/x-sdk/bookmarks";
 import {
   isTokenExpired,
@@ -49,7 +49,7 @@ function isArticleTweet(tweet: Tweet): boolean {
 
 interface CachedBookmarks {
   cachedAt: string;
-  response: XBookmarksResponse;
+  response: BookmarksFolderResponse;
 }
 
 const cachePath =
@@ -65,7 +65,7 @@ async function loadCache(): Promise<CachedBookmarks | null> {
   }
 }
 
-async function saveCache(response: XBookmarksResponse) {
+async function saveCache(response: BookmarksFolderResponse) {
   await fs.mkdir(path.dirname(cachePath), { recursive: true });
   const payload: CachedBookmarks = {
     cachedAt: new Date().toISOString(),
@@ -153,7 +153,7 @@ if (!folderId) {
 }
 
 // Fetch bookmarks (cached) - only returns basic tweet data (id, text)
-let bookmarksResponse: XBookmarksResponse;
+let bookmarksResponse: BookmarksFolderResponse;
 const cached = await loadCache();
 
 if (cached) {
