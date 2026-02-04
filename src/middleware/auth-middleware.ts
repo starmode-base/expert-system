@@ -94,6 +94,14 @@ export const authMiddleware = createMiddleware().server(async ({ next }) => {
 
     // Get the viewer again
     viewer = await getViewer(clerkUserId);
+  } else {
+    // Keep the email synced without blocking the request
+    void (async () => {
+      const clerkUser = await getClerkUser(clerkUserId);
+      await upsertViewer(clerkUser);
+    })().catch((error) => {
+      console.error("Failed to sync viewer email", error);
+    });
   }
 
   // Viewer must exist in our database

@@ -20,7 +20,7 @@ interface TrackedCompany {
   nextEarningsDate: Date | null;
 }
 
-export const Route = createFileRoute("/importer")({
+export const Route = createFileRoute("/settings/importer")({
   loader: async () => {
     const { viewerId } = await listOrganizationsSF();
     const stockTickers = await queryStocksSF();
@@ -225,7 +225,7 @@ function RouteComponent() {
   };
 
   return (
-    <div className="h-[calc(100dvh-64px)] overflow-hidden">
+    <div className="h-[calc(100dvh-64px-49px)] overflow-hidden">
       <div className="mx-auto flex h-full max-w-4xl flex-col gap-4 px-2 py-4 sm:px-4">
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white p-1 text-sm">
@@ -522,54 +522,4 @@ function RouteComponent() {
       </div>
     </div>
   );
-}
-
-//
-// Upload categories and stock tickers data
-//
-{
-  /* One time uploads. Remove or hide buttons once data is uploaded */
-}
-{
-  /* WARNING: This will polute categories data! */
-}
-{
-  // const uploadCategories = useServerFn(uploadCategoriesSF);
-  // const uploadStockData = useServerFn(uploadStockDataSF);
-  /* <button
-    onClick={async () => {
-      await uploadCategories();
-    }}
-    className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
-  >
-    Upload Categories
-  </button>
-
-  <button
-    onClick={async () => {
-      await uploadStockData();
-    }}
-    className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
-  >
-    Upload Stocks
-  </button> */
-}
-
-//
-// Science Daily scraper
-//
-// const sendEventScienceDailyScraper = useServerFn(
-//   sendEventScienceDailyScraperSF,
-// );
-
-{
-  /* <button
-              onClick={async () => {
-                await sendEventScienceDailyScraper();
-                setLoading(true);
-              }}
-              className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-1 text-white"
-            >
-              Scrape News
-            </button> */
 }

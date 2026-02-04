@@ -16,9 +16,11 @@ export const dailyInsight = inngest.createFunction(
   { id: "scheduler.daily-insight" },
   trigger,
   async ({ step }) => {
+    // Hardcoded for now to send to to only generate insights for ME
     const users = await step.run("get-all-users", async () => {
       const rows = await db.query.users.findMany({
-        where: (users, { eq }) => eq(users.email, "spencer@starmode.app"),
+        where: (users, { eq }) =>
+          eq(users.email, "spencer.g.smith6+dev@gmail.com"),
         columns: { id: true, email: true },
       });
 

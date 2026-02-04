@@ -14,24 +14,24 @@ import { useEffect, useRef, useState } from "react";
 import { Edge, GraphData, loadGraphData, Node } from "~/server/build-graph";
 import { FilterBar, FilterParams } from "~/components/filter-bar";
 
-export const Route = createFileRoute("/knowledge-graph/$graphType/$documentid")(
-  {
-    loader: async ({ params: { graphType, documentid } }) => {
-      const graphData = await loadGraphData({ data: graphType });
-      const selectedDoc = (await queryDocument({ data: documentid })) ?? null;
-      const { sources, categories } = await getFilterValues();
+export const Route = createFileRoute(
+  "/settings/knowledge-graph/$graphType/$documentid",
+)({
+  loader: async ({ params: { graphType, documentid } }) => {
+    const graphData = await loadGraphData({ data: graphType });
+    const selectedDoc = (await queryDocument({ data: documentid })) ?? null;
+    const { sources, categories } = await getFilterValues();
 
-      return {
-        graphType,
-        graphData,
-        selectedDoc,
-        sources,
-        categories,
-      };
-    },
-    component: RouteComponent,
+    return {
+      graphType,
+      graphData,
+      selectedDoc,
+      sources,
+      categories,
+    };
   },
-);
+  component: RouteComponent,
+});
 
 function KnowledgeGraph({
   graphType,
@@ -128,7 +128,7 @@ function KnowledgeGraph({
     const takeaway = graphData.nodes.find((node) => node.id === nodeId);
 
     await navigate({
-      to: "/knowledge-graph/$graphType/$documentid",
+      to: "/settings/knowledge-graph/$graphType/$documentid",
       params: { graphType, documentid: takeaway?.documentId ?? "" },
     });
   };
@@ -193,20 +193,20 @@ function RouteComponent() {
   const navigate = useNavigate();
   if ((graphType !== "topic" && graphType !== "concept") || !graphData) {
     return navigate({
-      to: "/knowledge-graph/$graphType/$documentid",
+      to: "/settings/knowledge-graph/$graphType/$documentid",
       params: { graphType: "topic", documentid: selectedDoc?.id ?? "" },
     });
   }
   invariant(graphData, "No graph data");
   return (
-    <div className="flex h-[calc(100dvh-64px)] bg-white">
+    <div className="flex h-[calc(100dvh-64px-49px)] bg-white">
       <div className="m-4 w-1/2 overflow-y-hidden border-r border-gray-200">
         <h1 className="mb-4 text-2xl font-semibold">Knowledge Graph</h1>
         <div className="flex border-b border-gray-200 pb-4">
           <button
             onClick={async () => {
               await navigate({
-                to: "/knowledge-graph/$graphType/$documentid",
+                to: "/settings/knowledge-graph/$graphType/$documentid",
                 params: {
                   graphType: "topic",
                   documentid: selectedDoc?.id ?? "",
@@ -220,7 +220,7 @@ function RouteComponent() {
           <button
             onClick={async () => {
               await navigate({
-                to: "/knowledge-graph/$graphType/$documentid",
+                to: "/settings/knowledge-graph/$graphType/$documentid",
                 params: {
                   graphType: "concept",
                   documentid: selectedDoc?.id ?? "",

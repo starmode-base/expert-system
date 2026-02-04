@@ -118,12 +118,7 @@ function NavBar() {
 
   const devNavItems = [
     { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
-    {
-      key: "knowledge-graph",
-      to: "/knowledge-graph",
-      label: "Knowledge Graph",
-    },
-    { key: "importer", to: "/importer", label: "Importer" },
+    { key: "settings", to: "/settings", label: "Settings" },
   ];
 
   // TODO: add user role for dev permissions.
