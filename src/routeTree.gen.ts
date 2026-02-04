@@ -14,16 +14,18 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as TakeawayFeedImport } from './routes/takeaway-feed'
 import { Route as SettingsImport } from './routes/settings'
 import { Route as ResearchFeedImport } from './routes/research-feed'
-import { Route as ImporterImport } from './routes/importer'
 import { Route as IndexImport } from './routes/index'
+import { Route as SettingsIndexImport } from './routes/settings/index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
-import { Route as KnowledgeGraphIndexImport } from './routes/knowledge-graph.index'
 import { Route as InsightStudioIndexImport } from './routes/insight-studio.index'
+import { Route as SettingsXImport } from './routes/settings/x'
+import { Route as SettingsImporterImport } from './routes/settings/importer'
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
 import { Route as InsightInsightIdImport } from './routes/insight.$insightId'
 import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$insightId'
 import { Route as GuestResearchFeedImport } from './routes/guest.research-feed'
-import { Route as KnowledgeGraphGraphTypeDocumentidImport } from './routes/knowledge-graph.$graphType.$documentid'
+import { Route as SettingsKnowledgeGraphIndexImport } from './routes/settings/knowledge-graph.index'
+import { Route as SettingsKnowledgeGraphGraphTypeDocumentidImport } from './routes/settings/knowledge-graph.$graphType.$documentid'
 
 // Create/Update Routes
 
@@ -45,16 +47,16 @@ const ResearchFeedRoute = ResearchFeedImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const ImporterRoute = ImporterImport.update({
-  id: '/importer',
-  path: '/importer',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const SettingsIndexRoute = SettingsIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRoute,
 } as any)
 
 const NewsFeedIndexRoute = NewsFeedIndexImport.update({
@@ -63,16 +65,22 @@ const NewsFeedIndexRoute = NewsFeedIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const KnowledgeGraphIndexRoute = KnowledgeGraphIndexImport.update({
-  id: '/knowledge-graph/',
-  path: '/knowledge-graph/',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const InsightStudioIndexRoute = InsightStudioIndexImport.update({
   id: '/insight-studio/',
   path: '/insight-studio/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const SettingsXRoute = SettingsXImport.update({
+  id: '/x',
+  path: '/x',
+  getParentRoute: () => SettingsRoute,
+} as any)
+
+const SettingsImporterRoute = SettingsImporterImport.update({
+  id: '/importer',
+  path: '/importer',
+  getParentRoute: () => SettingsRoute,
 } as any)
 
 const NewsFeedDocumentidRoute = NewsFeedDocumentidImport.update({
@@ -99,11 +107,18 @@ const GuestResearchFeedRoute = GuestResearchFeedImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const KnowledgeGraphGraphTypeDocumentidRoute =
-  KnowledgeGraphGraphTypeDocumentidImport.update({
+const SettingsKnowledgeGraphIndexRoute =
+  SettingsKnowledgeGraphIndexImport.update({
+    id: '/knowledge-graph/',
+    path: '/knowledge-graph/',
+    getParentRoute: () => SettingsRoute,
+  } as any)
+
+const SettingsKnowledgeGraphGraphTypeDocumentidRoute =
+  SettingsKnowledgeGraphGraphTypeDocumentidImport.update({
     id: '/knowledge-graph/$graphType/$documentid',
     path: '/knowledge-graph/$graphType/$documentid',
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => SettingsRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -115,13 +130,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/importer': {
-      id: '/importer'
-      path: '/importer'
-      fullPath: '/importer'
-      preLoaderRoute: typeof ImporterImport
       parentRoute: typeof rootRoute
     }
     '/research-feed': {
@@ -173,18 +181,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsFeedDocumentidImport
       parentRoute: typeof rootRoute
     }
+    '/settings/importer': {
+      id: '/settings/importer'
+      path: '/importer'
+      fullPath: '/settings/importer'
+      preLoaderRoute: typeof SettingsImporterImport
+      parentRoute: typeof SettingsImport
+    }
+    '/settings/x': {
+      id: '/settings/x'
+      path: '/x'
+      fullPath: '/settings/x'
+      preLoaderRoute: typeof SettingsXImport
+      parentRoute: typeof SettingsImport
+    }
     '/insight-studio/': {
       id: '/insight-studio/'
       path: '/insight-studio'
       fullPath: '/insight-studio'
       preLoaderRoute: typeof InsightStudioIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/knowledge-graph/': {
-      id: '/knowledge-graph/'
-      path: '/knowledge-graph'
-      fullPath: '/knowledge-graph'
-      preLoaderRoute: typeof KnowledgeGraphIndexImport
       parentRoute: typeof rootRoute
     }
     '/news-feed/': {
@@ -194,72 +209,111 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsFeedIndexImport
       parentRoute: typeof rootRoute
     }
-    '/knowledge-graph/$graphType/$documentid': {
-      id: '/knowledge-graph/$graphType/$documentid'
+    '/settings/': {
+      id: '/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexImport
+      parentRoute: typeof SettingsImport
+    }
+    '/settings/knowledge-graph/': {
+      id: '/settings/knowledge-graph/'
+      path: '/knowledge-graph'
+      fullPath: '/settings/knowledge-graph'
+      preLoaderRoute: typeof SettingsKnowledgeGraphIndexImport
+      parentRoute: typeof SettingsImport
+    }
+    '/settings/knowledge-graph/$graphType/$documentid': {
+      id: '/settings/knowledge-graph/$graphType/$documentid'
       path: '/knowledge-graph/$graphType/$documentid'
-      fullPath: '/knowledge-graph/$graphType/$documentid'
-      preLoaderRoute: typeof KnowledgeGraphGraphTypeDocumentidImport
-      parentRoute: typeof rootRoute
+      fullPath: '/settings/knowledge-graph/$graphType/$documentid'
+      preLoaderRoute: typeof SettingsKnowledgeGraphGraphTypeDocumentidImport
+      parentRoute: typeof SettingsImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface SettingsRouteChildren {
+  SettingsImporterRoute: typeof SettingsImporterRoute
+  SettingsXRoute: typeof SettingsXRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
+  SettingsKnowledgeGraphIndexRoute: typeof SettingsKnowledgeGraphIndexRoute
+  SettingsKnowledgeGraphGraphTypeDocumentidRoute: typeof SettingsKnowledgeGraphGraphTypeDocumentidRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsImporterRoute: SettingsImporterRoute,
+  SettingsXRoute: SettingsXRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
+  SettingsKnowledgeGraphIndexRoute: SettingsKnowledgeGraphIndexRoute,
+  SettingsKnowledgeGraphGraphTypeDocumentidRoute:
+    SettingsKnowledgeGraphGraphTypeDocumentidRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/importer': typeof ImporterRoute
   '/research-feed': typeof ResearchFeedRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/takeaway-feed': typeof TakeawayFeedRoute
   '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
+  '/settings/importer': typeof SettingsImporterRoute
+  '/settings/x': typeof SettingsXRoute
   '/insight-studio': typeof InsightStudioIndexRoute
-  '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
-  '/knowledge-graph/$graphType/$documentid': typeof KnowledgeGraphGraphTypeDocumentidRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/settings/knowledge-graph': typeof SettingsKnowledgeGraphIndexRoute
+  '/settings/knowledge-graph/$graphType/$documentid': typeof SettingsKnowledgeGraphGraphTypeDocumentidRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/importer': typeof ImporterRoute
   '/research-feed': typeof ResearchFeedRoute
-  '/settings': typeof SettingsRoute
   '/takeaway-feed': typeof TakeawayFeedRoute
   '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
+  '/settings/importer': typeof SettingsImporterRoute
+  '/settings/x': typeof SettingsXRoute
   '/insight-studio': typeof InsightStudioIndexRoute
-  '/knowledge-graph': typeof KnowledgeGraphIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
-  '/knowledge-graph/$graphType/$documentid': typeof KnowledgeGraphGraphTypeDocumentidRoute
+  '/settings': typeof SettingsIndexRoute
+  '/settings/knowledge-graph': typeof SettingsKnowledgeGraphIndexRoute
+  '/settings/knowledge-graph/$graphType/$documentid': typeof SettingsKnowledgeGraphGraphTypeDocumentidRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/importer': typeof ImporterRoute
   '/research-feed': typeof ResearchFeedRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/takeaway-feed': typeof TakeawayFeedRoute
   '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
+  '/settings/importer': typeof SettingsImporterRoute
+  '/settings/x': typeof SettingsXRoute
   '/insight-studio/': typeof InsightStudioIndexRoute
-  '/knowledge-graph/': typeof KnowledgeGraphIndexRoute
   '/news-feed/': typeof NewsFeedIndexRoute
-  '/knowledge-graph/$graphType/$documentid': typeof KnowledgeGraphGraphTypeDocumentidRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/settings/knowledge-graph/': typeof SettingsKnowledgeGraphIndexRoute
+  '/settings/knowledge-graph/$graphType/$documentid': typeof SettingsKnowledgeGraphGraphTypeDocumentidRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/importer'
     | '/research-feed'
     | '/settings'
     | '/takeaway-feed'
@@ -267,29 +321,32 @@ export interface FileRouteTypes {
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
+    | '/settings/importer'
+    | '/settings/x'
     | '/insight-studio'
-    | '/knowledge-graph'
     | '/news-feed'
-    | '/knowledge-graph/$graphType/$documentid'
+    | '/settings/'
+    | '/settings/knowledge-graph'
+    | '/settings/knowledge-graph/$graphType/$documentid'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/importer'
     | '/research-feed'
-    | '/settings'
     | '/takeaway-feed'
     | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
+    | '/settings/importer'
+    | '/settings/x'
     | '/insight-studio'
-    | '/knowledge-graph'
     | '/news-feed'
-    | '/knowledge-graph/$graphType/$documentid'
+    | '/settings'
+    | '/settings/knowledge-graph'
+    | '/settings/knowledge-graph/$graphType/$documentid'
   id:
     | '__root__'
     | '/'
-    | '/importer'
     | '/research-feed'
     | '/settings'
     | '/takeaway-feed'
@@ -297,44 +354,40 @@ export interface FileRouteTypes {
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
+    | '/settings/importer'
+    | '/settings/x'
     | '/insight-studio/'
-    | '/knowledge-graph/'
     | '/news-feed/'
-    | '/knowledge-graph/$graphType/$documentid'
+    | '/settings/'
+    | '/settings/knowledge-graph/'
+    | '/settings/knowledge-graph/$graphType/$documentid'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ImporterRoute: typeof ImporterRoute
   ResearchFeedRoute: typeof ResearchFeedRoute
-  SettingsRoute: typeof SettingsRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   TakeawayFeedRoute: typeof TakeawayFeedRoute
   GuestResearchFeedRoute: typeof GuestResearchFeedRoute
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   InsightInsightIdRoute: typeof InsightInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
   InsightStudioIndexRoute: typeof InsightStudioIndexRoute
-  KnowledgeGraphIndexRoute: typeof KnowledgeGraphIndexRoute
   NewsFeedIndexRoute: typeof NewsFeedIndexRoute
-  KnowledgeGraphGraphTypeDocumentidRoute: typeof KnowledgeGraphGraphTypeDocumentidRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ImporterRoute: ImporterRoute,
   ResearchFeedRoute: ResearchFeedRoute,
-  SettingsRoute: SettingsRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   TakeawayFeedRoute: TakeawayFeedRoute,
   GuestResearchFeedRoute: GuestResearchFeedRoute,
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   InsightInsightIdRoute: InsightInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
   InsightStudioIndexRoute: InsightStudioIndexRoute,
-  KnowledgeGraphIndexRoute: KnowledgeGraphIndexRoute,
   NewsFeedIndexRoute: NewsFeedIndexRoute,
-  KnowledgeGraphGraphTypeDocumentidRoute:
-    KnowledgeGraphGraphTypeDocumentidRoute,
 }
 
 export const routeTree = rootRoute
@@ -348,7 +401,6 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/importer",
         "/research-feed",
         "/settings",
         "/takeaway-feed",
@@ -357,22 +409,24 @@ export const routeTree = rootRoute
         "/insight/$insightId",
         "/news-feed/$documentid",
         "/insight-studio/",
-        "/knowledge-graph/",
-        "/news-feed/",
-        "/knowledge-graph/$graphType/$documentid"
+        "/news-feed/"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/importer": {
-      "filePath": "importer.tsx"
-    },
     "/research-feed": {
       "filePath": "research-feed.tsx"
     },
     "/settings": {
-      "filePath": "settings.tsx"
+      "filePath": "settings.tsx",
+      "children": [
+        "/settings/importer",
+        "/settings/x",
+        "/settings/",
+        "/settings/knowledge-graph/",
+        "/settings/knowledge-graph/$graphType/$documentid"
+      ]
     },
     "/takeaway-feed": {
       "filePath": "takeaway-feed.tsx"
@@ -389,17 +443,31 @@ export const routeTree = rootRoute
     "/news-feed/$documentid": {
       "filePath": "news-feed.$documentid.tsx"
     },
+    "/settings/importer": {
+      "filePath": "settings/importer.tsx",
+      "parent": "/settings"
+    },
+    "/settings/x": {
+      "filePath": "settings/x.tsx",
+      "parent": "/settings"
+    },
     "/insight-studio/": {
       "filePath": "insight-studio.index.tsx"
-    },
-    "/knowledge-graph/": {
-      "filePath": "knowledge-graph.index.tsx"
     },
     "/news-feed/": {
       "filePath": "news-feed.index.tsx"
     },
-    "/knowledge-graph/$graphType/$documentid": {
-      "filePath": "knowledge-graph.$graphType.$documentid.tsx"
+    "/settings/": {
+      "filePath": "settings/index.tsx",
+      "parent": "/settings"
+    },
+    "/settings/knowledge-graph/": {
+      "filePath": "settings/knowledge-graph.index.tsx",
+      "parent": "/settings"
+    },
+    "/settings/knowledge-graph/$graphType/$documentid": {
+      "filePath": "settings/knowledge-graph.$graphType.$documentid.tsx",
+      "parent": "/settings"
     }
   }
 }
