@@ -100,3 +100,20 @@ export interface XBookmarkFoldersResponse {
     result_count?: number;
   };
 }
+
+/**
+ * Response from GET /2/users/:id/bookmarks/folders/:folder_id
+ * Note: This endpoint only returns tweet IDs, not full tweet data
+ */
+export interface BookmarksFolderResponse {
+  data?: { id: string }[];
+  errors?: {
+    title: string;
+    type: string;
+    detail: string;
+    status: number;
+  }[];
+  meta?: {
+    next_token?: string;
+  };
+}

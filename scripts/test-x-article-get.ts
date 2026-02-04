@@ -5,8 +5,6 @@ import { db, schema } from "~/postgres/db";
 import {
   getBookmarksByFolder,
   type BookmarksFolderResponse,
-} from "../src/x-client/x-sdk/bookmarks";
-import {
   isTokenExpired,
   refreshAccessToken,
   calculateExpiresAt,
