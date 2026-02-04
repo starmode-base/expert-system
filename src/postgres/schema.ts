@@ -315,6 +315,40 @@ export const insightReferences = pgTable(
 export type InsightReferenceSelect = typeof insightReferences.$inferSelect;
 export type InsightReferenceInsert = typeof insightReferences.$inferInsert;
 
+/**
+ * X Bookmarks Auth - Stores OAuth2 tokens for X bookmarks sync
+ *
+ * Each user can connect one X account. Tokens are used by:
+ * - The daily bookmark sync job (refreshes token, fetches bookmarks)
+ * - The settings UI (displays connection status)
+ *
+ * Fields:
+ * - userId: Our internal user ID (who connected this X account)
+ * - xUserId: X's user ID (required for bookmarks API - must match authenticated user)
+ * - refreshToken: Used to get new access tokens without user interaction
+ * - accessToken: Current token for API calls (expires after ~2 hours)
+ * - expiresAt: When the access token expires (refresh before this time)
+ * - lastSyncCursor: Pagination token for incremental bookmark fetching
+ * - selectedFolderId: X bookmark folder ID to sync (null = all bookmarks)
+ * - selectedFolderName: Display name of selected folder (for UI)
+ */
+export const xBookmarksAuth = pgTable("x_bookmarks_auth", {
+  ...baseSchema,
+  userId: text()
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  xUserId: text().notNull(),
+  refreshToken: text().notNull(),
+  accessToken: text().notNull(),
+  expiresAt: timestamp().notNull(),
+  lastSyncCursor: text(),
+  selectedFolderId: text(),
+  selectedFolderName: text(),
+});
+
+export type XBookmarksAuthSelect = typeof xBookmarksAuth.$inferSelect;
+export type XBookmarksAuthInsert = typeof xBookmarksAuth.$inferInsert;
+
 // insights <> takeaways junction table
 export const insightTakeaways = pgTable(
   "insight_takeaways",

@@ -18,6 +18,7 @@ import {
   insightTakeaways,
   organizationMembers,
   insightReferences,
+  xBookmarksAuth,
 } from "./schema";
 
 export const conceptEmbeddingsRelations = relations(
@@ -71,6 +72,14 @@ export const usersRelations = relations(users, ({ many }) => ({
   insights: many(insights),
   trackedCompanies: many(trackedCompanies),
   organizationMembers: many(organizationMembers),
+  xBookmarksAuth: many(xBookmarksAuth),
+}));
+
+export const xBookmarksAuthRelations = relations(xBookmarksAuth, ({ one }) => ({
+  user: one(users, {
+    fields: [xBookmarksAuth.userId],
+    references: [users.id],
+  }),
 }));
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
