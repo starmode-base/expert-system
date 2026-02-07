@@ -5,7 +5,7 @@ import { invariant } from "@tanstack/react-router";
 
 const openAiClient = new OpenAI();
 
-export async function generateResearchObjectives(
+export async function generateResearchThemes(
   takeaways: { id: string; summary: string }[],
   recentInsights: {
     id: string;
@@ -24,7 +24,7 @@ export async function generateResearchObjectives(
             "A distinct 1-2 sentence research question pointing toward a non-obvious, surprising, or counterintuitive insight. Should connect multiple ideas and challenge conventional thinking.",
           ),
       )
-      .length(3),
+      .length(2),
   });
 
   const response = await openAiClient.responses.parse({
@@ -40,40 +40,38 @@ export async function generateResearchObjectives(
       {
         role: "user",
         type: "message",
-        content: `Given the recent takeaway summaries and recent insights below, generate exactly 3 distinct research objectives for the insight generator.
+        content: `SYSTEM PROMPT: RESEARCH THEME GENERATION
 
-      Output rules (strict):
-      - Each objective must be phrased as a single concrete research question (end with a "?").
-      - 1–2 sentences per objective (no bullets, no colons, no sub-questions).
+Objective:
+Given recent takeaway summaries and recent insights, generate exactly 2 distinct research themes that will guide a research agent to discover relevant documents from a large corpus. These themes are inputs to downstream insight generation and must maximize novelty, optionality, and second-order discovery.
 
-      Quality bar:
-      - Non-obvious: connects at least two ideas from different sources or domains in a way that reveals something hidden or counterintuitive.
-      - Consequential: if the answer is "yes," it changes how we should think about a company, sector, technology, or economic dynamic.
-      - Testable: there is some observable evidence that would confirm or refute this.
-      - Surprising: a smart generalist would say "I hadn't thought of that" or "that's counterintuitive."
+Output rules (strict):
+- Output exactly 2 research themes.
+- Each theme must be phrased as a short research framing statement, not a question.
+- 1–2 sentences per theme.
+- No bullets, no numbering, no headings, no colons.
+- Plain text only.
 
-      What makes a research objective interesting:
-      - It challenges a widely-held assumption
-      - It connects two things people don't usually connect
-      - It identifies an emerging pattern before it's obvious
-      - It explains something confusing or counterintuitive
-      - It reveals a hidden constraint or bottleneck
-      - It surfaces a second-order effect of a known trend
+Novelty constraints (critical):
+- Do NOT overlap with recent insights in central claim, primary entities, or core mechanism.
+- Each theme must target a different topic cluster and a different set of primary actors or systems.
+- Themes should be broad enough to pull diverse documents, but sharp enough to exclude generic material.
+- Penalize obvious continuations of known narratives or consensus views.
 
-      What is NOT interesting:
-      - Restating what the takeaways already say
-      - Obvious trend extrapolation ("AI will keep growing")
-      - Generic sector analysis ("cloud is competitive")
-      - Questions with obvious answers
+Quality bar for a strong research theme:
+- Connects at least two different domains (e.g., technology + regulation, incentives + infrastructure, labor + capital).
+- Challenges a widely-held assumption or exposes a hidden constraint, bottleneck, or second-order effect.
+- Points toward an explanation for something confusing, unstable, or contradictory in the current landscape.
+- If explored deeply, could plausibly produce an investable or strategic insight.
 
-      Novelty constraints:
-      - Do not overlap with the recent insights. Avoid the same central claim, same primary entities, or same mechanism.
-      - Each of the 3 objectives must target a different topic cluster and different primary entities.
+What makes a theme weak (avoid):
+- Restating or slightly generalizing existing takeaways.
+- Obvious trend extrapolation or surface-level macro narratives.
+- Company-specific diligence questions.
+- Themes that imply an answer rather than opening a line of inquiry.
 
-      Style constraints:
-      - Do not restate or quote the takeaways.
-      - Do not hedge (avoid words like "may", "might", "could").
-      - Write like you're pointing an analyst toward something genuinely surprising that deserves investigation.
+Style constraints:
+- Favor structural forces, incentives, and mechanisms over events or announcements.
 
       Takeaway summaries:
       ${takeaways.map((takeaway) => `- ${takeaway.summary}`).join("\n")}

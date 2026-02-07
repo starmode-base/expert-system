@@ -105,6 +105,7 @@ function createInsightAgent() {
 export interface InsightAgentInput {
   takeawayPreviewFormatted: string;
   recentInsights: string;
+  seedText: string;
   insightPrompt?: string;
 }
 

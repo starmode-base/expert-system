@@ -70,6 +70,7 @@ export const generateInsight = inngest.createFunction(
         return await runInsightAgent({
           takeawayPreviewFormatted,
           recentInsights,
+          seedText: event.data.seedText,
           insightPrompt: event.data.insightPrompt,
         });
       } catch (error) {

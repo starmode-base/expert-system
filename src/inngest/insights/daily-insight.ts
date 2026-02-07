@@ -1,7 +1,7 @@
 import { db } from "~/postgres/db";
 
 import { inngest } from "../client";
-import { generateResearchObjectives } from "./helpers/generate-research-objectives";
+import { generateResearchThemes } from "./helpers/generate-research-objectives";
 
 /**
  * Generate daily insights for each user based on takeaways created in the last 3 days.
@@ -29,8 +29,11 @@ export const dailyInsight = inngest.createFunction(
 
     const takeaways = await step.run("get-takeaways-last-3d", async () => {
       // Query the 20 most recently created takeaways
+      // Query takeaways created in the last 3 days, limit 20
+      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
       const rows = await db.query.takeaways.findMany({
         columns: { id: true, summary: true },
+        where: (takeaways, { gte }) => gte(takeaways.createdAt, threeDaysAgo),
         orderBy: (takeaways, { desc }) => desc(takeaways.createdAt),
         limit: 20,
       });
@@ -48,15 +51,25 @@ export const dailyInsight = inngest.createFunction(
       return rows;
     });
 
-    const insightPrompts = await step.run(
+    // If there are fewer than five takeaways, do not proceed and return a summary
+    if (takeaways.length < 5) {
+      return {
+        users: users.length,
+        takeaways: takeaways.length,
+        sent: 0,
+        reason: "Not enough takeaways to generate insights",
+      };
+    }
+
+    const researchThemes = await step.run(
       "get-generate-insight-prompts",
       async () => {
-        return await generateResearchObjectives(takeaways, recentInsights);
+        return await generateResearchThemes(takeaways, recentInsights);
       },
     );
 
     // If no seed texts, don't send any insights
-    if (insightPrompts.length === 0)
+    if (researchThemes.length === 0)
       return {
         users: users.length,
         takeaways: takeaways.length,
@@ -67,11 +80,11 @@ export const dailyInsight = inngest.createFunction(
     const sendCounts = await Promise.all(
       users.map((user) =>
         Promise.all(
-          insightPrompts.map((insightPrompt, promptIndex) =>
+          researchThemes.map((researchTheme, promptIndex) =>
             step.sendEvent(`generate-insight-${user.id}-${promptIndex}`, {
               name: "app/generate-insight",
               data: {
-                seedText: insightPrompt,
+                seedText: researchTheme,
                 user: { id: user.id, email: user.email },
               },
             }),
@@ -89,7 +102,7 @@ export const dailyInsight = inngest.createFunction(
       users: users.length,
       takeaways: takeaways.length,
       totalInsightsSent,
-      insightPrompts,
+      insightPrompts: researchThemes,
     };
   },
 );
