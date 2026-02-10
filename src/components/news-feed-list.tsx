@@ -62,9 +62,9 @@ export function NewsFeedList(props: NewsFeedListProps) {
         );
       })}
       <div ref={sentinelRef} className="py-4 text-center">
-        {isLoadingMore && (
+        {isLoadingMore ? (
           <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-        )}
+        ) : null}
       </div>
     </div>
   );

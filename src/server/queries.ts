@@ -1,7 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db, schema } from "../postgres/db";
 
-import { and, desc, eq, isNotNull, lt, or } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  lte,
+  lt,
+  or,
+} from "drizzle-orm";
 import { z } from "zod";
 import type { PaginatedResult } from "./pagination";
 import { TakeawaySearchResult } from "./searchSFs";
@@ -323,34 +333,39 @@ export const queryInsightsFeed = createServerFn({ method: "GET" })
     }));
   });
 
-// Shared relations config and mapping for insight feed queries
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment */
-const insightFeedWith = {
-  insightTakeaways: {
-    with: {
-      takeaway: {
-        with: {
-          document: true,
-        },
-      },
-    },
-  },
-  insightReferences: {
-    with: {
-      takeawayReference: {
-        with: { takeaway: { with: { document: true } } },
-      },
-    },
-    orderBy: (insightReferences: any, { asc }: any) => [
-      asc(insightReferences.insightReferenceNumber),
-    ],
-  },
-} as const;
+// Shared mapping for paginated insight feed queries
+interface InsightDocumentRef {
+  id: string;
+  title: string;
+  source: string;
+  link: string;
+  publicationDate: Date;
+}
 
-function mapInsightToItem(insight: any): InsightsItem {
+interface InsightQueryRow extends InsightSelect {
+  insightReferences: {
+    insightReferenceNumber: number;
+    referenceId: string;
+    takeawayReference: {
+      reference: string;
+      takeaway: { document: InsightDocumentRef };
+    };
+  }[];
+  insightTakeaways: {
+    type: "concept" | "takeaway";
+    takeawayId: string;
+    takeaway: {
+      title: string;
+      summary: string;
+      document: InsightDocumentRef;
+    };
+  }[];
+}
+
+function mapInsightToItem(insight: InsightQueryRow): InsightsItem {
   return {
     insight,
-    insightReferences: insight.insightReferences.map((row: any) => ({
+    insightReferences: insight.insightReferences.map((row) => ({
       insightReferenceNumber: row.insightReferenceNumber,
       referenceId: row.referenceId,
       reference: row.takeawayReference.reference,
@@ -362,8 +377,8 @@ function mapInsightToItem(insight: any): InsightsItem {
         row.takeawayReference.takeaway.document.publicationDate,
     })),
     insightTakeaways: insight.insightTakeaways
-      .filter((row: any) => row.type === "takeaway")
-      .map((row: any) => ({
+      .filter((row) => row.type === "takeaway")
+      .map((row) => ({
         takeawayId: row.takeawayId,
         title: row.takeaway.title,
         summary: row.takeaway.summary,
@@ -375,7 +390,6 @@ function mapInsightToItem(insight: any): InsightsItem {
       })),
   };
 }
-/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment */
 
 function buildInsightCursorCondition(cursor: string | null) {
   if (!cursor) return undefined;
@@ -389,10 +403,10 @@ function buildInsightCursorCondition(cursor: string | null) {
   );
 }
 
-function buildInsightNextCursor(
-  items: { createdAt: Date; id: string }[],
+function buildInsightNextCursor<T extends { createdAt: Date; id: string }>(
+  items: T[],
   limit: number,
-): { pageItems: typeof items; nextCursor: string | null } {
+): { pageItems: T[]; nextCursor: string | null } {
   const hasMore = items.length > limit;
   const pageItems = hasMore ? items.slice(0, limit) : items;
   const lastItem = pageItems[pageItems.length - 1];
@@ -428,7 +442,27 @@ export const queryInsightsFeedPaginated = createServerFn({ method: "GET" })
 
       const insights = await db.query.insights.findMany({
         where: and(...conditions),
-        with: insightFeedWith,
+        with: {
+          insightTakeaways: {
+            with: {
+              takeaway: {
+                with: {
+                  document: true,
+                },
+              },
+            },
+          },
+          insightReferences: {
+            with: {
+              takeawayReference: {
+                with: { takeaway: { with: { document: true } } },
+              },
+            },
+            orderBy: (insightReferences, { asc }) => [
+              asc(insightReferences.insightReferenceNumber),
+            ],
+          },
+        },
         orderBy: [desc(schema.insights.createdAt), desc(schema.insights.id)],
         limit: limit + 1,
       });
@@ -457,7 +491,27 @@ export const queryPublicInsightsFeedPaginated = createServerFn({
 
       const insights = await db.query.insights.findMany({
         where: and(...conditions),
-        with: insightFeedWith,
+        with: {
+          insightTakeaways: {
+            with: {
+              takeaway: {
+                with: {
+                  document: true,
+                },
+              },
+            },
+          },
+          insightReferences: {
+            with: {
+              takeawayReference: {
+                with: { takeaway: { with: { document: true } } },
+              },
+            },
+            orderBy: (insightReferences, { asc }) => [
+              asc(insightReferences.insightReferenceNumber),
+            ],
+          },
+        },
         orderBy: [desc(schema.insights.createdAt), desc(schema.insights.id)],
         limit: limit + 1,
       });
@@ -567,6 +621,153 @@ export const queryTakeaways = createServerFn({
     documentLink: takeaway.document.link,
   }));
 });
+
+const takeawayFiltersSchema = z.object({
+  sources: z.array(z.string()),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+
+export const queryTakeawaysPaginated = createServerFn({
+  method: "GET",
+})
+  .validator(
+    z.object({
+      cursor: z.string().nullable(),
+      limit: z.number().default(20),
+      filters: takeawayFiltersSchema,
+    }),
+  )
+  .handler(
+    async ({
+      data: { cursor, limit, filters },
+    }): Promise<PaginatedResult<TakeawaySearchResult>> => {
+      const parsedCursor = cursor
+        ? (JSON.parse(cursor) as {
+            publicationDate: string;
+            createdAt: string;
+            id: string;
+          })
+        : null;
+
+      // Step 1: Get paginated takeaway IDs using a join to documents for
+      // filtering and sorting by publication date.
+      const conditions = [];
+
+      if (filters.sources.length > 0) {
+        conditions.push(inArray(schema.documents.source, filters.sources));
+      }
+      if (filters.startDate) {
+        conditions.push(
+          gte(schema.documents.publicationDate, new Date(filters.startDate)),
+        );
+      }
+      if (filters.endDate) {
+        conditions.push(
+          lte(schema.documents.publicationDate, new Date(filters.endDate)),
+        );
+      }
+
+      if (parsedCursor) {
+        conditions.push(
+          or(
+            lt(
+              schema.documents.publicationDate,
+              new Date(parsedCursor.publicationDate),
+            ),
+            and(
+              eq(
+                schema.documents.publicationDate,
+                new Date(parsedCursor.publicationDate),
+              ),
+              lt(schema.takeaways.createdAt, new Date(parsedCursor.createdAt)),
+            ),
+            and(
+              eq(
+                schema.documents.publicationDate,
+                new Date(parsedCursor.publicationDate),
+              ),
+              eq(schema.takeaways.createdAt, new Date(parsedCursor.createdAt)),
+              lt(schema.takeaways.id, parsedCursor.id),
+            ),
+          ),
+        );
+      }
+
+      const idRows = await db
+        .select({
+          id: schema.takeaways.id,
+          publicationDate: schema.documents.publicationDate,
+          createdAt: schema.takeaways.createdAt,
+        })
+        .from(schema.takeaways)
+        .innerJoin(
+          schema.documents,
+          eq(schema.takeaways.documentId, schema.documents.id),
+        )
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(
+          desc(schema.documents.publicationDate),
+          desc(schema.takeaways.createdAt),
+          desc(schema.takeaways.id),
+        )
+        .limit(limit + 1);
+
+      const hasMore = idRows.length > limit;
+      const pageIdRows = hasMore ? idRows.slice(0, limit) : idRows;
+
+      if (pageIdRows.length === 0) {
+        return { items: [], nextCursor: null };
+      }
+
+      const lastRow = pageIdRows[pageIdRows.length - 1];
+      const nextCursor =
+        hasMore && lastRow
+          ? JSON.stringify({
+              publicationDate: lastRow.publicationDate.toISOString(),
+              createdAt: lastRow.createdAt.toISOString(),
+              id: lastRow.id,
+            })
+          : null;
+
+      // Step 2: Load full takeaway data with relations for the page IDs.
+      const ids = pageIdRows.map((r) => r.id);
+      const takeaways = await db.query.takeaways.findMany({
+        where: inArray(schema.takeaways.id, ids),
+        with: {
+          category: true,
+          document: true,
+          takeawayReferences: true,
+        },
+      });
+
+      // Preserve the sort order from step 1.
+      const orderMap = new Map(ids.map((id, i) => [id, i]));
+      takeaways.sort(
+        (a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0),
+      );
+
+      const items: TakeawaySearchResult[] = takeaways.map((takeaway) => ({
+        id: takeaway.id,
+        documentId: takeaway.documentId,
+        title: takeaway.title,
+        publicationDate: takeaway.document.publicationDate,
+        createdAt: takeaway.createdAt,
+        takeaway: takeaway.takeaway,
+        summary: takeaway.summary,
+        concept: takeaway.concept,
+        source: takeaway.document.source,
+        documentTitle: takeaway.document.title,
+        documentSource: takeaway.document.source,
+        category: takeaway.category?.name,
+        similarity: 0,
+        references: takeaway.takeawayReferences,
+        documentLink: takeaway.document.link,
+      }));
+
+      return { items, nextCursor };
+    },
+  );
 
 export const vectorTakeawaySearchTimeWeightedSF = createServerFn({
   method: "GET",
