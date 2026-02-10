@@ -8,6 +8,7 @@ import {
 import { fetchTakeawayById } from "../tool-functions/tools-takeaways";
 import { invariant } from "@tanstack/react-router";
 import { createFinancialAnalysisAgent } from "./financial-analyst";
+import { createMacroResearcherAgent } from "./macro-researcher";
 import { createResearcherAgent } from "./researcher";
 
 // ---------------------------
@@ -61,6 +62,33 @@ Provide the following sructured information to the financialAnalyst:
   Constraints: (no speculation, cite numbers, handle missing data)`,
 });
 
+const macroResearcher = createMacroResearcherAgent();
+
+const macroResearcherTool = macroResearcher.asTool({
+  toolName: "macroResearcher",
+  toolDescription: `This tool provides autonomous macroeconomic research and data retrieval using FRED (Federal Reserve Economic Data).
+
+Capabilities:
+- Retrieve real GDP, CPI, PCE, unemployment, nonfarm payrolls, fed funds rate, 10-year Treasury yield, industrial production, housing starts, and consumer sentiment data.
+- Fetch latest observations or data within specific date ranges.
+- Request data transformations (percent change, year-over-year change, etc.).
+- Compare multiple macro indicators side-by-side.
+- Analyze trends, inflection points, divergences, and policy implications.
+- Do not iterate on the same macro analysis for the same objective. Only use this tool once unless you need a new and distinct analysis.
+
+Usage:
+Use this tool whenever macroeconomic data, business cycle context, monetary policy analysis, or broad economic trends will add value to the insight.
+
+Provide the following structured information to the macroResearcher:
+
+  Today's date:
+  Objective:
+  Request:
+  Scope: (indicators / time range / other)
+  Timeframe: (months/quarters/years; as-of date)
+  Constraints: (no speculation, cite numbers, handle missing data)`,
+});
+
 const researcher = createResearcherAgent();
 const researcherTool = researcher.asTool({
   toolName: "researcher",
@@ -89,7 +117,7 @@ function createInsightAgent() {
     name: "Insight Generator",
     instructions: systemPrompt,
     model: "gpt-5.2",
-    tools: [financialAnalystTool, researcherTool, fetchTakeawayByIdTool],
+    tools: [financialAnalystTool, macroResearcherTool, researcherTool, fetchTakeawayByIdTool],
     outputType: insightSchema,
     modelSettings: {
       parallelToolCalls: false,
