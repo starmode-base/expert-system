@@ -11,7 +11,6 @@ import {
   fetchLatestBalanceSheetByMetric,
   fetchLatestCashFlowByMetric,
   fetchLatestIncomeStatementByMetric,
-  fetchLatestTreasuryYield,
 } from "~/inngest/insights/tool-functions/tools-financial";
 
 // const symbol = (process.argv[2] ?? "TSLA").toUpperCase();
@@ -135,9 +134,3 @@ const result3 = await fetchLatestCashFlowByMetric("TSLA", 4, [
 ]);
 
 console.log("Result3", result3);
-
-await new Promise((resolve) => setTimeout(resolve, 1100));
-
-const result4 = await fetchLatestTreasuryYield("monthly", "10year", 3);
-
-console.log("Result4", result4);

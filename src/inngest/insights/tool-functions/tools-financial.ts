@@ -12,9 +12,6 @@ import {
   CashFlowReport,
   fetchCashFlow,
   cashFlowReportMetrics,
-  fetchTreasuryYield,
-  TreasuryYieldInterval,
-  TreasuryYieldMaturity,
 } from "~/server/financial-data-api/alpha-vantage-api";
 
 /**
@@ -128,21 +125,3 @@ export async function fetchLatestCashFlowByMetric(
     }, {});
 }
 
-/**
- * Fetch the most recent treasury yield curve data for the given maturity and interval.
- *
- * @param interval Frequency of the data points (for example, "daily" | "weekly" | "monthly").   This is the frequency of the data points.
- * @param maturity Maturity of the treasury yield (for example, "3month" | "2year" | "5year" | "7year" | "10year" | "30year").   This is the maturity of the treasury yield.
- * @param lastNPoints Number of most recent data points to include from the API response (newest first).
- * @returns Array of yield entries limited to the requested number of points.
- */
-// Treasury yield curve
-export async function fetchLatestTreasuryYield(
-  interval: TreasuryYieldInterval,
-  maturity: TreasuryYieldMaturity,
-  lastNPoints: number,
-) {
-  await new Promise((resolve) => setTimeout(resolve, 1100));
-  const treasuryYield = await fetchTreasuryYield({ interval, maturity });
-  return treasuryYield.data.slice(0, lastNPoints);
-}
