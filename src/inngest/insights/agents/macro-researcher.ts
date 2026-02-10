@@ -28,21 +28,21 @@ const fetchLatestFredObservationsParams = z.object({
     .describe("Number of most recent observations to return"),
   units: z
     .enum(fredUnits)
-    .optional()
+    .nullable()
     .describe(
-      "Value transformation: lin (levels), chg (change), pch (percent change), pc1 (% change from year ago), etc.",
+      "Value transformation: lin (levels), chg (change), pch (percent change), pc1 (% change from year ago), etc. Pass null for default (levels).",
     ),
   frequency: z
     .enum(fredFrequencies)
-    .optional()
+    .nullable()
     .describe(
-      "Aggregate to lower frequency: d (daily), w (weekly), m (monthly), q (quarterly), a (annual)",
+      "Aggregate to lower frequency: d (daily), w (weekly), m (monthly), q (quarterly), a (annual). Pass null to keep native frequency.",
     ),
   aggregationMethod: z
     .enum(fredAggregationMethods)
-    .optional()
+    .nullable()
     .describe(
-      "Aggregation method when changing frequency: avg (average), sum, eop (end of period)",
+      "Aggregation method when changing frequency: avg (average), sum, eop (end of period). Pass null for default.",
     ),
 });
 
@@ -60,9 +60,9 @@ const fetchLatestFredObservationsTool: FunctionTool<
     return await fetchLatestFredObservations(
       args.seriesId,
       args.lastN,
-      args.units,
-      args.frequency,
-      args.aggregationMethod,
+      args.units ?? undefined,
+      args.frequency ?? undefined,
+      args.aggregationMethod ?? undefined,
     );
   },
 });
@@ -75,21 +75,21 @@ const fetchFredObservationsByDateRangeParams = z.object({
   observationEnd: z.string().describe("End date in YYYY-MM-DD format"),
   units: z
     .enum(fredUnits)
-    .optional()
+    .nullable()
     .describe(
-      "Value transformation: lin (levels), chg (change), pch (percent change), pc1 (% change from year ago), etc.",
+      "Value transformation: lin (levels), chg (change), pch (percent change), pc1 (% change from year ago), etc. Pass null for default (levels).",
     ),
   frequency: z
     .enum(fredFrequencies)
-    .optional()
+    .nullable()
     .describe(
-      "Aggregate to lower frequency: d (daily), w (weekly), m (monthly), q (quarterly), a (annual)",
+      "Aggregate to lower frequency: d (daily), w (weekly), m (monthly), q (quarterly), a (annual). Pass null to keep native frequency.",
     ),
   aggregationMethod: z
     .enum(fredAggregationMethods)
-    .optional()
+    .nullable()
     .describe(
-      "Aggregation method when changing frequency: avg (average), sum, eop (end of period)",
+      "Aggregation method when changing frequency: avg (average), sum, eop (end of period). Pass null for default.",
     ),
 });
 
@@ -110,9 +110,9 @@ const fetchFredObservationsByDateRangeTool: FunctionTool<
       args.seriesId,
       args.observationStart,
       args.observationEnd,
-      args.units,
-      args.frequency,
-      args.aggregationMethod,
+      args.units ?? undefined,
+      args.frequency ?? undefined,
+      args.aggregationMethod ?? undefined,
     );
   },
 });
@@ -152,16 +152,22 @@ const fetchMultipleFredSeriesParams = z.object({
     .describe("Number of most recent observations per series"),
   units: z
     .enum(fredUnits)
-    .optional()
-    .describe("Value transformation applied to all series"),
+    .nullable()
+    .describe(
+      "Value transformation applied to all series. Pass null for default (levels).",
+    ),
   frequency: z
     .enum(fredFrequencies)
-    .optional()
-    .describe("Frequency aggregation applied to all series"),
+    .nullable()
+    .describe(
+      "Frequency aggregation applied to all series. Pass null to keep native frequency.",
+    ),
   aggregationMethod: z
     .enum(fredAggregationMethods)
-    .optional()
-    .describe("Aggregation method when changing frequency"),
+    .nullable()
+    .describe(
+      "Aggregation method when changing frequency. Pass null for default.",
+    ),
 });
 
 const fetchMultipleFredSeriesTool: FunctionTool<
@@ -178,9 +184,9 @@ const fetchMultipleFredSeriesTool: FunctionTool<
     return await fetchMultipleFredSeries(
       args.seriesIds,
       args.lastN,
-      args.units,
-      args.frequency,
-      args.aggregationMethod,
+      args.units ?? undefined,
+      args.frequency ?? undefined,
+      args.aggregationMethod ?? undefined,
     );
   },
 });
