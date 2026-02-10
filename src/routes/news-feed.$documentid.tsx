@@ -1,22 +1,24 @@
 import { createFileRoute, invariant } from "@tanstack/react-router";
 import { DocumentContent } from "~/components/document-content";
 import { NewsFeedList } from "~/components/news-feed-list";
-import { queryDocument, queryDocuments } from "~/server/queries";
+import { queryDocument, queryDocumentsPaginated } from "~/server/queries";
 
 export const Route = createFileRoute("/news-feed/$documentid")({
   loader: async ({ params: { documentid } }) => {
-    const documents = await queryDocuments();
+    const page = await queryDocumentsPaginated({
+      data: { cursor: null, limit: 25 },
+    });
     const selectedDoc = await queryDocument({ data: documentid });
 
-    return { documents, selectedDoc };
+    return { page, selectedDoc };
   },
 
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { documents, selectedDoc } = Route.useLoaderData();
-  invariant(documents, "No documents");
+  const { page, selectedDoc } = Route.useLoaderData();
+  invariant(page, "No documents");
   invariant(selectedDoc, "No document selected");
 
   return (
@@ -29,7 +31,7 @@ function RouteComponent() {
           </h1>
         </div>
 
-        <NewsFeedList documents={documents} selectedDocId={selectedDoc.id} />
+        <NewsFeedList initialPage={page} selectedDocId={selectedDoc.id} />
       </div>
 
       {/* Right Detail View */}

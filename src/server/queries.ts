@@ -1,14 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db, schema } from "../postgres/db";
 
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull, lt, or } from "drizzle-orm";
 import { z } from "zod";
+import type { PaginatedResult } from "./pagination";
 import { TakeawaySearchResult } from "./searchSFs";
 import {
   vectorConceptSearchTimeWeighted,
   vectorTakeawaySearchTimeWeighted,
 } from "./vector-queries";
-import { InsightSelect, TakeawayReferenceSelect } from "~/postgres/schema";
+import {
+  DocumentSelect,
+  InsightSelect,
+  TakeawayReferenceSelect,
+} from "~/postgres/schema";
 import { authMiddleware } from "~/middleware/auth-middleware";
 
 export const queryDocuments = createServerFn({
@@ -21,6 +26,67 @@ export const queryDocuments = createServerFn({
 
   return documents;
 });
+
+export const queryDocumentsPaginated = createServerFn({
+  method: "GET",
+})
+  .validator(
+    z.object({
+      cursor: z.string().nullable(),
+      limit: z.number().default(25),
+    }),
+  )
+  .handler(
+    async ({
+      data: { cursor, limit },
+    }): Promise<PaginatedResult<DocumentSelect>> => {
+      const parsedCursor = cursor
+        ? (JSON.parse(cursor) as { publicationDate: string; id: string })
+        : null;
+
+      const conditions = [];
+      if (parsedCursor) {
+        conditions.push(
+          or(
+            lt(
+              schema.documents.publicationDate,
+              new Date(parsedCursor.publicationDate),
+            ),
+            and(
+              eq(
+                schema.documents.publicationDate,
+                new Date(parsedCursor.publicationDate),
+              ),
+              lt(schema.documents.id, parsedCursor.id),
+            ),
+          ),
+        );
+      }
+
+      const documents = await db.query.documents.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        orderBy: [
+          desc(schema.documents.publicationDate),
+          desc(schema.documents.id),
+        ],
+        limit: limit + 1,
+      });
+
+      const hasMore = documents.length > limit;
+      const pageItems = hasMore ? documents.slice(0, limit) : documents;
+
+      const lastItem = pageItems[pageItems.length - 1];
+      const nextCursor =
+        hasMore && lastItem
+          ? JSON.stringify({
+              publicationDate: lastItem.publicationDate.toISOString(),
+              id: lastItem.id,
+            })
+          : null;
+
+      return { items: pageItems, nextCursor };
+    },
+  );
 
 export interface Document {
   id: string;
@@ -256,6 +322,150 @@ export const queryInsightsFeed = createServerFn({ method: "GET" })
         })),
     }));
   });
+
+// Shared relations config and mapping for insight feed queries
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment */
+const insightFeedWith = {
+  insightTakeaways: {
+    with: {
+      takeaway: {
+        with: {
+          document: true,
+        },
+      },
+    },
+  },
+  insightReferences: {
+    with: {
+      takeawayReference: {
+        with: { takeaway: { with: { document: true } } },
+      },
+    },
+    orderBy: (insightReferences: any, { asc }: any) => [
+      asc(insightReferences.insightReferenceNumber),
+    ],
+  },
+} as const;
+
+function mapInsightToItem(insight: any): InsightsItem {
+  return {
+    insight,
+    insightReferences: insight.insightReferences.map((row: any) => ({
+      insightReferenceNumber: row.insightReferenceNumber,
+      referenceId: row.referenceId,
+      reference: row.takeawayReference.reference,
+      documentId: row.takeawayReference.takeaway.document.id,
+      documentTitle: row.takeawayReference.takeaway.document.title,
+      documentSource: row.takeawayReference.takeaway.document.source,
+      documentLink: row.takeawayReference.takeaway.document.link,
+      documentPublicationDate:
+        row.takeawayReference.takeaway.document.publicationDate,
+    })),
+    insightTakeaways: insight.insightTakeaways
+      .filter((row: any) => row.type === "takeaway")
+      .map((row: any) => ({
+        takeawayId: row.takeawayId,
+        title: row.takeaway.title,
+        summary: row.takeaway.summary,
+        documentId: row.takeaway.document.id,
+        documentTitle: row.takeaway.document.title,
+        documentSource: row.takeaway.document.source,
+        documentLink: row.takeaway.document.link,
+        documentPublicationDate: row.takeaway.document.publicationDate,
+      })),
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment */
+
+function buildInsightCursorCondition(cursor: string | null) {
+  if (!cursor) return undefined;
+  const parsed = JSON.parse(cursor) as { createdAt: string; id: string };
+  return or(
+    lt(schema.insights.createdAt, new Date(parsed.createdAt)),
+    and(
+      eq(schema.insights.createdAt, new Date(parsed.createdAt)),
+      lt(schema.insights.id, parsed.id),
+    ),
+  );
+}
+
+function buildInsightNextCursor(
+  items: { createdAt: Date; id: string }[],
+  limit: number,
+): { pageItems: typeof items; nextCursor: string | null } {
+  const hasMore = items.length > limit;
+  const pageItems = hasMore ? items.slice(0, limit) : items;
+  const lastItem = pageItems[pageItems.length - 1];
+  const nextCursor =
+    hasMore && lastItem
+      ? JSON.stringify({
+          createdAt: lastItem.createdAt.toISOString(),
+          id: lastItem.id,
+        })
+      : null;
+  return { pageItems, nextCursor };
+}
+
+export const queryInsightsFeedPaginated = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .validator(
+    z.object({
+      cursor: z.string().nullable(),
+      limit: z.number().default(10),
+    }),
+  )
+  .handler(
+    async ({
+      context,
+      data: { cursor, limit },
+    }): Promise<PaginatedResult<InsightsItem>> => {
+      const cursorCondition = buildInsightCursorCondition(cursor);
+      const conditions = [
+        eq(schema.insights.userId, context.viewer.id),
+        isNotNull(schema.insights.insight),
+      ];
+      if (cursorCondition) conditions.push(cursorCondition);
+
+      const insights = await db.query.insights.findMany({
+        where: and(...conditions),
+        with: insightFeedWith,
+        orderBy: [desc(schema.insights.createdAt), desc(schema.insights.id)],
+        limit: limit + 1,
+      });
+
+      const { pageItems, nextCursor } = buildInsightNextCursor(insights, limit);
+      return { items: pageItems.map(mapInsightToItem), nextCursor };
+    },
+  );
+
+export const queryPublicInsightsFeedPaginated = createServerFn({
+  method: "GET",
+})
+  .validator(
+    z.object({
+      cursor: z.string().nullable(),
+      limit: z.number().default(10),
+    }),
+  )
+  .handler(
+    async ({
+      data: { cursor, limit },
+    }): Promise<PaginatedResult<InsightsItem>> => {
+      const cursorCondition = buildInsightCursorCondition(cursor);
+      const conditions = [isNotNull(schema.insights.insight)];
+      if (cursorCondition) conditions.push(cursorCondition);
+
+      const insights = await db.query.insights.findMany({
+        where: and(...conditions),
+        with: insightFeedWith,
+        orderBy: [desc(schema.insights.createdAt), desc(schema.insights.id)],
+        limit: limit + 1,
+      });
+
+      const { pageItems, nextCursor } = buildInsightNextCursor(insights, limit);
+      return { items: pageItems.map(mapInsightToItem), nextCursor };
+    },
+  );
 
 export const queryDocument = createServerFn({
   method: "GET",
