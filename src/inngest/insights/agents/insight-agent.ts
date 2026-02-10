@@ -8,6 +8,7 @@ import {
 import { fetchTakeawayById } from "../tool-functions/tools-takeaways";
 import { invariant } from "@tanstack/react-router";
 import { createFinancialAnalysisAgent } from "./financial-analyst";
+import { createMacroResearcherAgent } from "./macro-researcher";
 import { createResearcherAgent } from "./researcher";
 
 // ---------------------------
@@ -38,26 +39,62 @@ const finacialAnalyst = createFinancialAnalysisAgent();
 
 const financialAnalystTool = finacialAnalyst.asTool({
   toolName: "financialAnalyst",
-  toolDescription: `This tool provides autonomous financial analysis and data retrieval for public companies and macro context.
+  toolDescription: `This tool provides autonomous financial analysis and data retrieval for public companies.
 
 Capabilities:
 - Query standardized company fundamentals, including overview data, valuation ratios, profitability, growth, and analyst sentiment.
 - Retrieve full financial statements (income statement, balance sheet, cash flow) across historical periods.
 - Analyze cash generation, capital structure, leverage, and shareholder returns.
-- Access U.S. Treasury yield curve data across short- and long-duration maturities.
 - Perform comparative analysis, trend analysis, and high-level financial reasoning based on retrieved data.
-- Do not iterate on the same financial analysis for the same objective. Only use this tool once unless you need a new and distict analysis.
+- Do not iterate on the same financial analysis for the same objective. Only use this tool once unless you need a new and distinct analysis.
+
+Note: For macroeconomic data (GDP, inflation, rates, yield curves, credit spreads, etc.) use macroResearcher instead.
 
 Usage:
-Use this tool whenever financial data, company fundamentals, macro rate context, or investment-oriented analysis will add value to the insight.
+Use this tool whenever company-specific financial data, fundamentals, or investment-oriented analysis will add value to the insight.
 
-Provide the following sructured information to the financialAnalyst:
+Provide the following structured information to the financialAnalyst:
 
   Today's date:
   Objective:
   Request:
-  Scope: (tickers / macro series / other)
+  Scope: (tickers)
   Timeframe: (quarters/years; as-of date)
+  Constraints: (no speculation, cite numbers, handle missing data)`,
+});
+
+const macroResearcher = createMacroResearcherAgent();
+
+const macroResearcherTool = macroResearcher.asTool({
+  toolName: "macroResearcher",
+  toolDescription: `This tool provides autonomous macroeconomic research and data retrieval using FRED (Federal Reserve Economic Data).
+
+Capabilities:
+- Growth & output: Real GDP, industrial production, capacity utilization, real consumption, business investment.
+- Labor market: Unemployment, participation, employment-population ratio, payrolls, jobless claims, job openings, quits rate.
+- Inflation & prices: CPI, core CPI, PCE, core PCE, trimmed mean PCE (Dallas Fed), median CPI (Cleveland Fed).
+- Wages & income: Average hourly earnings, employment cost index, real disposable income.
+- Monetary policy & liquidity: Fed funds rate, IORB, Fed balance sheet, bank reserves, reverse repo, M2.
+- Rates & yield curve: 2Y and 10Y Treasury yields, 10Y-2Y spread, term premium, breakeven inflation.
+- Credit & financial stress: Baa corporate spread, high yield OAS, Senior Loan Officer Survey, Chicago Fed NFCI, bank credit.
+- Housing: Starts, permits, existing home sales, Case-Shiller home prices, 30-year mortgage rate.
+- Sentiment: University of Michigan consumer sentiment.
+- Fetch latest observations or data within specific date ranges.
+- Request data transformations (percent change, year-over-year change, etc.).
+- Compare multiple macro indicators side-by-side.
+- Analyze trends, inflection points, divergences, and policy implications.
+- Do not iterate on the same macro analysis for the same objective. Only use this tool once unless you need a new and distinct analysis.
+
+Usage:
+Use this tool whenever macroeconomic data, business cycle context, monetary policy analysis, or broad economic trends will add value to the insight.
+
+Provide the following structured information to the macroResearcher:
+
+  Today's date:
+  Objective:
+  Request:
+  Scope: (indicators / time range / other)
+  Timeframe: (months/quarters/years; as-of date)
   Constraints: (no speculation, cite numbers, handle missing data)`,
 });
 
@@ -89,7 +126,12 @@ function createInsightAgent() {
     name: "Insight Generator",
     instructions: systemPrompt,
     model: "gpt-5.2",
-    tools: [financialAnalystTool, researcherTool, fetchTakeawayByIdTool],
+    tools: [
+      financialAnalystTool,
+      macroResearcherTool,
+      researcherTool,
+      fetchTakeawayByIdTool,
+    ],
     outputType: insightSchema,
     modelSettings: {
       parallelToolCalls: false,

@@ -28,12 +28,13 @@ INPUTS YOU WILL RECEIVE
 Research Process:
 - Using the research theme as inspiration, deeply think about the initial context that you are given to inform potential insights. Think creatively.
 - Start by selecting the 1–3 most relevant takeaways based on your candidate insights and call fetchTakeawayById for each.
-- Use financialAnalyst for supporting public-market or macro-rate data.
+- Use financialAnalyst for supporting public-market or company-specific financial data.
+- Use macroResearcher for macroeconomic data from FRED (GDP, inflation, labor market, wages, monetary policy, yield curve, credit spreads, financial conditions, housing, and consumer sentiment).
 - Use researcher if you need additional takeaways, competitive landscape, historical precedents, or cross-domain analogies that strengthen the insight.
 - Continue to read more takeaways until you have a strong and convincing edidence base for your insight.
-- Only use financialAnalyst or researcher tool a second time for queries that are completely unrelated to previous queries.
+- Only use financialAnalyst, macroResearcher, or researcher tool a second time for queries that are completely unrelated to previous queries.
 
-Insights with financial evidence are more likely to be interesting and consequential.
+Insights with financial or macroeconomic evidence are more likely to be interesting and consequential.
 Insights with evidence/references from multiple sources are more interesting and convincing. Always use at least 2 difference sources.
 
 ---

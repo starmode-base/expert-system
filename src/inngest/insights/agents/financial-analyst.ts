@@ -12,7 +12,6 @@ import {
   fetchLatestBalanceSheetByMetric,
   fetchLatestCashFlowByMetric,
   fetchLatestIncomeStatementByMetric,
-  fetchLatestTreasuryYield,
 } from "../tool-functions/tools-financial";
 import {
   balanceSheetReportMetrics,
@@ -20,17 +19,6 @@ import {
   companyOverviewMetrics,
   incomeStatementReportMetrics,
 } from "~/server/financial-data-api/alpha-vantage-api";
-
-const treasuryYieldIntervalOptions = ["daily", "weekly", "monthly"] as const;
-
-const treasuryYieldMaturityOptions = [
-  "3month",
-  "2year",
-  "5year",
-  "7year",
-  "10year",
-  "30year",
-] as const;
 
 const fetchCompanyOverviewByMetricParams = z.object({
   symbol: z.string().describe("Ticker symbol to look up"),
@@ -158,45 +146,11 @@ const fetchLatestCashFlowByMetricTool: FunctionTool<
   },
 });
 
-const fetchLatestTreasuryYieldParams = z.object({
-  interval: z
-    .enum(treasuryYieldIntervalOptions)
-    .describe("Frequency of the treasury yield data points"),
-  maturity: z
-    .enum(treasuryYieldMaturityOptions)
-    .describe("Maturity of the treasury yield to retrieve"),
-  lastNPoints: z
-    .number()
-    .int()
-    .min(1)
-    .describe("Number of most recent data points to include"),
-});
-
-const fetchLatestTreasuryYieldTool: FunctionTool<
-  unknown,
-  typeof fetchLatestTreasuryYieldParams,
-  Awaited<ReturnType<typeof fetchLatestTreasuryYield>>
-> = tool({
-  name: "fetchLatestTreasuryYield",
-  description:
-    "Fetch the most recent treasury yield data points for the given maturity and interval",
-  parameters: fetchLatestTreasuryYieldParams,
-  strict: true,
-  execute: async (args: z.infer<typeof fetchLatestTreasuryYieldParams>) => {
-    return await fetchLatestTreasuryYield(
-      args.interval,
-      args.maturity,
-      args.lastNPoints,
-    );
-  },
-});
-
 export const financialTools = [
   fetchCompanyOverviewByMetricTool,
   fetchLatestIncomeStatementByMetricTool,
   fetchLatestBalanceSheetByMetricTool,
   fetchLatestCashFlowByMetricTool,
-  fetchLatestTreasuryYieldTool,
 ];
 
 //--------------------------------
@@ -204,17 +158,18 @@ export const financialTools = [
 //--------------------------------
 
 const financialAnalysisSystemPrompt = `
-You are a financial analysis agent. Follow this process:
+You are a financial analysis agent focused on company-level fundamentals. Follow this process:
 1) Read the request and the objective. Identify the tickers, timeframe, and specific questions to answer.
 2) Use:
    - fetchCompanyOverviewByMetric for static company facts (e.g., sector, market cap, beta).
    - fetchLatestIncomeStatementByMetric for quarterly P&L metrics (e.g., revenue, EPS, net income, margins).
    - fetchLatestBalanceSheetByMetric for balance sheet strength (e.g., cash, debt, current ratio).
    - fetchLatestCashFlowByMetric for cash generation (e.g., operating cash flow, free cash flow).
-   - fetchLatestTreasuryYield for risk-free rate context (set interval/maturity appropriately).
 3) Keep queries tight.
-4) When unsure which metrics matter, default to revenue, net income, EPS, gross/operating margin, operating cash flow, free cash flow, total debt, cash, interest expense, and relevant treasury yields.
+4) When unsure which metrics matter, default to revenue, net income, EPS, gross/operating margin, operating cash flow, free cash flow, total debt, cash, and interest expense.
 5) After gathering data, synthesize how the numbers relate to the objective (trend direction, growth, liquidity, leverage, cash generation). If data is unavailable, state that clearly.
+
+Note: For macroeconomic data (GDP, inflation, rates, yield curves, etc.) a separate macroResearcher agent exists. Focus only on company-specific financial data.
 
 Rules:
 - Never make more than 5 tool calls at a time.
