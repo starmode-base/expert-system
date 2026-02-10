@@ -29,7 +29,7 @@ Research Process:
 - Using the research theme as inspiration, deeply think about the initial context that you are given to inform potential insights. Think creatively.
 - Start by selecting the 1–3 most relevant takeaways based on your candidate insights and call fetchTakeawayById for each.
 - Use financialAnalyst for supporting public-market or company-specific financial data.
-- Use macroResearcher for macroeconomic data from FRED (GDP, CPI, unemployment, fed funds rate, payrolls, housing, industrial production, consumer sentiment, Treasury yields, PCE).
+- Use macroResearcher for macroeconomic data from FRED (GDP, inflation, labor market, wages, monetary policy, yield curve, credit spreads, financial conditions, housing, and consumer sentiment).
 - Use researcher if you need additional takeaways, competitive landscape, historical precedents, or cross-domain analogies that strengthen the insight.
 - Continue to read more takeaways until you have a strong and convincing edidence base for your insight.
 - Only use financialAnalyst, macroResearcher, or researcher tool a second time for queries that are completely unrelated to previous queries.

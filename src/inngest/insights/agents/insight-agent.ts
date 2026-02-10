@@ -69,7 +69,15 @@ const macroResearcherTool = macroResearcher.asTool({
   toolDescription: `This tool provides autonomous macroeconomic research and data retrieval using FRED (Federal Reserve Economic Data).
 
 Capabilities:
-- Retrieve real GDP, CPI, PCE, unemployment, nonfarm payrolls, fed funds rate, 10-year Treasury yield, industrial production, housing starts, and consumer sentiment data.
+- Growth & output: Real GDP, industrial production, capacity utilization, real consumption, business investment.
+- Labor market: Unemployment, participation, employment-population ratio, payrolls, jobless claims, job openings, quits rate.
+- Inflation & prices: CPI, core CPI, PCE, core PCE, trimmed mean PCE (Dallas Fed), median CPI (Cleveland Fed).
+- Wages & income: Average hourly earnings, employment cost index, real disposable income.
+- Monetary policy & liquidity: Fed funds rate, IORB, Fed balance sheet, bank reserves, reverse repo, M2.
+- Rates & yield curve: 2Y and 10Y Treasury yields, 10Y-2Y spread, term premium, breakeven inflation.
+- Credit & financial stress: Baa corporate spread, high yield OAS, Senior Loan Officer Survey, Chicago Fed NFCI, bank credit.
+- Housing: Starts, permits, existing home sales, Case-Shiller home prices, 30-year mortgage rate.
+- Sentiment: University of Michigan consumer sentiment.
 - Fetch latest observations or data within specific date ranges.
 - Request data transformations (percent change, year-over-year change, etc.).
 - Compare multiple macro indicators side-by-side.
