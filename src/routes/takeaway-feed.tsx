@@ -112,12 +112,14 @@ function RouteComponent() {
   const [filters, setFilters] = useState<FilterParams>(filtersProp);
 
   const handleSearch = () => {
-    const existingPath = router.state.location.pathname;
     void router.navigate({
-      to: existingPath,
+      to: router.state.location.pathname,
       search: {
         searchInput,
-        filters: router.state.location.search.filters,
+        filters: {
+          ...filters,
+          sources: filters.sources.map(normalizeFilterValue),
+        },
       },
     });
   };
