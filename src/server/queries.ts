@@ -26,17 +26,6 @@ import {
 } from "~/postgres/schema";
 import { authMiddleware } from "~/middleware/auth-middleware";
 
-export const queryDocuments = createServerFn({
-  method: "GET",
-}).handler(async () => {
-  const documents = await db.query.documents
-    .findMany
-    // {} TODO: add user and org foreign keys
-    ();
-
-  return documents;
-});
-
 export const queryDocumentsPaginated = createServerFn({
   method: "GET",
 })
@@ -153,63 +142,6 @@ export interface InsightsItem {
   insightTakeaways: InsightTakeawayItem[];
 }
 
-export const queryPublicInsightsFeed = createServerFn({
-  method: "GET",
-}).handler(async (): Promise<InsightsItem[]> => {
-  const insights = await db.query.insights.findMany({
-    where: isNotNull(schema.insights.insight),
-    with: {
-      insightTakeaways: {
-        with: {
-          takeaway: {
-            with: {
-              document: true,
-            },
-          },
-        },
-      },
-      insightReferences: {
-        with: {
-          takeawayReference: {
-            with: { takeaway: { with: { document: true } } },
-          },
-        },
-        orderBy: (insightReferences, { asc }) => [
-          asc(insightReferences.insightReferenceNumber),
-        ],
-      },
-    },
-    orderBy: (insights, { desc }) => [desc(insights.createdAt)],
-  });
-
-  return insights.map((insight) => ({
-    insight,
-    insightReferences: insight.insightReferences.map((row) => ({
-      insightReferenceNumber: row.insightReferenceNumber,
-      referenceId: row.referenceId,
-      reference: row.takeawayReference.reference,
-      documentId: row.takeawayReference.takeaway.document.id,
-      documentTitle: row.takeawayReference.takeaway.document.title,
-      documentSource: row.takeawayReference.takeaway.document.source,
-      documentLink: row.takeawayReference.takeaway.document.link,
-      documentPublicationDate:
-        row.takeawayReference.takeaway.document.publicationDate,
-    })),
-    insightTakeaways: insight.insightTakeaways
-      .filter((row) => row.type === "takeaway")
-      .map((row) => ({
-        takeawayId: row.takeawayId,
-        title: row.takeaway.title,
-        summary: row.takeaway.summary,
-        documentId: row.takeaway.document.id,
-        documentTitle: row.takeaway.document.title,
-        documentSource: row.takeaway.document.source,
-        documentLink: row.takeaway.document.link,
-        documentPublicationDate: row.takeaway.document.publicationDate,
-      })),
-  }));
-});
-
 export const queryPublicInsightById = createServerFn({ method: "GET" })
   .validator(z.string()) // insightId
   .handler(async ({ data: insightId }): Promise<InsightsItem | null> => {
@@ -271,66 +203,6 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
           documentPublicationDate: row.takeaway.document.publicationDate,
         })),
     };
-  });
-
-export const queryInsightsFeed = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }): Promise<InsightsItem[]> => {
-    const insights = await db.query.insights.findMany({
-      where: and(
-        eq(schema.insights.userId, context.viewer.id),
-        isNotNull(schema.insights.insight),
-      ),
-      with: {
-        insightTakeaways: {
-          with: {
-            takeaway: {
-              with: {
-                document: true,
-              },
-            },
-          },
-        },
-        insightReferences: {
-          with: {
-            takeawayReference: {
-              with: { takeaway: { with: { document: true } } },
-            },
-          },
-          orderBy: (insightReferences, { asc }) => [
-            asc(insightReferences.insightReferenceNumber),
-          ],
-        },
-      },
-      orderBy: (insights, { desc }) => [desc(insights.createdAt)],
-    });
-
-    return insights.map((insight) => ({
-      insight,
-      insightReferences: insight.insightReferences.map((row) => ({
-        insightReferenceNumber: row.insightReferenceNumber,
-        referenceId: row.referenceId,
-        reference: row.takeawayReference.reference,
-        documentId: row.takeawayReference.takeaway.document.id,
-        documentTitle: row.takeawayReference.takeaway.document.title,
-        documentSource: row.takeawayReference.takeaway.document.source,
-        documentLink: row.takeawayReference.takeaway.document.link,
-        documentPublicationDate:
-          row.takeawayReference.takeaway.document.publicationDate,
-      })),
-      insightTakeaways: insight.insightTakeaways
-        .filter((row) => row.type === "takeaway")
-        .map((row) => ({
-          takeawayId: row.takeawayId,
-          title: row.takeaway.title,
-          summary: row.takeaway.summary,
-          documentId: row.takeaway.document.id,
-          documentTitle: row.takeaway.document.title,
-          documentSource: row.takeaway.document.source,
-          documentLink: row.takeaway.document.link,
-          documentPublicationDate: row.takeaway.document.publicationDate,
-        })),
-    }));
   });
 
 // Shared mapping for paginated insight feed queries
@@ -583,43 +455,6 @@ export const getFilterValues = createServerFn({
       new Set(documentSources.map((source) => source.source)),
     ),
   };
-});
-
-export const queryTakeaways = createServerFn({
-  method: "GET",
-}).handler(async (): Promise<TakeawaySearchResult[]> => {
-  const takeaways = await db.query.takeaways.findMany({
-    with: {
-      category: true,
-      document: true,
-      takeawayReferences: true,
-    },
-  });
-
-  const orderedResults = takeaways.sort(
-    (a, b) =>
-      b.document.publicationDate.getTime() -
-        a.document.publicationDate.getTime() ||
-      b.createdAt.getTime() - a.createdAt.getTime(),
-  );
-
-  return orderedResults.map((takeaway) => ({
-    id: takeaway.id,
-    documentId: takeaway.documentId,
-    title: takeaway.title,
-    publicationDate: takeaway.document.publicationDate,
-    createdAt: takeaway.createdAt,
-    takeaway: takeaway.takeaway,
-    summary: takeaway.summary,
-    concept: takeaway.concept,
-    source: takeaway.document.source,
-    documentTitle: takeaway.document.title,
-    documentSource: takeaway.document.source,
-    category: takeaway.category?.name,
-    similarity: 0,
-    references: takeaway.takeawayReferences,
-    documentLink: takeaway.document.link,
-  }));
 });
 
 const takeawayFiltersSchema = z.object({
