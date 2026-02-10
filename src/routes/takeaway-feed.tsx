@@ -1,16 +1,14 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   FilterBar,
   FilterParams,
   normalizeFilterValue,
 } from "~/components/filter-bar";
 import { TakeawayTile } from "~/components/takeaway-tile";
-import {
-  getFilterValues,
-  // queryTakeaways,
-} from "~/server/queries";
-import { searchTakeawaysSF, TakeawaySearchResult } from "~/server/searchSFs";
+import { useInfiniteScroll } from "~/lib/use-infinite-scroll";
+import { getFilterValues } from "~/server/queries";
+import { searchTakeawaysSF } from "~/server/searchSFs";
 
 /**
  * denormalizeFilters takes normalized filter values from the URL and maps them back
@@ -55,20 +53,7 @@ export const Route = createFileRoute("/takeaway-feed")({
     const { sources } = await getFilterValues();
     const { searchInput, filters } = search;
 
-    const takeaways = await searchTakeawaysSF({
-      data: {
-        searchInput,
-        filters: filters
-          ? denormalizeFilters(filters, sources)
-          : {
-              sources,
-              startDate: undefined,
-              endDate: undefined,
-            },
-      },
-    });
-
-    const filtersProp = filters
+    const resolvedFilters = filters
       ? denormalizeFilters(filters, sources)
       : {
           sources,
@@ -76,11 +61,20 @@ export const Route = createFileRoute("/takeaway-feed")({
           endDate: undefined,
         };
 
+    const page = await searchTakeawaysSF({
+      data: {
+        searchInput,
+        filters: resolvedFilters,
+        cursor: null,
+        limit: 20,
+      },
+    });
+
     return {
-      takeaways,
+      page,
       sources,
       searchInput,
-      filtersProp,
+      filtersProp: resolvedFilters,
     };
   },
   component: RouteComponent,
@@ -88,30 +82,44 @@ export const Route = createFileRoute("/takeaway-feed")({
 
 function RouteComponent() {
   const {
-    takeaways,
+    page,
     sources,
     searchInput: searchInputProp,
     filtersProp,
   } = Route.useLoaderData();
   const router = useRouter();
-  const [takeawaySearchResults, setTakeawaySearchResults] =
-    useState<TakeawaySearchResult[]>(takeaways);
 
-  // Keep results in‑sync when loader re‑runs (e.g. after filters change)
-  useEffect(() => {
-    setTakeawaySearchResults(takeaways);
-  }, [takeaways]);
+  const resetKey = JSON.stringify({
+    searchInput: searchInputProp,
+    filters: filtersProp,
+  });
+
+  const { items, sentinelRef, isLoadingMore } = useInfiniteScroll({
+    initialData: page,
+    fetchPage: (cursor) =>
+      searchTakeawaysSF({
+        data: {
+          searchInput: searchInputProp,
+          filters: filtersProp,
+          cursor,
+          limit: 20,
+        },
+      }),
+    resetKey,
+  });
 
   const [searchInput, setSearchInput] = useState(searchInputProp);
   const [filters, setFilters] = useState<FilterParams>(filtersProp);
 
   const handleSearch = () => {
-    const existingPath = router.state.location.pathname;
     void router.navigate({
-      to: existingPath,
+      to: router.state.location.pathname,
       search: {
         searchInput,
-        filters: router.state.location.search.filters,
+        filters: {
+          ...filters,
+          sources: filters.sources.map(normalizeFilterValue),
+        },
       },
     });
   };
@@ -152,15 +160,20 @@ function RouteComponent() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {takeawaySearchResults.length === 0 ? (
+          {items.length === 0 ? (
             <p className="py-4 text-center text-gray-500">
               No takeaways found.
             </p>
           ) : (
             <div className="border-t border-gray-200">
-              {takeawaySearchResults.map((takeaway) => (
+              {items.map((takeaway) => (
                 <TakeawayTile key={takeaway.id} takeaway={takeaway} />
               ))}
+              <div ref={sentinelRef} className="py-4 text-center">
+                {isLoadingMore ? (
+                  <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                ) : null}
+              </div>
             </div>
           )}
         </div>

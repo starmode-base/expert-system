@@ -96,7 +96,7 @@ export default tseslint.config(
   },
 
   {
-    files: ["app/routes/**/*.tsx"],
+    files: ["src/routes/**/*.tsx"],
     rules: {
       "@typescript-eslint/only-throw-error": "off",
     },

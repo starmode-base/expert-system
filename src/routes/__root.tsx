@@ -1,11 +1,10 @@
 import {
   HeadContent,
   Link,
-  Navigate,
   Outlet,
   Scripts,
   createRootRoute,
-  useLocation,
+  redirect,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
@@ -19,6 +18,14 @@ import {
   useAuth,
   UserButton,
 } from "@clerk/tanstack-start";
+import { createServerFn } from "@tanstack/react-start";
+import { getWebRequest } from "vinxi/http";
+import { getClerkUserId } from "~/server/auth";
+
+const checkAuth = createServerFn({ method: "GET" }).handler(async () => {
+  const clerkUserId = await getClerkUserId(getWebRequest());
+  return !!clerkUserId;
+});
 
 const SITE_ORIGIN = "https://expert-system.starmode.dev";
 const DEFAULT_IMAGE_URL = `${SITE_ORIGIN}/logo-x.jpg`;
@@ -61,6 +68,21 @@ const head = {
 };
 
 export const Route = createRootRoute({
+  beforeLoad: async ({ location }) => {
+    const isAuthenticated = await checkAuth();
+
+    const isGuestPath =
+      location.pathname.startsWith("/guest/") ||
+      location.pathname.startsWith("/insight/");
+
+    if (!isAuthenticated && !isGuestPath) {
+      throw redirect({ to: "/guest/research-feed" });
+    }
+
+    if (isAuthenticated && location.pathname === "/guest/research-feed") {
+      throw redirect({ to: "/research-feed" });
+    }
+  },
   head: () => head,
   errorComponent: (props) => {
     return (
@@ -89,16 +111,12 @@ function RootDocument(props: React.PropsWithChildren) {
           <HeadContent />
         </head>
         <body>
-          <SignedOut>
-            <SignedOutRouterGate>{props.children}</SignedOutRouterGate>
-          </SignedOut>
+          <SignedOut>{props.children}</SignedOut>
           <SignedIn>
-            <SignedInRouterGate>
-              <div className="min-h-dvh bg-slate-100">
-                <NavBar />
-                {props.children}
-              </div>
-            </SignedInRouterGate>
+            <div className="min-h-dvh bg-slate-100">
+              <NavBar />
+              {props.children}
+            </div>
           </SignedIn>
           <TanStackRouterDevtools position="bottom-right" />
           <Scripts />
@@ -171,31 +189,4 @@ function NavBar() {
       </nav>
     </header>
   );
-}
-
-// TODO: These gates are slow and inelegant solutions. Ask Mikael how to improve this.
-
-function SignedOutRouterGate(props: React.PropsWithChildren) {
-  const location = useLocation();
-
-  if (
-    !(
-      location.pathname.startsWith("/guest/research-feed") ||
-      location.pathname.startsWith("/insight/")
-    )
-  ) {
-    return <Navigate to="/guest/research-feed" />;
-  }
-
-  return props.children;
-}
-
-function SignedInRouterGate(props: React.PropsWithChildren) {
-  const location = useLocation();
-
-  if (location.pathname === "/guest/research-feed") {
-    return <Navigate to="/research-feed" replace />;
-  }
-
-  return props.children;
 }

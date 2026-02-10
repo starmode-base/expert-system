@@ -1,18 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { NewsFeedList } from "~/components/news-feed-list";
-import { queryDocuments } from "~/server/queries";
+import { queryDocumentsPaginated } from "~/server/queries";
 
 export const Route = createFileRoute("/news-feed/")({
   loader: async () => {
-    const documents = await queryDocuments();
-    return { documents };
+    const page = await queryDocumentsPaginated({
+      data: { cursor: null, limit: 25 },
+    });
+    return { page };
   },
 
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { documents } = Route.useLoaderData();
+  const { page } = Route.useLoaderData();
 
   return (
     <div className="flex h-[calc(100dvh-64px)] overflow-hidden bg-gray-50">
@@ -24,7 +26,7 @@ function RouteComponent() {
           </h1>
         </div>
 
-        <NewsFeedList documents={documents} />
+        <NewsFeedList initialPage={page} />
       </div>
 
       {/* Empty State - desktop only */}

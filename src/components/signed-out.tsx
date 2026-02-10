@@ -1,14 +1,18 @@
 import { SignInButton, SignUpButton } from "@clerk/tanstack-start";
 import { useEffect, useRef, useState } from "react";
 import { InsightsFeed } from "~/components/insight-feed/insights-feed";
-import { type InsightsItem } from "~/server/queries";
+import type { PaginatedResult } from "~/server/pagination";
+import {
+  type InsightsItem,
+  queryPublicInsightsFeedPaginated,
+} from "~/server/queries";
 
 export interface SignedOutExperienceProps {
-  items: InsightsItem[];
+  initialPage: PaginatedResult<InsightsItem>;
 }
 
 export function SignedOutExperience(props: SignedOutExperienceProps) {
-  const items = props.items;
+  const { initialPage } = props;
   const feedScrollRef = useRef<HTMLDivElement | null>(null);
   const [fadeProgress, setFadeProgress] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -146,7 +150,14 @@ export function SignedOutExperience(props: SignedOutExperienceProps) {
           style={feedStyle}
         >
           <div ref={feedScrollRef} className="flex-1 overflow-y-auto">
-            <InsightsFeed items={items} />
+            <InsightsFeed
+              initialPage={initialPage}
+              fetchPage={(cursor) =>
+                queryPublicInsightsFeedPaginated({
+                  data: { cursor, limit: 10 },
+                })
+              }
+            />
           </div>
         </div>
       </div>
