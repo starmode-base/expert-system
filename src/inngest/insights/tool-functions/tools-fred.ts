@@ -123,12 +123,7 @@ export async function fetchMultipleFredSeries(
   units?: FredUnit,
   frequency?: FredFrequency,
   aggregationMethod?: FredAggregationMethod,
-): Promise<
-  Record<
-    string,
-    { description: string; data: FredObservation[] }
-  >
-> {
+): Promise<Record<string, { description: string; data: FredObservation[] }>> {
   const results: Record<
     string,
     { description: string; data: FredObservation[] }

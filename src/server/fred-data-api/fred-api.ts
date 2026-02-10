@@ -113,8 +113,7 @@ export const fredSeriesDescriptions: Record<FredSeriesId, string> = {
     "Average Hourly Earnings of All Employees, Total Private ($/hour)",
   ECIALLCIV:
     "Employment Cost Index: Total Compensation, All Civilian (index, Dec 2005=100)",
-  DSPIC96:
-    "Real Disposable Personal Income (billions of chained 2017 dollars)",
+  DSPIC96: "Real Disposable Personal Income (billions of chained 2017 dollars)",
 
   // Monetary Policy / Liquidity
   FEDFUNDS: "Effective Federal Funds Rate – monthly average (%)",
@@ -147,15 +146,13 @@ export const fredSeriesDescriptions: Record<FredSeriesId, string> = {
   TOTBKCR: "Bank Credit, All Commercial Banks (billions of dollars, SA)",
 
   // Housing
-  HOUST:
-    "New Privately-Owned Housing Units Started (thousands of units, SAAR)",
+  HOUST: "New Privately-Owned Housing Units Started (thousands of units, SAAR)",
   PERMIT:
     "New Privately-Owned Housing Units Authorized in Permit-Issuing Places (thousands of units, SAAR)",
   EXHOSLUSM495S: "Existing Home Sales (thousands of units, SAAR)",
   CSUSHPINSA:
     "S&P/Case-Shiller U.S. National Home Price Index (Jan 2000=100, NSA)",
-  MORTGAGE30US:
-    "30-Year Fixed Rate Mortgage Average in the United States (%)",
+  MORTGAGE30US: "30-Year Fixed Rate Mortgage Average in the United States (%)",
 
   // Sentiment
   UMCSENT: "University of Michigan: Consumer Sentiment (1966:Q1=100)",

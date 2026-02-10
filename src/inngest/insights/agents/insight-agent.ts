@@ -126,7 +126,12 @@ function createInsightAgent() {
     name: "Insight Generator",
     instructions: systemPrompt,
     model: "gpt-5.2",
-    tools: [financialAnalystTool, macroResearcherTool, researcherTool, fetchTakeawayByIdTool],
+    tools: [
+      financialAnalystTool,
+      macroResearcherTool,
+      researcherTool,
+      fetchTakeawayByIdTool,
+    ],
     outputType: insightSchema,
     modelSettings: {
       parallelToolCalls: false,

@@ -56,9 +56,7 @@ const fetchLatestFredObservationsTool: FunctionTool<
     "Fetch the latest N observations for a single FRED macro series (e.g. GDP, CPI, unemployment rate). Returns data newest-first.",
   parameters: fetchLatestFredObservationsParams,
   strict: true,
-  execute: async (
-    args: z.infer<typeof fetchLatestFredObservationsParams>,
-  ) => {
+  execute: async (args: z.infer<typeof fetchLatestFredObservationsParams>) => {
     return await fetchLatestFredObservations(
       args.seriesId,
       args.lastN,
@@ -73,12 +71,8 @@ const fetchFredObservationsByDateRangeParams = z.object({
   seriesId: z
     .enum(fredSeriesIds)
     .describe("FRED series identifier (e.g. GDPC1, UNRATE, CPIAUCSL)"),
-  observationStart: z
-    .string()
-    .describe("Start date in YYYY-MM-DD format"),
-  observationEnd: z
-    .string()
-    .describe("End date in YYYY-MM-DD format"),
+  observationStart: z.string().describe("Start date in YYYY-MM-DD format"),
+  observationEnd: z.string().describe("End date in YYYY-MM-DD format"),
   units: z
     .enum(fredUnits)
     .optional()
@@ -149,7 +143,7 @@ const fetchMultipleFredSeriesParams = z.object({
     .array(z.enum(fredSeriesIds))
     .min(1)
     .describe(
-      "Array of FRED series identifiers to fetch (e.g. [\"GDPC1\", \"UNRATE\", \"CPIAUCSL\"])",
+      'Array of FRED series identifiers to fetch (e.g. ["GDPC1", "UNRATE", "CPIAUCSL"])',
     ),
   lastN: z
     .number()
