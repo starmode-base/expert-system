@@ -10,25 +10,28 @@ Reflect on the current coding session, identify reusable lessons, and persist th
 ## Step 1: Identify learnings
 
 Review the conversation for:
+
 - Errors that required multiple attempts to fix
 - Tooling surprises (e.g. auto-generated files, deprecated APIs)
 - Project-specific conventions that weren't obvious
 - Patterns that worked well and should be repeated
 
 For each candidate learning, ask:
+
 - **Is it already enforced?** If a linter, type checker, or existing rule already catches it, it doesn't need documenting — the tool will teach the agent at runtime.
 - **Is it project-specific?** Generic best practices (e.g. "write tests") don't belong. Only capture knowledge an agent couldn't infer from the code alone.
 - **Is it durable?** Avoid time-sensitive notes. If something will change soon, skip it.
 
 ## Step 2: Choose the right format
 
-| Format | When to use |
-|--------|-------------|
-| **Root `AGENTS.md`** | Project-wide guidance (build tools, routing, deploy) |
+| Format                       | When to use                                                                            |
+| ---------------------------- | -------------------------------------------------------------------------------------- |
+| **Root `AGENTS.md`**         | Project-wide guidance (build tools, routing, deploy)                                   |
 | **Subdirectory `AGENTS.md`** | Scoped to a specific area (e.g. `src/inngest/AGENTS.md` for inngest-specific patterns) |
-| **New skill** | Reusable multi-step workflow that benefits from structured instructions |
+| **New skill**                | Reusable multi-step workflow that benefits from structured instructions                |
 
 Guidelines for placement:
+
 - Keep entries at the **narrowest relevant scope**. A lesson about inngest job patterns belongs in `src/inngest/AGENTS.md`, not the root.
 - If an `AGENTS.md` already exists at the target level, **append** to it. Don't create a competing file.
 - If the learning is a multi-step process with decision points or templates, create a **skill** instead.
@@ -36,12 +39,14 @@ Guidelines for placement:
 ## Step 3: Write the entry
 
 For `AGENTS.md` entries:
+
 - Use a descriptive `##` heading
 - Keep it to 1-4 sentences. Be direct.
 - Include a short code example only if the correct pattern is non-obvious.
 - Don't repeat what linters or type checkers already enforce.
 
 For new skills:
+
 - Follow the skill creation guidelines in `~/.cursor/skills-cursor/create-skill/SKILL.md`
 - Place project skills in `.ai/skills/`
 

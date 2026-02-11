@@ -50,14 +50,14 @@ description: <One sentence. What it does and when to use it.>
 
 ## Frontmatter rules
 
-| Field | Required | Format |
-|-------|----------|--------|
-| `name` | Yes | Matches the folder name, kebab-case |
-| `description` | Yes | Single sentence. Starts with a verb. Ends with a trigger phrase ("Use when ...") |
+| Field         | Required | Format                                                                           |
+| ------------- | -------- | -------------------------------------------------------------------------------- |
+| `name`        | Yes      | Matches the folder name, kebab-case                                              |
+| `description` | Yes      | Single sentence. Starts with a verb. Ends with a trigger phrase ("Use when ...") |
 
 ## Writing guidelines
 
-- Keep instructions actionable — tell the agent *what to do*, not background theory.
+- Keep instructions actionable — tell the agent _what to do_, not background theory.
 - Include bash snippets or code examples when the correct invocation is non-obvious.
 - Target 15–60 lines. Short skills are easier for agents to follow.
 - Don't duplicate guidance that already exists in `AGENTS.md` or other skills.
