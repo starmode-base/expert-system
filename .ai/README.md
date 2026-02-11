@@ -18,6 +18,7 @@ Both tools resolve their expected paths through symlinks, so every skill is defi
 .ai/
 └── skills/
     ├── check/SKILL.md
+    ├── create-skill/SKILL.md
     ├── insight-backend-flow-doc-update/SKILL.md
     ├── pr-cleanup/SKILL.md
     ├── pr-description/SKILL.md
@@ -29,10 +30,13 @@ Both tools resolve their expected paths through symlinks, so every skill is defi
 
 ## Adding a skill
 
+Use the **create-skill** skill, or manually:
+
 ```bash
 mkdir .ai/skills/my-skill
-# Create SKILL.md with frontmatter (name, description) and instructions
 ```
+
+Then create `SKILL.md` with frontmatter (`name`, `description`) and step-by-step instructions. See `create-skill/SKILL.md` for the full template and guidelines.
 
 It will appear in both Cursor and Claude Code automatically — no extra steps.
 
