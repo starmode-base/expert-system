@@ -6,6 +6,10 @@ Single source of truth for agent skills used by **Cursor** and **Claude Code**.
 
 ```mermaid
 graph LR
+    subgraph Create
+        D["mkdir .ai/skills/my-skill"] --> E["Write SKILL.md"]
+    end
+    E --> A
     A[".ai/skills/"] -- symlink --> B[".cursor/skills/"]
     A -- symlink --> C[".claude/skills/"]
 ```
