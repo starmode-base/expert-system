@@ -43,7 +43,7 @@ For `AGENTS.md` entries:
 
 For new skills:
 - Follow the skill creation guidelines in `~/.cursor/skills-cursor/create-skill/SKILL.md`
-- Place project skills in `.cursor/skills/`
+- Place project skills in `.ai/skills/`
 
 ## Step 4: Verify
 
