@@ -5,6 +5,7 @@ import {
   listBlogFeedsSF,
   fetchFeedArticlesSF,
   toggleBlogEnabledSF,
+  addBlogFeedSF,
   type BlogFeed,
 } from "~/server/blog-feeds";
 import { sendEventSeedBlogsSF } from "~/server/inggest";
@@ -34,6 +35,9 @@ function BlogFeedsRoute() {
   const [seedStatus, setSeedStatus] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
   const [search, setSearch] = useState("");
+  const [addUrl, setAddUrl] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const filteredFeeds = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -48,6 +52,7 @@ function BlogFeedsRoute() {
   const fetchArticles = useServerFn(fetchFeedArticlesSF);
   const seedBlogs = useServerFn(sendEventSeedBlogsSF);
   const toggleEnabled = useServerFn(toggleBlogEnabledSF);
+  const addBlogFeed = useServerFn(addBlogFeedSF);
 
   const handleToggleEnabled = async (feed: BlogFeed) => {
     setToggling(true);
@@ -62,6 +67,23 @@ function BlogFeedsRoute() {
       // Silently fail — state stays unchanged
     } finally {
       setToggling(false);
+    }
+  };
+
+  const handleAddFeed = async () => {
+    const url = addUrl.trim();
+    if (!url) return;
+    setAdding(true);
+    setAddError(null);
+    try {
+      const feed = await addBlogFeed({ data: { xmlUrl: url } });
+      setFeeds((prev) => [feed, ...prev.filter((f) => f.id !== feed.id)]);
+      setAddUrl("");
+      void handleSelectFeed(feed);
+    } catch (e) {
+      setAddError(e instanceof Error ? e.message : "Failed to add feed");
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -112,80 +134,119 @@ function BlogFeedsRoute() {
       <div className="mx-auto flex h-full max-w-4xl flex-col px-2 py-4 sm:px-4">
         <div className="flex min-h-0 flex-1 gap-4">
           {/* Feed list */}
-          <div className="flex w-72 shrink-0 flex-col border border-gray-200 bg-white">
-            <div className="shrink-0 border-b border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-semibold text-gray-900">
-                    Blog Feeds
-                  </h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {filteredFeeds.length === feeds.length
-                      ? `${feeds.length} feeds`
-                      : `${filteredFeeds.length} of ${feeds.length} feeds`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {seedStatus ? (
-                    <span className="text-xs text-gray-500">{seedStatus}</span>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={handleSeedBlogs}
-                    disabled={seeding}
-                    className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    {seeding ? "Seeding..." : "Seed Blogs"}
-                  </button>
-                </div>
-              </div>
-              <input
-                type="text"
-                placeholder="Search feeds..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
+          <div className="flex w-72 shrink-0 flex-col gap-3">
+            {/* Update blogs panel */}
+            <div className="shrink-0 border border-gray-200 bg-white p-4">
+              <h2
+                className="text-sm font-semibold text-gray-900"
+                title="Add a feed by URL or bulk-import from the curated OPML list"
+              >
+                Update Blogs
+              </h2>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void handleAddFeed();
                 }}
-                className="mt-3 w-full rounded border border-gray-200 px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-gray-400"
-              />
-            </div>
-            <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto">
-              {filteredFeeds.map((feed) => (
+                className="mt-2 flex gap-1.5"
+              >
+                <input
+                  type="text"
+                  placeholder="Paste feed URL..."
+                  value={addUrl}
+                  onChange={(e) => {
+                    setAddUrl(e.target.value);
+                    setAddError(null);
+                  }}
+                  className="min-w-0 flex-1 rounded border border-gray-200 px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-gray-400"
+                />
                 <button
-                  key={feed.xmlUrl}
-                  type="button"
-                  onClick={() => handleSelectFeed(feed)}
-                  className={`w-full cursor-pointer px-4 py-3 text-left transition-colors ${
-                    selectedFeed?.xmlUrl === feed.xmlUrl
-                      ? "bg-slate-50"
-                      : "hover:bg-gray-50"
-                  }`}
+                  type="submit"
+                  disabled={adding || !addUrl.trim()}
+                  className="shrink-0 rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${feed.enabled ? "bg-green-500" : "bg-gray-300"}`}
-                    />
-                    <span
-                      className={`truncate text-sm font-medium ${
-                        selectedFeed?.xmlUrl === feed.xmlUrl
-                          ? "text-slate-900"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      {feed.title}
-                    </span>
-                  </div>
-                  {feed.description ? (
-                    <div className="mt-0.5 line-clamp-1 pl-3 text-xs text-gray-400">
-                      {feed.description}
-                    </div>
-                  ) : feed.htmlUrl ? (
-                    <div className="mt-0.5 truncate pl-3 text-xs text-gray-400">
-                      {feed.htmlUrl.replace(/^https?:\/\//, "")}
-                    </div>
-                  ) : null}
+                  {adding ? "Adding..." : "Add"}
                 </button>
-              ))}
+              </form>
+              {addError ? (
+                <p className="mt-1 text-xs text-red-600">{addError}</p>
+              ) : null}
+              <div className="mt-2 flex items-center justify-between">
+                {seedStatus ? (
+                  <span className="text-xs text-gray-500">{seedStatus}</span>
+                ) : (
+                  <span />
+                )}
+                <button
+                  type="button"
+                  onClick={handleSeedBlogs}
+                  disabled={seeding}
+                  className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {seeding ? "Updating..." : "Update Blogs"}
+                </button>
+              </div>
+            </div>
+
+            {/* Blog feeds list */}
+            <div className="flex min-h-0 flex-1 flex-col border border-gray-200 bg-white">
+              <div className="shrink-0 border-b border-gray-200 p-4">
+                <h2 className="text-base font-semibold text-gray-900">
+                  Blog Feeds
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  {filteredFeeds.length === feeds.length
+                    ? `${feeds.length} feeds`
+                    : `${filteredFeeds.length} of ${feeds.length} feeds`}
+                </p>
+                <input
+                  type="text"
+                  placeholder="Search feeds..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                  }}
+                  className="mt-3 w-full rounded border border-gray-200 px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-gray-400"
+                />
+              </div>
+              <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto">
+                {filteredFeeds.map((feed) => (
+                  <button
+                    key={feed.xmlUrl}
+                    type="button"
+                    onClick={() => handleSelectFeed(feed)}
+                    className={`w-full cursor-pointer px-4 py-3 text-left transition-colors ${
+                      selectedFeed?.xmlUrl === feed.xmlUrl
+                        ? "bg-slate-50"
+                        : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${feed.enabled ? "bg-green-500" : "bg-gray-300"}`}
+                      />
+                      <span
+                        className={`truncate text-sm font-medium ${
+                          selectedFeed?.xmlUrl === feed.xmlUrl
+                            ? "text-slate-900"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        {feed.title}
+                      </span>
+                    </div>
+                    {feed.description ? (
+                      <div className="mt-0.5 line-clamp-1 pl-3 text-xs text-gray-400">
+                        {feed.description}
+                      </div>
+                    ) : feed.htmlUrl ? (
+                      <div className="mt-0.5 truncate pl-3 text-xs text-gray-400">
+                        {feed.htmlUrl.replace(/^https?:\/\//, "")}
+                      </div>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -231,6 +292,14 @@ function BlogFeedsRoute() {
                             ? "Full content in feed"
                             : "Requires scraping"}
                         </span>
+                        <a
+                          href={selectedFeed.xmlUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-blue-600 hover:bg-gray-200"
+                        >
+                          RSS Feed
+                        </a>
                         {selectedFeed.lastScrapedAt ? (
                           <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
                             Last scraped{" "}

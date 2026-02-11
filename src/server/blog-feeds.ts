@@ -2,6 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { eq, not } from "drizzle-orm";
 import { parseStringPromise } from "xml2js";
 import { z } from "zod";
+import {
+  extractFeedMetadata,
+  detectContentInFeedFromXml,
+} from "~/inngest/importers/scheduled/blogs/blog-helpers";
 import { db, schema } from "~/postgres/db";
 
 export interface BlogFeed {
@@ -69,6 +73,100 @@ export const toggleBlogEnabledSF = createServerFn({ method: "POST" })
     }
 
     return row;
+  });
+
+/**
+ * Add a blog feed by URL: fetch the feed, extract metadata, and upsert into the database.
+ */
+export const addBlogFeedSF = createServerFn({ method: "POST" })
+  .validator(z.object({ xmlUrl: z.url() }))
+  .handler(async ({ data }) => {
+    const response = await fetch(data.xmlUrl, {
+      headers: { "User-Agent": "ExpertSystem/1.0 RSS Reader" },
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch feed: ${response.status}`);
+    }
+
+    const xml = await response.text();
+    const metadata = await extractFeedMetadata(xml);
+    const contentInFeed = await detectContentInFeedFromXml(xml);
+
+    // Extract htmlUrl (site link) from the feed XML
+    const parsed = (await parseStringPromise(xml, {
+      trim: true,
+      explicitArray: true,
+    })) as Record<string, unknown>;
+
+    let htmlUrl: string | null = null;
+
+    // RSS 2.0: <channel><link>
+    const rss = parsed as {
+      rss?: { channel?: { link?: string[] }[] };
+    };
+    if (rss.rss?.channel?.[0]?.link?.[0]) {
+      htmlUrl = rss.rss.channel[0].link[0];
+    }
+
+    // Atom: <feed><link rel="alternate" href="...">
+    if (!htmlUrl) {
+      const atom = parsed as {
+        feed?: { link?: { $: { href: string; rel?: string } }[] };
+      };
+      const altLink = atom.feed?.link?.find((l) => l.$.rel === "alternate");
+      htmlUrl = altLink?.$.href ?? atom.feed?.link?.[0]?.$.href ?? null;
+    }
+
+    // RDF: <channel><link>
+    if (!htmlUrl) {
+      const rdf = parsed as {
+        "rdf:RDF"?: { channel?: { link?: string[] }[] };
+      };
+      htmlUrl = rdf["rdf:RDF"]?.channel?.[0]?.link?.[0] ?? null;
+    }
+
+    const title = metadata.title ?? data.xmlUrl;
+
+    const rows = await db
+      .insert(schema.blogs)
+      .values({
+        title,
+        description: metadata.description,
+        xmlUrl: data.xmlUrl,
+        htmlUrl,
+        enabled: false,
+        contentInFeed,
+      })
+      .onConflictDoUpdate({
+        target: schema.blogs.xmlUrl,
+        set: {
+          title,
+          description: metadata.description,
+          htmlUrl,
+          contentInFeed,
+        },
+      })
+      .returning();
+
+    const row = rows[0];
+    if (!row) {
+      throw new Error("Failed to upsert blog feed");
+    }
+
+    const feed: BlogFeed = {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      xmlUrl: row.xmlUrl,
+      htmlUrl: row.htmlUrl,
+      enabled: row.enabled,
+      contentInFeed: row.contentInFeed,
+      lastScrapedAt: row.lastScrapedAt?.toISOString() ?? null,
+    };
+
+    return feed;
   });
 
 /**
