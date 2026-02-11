@@ -61,6 +61,7 @@ Provide the following structured information to the financialAnalyst:
   Scope: (tickers)
   Timeframe: (quarters/years; as-of date)
   Constraints: (no speculation, cite numbers, handle missing data)`,
+  runOptions: { maxTurns: 40 },
 });
 
 const macroResearcher = createMacroResearcherAgent();
@@ -96,6 +97,7 @@ Provide the following structured information to the macroResearcher:
   Scope: (indicators / time range / other)
   Timeframe: (months/quarters/years; as-of date)
   Constraints: (no speculation, cite numbers, handle missing data)`,
+  runOptions: { maxTurns: 40 },
 });
 
 const researcher = createResearcherAgent();
@@ -115,6 +117,7 @@ Provide the following sructured information to the researcher:
   Research Objective:
   Context:
 `,
+  runOptions: { maxTurns: 40 },
 });
 
 // ---------------------------
@@ -157,7 +160,7 @@ export async function runInsightAgent(
   input: InsightAgentInput,
 ): Promise<InsightStructuredOutput> {
   const agent = createInsightAgent();
-  const result = await run(agent, buildUserPrompt(input));
+  const result = await run(agent, buildUserPrompt(input), { maxTurns: 40 });
 
   invariant(result.finalOutput, "No final output");
 
