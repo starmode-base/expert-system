@@ -24,8 +24,6 @@ const rawEnv = {
   ALPHAVANTAGE_API_KEY: process.env.ALPHAVANTAGE_API_KEY,
   FRED_API_KEY: process.env.FRED_API_KEY,
   X_BEARER_TOKEN: process.env.X_BEARER_TOKEN,
-  X_API_KEY: process.env.X_API_KEY,
-  X_API_SECRET: process.env.X_API_SECRET,
   X_CLIENT_ID: process.env.X_CLIENT_ID,
   X_CLIENT_SECRET: process.env.X_CLIENT_SECRET,
   X_REDIRECT_URI: process.env.X_REDIRECT_URI,
