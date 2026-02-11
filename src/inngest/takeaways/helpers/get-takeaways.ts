@@ -41,7 +41,7 @@ const schema = z.object({
             -Do not use the same reference across takeaways.`),
           reference: z.string()
             .describe(`Relevant facts, quotes and data to support the takeaway.
-              - When quoting a speaker, provide the attribution in the following format: '"[text]" - <Speaker Name>'
+              - When quoting, provide the attribution in the following format: '"[text]" - <Author/Speaker/Source Name>' (Ideally we are quoting a person, but sources are also valid.)
               - The reference should be an exact excerpt from the text. Never use a summary of the text.
               - The reference should be able to stand alone, such that it could be reused in a different context.
               - Err on over referencing to ensure the takeaways are well supported by the text.
@@ -56,6 +56,7 @@ export async function getTakeaways(
   articleText: string,
   takeawayInstructions?: string,
   model = "gpt-5.2",
+  sourceAttribution?: string,
 ) {
   const response = await client.responses.parse({
     model,
@@ -67,6 +68,14 @@ export async function getTakeaways(
         content: `
         # Role
         You are a Lead Systems Analyst. Your job is to compress raw information into high-signal and evidence-backed findings. You are processing a mix of Financial News, Earnings Transcripts, and Scientific Research.
+
+        ${
+          sourceAttribution
+            ? `# Source Attribution
+        This document is from: ${sourceAttribution}
+        When attributing quotes or claims, this source can be usedfor correct attribution.`
+            : ""
+        }
 
         Document Text:
         ${articleText}
