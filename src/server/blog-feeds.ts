@@ -6,6 +6,7 @@ import {
   extractFeedMetadata,
   detectContentInFeedFromXml,
 } from "~/inngest/importers/scheduled/blogs/blog-helpers";
+import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
 
 export interface BlogFeed {
@@ -33,8 +34,9 @@ interface RssFeedItem {
 /**
  * Query the blogs table and return all feeds sorted by title
  */
-export const listBlogFeedsSF = createServerFn({ method: "GET" }).handler(
-  async () => {
+export const listBlogFeedsSF = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async () => {
     const rows = await db
       .select()
       .from(schema.blogs)
@@ -52,13 +54,13 @@ export const listBlogFeedsSF = createServerFn({ method: "GET" }).handler(
     }));
 
     return feeds;
-  },
-);
+  });
 
 /**
  * Toggle a blog's enabled status
  */
 export const toggleBlogEnabledSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator(z.object({ blogId: z.string() }))
   .handler(async ({ data }) => {
     const rows = await db
@@ -79,6 +81,7 @@ export const toggleBlogEnabledSF = createServerFn({ method: "POST" })
  * Add a blog feed by URL: fetch the feed, extract metadata, and upsert into the database.
  */
 export const addBlogFeedSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator(z.object({ xmlUrl: z.url() }))
   .handler(async ({ data }) => {
     const response = await fetch(data.xmlUrl, {
@@ -173,6 +176,7 @@ export const addBlogFeedSF = createServerFn({ method: "POST" })
  * Fetch and parse an RSS/Atom feed, returning its articles
  */
 export const fetchFeedArticlesSF = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
   .validator(z.object({ xmlUrl: z.url() }))
   .handler(async ({ data }) => {
     const response = await fetch(data.xmlUrl, {

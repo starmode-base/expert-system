@@ -73,7 +73,7 @@ export async function getTakeaways(
           sourceAttribution
             ? `# Source Attribution
         This document is from: ${sourceAttribution}
-        When attributing quotes or claims, this source can be usedfor correct attribution.`
+        When attributing quotes or claims, this source can be used for correct attribution.`
             : ""
         }
 
