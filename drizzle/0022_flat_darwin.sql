@@ -1,0 +1,1 @@
+ALTER TABLE "documents" ADD COLUMN "is_substantive" boolean DEFAULT true NOT NULL;
