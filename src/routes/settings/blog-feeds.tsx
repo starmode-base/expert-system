@@ -21,9 +21,15 @@ interface FeedArticle {
   pubDate: string | null;
 }
 
+interface FeedMeta {
+  title: string | null;
+  description: string | null;
+}
+
 function BlogFeedsRoute() {
   const { feeds } = Route.useLoaderData();
   const [selectedFeed, setSelectedFeed] = useState<BlogFeed | null>(null);
+  const [feedMeta, setFeedMeta] = useState<FeedMeta | null>(null);
   const [articles, setArticles] = useState<FeedArticle[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,13 +38,15 @@ function BlogFeedsRoute() {
 
   const handleSelectFeed = async (feed: BlogFeed) => {
     setSelectedFeed(feed);
+    setFeedMeta(null);
     setArticles([]);
     setError(null);
     setLoading(true);
 
     try {
       const result = await fetchArticles({ data: { xmlUrl: feed.xmlUrl } });
-      setArticles(result);
+      setFeedMeta(result.metadata);
+      setArticles(result.articles);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load articles");
     } finally {
@@ -107,17 +115,22 @@ function BlogFeedsRoute() {
             {selectedFeed ? (
               <>
                 <div className="shrink-0 border-b border-gray-200 p-4">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h2 className="truncate text-base font-semibold text-gray-900">
-                        {selectedFeed.title}
+                        {feedMeta?.title ?? selectedFeed.title}
                       </h2>
+                      {feedMeta?.description ? (
+                        <p className="mt-1 line-clamp-2 text-sm text-gray-500">
+                          {feedMeta.description}
+                        </p>
+                      ) : null}
                       {selectedFeed.htmlUrl ? (
                         <a
                           href={selectedFeed.htmlUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-0.5 block truncate text-sm text-blue-600 hover:underline"
+                          className="mt-1 block truncate text-xs text-blue-600 hover:underline"
                         >
                           {selectedFeed.htmlUrl.replace(/^https?:\/\//, "")}
                         </a>
