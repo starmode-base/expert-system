@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   listBlogFeedsSF,
   fetchFeedArticlesSF,
@@ -33,6 +33,17 @@ function BlogFeedsRoute() {
   const [seeding, setSeeding] = useState(false);
   const [seedStatus, setSeedStatus] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filteredFeeds = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return feeds;
+    return feeds.filter((f) => {
+      const haystack =
+        `${f.title}\0${f.description ?? ""}\0${f.htmlUrl ?? ""}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [feeds, search]);
 
   const fetchArticles = useServerFn(fetchFeedArticlesSF);
   const seedBlogs = useServerFn(sendEventSeedBlogsSF);
@@ -109,7 +120,9 @@ function BlogFeedsRoute() {
                     Blog Feeds
                   </h2>
                   <p className="mt-1 text-sm text-gray-500">
-                    {feeds.length} feeds
+                    {filteredFeeds.length === feeds.length
+                      ? `${feeds.length} feeds`
+                      : `${filteredFeeds.length} of ${feeds.length} feeds`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -126,9 +139,18 @@ function BlogFeedsRoute() {
                   </button>
                 </div>
               </div>
+              <input
+                type="text"
+                placeholder="Search feeds..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                }}
+                className="mt-3 w-full rounded border border-gray-200 px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-gray-400"
+              />
             </div>
             <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto">
-              {feeds.map((feed) => (
+              {filteredFeeds.map((feed) => (
                 <button
                   key={feed.xmlUrl}
                   type="button"
