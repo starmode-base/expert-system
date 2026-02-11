@@ -79,7 +79,7 @@ export const scrapeSingleBlog = inngest.createFunction(
           new Date(b.publicationDate).getTime() -
           new Date(a.publicationDate).getTime(),
       )
-      .slice(-MAX_ARTICLES_PER_RUN);
+      .slice(0, MAX_ARTICLES_PER_RUN);
 
     if (newCandidates.length === 0) {
       await step.run("update-last-scraped", async () => {
