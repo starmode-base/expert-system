@@ -136,21 +136,22 @@ export const scrapeSingleBlog = inngest.createFunction(
     }
 
     // Generate summaries and assess substantiveness
-    const summaryResults = await Promise.all(
+    const withSummaries = await Promise.all(
       withText.map(async (doc, index) => {
-        return await step.run(`generate-summary-${index}`, async () => {
-          return await getDocumentSummary(doc.articleText, doc.title);
-        });
+        const summaryResult = await step.run(
+          `generate-summary-${index}`,
+          async () => {
+            return await getDocumentSummary(doc.articleText, doc.title);
+          },
+        );
+        return { ...doc, summaryResult };
       }),
     );
 
     // Filter to only substantive articles worth generating takeaways for
-    const substantive = withText
-      .map((doc, index) => ({
-        doc,
-        summary: summaryResults[index],
-      }))
-      .filter((entry) => entry.summary?.isSubstantive);
+    const substantive = withSummaries.filter(
+      (doc) => doc.summaryResult.isSubstantive,
+    );
 
     if (substantive.length === 0) {
       await step.run("update-last-scraped-no-substantive", async () => {
@@ -168,13 +169,13 @@ export const scrapeSingleBlog = inngest.createFunction(
 
     // Insert documents
     const inserted = await step.run("insert-documents", async () => {
-      const values = substantive.map((entry) => ({
+      const values = substantive.map((doc) => ({
         source: blog.title,
-        title: entry.doc.title,
-        description: entry.summary?.summary ?? entry.doc.description,
-        publicationDate: new Date(entry.doc.publicationDate),
-        link: entry.doc.link,
-        articleText: entry.doc.articleText,
+        title: doc.title,
+        description: doc.summaryResult.summary,
+        publicationDate: new Date(doc.publicationDate),
+        link: doc.link,
+        articleText: doc.articleText,
       }));
 
       return await db

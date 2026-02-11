@@ -79,19 +79,23 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
     }
 
     // Generate summaries for each document
-    const summaryResults = await Promise.all(
+    const withSummaries = await Promise.all(
       candidatesWithTranscripts.map(async (doc, index) => {
-        return await step.run(`generate-summary-${index}`, async () => {
-          return await getDocumentSummary(doc.articleText, doc.title);
-        });
+        const summaryResult = await step.run(
+          `generate-summary-${index}`,
+          async () => {
+            return await getDocumentSummary(doc.articleText, doc.title);
+          },
+        );
+        return { ...doc, summaryResult };
       }),
     );
 
     const inserted = await step.run("insert-documents", async () => {
-      const values = candidatesWithTranscripts.map((doc, index) => ({
+      const values = withSummaries.map((doc) => ({
         source: "Dwarkesh Podcast",
         title: doc.title,
-        description: summaryResults[index]?.summary ?? doc.description,
+        description: doc.summaryResult.summary,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,
