@@ -7,7 +7,7 @@ import { extractBodyTextFromUrl } from "~/inngest/importers/scrapers/extract-bod
 import { getDocumentSummary } from "../../helpers/get-document-summary";
 
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
-const MAX_ARTICLES_PER_RUN = 3;
+const MAX_ARTICLES_PER_RUN = 5;
 
 /**
  * Per-blog scraper worker: fetches and parses the RSS feed, deduplicates
@@ -169,12 +169,17 @@ export const scrapeSingleBlog = inngest.createFunction(
     // Only fan out takeaway generation for substantive articles
     const substantive = inserted.filter((doc) => doc.isSubstantive);
 
+    const takeawayPrompt = `
+- If relevant, include one concrete implication for builders/investors/operators
+- If relevant, include one concrete implication for technology, business, market, etc.`;
+
     await Promise.all(
       substantive.map(async (doc) => {
         await step.sendEvent(`generate-takeaways-${doc.id}`, {
           name: "app/generate-takeaways",
           data: {
             documentId: doc.id,
+            takeawayPrompt,
             user: { id: "", email: "" },
           },
         });
