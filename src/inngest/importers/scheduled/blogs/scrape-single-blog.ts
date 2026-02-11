@@ -74,7 +74,12 @@ export const scrapeSingleBlog = inngest.createFunction(
           !existingLinkSet.has(c.link) &&
           new Date(c.publicationDate) >= cutoffDate,
       )
-      .slice(0, MAX_ARTICLES_PER_RUN);
+      .sort(
+        (a, b) =>
+          new Date(b.publicationDate).getTime() -
+          new Date(a.publicationDate).getTime(),
+      )
+      .slice(-MAX_ARTICLES_PER_RUN);
 
     if (newCandidates.length === 0) {
       await step.run("update-last-scraped", async () => {
@@ -130,8 +135,8 @@ export const scrapeSingleBlog = inngest.createFunction(
       };
     }
 
-    // Generate summaries
-    const summaries = await Promise.all(
+    // Generate summaries and assess substantiveness
+    const summaryResults = await Promise.all(
       withText.map(async (doc, index) => {
         return await step.run(`generate-summary-${index}`, async () => {
           return await getDocumentSummary(doc.articleText, doc.title);
@@ -139,15 +144,37 @@ export const scrapeSingleBlog = inngest.createFunction(
       }),
     );
 
+    // Filter to only substantive articles worth generating takeaways for
+    const substantive = withText
+      .map((doc, index) => ({
+        doc,
+        summary: summaryResults[index],
+      }))
+      .filter((entry) => entry.summary?.isSubstantive);
+
+    if (substantive.length === 0) {
+      await step.run("update-last-scraped-no-substantive", async () => {
+        await db
+          .update(schema.blogs)
+          .set({ lastScrapedAt: new Date() })
+          .where(eq(schema.blogs.id, blogId));
+      });
+      return {
+        inserted: 0,
+        skipped: withText.length,
+        blogTitle: blog.title,
+      };
+    }
+
     // Insert documents
     const inserted = await step.run("insert-documents", async () => {
-      const values = withText.map((doc, index) => ({
+      const values = substantive.map((entry) => ({
         source: blog.title,
-        title: doc.title,
-        description: summaries[index] ?? doc.description,
-        publicationDate: new Date(doc.publicationDate),
-        link: doc.link,
-        articleText: doc.articleText,
+        title: entry.doc.title,
+        description: entry.summary?.summary ?? entry.doc.description,
+        publicationDate: new Date(entry.doc.publicationDate),
+        link: entry.doc.link,
+        articleText: entry.doc.articleText,
       }));
 
       return await db

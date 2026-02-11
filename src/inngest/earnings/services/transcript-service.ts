@@ -84,7 +84,7 @@ export async function fetchAndSaveTranscript({
   }
 
   // Generate summary for the transcript
-  const description = await getDocumentSummary(articleText, title);
+  const { summary: description } = await getDocumentSummary(articleText, title);
 
   const document = {
     source: EARNINGS_TRANSCRIPT_SOURCE,

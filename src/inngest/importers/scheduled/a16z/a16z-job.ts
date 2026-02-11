@@ -87,7 +87,7 @@ export const a16zNewsScraper = inngest.createFunction(
     }
 
     // Generate summaries for each document
-    const summaries = await Promise.all(
+    const summaryResults = await Promise.all(
       candidatesWithArticles.map(async (doc, index) => {
         return await step.run(`generate-summary-${index}`, async () => {
           return await getDocumentSummary(doc.articleText, doc.title);
@@ -99,7 +99,7 @@ export const a16zNewsScraper = inngest.createFunction(
       const values = candidatesWithArticles.map((doc, index) => ({
         source: "a16z News",
         title: doc.title,
-        description: summaries[index] ?? doc.description,
+        description: summaryResults[index]?.summary ?? doc.description,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,
