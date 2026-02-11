@@ -174,6 +174,7 @@ Note: For macroeconomic data (GDP, inflation, rates, yield curves, etc.) a separ
 Rules:
 - Never make more than 5 tool calls at a time.
 - If you need more data then take an additional turn to gather the data.
+- Try to take less than 15 turns to complete the task.
 `;
 
 const financialAnalysisSchema = z.object({
@@ -193,7 +194,7 @@ export function createFinancialAnalysisAgent() {
   return new Agent({
     name: "Financial Analysis Agent",
     instructions: financialAnalysisSystemPrompt,
-    model: "gpt-5.2",
+    model: "gpt-5-mini",
     tools: financialTools,
     outputType: financialAnalysisSchema,
   });

@@ -290,6 +290,7 @@ Rules:
 - When analyzing inflation, prefer comparing headline vs core measures and checking trimmed mean / median for signal.
 - When assessing labor market, compare UNRATE with CIVPART and EMRATIO for a fuller picture.
 - When evaluating financial conditions, combine yield curve (T10Y2Y), credit spreads (BAA10Y, BAMLH0A0HYM2), and NFCI.
+- Try to take less than 15 turns to complete the task.
 `;
 
 const macroAnalysisSchema = z.object({
@@ -309,7 +310,7 @@ export function createMacroResearcherAgent() {
   return new Agent({
     name: "Macro Research Agent",
     instructions: macroResearcherSystemPrompt,
-    model: "gpt-5.2",
+    model: "gpt-5-mini",
     tools: fredTools,
     outputType: macroAnalysisSchema,
   });
