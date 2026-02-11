@@ -87,19 +87,24 @@ export const a16zNewsScraper = inngest.createFunction(
     }
 
     // Generate summaries for each document
-    const summaries = await Promise.all(
+    const withSummaries = await Promise.all(
       candidatesWithArticles.map(async (doc, index) => {
-        return await step.run(`generate-summary-${index}`, async () => {
-          return await getDocumentSummary(doc.articleText, doc.title);
-        });
+        const summaryResult = await step.run(
+          `generate-summary-${index}`,
+          async () => {
+            return await getDocumentSummary(doc.articleText, doc.title);
+          },
+        );
+        return { ...doc, summaryResult };
       }),
     );
 
     const inserted = await step.run("insert-documents", async () => {
-      const values = candidatesWithArticles.map((doc, index) => ({
+      const values = withSummaries.map((doc) => ({
         source: "a16z News",
         title: doc.title,
-        description: summaries[index] ?? doc.description,
+        description: doc.summaryResult.summary,
+        isSubstantive: doc.summaryResult.isSubstantive,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,

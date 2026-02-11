@@ -95,6 +95,18 @@ const eventSchemas = {
   "dev/scheduler.fed-speeches-scraper.manual": z.object({}),
   "dev/scheduler.dwarkesh-podcast-scraper.manual": z.object({}),
   "dev/scheduler.a16z-news-scraper.manual": z.object({}),
+  "blog/seed-blogs": z.object({}),
+  "blog/seed-single-feed": z.object({
+    xmlUrl: z.string(),
+    title: z.string(),
+    htmlUrl: z.string(),
+  }),
+  "blog/scrape-all-blogs": z.object({}),
+  "blog/scrape-single-blog": z.object({
+    blogId: z.string(),
+  }),
+  "dev/blog.seed-blogs.manual": z.object({}),
+  "dev/blog.scrape-all-blogs.manual": z.object({}),
 };
 
 // Create a client to send and receive events

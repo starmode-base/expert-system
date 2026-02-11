@@ -222,19 +222,24 @@ export const stratecheryScraper = inngest.createFunction(
     }
 
     // Generate summaries for each document
-    const summaries = await Promise.all(
+    const withSummaries = await Promise.all(
       toInsert.map(async (doc, index) => {
-        return await step.run(`generate-summary-${index}`, async () => {
-          return await getDocumentSummary(doc.articleText, doc.title);
-        });
+        const summaryResult = await step.run(
+          `generate-summary-${index}`,
+          async () => {
+            return await getDocumentSummary(doc.articleText, doc.title);
+          },
+        );
+        return { ...doc, summaryResult };
       }),
     );
 
     const inserted = await step.run("insert-documents", async () => {
-      const values = toInsert.map((doc, index) => ({
+      const values = withSummaries.map((doc) => ({
         source: "Stratechery (Ben Thompson)",
         title: doc.title,
-        description: summaries[index] ?? doc.description,
+        description: doc.summaryResult.summary,
+        isSubstantive: doc.summaryResult.isSubstantive,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,

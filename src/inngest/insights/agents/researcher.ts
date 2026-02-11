@@ -86,6 +86,7 @@ Rules:
 - Always use fetchTakeawayPreviews for retrieval.
 - Do not fabricate ids. Only return ids present in the tool response.
 - Cast a wider net than seems necessary—unexpected connections often come from adjacent domains.
+- Try to take less than 15 turns to complete the task.
 `;
 
 export function createResearcherAgent() {

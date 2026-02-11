@@ -9,6 +9,7 @@ export interface Document {
   description: string;
   link: string;
   articleText: string;
+  isSubstantive?: boolean;
 }
 
 /**
@@ -45,6 +46,9 @@ export async function saveContent(document: Document): Promise<string> {
       publicationDate: document.publicationDate,
       link: document.link,
       articleText: document.articleText,
+      ...(document.isSubstantive !== undefined && {
+        isSubstantive: document.isSubstantive,
+      }),
     })
     .returning({ id: schema.documents.id });
 

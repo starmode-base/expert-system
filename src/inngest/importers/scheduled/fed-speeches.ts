@@ -231,14 +231,18 @@ export const fedSpeechesScraper = inngest.createFunction(
     }
 
     // Generate summaries for each document
-    const summaries = await Promise.all(
+    const withSummaries = await Promise.all(
       fulfilledScraped.map(async (doc, index) => {
-        return await step.run(`generate-summary-${index}`, async () => {
-          return await getDocumentSummary(
-            doc.value.articleText,
-            doc.value.candidate.title,
-          );
-        });
+        const summaryResult = await step.run(
+          `generate-summary-${index}`,
+          async () => {
+            return await getDocumentSummary(
+              doc.value.articleText,
+              doc.value.candidate.title,
+            );
+          },
+        );
+        return { ...doc.value, summaryResult };
       }),
     );
 
@@ -246,13 +250,14 @@ export const fedSpeechesScraper = inngest.createFunction(
       return await db
         .insert(schema.documents)
         .values(
-          fulfilledScraped.map((doc, index) => ({
+          withSummaries.map((doc) => ({
             source: FED_SOURCE,
-            title: doc.value.candidate.title,
-            description: summaries[index] ?? doc.value.candidate.description,
-            publicationDate: new Date(doc.value.candidate.publicationDate),
-            link: doc.value.candidate.link,
-            articleText: doc.value.articleText,
+            title: doc.candidate.title,
+            description: doc.summaryResult.summary,
+            isSubstantive: doc.summaryResult.isSubstantive,
+            publicationDate: new Date(doc.candidate.publicationDate),
+            link: doc.candidate.link,
+            articleText: doc.articleText,
           })),
         )
         .returning({ id: schema.documents.id });

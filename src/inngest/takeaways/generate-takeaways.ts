@@ -51,22 +51,27 @@ export const generateTakeaways = inngest.createFunction(
      */
     const takeaways = await step
       .run(`generate-takeaways-${event.data.documentId}`, async () => {
-        const articleText = await db.query.documents.findFirst({
+        const document = await db.query.documents.findFirst({
           where: (documents, { eq }) => eq(documents.id, event.data.documentId),
-          columns: { articleText: true },
+          columns: { articleText: true, source: true, title: true },
         });
 
-        invariant(articleText?.articleText, "No article text");
+        invariant(document?.articleText, "No article text");
 
         // ######
         console.log(
           `Generating takeaways for document ${event.data.documentId}`,
         );
 
+        const sourceAttribution = [document.source, document.title]
+          .filter(Boolean)
+          .join(" — ");
+
         const takeaways = await getTakeaways(
-          articleText.articleText,
+          document.articleText,
           event.data.takeawayPrompt,
           event.data.model,
+          sourceAttribution || undefined,
         );
 
         return takeaways;

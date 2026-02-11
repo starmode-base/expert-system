@@ -77,6 +77,15 @@ export const sendEventGenerateTakeawaysSF = createServerFn({ method: "POST" })
     return context.viewer.email;
   });
 
+export const sendEventSeedBlogsSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async () => {
+    await inngest.send({
+      name: "blog/seed-blogs",
+      data: {},
+    });
+  });
+
 // app/generate-insight
 
 export const sendEventGenerateInsightSF = createServerFn({ method: "POST" })

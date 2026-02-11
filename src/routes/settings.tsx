@@ -32,6 +32,7 @@ function SettingsLayout() {
       to: "/settings/knowledge-graph",
       label: "Knowledge Graph",
     },
+    { key: "blog-feeds", to: "/settings/blog-feeds", label: "Blog Feeds" },
   ];
 
   return (
