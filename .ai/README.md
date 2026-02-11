@@ -47,3 +47,50 @@ It will appear in both Cursor and Claude Code automatically — no extra steps.
 ## Removing a skill
 
 Delete the folder from `.ai/skills/`. Both symlinks reflect the change immediately.
+
+## AGENTS.md — codebase context
+
+`AGENTS.md` files are the persistent memory that agents read at the start of every session. They capture project-specific knowledge that agents can't infer from code alone.
+
+```mermaid
+graph TD
+    S["Coding session"] -- mistakes / surprises --> L["session-learnings skill"]
+    L -- project-wide? --> R["AGENTS.md (root)"]
+    L -- domain-scoped? --> Sub["src/&lt;area&gt;/AGENTS.md"]
+    L -- multi-step workflow? --> Sk[".ai/skills/new-skill/"]
+    R -- symlink --> RC["CLAUDE.md (root)"]
+    Sub -- symlink --> SubC["src/&lt;area&gt;/CLAUDE.md"]
+    R -- read by --> A["Future agent sessions"]
+    Sub -- read by --> A
+    Sk -- read by --> A
+```
+
+### How it works
+
+The **session-learnings** skill is responsible for maintaining `AGENTS.md` files. At the end of a session (or when asked), it:
+
+1. Reviews the conversation for pitfalls, conventions, and tooling surprises.
+2. Filters out anything already enforced by linters or type checkers.
+3. Writes the learning to the narrowest relevant scope.
+
+Each `AGENTS.md` has a `CLAUDE.md` symlink next to it so Claude Code reads the same content.
+
+### Placement rules
+
+| Scope | File | Example |
+|-------|------|---------|
+| Project-wide | `AGENTS.md` (root) | Linting config, routing, deploy |
+| Domain-scoped | `src/<area>/AGENTS.md` | `src/inngest/AGENTS.md` for inngest patterns |
+| Multi-step workflow | `.ai/skills/<name>/SKILL.md` | Reusable process with decision points |
+
+Subdirectory `AGENTS.md` files **only** live at the first level under `src/`. Never deeper (e.g. not `src/inngest/importers/AGENTS.md`). If a learning is specific to a sub-area, it goes in the nearest top-level parent's file.
+
+### Current files
+
+```
+AGENTS.md              ← project-wide (linting, route generation)
+CLAUDE.md              → AGENTS.md (symlink)
+
+src/inngest/AGENTS.md  ← inngest-specific patterns
+src/inngest/CLAUDE.md  → AGENTS.md (symlink)
+```
