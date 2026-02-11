@@ -104,6 +104,7 @@ export const a16zNewsScraper = inngest.createFunction(
         source: "a16z News",
         title: doc.title,
         description: doc.summaryResult.summary,
+        isSubstantive: doc.summaryResult.isSubstantive,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,

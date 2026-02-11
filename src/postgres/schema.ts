@@ -109,6 +109,7 @@ export const documents = pgTable("documents", {
   publicationDate: timestamp().notNull(),
   link: text().notNull(),
   articleText: text().notNull(),
+  isSubstantive: boolean().notNull().default(true),
 });
 
 export type DocumentSelect = typeof documents.$inferSelect;

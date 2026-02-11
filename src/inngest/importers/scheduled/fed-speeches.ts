@@ -254,6 +254,7 @@ export const fedSpeechesScraper = inngest.createFunction(
             source: FED_SOURCE,
             title: doc.candidate.title,
             description: doc.summaryResult.summary,
+            isSubstantive: doc.summaryResult.isSubstantive,
             publicationDate: new Date(doc.candidate.publicationDate),
             link: doc.candidate.link,
             articleText: doc.articleText,

@@ -96,6 +96,7 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
         source: "Dwarkesh Podcast",
         title: doc.title,
         description: doc.summaryResult.summary,
+        isSubstantive: doc.summaryResult.isSubstantive,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,

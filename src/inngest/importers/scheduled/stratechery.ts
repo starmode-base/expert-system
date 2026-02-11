@@ -239,6 +239,7 @@ export const stratecheryScraper = inngest.createFunction(
         source: "Stratechery (Ben Thompson)",
         title: doc.title,
         description: doc.summaryResult.summary,
+        isSubstantive: doc.summaryResult.isSubstantive,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,

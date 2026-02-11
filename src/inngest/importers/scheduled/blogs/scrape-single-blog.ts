@@ -148,45 +148,29 @@ export const scrapeSingleBlog = inngest.createFunction(
       }),
     );
 
-    // Filter to only substantive articles worth generating takeaways for
-    const substantive = withSummaries.filter(
-      (doc) => doc.summaryResult.isSubstantive,
-    );
-
-    if (substantive.length === 0) {
-      await step.run("update-last-scraped-no-substantive", async () => {
-        await db
-          .update(schema.blogs)
-          .set({ lastScrapedAt: new Date() })
-          .where(eq(schema.blogs.id, blogId));
-      });
-      return {
-        inserted: 0,
-        skipped: withText.length,
-        blogTitle: blog.title,
-      };
-    }
-
-    // Insert documents
+    // Insert all documents
     const inserted = await step.run("insert-documents", async () => {
-      const values = substantive.map((doc) => ({
+      const values = withSummaries.map((doc) => ({
         source: blog.title,
         title: doc.title,
         description: doc.summaryResult.summary,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,
+        isSubstantive: doc.summaryResult.isSubstantive,
       }));
 
-      return await db
-        .insert(schema.documents)
-        .values(values)
-        .returning({ id: schema.documents.id });
+      return await db.insert(schema.documents).values(values).returning({
+        id: schema.documents.id,
+        isSubstantive: schema.documents.isSubstantive,
+      });
     });
 
-    // Fan out takeaway generation
+    // Only fan out takeaway generation for substantive articles
+    const substantive = inserted.filter((doc) => doc.isSubstantive);
+
     await Promise.all(
-      inserted.map(async (doc) => {
+      substantive.map(async (doc) => {
         await step.sendEvent(`generate-takeaways-${doc.id}`, {
           name: "app/generate-takeaways",
           data: {

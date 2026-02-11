@@ -117,6 +117,7 @@ export const macroVoicesScraper = inngest.createFunction(
         source: "MacroVoices",
         title: doc.title,
         description: doc.summaryResult.summary,
+        isSubstantive: doc.summaryResult.isSubstantive,
         publicationDate: new Date(doc.publicationDate),
         link: doc.link,
         articleText: doc.articleText,
