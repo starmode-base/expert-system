@@ -24,11 +24,11 @@ For each candidate learning, ask:
 
 ## Step 2: Choose the right format
 
-| Format                       | When to use                                                                            |
-| ---------------------------- | -------------------------------------------------------------------------------------- |
-| **Root `AGENTS.md`**         | Project-wide guidance (build tools, routing, deploy)                                   |
-| **Top-level `src/` subdirectory `AGENTS.md`** | Scoped to a domain area (e.g. `src/inngest/AGENTS.md`) |
-| **New skill**                | Reusable multi-step workflow that benefits from structured instructions                |
+| Format                                        | When to use                                                             |
+| --------------------------------------------- | ----------------------------------------------------------------------- |
+| **Root `AGENTS.md`**                          | Project-wide guidance (build tools, routing, deploy)                    |
+| **Top-level `src/` subdirectory `AGENTS.md`** | Scoped to a domain area (e.g. `src/inngest/AGENTS.md`)                  |
+| **New skill**                                 | Reusable multi-step workflow that benefits from structured instructions |
 
 Guidelines for placement:
 

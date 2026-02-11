@@ -23,7 +23,7 @@ export async function getDocumentSummary(
       : articleText;
 
   const response = await client.responses.create({
-    model: "gpt-5-mini",
+    model: "gpt-5-nano",
     input: [
       {
         role: "system",

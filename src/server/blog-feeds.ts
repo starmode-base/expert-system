@@ -1,29 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
+import { eq, not } from "drizzle-orm";
 import { parseStringPromise } from "xml2js";
-import { readFile } from "fs/promises";
-import { resolve } from "path";
 import { z } from "zod";
-
-interface OpmlOutline {
-  $: {
-    type?: string;
-    text?: string;
-    title?: string;
-    xmlUrl?: string;
-    htmlUrl?: string;
-  };
-}
-
-interface OpmlResult {
-  opml: {
-    body: [{ outline: [{ outline: OpmlOutline[] }] }];
-  };
-}
+import { db, schema } from "~/postgres/db";
 
 export interface BlogFeed {
+  id: string;
   title: string;
+  description: string | null;
   xmlUrl: string;
-  htmlUrl: string;
+  htmlUrl: string | null;
+  enabled: boolean;
+  contentInFeed: boolean;
+  lastScrapedAt: string | null;
 }
 
 interface FeedMetadata {
@@ -38,36 +27,49 @@ interface RssFeedItem {
 }
 
 /**
- * Parse the OPML file and return the list of blog feeds
+ * Query the blogs table and return all feeds sorted by title
  */
 export const listBlogFeedsSF = createServerFn({ method: "GET" }).handler(
   async () => {
-    const opmlPath = resolve(
-      process.cwd(),
-      "src/inngest/importers/blog-feeds.opml",
-    );
-    const opmlContent = await readFile(opmlPath, "utf-8");
-    const result = (await parseStringPromise(opmlContent)) as OpmlResult;
+    const rows = await db
+      .select()
+      .from(schema.blogs)
+      .orderBy(schema.blogs.title);
 
-    const outlines = result.opml.body[0].outline[0].outline;
-
-    const feeds: BlogFeed[] = outlines
-      .filter(
-        (o): o is OpmlOutline & { $: { xmlUrl: string } } =>
-          o.$.type === "rss" && typeof o.$.xmlUrl === "string",
-      )
-      .map((o) => ({
-        title: o.$.title ?? o.$.text ?? "Unknown",
-        xmlUrl: o.$.xmlUrl,
-        htmlUrl: o.$.htmlUrl ?? "",
-      }))
-      .sort((a, b) =>
-        a.title.localeCompare(b.title, undefined, { sensitivity: "base" }),
-      );
+    const feeds: BlogFeed[] = rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      xmlUrl: row.xmlUrl,
+      htmlUrl: row.htmlUrl,
+      enabled: row.enabled,
+      contentInFeed: row.contentInFeed,
+      lastScrapedAt: row.lastScrapedAt?.toISOString() ?? null,
+    }));
 
     return feeds;
   },
 );
+
+/**
+ * Toggle a blog's enabled status
+ */
+export const toggleBlogEnabledSF = createServerFn({ method: "POST" })
+  .validator(z.object({ blogId: z.string() }))
+  .handler(async ({ data }) => {
+    const rows = await db
+      .update(schema.blogs)
+      .set({ enabled: not(schema.blogs.enabled) })
+      .where(eq(schema.blogs.id, data.blogId))
+      .returning({ id: schema.blogs.id, enabled: schema.blogs.enabled });
+
+    const row = rows[0];
+    if (!row) {
+      throw new Error("Blog not found");
+    }
+
+    return row;
+  });
 
 /**
  * Fetch and parse an RSS/Atom feed, returning its articles

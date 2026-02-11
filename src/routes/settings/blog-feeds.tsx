@@ -4,8 +4,10 @@ import { useState } from "react";
 import {
   listBlogFeedsSF,
   fetchFeedArticlesSF,
+  toggleBlogEnabledSF,
   type BlogFeed,
 } from "~/server/blog-feeds";
+import { sendEventSeedBlogsSF } from "~/server/inggest";
 
 export const Route = createFileRoute("/settings/blog-feeds")({
   loader: async () => {
@@ -21,31 +23,58 @@ interface FeedArticle {
   pubDate: string | null;
 }
 
-interface FeedMeta {
-  title: string | null;
-  description: string | null;
-}
-
 function BlogFeedsRoute() {
-  const { feeds } = Route.useLoaderData();
+  const { feeds: loaderFeeds } = Route.useLoaderData();
+  const [feeds, setFeeds] = useState(loaderFeeds);
   const [selectedFeed, setSelectedFeed] = useState<BlogFeed | null>(null);
-  const [feedMeta, setFeedMeta] = useState<FeedMeta | null>(null);
   const [articles, setArticles] = useState<FeedArticle[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [seedStatus, setSeedStatus] = useState<string | null>(null);
+  const [toggling, setToggling] = useState(false);
 
   const fetchArticles = useServerFn(fetchFeedArticlesSF);
+  const seedBlogs = useServerFn(sendEventSeedBlogsSF);
+  const toggleEnabled = useServerFn(toggleBlogEnabledSF);
+
+  const handleToggleEnabled = async (feed: BlogFeed) => {
+    setToggling(true);
+    try {
+      const result = await toggleEnabled({ data: { blogId: feed.id } });
+      const updated = { ...feed, enabled: result.enabled };
+      setFeeds((prev) => prev.map((f) => (f.id === feed.id ? updated : f)));
+      if (selectedFeed?.id === feed.id) {
+        setSelectedFeed(updated);
+      }
+    } catch {
+      // Silently fail — state stays unchanged
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  const handleSeedBlogs = async () => {
+    setSeeding(true);
+    setSeedStatus(null);
+    try {
+      await seedBlogs();
+      setSeedStatus("Seed job triggered");
+    } catch {
+      setSeedStatus("Failed to trigger seed job");
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const handleSelectFeed = async (feed: BlogFeed) => {
     setSelectedFeed(feed);
-    setFeedMeta(null);
     setArticles([]);
     setError(null);
     setLoading(true);
 
     try {
       const result = await fetchArticles({ data: { xmlUrl: feed.xmlUrl } });
-      setFeedMeta(result.metadata);
       setArticles(result.articles);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load articles");
@@ -74,10 +103,29 @@ function BlogFeedsRoute() {
           {/* Feed list */}
           <div className="flex w-72 shrink-0 flex-col border border-gray-200 bg-white">
             <div className="shrink-0 border-b border-gray-200 p-4">
-              <h2 className="text-base font-semibold text-gray-900">
-                Blog Feeds
-              </h2>
-              <p className="mt-1 text-sm text-gray-500">{feeds.length} feeds</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-semibold text-gray-900">
+                    Blog Feeds
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {feeds.length} feeds
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {seedStatus ? (
+                    <span className="text-xs text-gray-500">{seedStatus}</span>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={handleSeedBlogs}
+                    disabled={seeding}
+                    className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    {seeding ? "Seeding..." : "Seed Blogs"}
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto">
               {feeds.map((feed) => (
@@ -91,17 +139,26 @@ function BlogFeedsRoute() {
                       : "hover:bg-gray-50"
                   }`}
                 >
-                  <div
-                    className={`text-sm font-medium ${
-                      selectedFeed?.xmlUrl === feed.xmlUrl
-                        ? "text-slate-900"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    {feed.title}
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${feed.enabled ? "bg-green-500" : "bg-gray-300"}`}
+                    />
+                    <span
+                      className={`truncate text-sm font-medium ${
+                        selectedFeed?.xmlUrl === feed.xmlUrl
+                          ? "text-slate-900"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {feed.title}
+                    </span>
                   </div>
-                  {feed.htmlUrl ? (
-                    <div className="mt-0.5 truncate text-xs text-gray-400">
+                  {feed.description ? (
+                    <div className="mt-0.5 line-clamp-1 pl-3 text-xs text-gray-400">
+                      {feed.description}
+                    </div>
+                  ) : feed.htmlUrl ? (
+                    <div className="mt-0.5 truncate pl-3 text-xs text-gray-400">
                       {feed.htmlUrl.replace(/^https?:\/\//, "")}
                     </div>
                   ) : null}
@@ -118,11 +175,11 @@ function BlogFeedsRoute() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h2 className="truncate text-base font-semibold text-gray-900">
-                        {feedMeta?.title ?? selectedFeed.title}
+                        {selectedFeed.title}
                       </h2>
-                      {feedMeta?.description ? (
+                      {selectedFeed.description ? (
                         <p className="mt-1 line-clamp-2 text-sm text-gray-500">
-                          {feedMeta.description}
+                          {selectedFeed.description}
                         </p>
                       ) : null}
                       {selectedFeed.htmlUrl ? (
@@ -135,6 +192,30 @@ function BlogFeedsRoute() {
                           {selectedFeed.htmlUrl.replace(/^https?:\/\//, "")}
                         </a>
                       ) : null}
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={toggling}
+                          onClick={() => handleToggleEnabled(selectedFeed)}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors disabled:opacity-50 ${selectedFeed.enabled ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                        >
+                          <span
+                            className={`inline-block h-1.5 w-1.5 rounded-full ${selectedFeed.enabled ? "bg-green-500" : "bg-gray-400"}`}
+                          />
+                          {selectedFeed.enabled ? "Enabled" : "Disabled"}
+                        </button>
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                          {selectedFeed.contentInFeed
+                            ? "Full content in feed"
+                            : "Requires scraping"}
+                        </span>
+                        {selectedFeed.lastScrapedAt ? (
+                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                            Last scraped{" "}
+                            {formatDate(selectedFeed.lastScrapedAt)}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                     {!loading && articles.length > 0 ? (
                       <span className="shrink-0 rounded-full border border-gray-200 px-2 py-1 text-xs text-gray-500">

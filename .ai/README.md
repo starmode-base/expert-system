@@ -77,11 +77,11 @@ Each `AGENTS.md` has a `CLAUDE.md` symlink next to it so Claude Code reads the s
 
 ### Placement rules
 
-| Scope | File | Example |
-|-------|------|---------|
-| Project-wide | `AGENTS.md` (root) | Linting config, routing, deploy |
-| Domain-scoped | `src/<area>/AGENTS.md` | `src/inngest/AGENTS.md` for inngest patterns |
-| Multi-step workflow | `.ai/skills/<name>/SKILL.md` | Reusable process with decision points |
+| Scope               | File                         | Example                                      |
+| ------------------- | ---------------------------- | -------------------------------------------- |
+| Project-wide        | `AGENTS.md` (root)           | Linting config, routing, deploy              |
+| Domain-scoped       | `src/<area>/AGENTS.md`       | `src/inngest/AGENTS.md` for inngest patterns |
+| Multi-step workflow | `.ai/skills/<name>/SKILL.md` | Reusable process with decision points        |
 
 Subdirectory `AGENTS.md` files **only** live at the first level under `src/`. Never deeper (e.g. not `src/inngest/importers/AGENTS.md`). If a learning is specific to a sub-area, it goes in the nearest top-level parent's file.
 

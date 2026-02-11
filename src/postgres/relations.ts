@@ -19,6 +19,7 @@ import {
   organizationMembers,
   insightReferences,
   xBookmarksAuth,
+  blogs,
 } from "./schema";
 
 export const conceptEmbeddingsRelations = relations(
@@ -199,3 +200,5 @@ export const insightReferencesRelations = relations(
     }),
   }),
 );
+
+export const blogsRelations = relations(blogs, () => ({}));

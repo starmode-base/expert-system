@@ -1,5 +1,6 @@
 import { randomId } from "~/lib/random-id";
 import {
+  boolean,
   doublePrecision,
   index,
   integer,
@@ -366,3 +367,20 @@ export const insightTakeaways = pgTable(
 
 export type InsightTakeawaySelect = typeof insightTakeaways.$inferSelect;
 export type InsightTakeawayInsert = typeof insightTakeaways.$inferInsert;
+
+/**
+ * Blogs - RSS feed registry for automated scraping
+ */
+export const blogs = pgTable("blogs", {
+  ...baseSchema,
+  title: text().notNull(),
+  description: text(),
+  xmlUrl: text().notNull().unique(),
+  htmlUrl: text(),
+  enabled: boolean().notNull().default(false),
+  contentInFeed: boolean().notNull().default(false),
+  lastScrapedAt: timestamp(),
+});
+
+export type BlogSelect = typeof blogs.$inferSelect;
+export type BlogInsert = typeof blogs.$inferInsert;
