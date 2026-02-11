@@ -169,12 +169,19 @@ export const scrapeSingleBlog = inngest.createFunction(
     // Only fan out takeaway generation for substantive articles
     const substantive = inserted.filter((doc) => doc.isSubstantive);
 
+    const takeawayPrompt = `Focus on takeaways that matter for technology trends, strategy, businesses, competitive dynamics, market structure, distribution, regulation, and second-order effects.
+
+Guidelines:
+- Write takeaways that generalize beyond the article, not just a recap of what happened
+- If relevant, include one concrete implication for builders/investors/operators `;
+
     await Promise.all(
       substantive.map(async (doc) => {
         await step.sendEvent(`generate-takeaways-${doc.id}`, {
           name: "app/generate-takeaways",
           data: {
             documentId: doc.id,
+            takeawayPrompt,
             user: { id: "", email: "" },
           },
         });
