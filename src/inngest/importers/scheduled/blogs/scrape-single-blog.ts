@@ -7,7 +7,7 @@ import { extractBodyTextFromUrl } from "~/inngest/importers/scrapers/extract-bod
 import { getDocumentSummary } from "../../helpers/get-document-summary";
 
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
-const MAX_ARTICLES_PER_RUN = 3;
+const MAX_ARTICLES_PER_RUN = 5;
 
 /**
  * Per-blog scraper worker: fetches and parses the RSS feed, deduplicates

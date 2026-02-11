@@ -90,7 +90,6 @@ const eventSchemas = {
   "dev/scheduler.daily-insight.manual": z.object({}),
   "dev/earnings.sync-calendar.manual": z.object({}),
   "dev/earnings.process-jobs.manual": z.object({}),
-  "dev/scheduler.stratechery-scraper.manual": z.object({}),
   "dev/scheduler.macrovoices-scraper.manual": z.object({}),
   "dev/scheduler.fed-speeches-scraper.manual": z.object({}),
   "dev/scheduler.dwarkesh-podcast-scraper.manual": z.object({}),
