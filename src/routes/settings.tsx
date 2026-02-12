@@ -25,7 +25,11 @@ function SettingsLayout() {
   }
 
   const subNavItems = [
-    { key: "importer", to: "/settings/importer", label: "Importer" },
+    {
+      key: "public-stocks",
+      to: "/settings/public-stocks",
+      label: "Public Stocks",
+    },
     { key: "x", to: "/settings/x", label: "X Settings" },
     {
       key: "knowledge-graph",

@@ -19,7 +19,7 @@ import { Route as SettingsIndexImport } from './routes/settings/index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
 import { Route as InsightStudioIndexImport } from './routes/insight-studio.index'
 import { Route as SettingsXImport } from './routes/settings/x'
-import { Route as SettingsImporterImport } from './routes/settings/importer'
+import { Route as SettingsPublicStocksImport } from './routes/settings/public-stocks'
 import { Route as SettingsBlogFeedsImport } from './routes/settings/blog-feeds'
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
 import { Route as InsightInsightIdImport } from './routes/insight.$insightId'
@@ -78,9 +78,9 @@ const SettingsXRoute = SettingsXImport.update({
   getParentRoute: () => SettingsRoute,
 } as any)
 
-const SettingsImporterRoute = SettingsImporterImport.update({
-  id: '/importer',
-  path: '/importer',
+const SettingsPublicStocksRoute = SettingsPublicStocksImport.update({
+  id: '/public-stocks',
+  path: '/public-stocks',
   getParentRoute: () => SettingsRoute,
 } as any)
 
@@ -195,11 +195,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsBlogFeedsImport
       parentRoute: typeof SettingsImport
     }
-    '/settings/importer': {
-      id: '/settings/importer'
-      path: '/importer'
-      fullPath: '/settings/importer'
-      preLoaderRoute: typeof SettingsImporterImport
+    '/settings/public-stocks': {
+      id: '/settings/public-stocks'
+      path: '/public-stocks'
+      fullPath: '/settings/public-stocks'
+      preLoaderRoute: typeof SettingsPublicStocksImport
       parentRoute: typeof SettingsImport
     }
     '/settings/x': {
@@ -251,7 +251,7 @@ declare module '@tanstack/react-router' {
 
 interface SettingsRouteChildren {
   SettingsBlogFeedsRoute: typeof SettingsBlogFeedsRoute
-  SettingsImporterRoute: typeof SettingsImporterRoute
+  SettingsPublicStocksRoute: typeof SettingsPublicStocksRoute
   SettingsXRoute: typeof SettingsXRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   SettingsKnowledgeGraphIndexRoute: typeof SettingsKnowledgeGraphIndexRoute
@@ -260,7 +260,7 @@ interface SettingsRouteChildren {
 
 const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsBlogFeedsRoute: SettingsBlogFeedsRoute,
-  SettingsImporterRoute: SettingsImporterRoute,
+  SettingsPublicStocksRoute: SettingsPublicStocksRoute,
   SettingsXRoute: SettingsXRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   SettingsKnowledgeGraphIndexRoute: SettingsKnowledgeGraphIndexRoute,
@@ -282,7 +282,7 @@ export interface FileRoutesByFullPath {
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/settings/blog-feeds': typeof SettingsBlogFeedsRoute
-  '/settings/importer': typeof SettingsImporterRoute
+  '/settings/public-stocks': typeof SettingsPublicStocksRoute
   '/settings/x': typeof SettingsXRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
@@ -300,7 +300,7 @@ export interface FileRoutesByTo {
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/settings/blog-feeds': typeof SettingsBlogFeedsRoute
-  '/settings/importer': typeof SettingsImporterRoute
+  '/settings/public-stocks': typeof SettingsPublicStocksRoute
   '/settings/x': typeof SettingsXRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
@@ -320,7 +320,7 @@ export interface FileRoutesById {
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
   '/settings/blog-feeds': typeof SettingsBlogFeedsRoute
-  '/settings/importer': typeof SettingsImporterRoute
+  '/settings/public-stocks': typeof SettingsPublicStocksRoute
   '/settings/x': typeof SettingsXRoute
   '/insight-studio/': typeof InsightStudioIndexRoute
   '/news-feed/': typeof NewsFeedIndexRoute
@@ -341,7 +341,7 @@ export interface FileRouteTypes {
     | '/insight/$insightId'
     | '/news-feed/$documentid'
     | '/settings/blog-feeds'
-    | '/settings/importer'
+    | '/settings/public-stocks'
     | '/settings/x'
     | '/insight-studio'
     | '/news-feed'
@@ -358,7 +358,7 @@ export interface FileRouteTypes {
     | '/insight/$insightId'
     | '/news-feed/$documentid'
     | '/settings/blog-feeds'
-    | '/settings/importer'
+    | '/settings/public-stocks'
     | '/settings/x'
     | '/insight-studio'
     | '/news-feed'
@@ -376,7 +376,7 @@ export interface FileRouteTypes {
     | '/insight/$insightId'
     | '/news-feed/$documentid'
     | '/settings/blog-feeds'
-    | '/settings/importer'
+    | '/settings/public-stocks'
     | '/settings/x'
     | '/insight-studio/'
     | '/news-feed/'
@@ -444,7 +444,7 @@ export const routeTree = rootRoute
       "filePath": "settings.tsx",
       "children": [
         "/settings/blog-feeds",
-        "/settings/importer",
+        "/settings/public-stocks",
         "/settings/x",
         "/settings/",
         "/settings/knowledge-graph/",
@@ -470,8 +470,8 @@ export const routeTree = rootRoute
       "filePath": "settings/blog-feeds.tsx",
       "parent": "/settings"
     },
-    "/settings/importer": {
-      "filePath": "settings/importer.tsx",
+    "/settings/public-stocks": {
+      "filePath": "settings/public-stocks.tsx",
       "parent": "/settings"
     },
     "/settings/x": {
