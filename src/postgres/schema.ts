@@ -209,6 +209,7 @@ export const stockSymbols = pgTable("stock_symbols", {
   address: text(),
   officialSite: text(),
   fiscalYearEnd: text(),
+  overviewFetchedAt: timestamp(),
 });
 
 export type StockSymbolSelect = typeof stockSymbols.$inferSelect;

@@ -1,4 +1,4 @@
-import { eq, isNull } from "drizzle-orm";
+import { asc, eq, isNull, lt, or } from "drizzle-orm";
 import { inngest } from "~/inngest/client";
 import { db, schema } from "~/postgres/db";
 import { generateEmbedding } from "~/postgres/generate-embedding";
@@ -7,9 +7,18 @@ import { fetchCompanyOverview } from "~/server/financial-data-api/alpha-vantage-
 const RATE_LIMIT_DELAY_MS = 1100;
 
 /**
- * One-time/on-demand backfill: fetch Alpha Vantage company overview
- * for every stock_symbols row that is missing profile data (sector IS NULL).
+ * Each symbol uses 2 Inngest steps (fetch + sleep). With a 1,000-step limit
+ * and 1 step for the initial query, we can process 499 symbols per run.
+ */
+const BATCH_SIZE = 499;
+
+const THREE_MONTHS_MS = 1000 * 60 * 60 * 24 * 90;
+
+/**
+ * Backfill Alpha Vantage company overviews for stock symbols that have
+ * never been fetched or haven't been refreshed in over three months.
  *
+ * Processes up to 499 symbols per run to stay within Inngest's step limit.
  * Triggered by the "stock/backfill-company-overviews" event, which is
  * sent by the "Update Stock Data" button after symbol sync completes.
  */
@@ -18,20 +27,29 @@ export const backfillCompanyOverviews = inngest.createFunction(
   { event: "stock/backfill-company-overviews" },
   async ({ step }) => {
     const symbolsToFetch = await step.run(
-      "get-symbols-missing-overview",
+      "get-symbols-needing-overview",
       async () => {
+        const threeMonthsAgo = new Date(Date.now() - THREE_MONTHS_MS);
+
         return await db
           .select({
             id: schema.stockSymbols.id,
             symbol: schema.stockSymbols.symbol,
           })
           .from(schema.stockSymbols)
-          .where(isNull(schema.stockSymbols.sector));
+          .where(
+            or(
+              isNull(schema.stockSymbols.overviewFetchedAt),
+              lt(schema.stockSymbols.overviewFetchedAt, threeMonthsAgo),
+            ),
+          )
+          .orderBy(asc(schema.stockSymbols.overviewFetchedAt))
+          .limit(BATCH_SIZE);
       },
     );
 
     if (symbolsToFetch.length === 0) {
-      console.log("All symbols already have overview data");
+      console.log("All symbols have up-to-date overview data");
       return { processed: 0, succeeded: 0, failed: 0 };
     }
 
@@ -61,6 +79,7 @@ export const backfillCompanyOverviews = inngest.createFunction(
               address: overview.Address,
               officialSite: overview.OfficialSite,
               fiscalYearEnd: overview.FiscalYearEnd,
+              overviewFetchedAt: new Date(),
             })
             .where(eq(schema.stockSymbols.id, id));
 
