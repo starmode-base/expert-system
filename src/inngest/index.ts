@@ -17,6 +17,8 @@ import {
   processEarningsJobs,
   fetchTranscripts,
 } from "./earnings";
+import { backfillCompanyOverviews } from "./stock-data/backfill-company-overviews";
+import { syncStockSymbols } from "./stock-data/sync-stock-symbols";
 
 export const inngestFunctions = [
   scienceDailyScraper,
@@ -34,4 +36,6 @@ export const inngestFunctions = [
   seedSingleFeed,
   scrapeAllBlogs,
   scrapeSingleBlog,
+  backfillCompanyOverviews,
+  syncStockSymbols,
 ];

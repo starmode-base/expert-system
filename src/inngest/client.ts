@@ -106,6 +106,8 @@ const eventSchemas = {
   }),
   "dev/blog.seed-blogs.manual": z.object({}),
   "dev/blog.scrape-all-blogs.manual": z.object({}),
+  "stock/sync-stock-symbols": z.object({}),
+  "stock/backfill-company-overviews": z.object({}),
 };
 
 // Create a client to send and receive events

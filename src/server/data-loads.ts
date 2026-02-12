@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
+import { inngest } from "~/inngest/client";
 import { db, schema } from "~/postgres/db";
 
 import { invariant } from "@tanstack/react-router";
@@ -181,88 +181,9 @@ export const uploadCategoriesSF = createServerFn({ method: "POST" }).handler(
 
 export const updateStockDataSF = createServerFn({ method: "POST" }).handler(
   async () => {
-    try {
-      // Get distinct symbol/name pairs from earnings_schedule
-      const earningsRecords = await db
-        .selectDistinct({
-          symbol: schema.earningsSchedule.symbol,
-          name: schema.earningsSchedule.name,
-        })
-        .from(schema.earningsSchedule);
-
-      if (earningsRecords.length === 0) {
-        console.log("No earnings schedule records found");
-        return { inserted: 0, updated: 0 };
-      }
-
-      console.log(
-        `Processing ${earningsRecords.length} distinct symbols from earnings schedule`,
-      );
-
-      // Get existing stock symbols
-      const existing = await db
-        .select({
-          id: schema.stockSymbols.id,
-          symbol: schema.stockSymbols.symbol,
-        })
-        .from(schema.stockSymbols);
-      const existingBySymbol = new Map(existing.map((r) => [r.symbol, r.id]));
-
-      // Dedupe earnings records by symbol (keep first occurrence)
-      const dedupedBySymbol = new Map<
-        string,
-        { symbol: string; name: string }
-      >();
-      for (const rec of earningsRecords) {
-        if (!dedupedBySymbol.has(rec.symbol)) {
-          dedupedBySymbol.set(rec.symbol, rec);
-        }
-      }
-
-      // Separate records into updates and inserts
-      const toInsert: { symbol: string; name: string }[] = [];
-      const toUpdate: { id: string; name: string }[] = [];
-
-      for (const rec of dedupedBySymbol.values()) {
-        const existingId = existingBySymbol.get(rec.symbol);
-        if (existingId) {
-          toUpdate.push({ id: existingId, name: rec.name });
-        } else {
-          toInsert.push({ symbol: rec.symbol, name: rec.name });
-        }
-      }
-
-      let insertedCount = 0;
-      let updatedCount = 0;
-
-      // Insert new records
-      if (toInsert.length > 0) {
-        const result = await db
-          .insert(schema.stockSymbols)
-          .values(toInsert)
-          .returning({
-            id: schema.stockSymbols.id,
-            symbol: schema.stockSymbols.symbol,
-          });
-        insertedCount = result.length;
-      }
-
-      // Update existing records
-      for (const rec of toUpdate) {
-        await db
-          .update(schema.stockSymbols)
-          .set({ name: rec.name })
-          .where(eq(schema.stockSymbols.id, rec.id));
-        updatedCount++;
-      }
-
-      console.log(
-        `Successfully inserted ${insertedCount} new stock symbols and updated ${updatedCount} existing symbols`,
-      );
-      return { inserted: insertedCount, updated: updatedCount };
-    } catch (error) {
-      console.error("Error updating stock data:", error);
-      throw error;
-    }
+    await inngest.send({
+      name: "stock/sync-stock-symbols",
+      data: {},
+    });
   },
 );

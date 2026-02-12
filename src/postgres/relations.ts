@@ -13,6 +13,7 @@ import {
   earningsFetchJobs,
   trackedCompanies,
   stockSymbols,
+  stockSymbolEmbeddings,
   documents,
   takeawayReferences,
   insightTakeaways,
@@ -140,9 +141,23 @@ export const trackedCompaniesRelations = relations(
   }),
 );
 
-export const stockSymbolsRelations = relations(stockSymbols, ({ many }) => ({
-  trackedCompanies: many(trackedCompanies),
-}));
+export const stockSymbolsRelations = relations(
+  stockSymbols,
+  ({ many, one }) => ({
+    trackedCompanies: many(trackedCompanies),
+    stockSymbolEmbedding: one(stockSymbolEmbeddings),
+  }),
+);
+
+export const stockSymbolEmbeddingsRelations = relations(
+  stockSymbolEmbeddings,
+  ({ one }) => ({
+    stockSymbol: one(stockSymbols, {
+      fields: [stockSymbolEmbeddings.stockSymbolId],
+      references: [stockSymbols.id],
+    }),
+  }),
+);
 
 export const documentsRelations = relations(documents, ({ many }) => ({
   takeaways: many(takeaways),

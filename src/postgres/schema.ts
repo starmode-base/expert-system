@@ -198,10 +198,39 @@ export const stockSymbols = pgTable("stock_symbols", {
   ...baseSchema,
   symbol: text("symbol").notNull(),
   name: text("name").notNull(),
+  assetType: text(),
+  description: text(),
+  cik: text(),
+  exchange: text(),
+  currency: text(),
+  country: text(),
+  sector: text(),
+  industry: text(),
+  address: text(),
+  officialSite: text(),
+  fiscalYearEnd: text(),
 });
 
 export type StockSymbolSelect = typeof stockSymbols.$inferSelect;
 export type StockSymbolInsert = typeof stockSymbols.$inferInsert;
+
+export const stockSymbolEmbeddings = pgTable(
+  "stock_symbol_embeddings",
+  {
+    ...baseSchema,
+    stockSymbolId: text()
+      .notNull()
+      .unique()
+      .references(() => stockSymbols.id, { onDelete: "cascade" }),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+  },
+  (table) => [
+    index("stockSymbolEmbeddingIndex").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops"),
+    ),
+  ],
+);
 
 /**
  * Tracked Companies - User-specific company watchlist
