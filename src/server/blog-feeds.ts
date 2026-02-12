@@ -173,6 +173,26 @@ export const addBlogFeedSF = createServerFn({ method: "POST" })
   });
 
 /**
+ * Delete a blog feed by ID
+ */
+export const deleteBlogFeedSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ blogId: z.string() }))
+  .handler(async ({ data }) => {
+    const rows = await db
+      .delete(schema.blogs)
+      .where(eq(schema.blogs.id, data.blogId))
+      .returning({ id: schema.blogs.id });
+
+    const row = rows[0];
+    if (!row) {
+      throw new Error("Blog not found");
+    }
+
+    return row;
+  });
+
+/**
  * Fetch and parse an RSS/Atom feed, returning its articles
  */
 export const fetchFeedArticlesSF = createServerFn({ method: "GET" })

@@ -6,6 +6,7 @@ import {
   fetchFeedArticlesSF,
   toggleBlogEnabledSF,
   addBlogFeedSF,
+  deleteBlogFeedSF,
   type BlogFeed,
 } from "~/server/blog-feeds";
 import { sendEventSeedBlogsSF } from "~/server/inggest";
@@ -38,14 +39,23 @@ function BlogFeedsRoute() {
   const [addUrl, setAddUrl] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filteredFeeds = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return feeds;
-    return feeds.filter((f) => {
-      const haystack =
-        `${f.title}\0${f.description ?? ""}\0${f.htmlUrl ?? ""}`.toLowerCase();
-      return haystack.includes(q);
+    const filtered = q
+      ? feeds.filter((f) => {
+          const haystack =
+            `${f.title}\0${f.description ?? ""}\0${f.htmlUrl ?? ""}`.toLowerCase();
+          return haystack.includes(q);
+        })
+      : [...feeds];
+
+    return filtered.sort((a, b) => {
+      // Enabled feeds first
+      if (a.enabled !== b.enabled) return a.enabled ? -1 : 1;
+      // Then alphabetically by title
+      return a.title.localeCompare(b.title);
     });
   }, [feeds, search]);
 
@@ -53,6 +63,7 @@ function BlogFeedsRoute() {
   const seedBlogs = useServerFn(sendEventSeedBlogsSF);
   const toggleEnabled = useServerFn(toggleBlogEnabledSF);
   const addBlogFeed = useServerFn(addBlogFeedSF);
+  const deleteBlogFeed = useServerFn(deleteBlogFeedSF);
 
   const handleToggleEnabled = async (feed: BlogFeed) => {
     setToggling(true);
@@ -113,6 +124,20 @@ function BlogFeedsRoute() {
       setError(e instanceof Error ? e.message : "Failed to load articles");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteFeed = async (feed: BlogFeed) => {
+    setDeleting(true);
+    try {
+      await deleteBlogFeed({ data: { blogId: feed.id } });
+      setFeeds((prev) => prev.filter((f) => f.id !== feed.id));
+      setSelectedFeed(null);
+      setArticles([]);
+    } catch {
+      // Silently fail — state stays unchanged
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -319,6 +344,14 @@ function BlogFeedsRoute() {
                             {formatDate(selectedFeed.lastScrapedAt)}
                           </span>
                         ) : null}
+                        <button
+                          type="button"
+                          disabled={deleting}
+                          onClick={() => handleDeleteFeed(selectedFeed)}
+                          className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
+                        >
+                          {deleting ? "Deleting..." : "Delete"}
+                        </button>
                       </div>
                     </div>
                     {!loading && articles.length > 0 ? (
