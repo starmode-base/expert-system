@@ -5,14 +5,6 @@ import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
 import type { PaginatedResult } from "./pagination";
 
-export const queryStocksSF = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    context.ensureViewer();
-    const stocks = await db.query.stockSymbols.findMany();
-    return stocks;
-  });
-
 export const queryStocksPaginatedSF = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator(
