@@ -132,9 +132,11 @@ function BlogFeedsRoute() {
   return (
     <div className="h-[calc(100dvh-64px-49px)] overflow-hidden">
       <div className="mx-auto flex h-full max-w-4xl flex-col px-2 py-4 sm:px-4">
-        <div className="flex min-h-0 flex-1 gap-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 md:flex-row">
           {/* Feed list */}
-          <div className="flex w-72 shrink-0 flex-col gap-3">
+          <div
+            className={`flex min-h-0 w-full flex-1 flex-col gap-3 md:w-72 md:flex-none md:shrink-0 ${selectedFeed ? "hidden md:flex" : ""}`}
+          >
             {/* Update blogs panel */}
             <div className="shrink-0 border border-gray-200 bg-white p-4">
               <h2
@@ -251,10 +253,21 @@ function BlogFeedsRoute() {
           </div>
 
           {/* Article list */}
-          <div className="flex min-w-0 flex-1 flex-col border border-gray-200 bg-white">
+          <div
+            className={`flex min-h-0 min-w-0 flex-1 flex-col border border-gray-200 bg-white ${selectedFeed ? "" : "hidden md:flex"}`}
+          >
             {selectedFeed ? (
               <>
                 <div className="shrink-0 border-b border-gray-200 p-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFeed(null);
+                    }}
+                    className="mb-2 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 md:hidden"
+                  >
+                    <span aria-hidden="true">&larr;</span> All feeds
+                  </button>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h2 className="truncate text-base font-semibold text-gray-900">
