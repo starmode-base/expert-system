@@ -41,11 +41,19 @@ function BlogFeedsRoute() {
 
   const filteredFeeds = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return feeds;
-    return feeds.filter((f) => {
-      const haystack =
-        `${f.title}\0${f.description ?? ""}\0${f.htmlUrl ?? ""}`.toLowerCase();
-      return haystack.includes(q);
+    const filtered = q
+      ? feeds.filter((f) => {
+          const haystack =
+            `${f.title}\0${f.description ?? ""}\0${f.htmlUrl ?? ""}`.toLowerCase();
+          return haystack.includes(q);
+        })
+      : [...feeds];
+
+    return filtered.sort((a, b) => {
+      // Enabled feeds first
+      if (a.enabled !== b.enabled) return a.enabled ? -1 : 1;
+      // Then alphabetically by title
+      return a.title.localeCompare(b.title);
     });
   }, [feeds, search]);
 
