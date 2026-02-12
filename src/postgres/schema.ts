@@ -214,6 +214,24 @@ export const stockSymbols = pgTable("stock_symbols", {
 export type StockSymbolSelect = typeof stockSymbols.$inferSelect;
 export type StockSymbolInsert = typeof stockSymbols.$inferInsert;
 
+export const stockSymbolEmbeddings = pgTable(
+  "stock_symbol_embeddings",
+  {
+    ...baseSchema,
+    stockSymbolId: text()
+      .notNull()
+      .unique()
+      .references(() => stockSymbols.id, { onDelete: "cascade" }),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+  },
+  (table) => [
+    index("stockSymbolEmbeddingIndex").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops"),
+    ),
+  ],
+);
+
 /**
  * Tracked Companies - User-specific company watchlist
  */

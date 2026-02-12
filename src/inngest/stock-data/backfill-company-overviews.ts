@@ -1,6 +1,7 @@
 import { eq, isNull } from "drizzle-orm";
 import { inngest } from "~/inngest/client";
 import { db, schema } from "~/postgres/db";
+import { generateEmbedding } from "~/postgres/generate-embedding";
 import { fetchCompanyOverview } from "~/server/financial-data-api/alpha-vantage-api";
 
 const RATE_LIMIT_DELAY_MS = 1100;
@@ -41,7 +42,7 @@ export const backfillCompanyOverviews = inngest.createFunction(
     let succeeded = 0;
     let failed = 0;
 
-    for (const { id, symbol } of symbolsToFetch.slice(0, 10)) {
+    for (const { id, symbol } of symbolsToFetch.slice(20, 30)) {
       const result = await step.run(`fetch-overview-${symbol}`, async () => {
         try {
           const overview = await fetchCompanyOverview(symbol);
@@ -62,6 +63,19 @@ export const backfillCompanyOverviews = inngest.createFunction(
               fiscalYearEnd: overview.FiscalYearEnd,
             })
             .where(eq(schema.stockSymbols.id, id));
+
+          if (overview.Description) {
+            const embeddingText = `${overview.Name} — ${overview.Description} | ${overview.Sector} | ${overview.Industry}`;
+            const embedding = await generateEmbedding(embeddingText);
+
+            await db
+              .insert(schema.stockSymbolEmbeddings)
+              .values({ stockSymbolId: id, embedding })
+              .onConflictDoUpdate({
+                target: schema.stockSymbolEmbeddings.stockSymbolId,
+                set: { embedding },
+              });
+          }
 
           return { success: true as const };
         } catch (error) {
