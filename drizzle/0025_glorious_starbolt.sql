@@ -1,0 +1,1 @@
+ALTER TABLE "stock_symbols" ADD COLUMN "overview_fetched_at" timestamp;
