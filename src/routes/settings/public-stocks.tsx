@@ -1,12 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useConnectionStateListener } from "ably/react";
 import { useMemo, useState, useEffect } from "react";
 import { PubSubProvider, useNotifyUI } from "~/lib/ably";
+import { useInfiniteScroll } from "~/lib/use-infinite-scroll";
 import { updateStockDataSF } from "~/server/data-loads";
 import { sendEventEarningsCallscraperSF } from "~/server/inggest";
 import { listOrganizationsSF } from "~/server/organizations";
-import { queryStocksSF } from "~/server/query-stocks";
+import { queryStocksPaginatedSF } from "~/server/query-stocks";
 import {
   listTrackedCompaniesSF,
   toggleTrackedCompanySF,
@@ -20,14 +21,20 @@ interface TrackedCompany {
   nextEarningsDate: Date | null;
 }
 
-export const Route = createFileRoute("/settings/importer")({
-  loader: async () => {
+export const Route = createFileRoute("/settings/public-stocks")({
+  validateSearch: (search: Record<string, unknown> | undefined) => ({
+    searchInput: search?.searchInput as string | undefined,
+  }),
+  loaderDeps: ({ search: { searchInput } }) => ({ searchInput }),
+  loader: async ({ deps: { searchInput } }) => {
     const { viewerId } = await listOrganizationsSF();
-    const stockTickers = await queryStocksSF();
+    const initialStockPage = await queryStocksPaginatedSF({
+      data: { search: searchInput, cursor: null, limit: 50 },
+    });
     const trackedCompanies =
       (await listTrackedCompaniesSF()) as TrackedCompany[];
 
-    return { viewerId, stockTickers, trackedCompanies };
+    return { viewerId, initialStockPage, trackedCompanies, searchInput };
   },
   component: RouteComponentProvider,
 });
@@ -48,9 +55,26 @@ function RouteComponentProvider() {
 function RouteComponent() {
   const {
     viewerId,
-    stockTickers,
+    initialStockPage,
     trackedCompanies: initialTrackedCompanies,
+    searchInput: searchInputProp,
   } = Route.useLoaderData();
+  const router = useRouter();
+
+  const resetKey = JSON.stringify({ searchInput: searchInputProp });
+
+  const {
+    items: stockTickers,
+    sentinelRef,
+    isLoadingMore,
+  } = useInfiniteScroll({
+    initialData: initialStockPage,
+    fetchPage: (cursor) =>
+      queryStocksPaginatedSF({
+        data: { search: searchInputProp, cursor, limit: 50 },
+      }),
+    resetKey,
+  });
 
   const [selectedYear, setSelectedYear] = useState<number>(
     new Date().getFullYear(),
@@ -62,7 +86,7 @@ function RouteComponent() {
       symbol: string;
     }[]
   >([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState(searchInputProp ?? "");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState<"tickers" | "tracked" | "update">(
@@ -119,27 +143,6 @@ function RouteComponent() {
   const currentYear = new Date().getFullYear();
   const availableYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-  const filteredTickers = useMemo(
-    () =>
-      stockTickers
-        .filter(
-          (t) =>
-            t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.symbol.toLowerCase().includes(searchTerm.toLowerCase()),
-        )
-        .slice()
-        .sort((a, b) => {
-          const byName = a.name.localeCompare(b.name, undefined, {
-            sensitivity: "base",
-          });
-          if (byName !== 0) return byName;
-          return a.symbol.localeCompare(b.symbol, undefined, {
-            sensitivity: "base",
-          });
-        }),
-    [searchTerm, stockTickers],
-  );
-
   useConnectionStateListener("connected", ({ current }) => {
     console.log("Ably connection state:", current);
   });
@@ -185,10 +188,8 @@ function RouteComponent() {
     try {
       const result = await toggleTrackedCompany({ data: { stockSymbolId } });
       if (result.isTracked) {
-        // Add to tracked companies
         const stock = stockTickers.find((s) => s.id === stockSymbolId);
         if (stock) {
-          // Safe assertion: when isTracked is true, id is always a string
           setTrackedCompanies((prev) => [
             ...prev,
             {
@@ -201,7 +202,6 @@ function RouteComponent() {
           ]);
         }
       } else {
-        // Remove from tracked companies
         setTrackedCompanies((prev) =>
           prev.filter((tc) => tc.stockSymbolId !== stockSymbolId),
         );
@@ -213,6 +213,13 @@ function RouteComponent() {
         return next;
       });
     }
+  };
+
+  const handleSearch = () => {
+    void router.navigate({
+      to: router.state.location.pathname,
+      search: { searchInput: searchInput || undefined },
+    });
   };
 
   const formatDate = (date: Date | null) => {
@@ -287,19 +294,32 @@ function RouteComponent() {
                       {selectedTickers.length} selected
                     </div>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Search tickers..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                    }}
-                    className="mt-3 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-400 focus:ring-2 focus:ring-slate-200 focus:outline-none"
-                  />
+                  <div className="mt-3 flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Search tickers..."
+                      value={searchInput}
+                      onChange={(e) => {
+                        setSearchInput(e.target.value);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSearch();
+                        }
+                      }}
+                      className="min-w-0 flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-400 focus:ring-2 focus:ring-slate-200 focus:outline-none"
+                    />
+                    <button
+                      onClick={handleSearch}
+                      className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-2 text-sm text-white"
+                    >
+                      Search
+                    </button>
+                  </div>
                 </div>
 
                 <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto">
-                  {filteredTickers.map((ticker) => {
+                  {stockTickers.map((ticker) => {
                     const isSelected = selectedTickers.some(
                       (t) => t.symbol === ticker.symbol,
                     );
@@ -321,12 +341,22 @@ function RouteComponent() {
                             className="mt-0.5 h-4 w-4 rounded border-gray-300 text-slate-900"
                           />
                           <div className="flex flex-col">
-                            <span className="text-sm text-gray-700">
+                            <Link
+                              to="/stocks/$symbol"
+                              params={{ symbol: ticker.symbol }}
+                              className="group/link text-sm text-gray-700 hover:text-gray-900"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                            >
                               {ticker.name}{" "}
-                              <span className="text-gray-400">
+                              <span className="text-gray-400 group-hover/link:text-gray-500">
                                 ({ticker.symbol})
                               </span>
-                            </span>
+                              <span className="ml-1 inline-block text-gray-300 group-hover/link:text-gray-500">
+                                &#8599;
+                              </span>
+                            </Link>
                             {ticker.description ? (
                               <span className="line-clamp-2 text-xs text-gray-400">
                                 {ticker.description}
@@ -353,6 +383,11 @@ function RouteComponent() {
                       </div>
                     );
                   })}
+                  <div ref={sentinelRef} className="py-4 text-center">
+                    {isLoadingMore ? (
+                      <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="shrink-0 border-t border-gray-200 p-4">
