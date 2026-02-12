@@ -320,12 +320,19 @@ function RouteComponent() {
                             }}
                             className="mt-0.5 h-4 w-4 rounded border-gray-300 text-slate-900"
                           />
-                          <span className="text-sm text-gray-700">
-                            {ticker.name}{" "}
-                            <span className="text-gray-400">
-                              ({ticker.symbol})
+                          <div className="flex flex-col">
+                            <span className="text-sm text-gray-700">
+                              {ticker.name}{" "}
+                              <span className="text-gray-400">
+                                ({ticker.symbol})
+                              </span>
                             </span>
-                          </span>
+                            {ticker.description ? (
+                              <span className="line-clamp-2 text-xs text-gray-400">
+                                {ticker.description}
+                              </span>
+                            ) : null}
+                          </div>
                         </label>
                         <button
                           onClick={() => handleToggleTracking(ticker.id)}

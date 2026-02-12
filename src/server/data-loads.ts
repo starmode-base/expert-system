@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
+import { inngest } from "~/inngest/client";
 import { db, schema } from "~/postgres/db";
 
 import { invariant } from "@tanstack/react-router";
@@ -259,6 +260,14 @@ export const updateStockDataSF = createServerFn({ method: "POST" }).handler(
       console.log(
         `Successfully inserted ${insertedCount} new stock symbols and updated ${updatedCount} existing symbols`,
       );
+
+      // Kick off company overview backfill for symbols missing profile data
+      await inngest.send({
+        name: "stock/backfill-company-overviews",
+        data: {},
+      });
+      console.log("Triggered company overview backfill");
+
       return { inserted: insertedCount, updated: updatedCount };
     } catch (error) {
       console.error("Error updating stock data:", error);

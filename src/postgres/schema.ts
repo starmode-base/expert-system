@@ -198,6 +198,17 @@ export const stockSymbols = pgTable("stock_symbols", {
   ...baseSchema,
   symbol: text("symbol").notNull(),
   name: text("name").notNull(),
+  assetType: text(),
+  description: text(),
+  cik: text(),
+  exchange: text(),
+  currency: text(),
+  country: text(),
+  sector: text(),
+  industry: text(),
+  address: text(),
+  officialSite: text(),
+  fiscalYearEnd: text(),
 });
 
 export type StockSymbolSelect = typeof stockSymbols.$inferSelect;
