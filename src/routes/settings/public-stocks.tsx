@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useConnectionStateListener } from "ably/react";
 import { useMemo, useState, useEffect } from "react";
@@ -341,12 +341,22 @@ function RouteComponent() {
                             className="mt-0.5 h-4 w-4 rounded border-gray-300 text-slate-900"
                           />
                           <div className="flex flex-col">
-                            <span className="text-sm text-gray-700">
+                            <Link
+                              to="/stocks/$symbol"
+                              params={{ symbol: ticker.symbol }}
+                              className="group/link text-sm text-gray-700 hover:text-gray-900"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                            >
                               {ticker.name}{" "}
-                              <span className="text-gray-400">
+                              <span className="text-gray-400 group-hover/link:text-gray-500">
                                 ({ticker.symbol})
                               </span>
-                            </span>
+                              <span className="ml-1 inline-block text-gray-300 group-hover/link:text-gray-500">
+                                &#8599;
+                              </span>
+                            </Link>
                             {ticker.description ? (
                               <span className="line-clamp-2 text-xs text-gray-400">
                                 {ticker.description}

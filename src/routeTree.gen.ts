@@ -18,6 +18,7 @@ import { Route as IndexImport } from './routes/index'
 import { Route as SettingsIndexImport } from './routes/settings/index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
 import { Route as InsightStudioIndexImport } from './routes/insight-studio.index'
+import { Route as StocksSymbolImport } from './routes/stocks.$symbol'
 import { Route as SettingsXImport } from './routes/settings/x'
 import { Route as SettingsPublicStocksImport } from './routes/settings/public-stocks'
 import { Route as SettingsBlogFeedsImport } from './routes/settings/blog-feeds'
@@ -69,6 +70,12 @@ const NewsFeedIndexRoute = NewsFeedIndexImport.update({
 const InsightStudioIndexRoute = InsightStudioIndexImport.update({
   id: '/insight-studio/',
   path: '/insight-studio/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const StocksSymbolRoute = StocksSymbolImport.update({
+  id: '/stocks/$symbol',
+  path: '/stocks/$symbol',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -209,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsXImport
       parentRoute: typeof SettingsImport
     }
+    '/stocks/$symbol': {
+      id: '/stocks/$symbol'
+      path: '/stocks/$symbol'
+      fullPath: '/stocks/$symbol'
+      preLoaderRoute: typeof StocksSymbolImport
+      parentRoute: typeof rootRoute
+    }
     '/insight-studio/': {
       id: '/insight-studio/'
       path: '/insight-studio'
@@ -284,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/settings/blog-feeds': typeof SettingsBlogFeedsRoute
   '/settings/public-stocks': typeof SettingsPublicStocksRoute
   '/settings/x': typeof SettingsXRoute
+  '/stocks/$symbol': typeof StocksSymbolRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
   '/settings/': typeof SettingsIndexRoute
@@ -302,6 +317,7 @@ export interface FileRoutesByTo {
   '/settings/blog-feeds': typeof SettingsBlogFeedsRoute
   '/settings/public-stocks': typeof SettingsPublicStocksRoute
   '/settings/x': typeof SettingsXRoute
+  '/stocks/$symbol': typeof StocksSymbolRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
   '/settings': typeof SettingsIndexRoute
@@ -322,6 +338,7 @@ export interface FileRoutesById {
   '/settings/blog-feeds': typeof SettingsBlogFeedsRoute
   '/settings/public-stocks': typeof SettingsPublicStocksRoute
   '/settings/x': typeof SettingsXRoute
+  '/stocks/$symbol': typeof StocksSymbolRoute
   '/insight-studio/': typeof InsightStudioIndexRoute
   '/news-feed/': typeof NewsFeedIndexRoute
   '/settings/': typeof SettingsIndexRoute
@@ -343,6 +360,7 @@ export interface FileRouteTypes {
     | '/settings/blog-feeds'
     | '/settings/public-stocks'
     | '/settings/x'
+    | '/stocks/$symbol'
     | '/insight-studio'
     | '/news-feed'
     | '/settings/'
@@ -360,6 +378,7 @@ export interface FileRouteTypes {
     | '/settings/blog-feeds'
     | '/settings/public-stocks'
     | '/settings/x'
+    | '/stocks/$symbol'
     | '/insight-studio'
     | '/news-feed'
     | '/settings'
@@ -378,6 +397,7 @@ export interface FileRouteTypes {
     | '/settings/blog-feeds'
     | '/settings/public-stocks'
     | '/settings/x'
+    | '/stocks/$symbol'
     | '/insight-studio/'
     | '/news-feed/'
     | '/settings/'
@@ -395,6 +415,7 @@ export interface RootRouteChildren {
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   InsightInsightIdRoute: typeof InsightInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
+  StocksSymbolRoute: typeof StocksSymbolRoute
   InsightStudioIndexRoute: typeof InsightStudioIndexRoute
   NewsFeedIndexRoute: typeof NewsFeedIndexRoute
 }
@@ -408,6 +429,7 @@ const rootRouteChildren: RootRouteChildren = {
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   InsightInsightIdRoute: InsightInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
+  StocksSymbolRoute: StocksSymbolRoute,
   InsightStudioIndexRoute: InsightStudioIndexRoute,
   NewsFeedIndexRoute: NewsFeedIndexRoute,
 }
@@ -430,6 +452,7 @@ export const routeTree = rootRoute
         "/insight-studio/$insightId",
         "/insight/$insightId",
         "/news-feed/$documentid",
+        "/stocks/$symbol",
         "/insight-studio/",
         "/news-feed/"
       ]
@@ -477,6 +500,9 @@ export const routeTree = rootRoute
     "/settings/x": {
       "filePath": "settings/x.tsx",
       "parent": "/settings"
+    },
+    "/stocks/$symbol": {
+      "filePath": "stocks.$symbol.tsx"
     },
     "/insight-studio/": {
       "filePath": "insight-studio.index.tsx"
