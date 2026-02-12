@@ -38,7 +38,7 @@ function SettingsLayout() {
   return (
     <div className="min-h-[calc(100dvh-64px)]">
       <div className="border-b border-slate-200 bg-white">
-        <nav className="mx-auto flex max-w-4xl items-center gap-1.5 px-3 py-2 sm:gap-2 sm:px-6">
+        <nav className="mx-auto flex max-w-4xl items-center gap-1.5 overflow-x-auto px-3 py-2 sm:gap-2 sm:px-6">
           {subNavItems.map((item) => (
             <Link
               key={item.key}
