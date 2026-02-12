@@ -169,6 +169,13 @@
       "when": 1770905082812,
       "tag": "0023_eminent_surge",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1770908054479,
+      "tag": "0024_chemical_ben_parker",
+      "breakpoints": true
     }
   ]
 }

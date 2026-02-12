@@ -42,7 +42,7 @@ export const backfillCompanyOverviews = inngest.createFunction(
     let succeeded = 0;
     let failed = 0;
 
-    for (const { id, symbol } of symbolsToFetch.slice(20, 30)) {
+    for (const { id, symbol } of symbolsToFetch) {
       const result = await step.run(`fetch-overview-${symbol}`, async () => {
         try {
           const overview = await fetchCompanyOverview(symbol);
