@@ -135,7 +135,7 @@ function BlogFeedsRoute() {
         <div className="flex min-h-0 flex-1 flex-col gap-4 md:flex-row">
           {/* Feed list */}
           <div
-            className={`flex w-full shrink-0 flex-col gap-3 md:w-72 ${selectedFeed ? "hidden md:flex" : ""}`}
+            className={`flex min-h-0 w-full flex-1 flex-col gap-3 md:w-72 md:flex-none md:shrink-0 ${selectedFeed ? "hidden md:flex" : ""}`}
           >
             {/* Update blogs panel */}
             <div className="shrink-0 border border-gray-200 bg-white p-4">
@@ -254,7 +254,7 @@ function BlogFeedsRoute() {
 
           {/* Article list */}
           <div
-            className={`flex min-w-0 flex-1 flex-col border border-gray-200 bg-white ${selectedFeed ? "" : "hidden md:flex"}`}
+            className={`flex min-h-0 min-w-0 flex-1 flex-col border border-gray-200 bg-white ${selectedFeed ? "" : "hidden md:flex"}`}
           >
             {selectedFeed ? (
               <>
