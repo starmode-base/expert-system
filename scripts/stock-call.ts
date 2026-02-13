@@ -7,16 +7,14 @@
 //   searchTickers,
 //   fetchTreasuryYield,
 // } from "~/server/financial-data-api/alpha-vantage-api";
-import {
-  fetchLatestBalanceSheetByMetric,
-  fetchLatestCashFlowByMetric,
-  fetchLatestIncomeStatementByMetric,
-} from "~/inngest/insights/tool-functions/tools-financial";
+
+import { fetchCompanyOverview } from "~/server/financial-data-api/alpha-vantage-api";
 
 // const symbol = (process.argv[2] ?? "TSLA").toUpperCase();
 // const searchKeywords = process.argv[3];
 
-// const overview = await fetchCompanyOverview(symbol);
+const overview = await fetchCompanyOverview("BRK.B");
+console.log("Overview", overview);
 
 // // Alpha Vantage allows one request per second, so wait before the quote call
 // await new Promise((resolve) => setTimeout(resolve, 1100));
@@ -106,31 +104,31 @@ import {
 // //   });
 // // }
 
-const result = await fetchLatestIncomeStatementByMetric("TSLA", 4, [
-  "totalRevenue",
-  "grossProfit",
-]);
+// const result = await fetchLatestIncomeStatementByMetric("TSLA", 4, [
+//   "totalRevenue",
+//   "grossProfit",
+// ]);
 
-console.log("Result", result);
+// console.log("Result", result);
 
-//sleep
-await new Promise((resolve) => setTimeout(resolve, 1100));
+// //sleep
+// await new Promise((resolve) => setTimeout(resolve, 1100));
 
-const result2 = await fetchLatestBalanceSheetByMetric("TSLA", 4, [
-  "totalAssets",
-  "totalLiabilities",
-]);
+// const result2 = await fetchLatestBalanceSheetByMetric("TSLA", 4, [
+//   "totalAssets",
+//   "totalLiabilities",
+// ]);
 
-console.log("Result2", result2);
+// console.log("Result2", result2);
 
-//sleep
-await new Promise((resolve) => setTimeout(resolve, 1100));
+// //sleep
+// await new Promise((resolve) => setTimeout(resolve, 1100));
 
-const result3 = await fetchLatestCashFlowByMetric("TSLA", 4, [
-  "operatingCashflow",
-  "cashflowFromInvestment",
-  "cashflowFromFinancing",
-  "profitLoss",
-]);
+// const result3 = await fetchLatestCashFlowByMetric("TSLA", 4, [
+//   "operatingCashflow",
+//   "cashflowFromInvestment",
+//   "cashflowFromFinancing",
+//   "profitLoss",
+// ]);
 
-console.log("Result3", result3);
+// console.log("Result3", result3);

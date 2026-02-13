@@ -108,6 +108,10 @@ const eventSchemas = {
   "dev/blog.scrape-all-blogs.manual": z.object({}),
   "stock/sync-stock-symbols": z.object({}),
   "stock/backfill-company-overviews": z.object({}),
+  "stock/fetch-company-overview": z.object({
+    stockSymbolId: z.string(),
+    symbol: z.string(),
+  }),
 };
 
 // Create a client to send and receive events

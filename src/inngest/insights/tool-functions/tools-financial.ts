@@ -27,6 +27,11 @@ export async function fetchCompanyOverviewByMetric(
 ) {
   await new Promise((resolve) => setTimeout(resolve, 1100));
   const overview = await fetchCompanyOverview(symbol);
+
+  if (!overview) {
+    return null;
+  }
+
   return overview[metric];
 }
 
