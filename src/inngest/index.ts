@@ -18,6 +18,7 @@ import {
   fetchTranscripts,
 } from "./earnings";
 import { backfillCompanyOverviews } from "./stock-data/backfill-company-overviews";
+import { fetchCompanyOverviewWorker } from "./stock-data/fetch-company-overview";
 import { syncStockSymbols } from "./stock-data/sync-stock-symbols";
 
 export const inngestFunctions = [
@@ -37,5 +38,6 @@ export const inngestFunctions = [
   scrapeAllBlogs,
   scrapeSingleBlog,
   backfillCompanyOverviews,
+  fetchCompanyOverviewWorker,
   syncStockSymbols,
 ];
