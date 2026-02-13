@@ -98,6 +98,7 @@ function RouteComponent() {
   const [trackingInProgress, setTrackingInProgress] = useState<Set<string>>(
     new Set(),
   );
+  const [stockDataSent, setStockDataSent] = useState(false);
 
   // Create a set of tracked stock symbol IDs for quick lookup
   const trackedStockSymbolIds = useMemo(
@@ -551,10 +552,15 @@ function RouteComponent() {
                   <button
                     onClick={async () => {
                       await updateStockData();
+                      setStockDataSent(true);
+                      setTimeout(() => {
+                        setStockDataSent(false);
+                      }, 2000);
                     }}
-                    className="w-full cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-sm text-white sm:w-auto"
+                    disabled={stockDataSent}
+                    className="w-full cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-50 sm:w-auto"
                   >
-                    Update Stock Data
+                    {stockDataSent ? "Sent!" : "Update Stock Data"}
                   </button>
                 </div>
               </div>
