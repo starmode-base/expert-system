@@ -4,7 +4,7 @@ import { db, schema } from "~/postgres/db";
 import { generateEmbedding } from "~/postgres/generate-embedding";
 import { fetchCompanyOverview } from "~/server/financial-data-api/alpha-vantage-api";
 
-const RATE_LIMIT_DELAY_MS = 1100;
+const RATE_LIMIT_DELAY_MS = 600;
 
 /**
  * Each symbol uses 2 Inngest steps (fetch + sleep). With a 1,000-step limit
