@@ -8,8 +8,8 @@ import { fetchCompanyOverview } from "~/server/financial-data-api/alpha-vantage-
  * Worker: fetch and persist an Alpha Vantage company overview for a single
  * stock symbol. Dispatched by the backfill-company-overviews scheduler.
  *
- * Concurrency is capped at 5 so invocations run serially, respecting the
- * Alpha Vantage rate limit without needing explicit sleep steps.
+ * Concurrency is capped at 5 to limit parallel requests. Each invocation
+ * sleeps after fetching to respect the Alpha Vantage rate limit.
  */
 export const fetchCompanyOverviewWorker = inngest.createFunction(
   {

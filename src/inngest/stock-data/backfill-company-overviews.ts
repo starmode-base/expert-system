@@ -15,7 +15,7 @@ const THREE_MONTHS_MS = 1000 * 60 * 60 * 24 * 90;
  * and fan out one "stock/fetch-company-overview" event per symbol.
  *
  * Each event is handled by a dedicated worker function with a concurrency
- * limit of 1, so Alpha Vantage rate limits are respected automatically.
+ * limit of 5, so Alpha Vantage rate limits are respected automatically.
  *
  * Triggered by the "stock/backfill-company-overviews" event, which is
  * sent by the "Update Stock Data" button after symbol sync completes.
@@ -51,7 +51,7 @@ export const backfillCompanyOverviews = inngest.createFunction(
       return { dispatched: 0 };
     }
 
-    const events = symbolsToFetch.slice(0, 5).map(({ id, symbol }) => ({
+    const events = symbolsToFetch.map(({ id, symbol }) => ({
       name: "stock/fetch-company-overview" as const,
       data: { stockSymbolId: id, symbol },
     }));
