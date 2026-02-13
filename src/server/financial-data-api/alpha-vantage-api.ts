@@ -322,11 +322,20 @@ async function fetchAlphaVantageJson(
 
 export async function fetchCompanyOverview(
   symbol: string,
-): Promise<CompanyOverview> {
+): Promise<CompanyOverview | null> {
   const json = await fetchAlphaVantageJson({
     function: "OVERVIEW",
     symbol,
   });
+
+  // Alpha Vantage returns an empty object for unrecognized symbols
+  if (
+    typeof json === "object" &&
+    json !== null &&
+    Object.keys(json).length === 0
+  ) {
+    return null;
+  }
 
   return CompanyOverviewSchema.parse(json);
 }
