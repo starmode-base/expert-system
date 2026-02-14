@@ -6,8 +6,7 @@ import { scienceDailyScraper } from "./importers/unused/science-daily-scraper";
 import { dwarkeshPodcastScraper } from "./importers/scheduled/dwarkesh/dwarkesh-job";
 import { macroVoicesScraper } from "./importers/scheduled/macrovoices/macrovoices-job";
 import { a16zNewsScraper } from "./importers/scheduled/a16z/a16z-job";
-import { seedBlogs } from "./importers/scheduled/blogs/seed-blogs";
-import { seedSingleFeed } from "./importers/scheduled/blogs/seed-single-feed";
+
 import { scrapeAllBlogs } from "./importers/scheduled/blogs/scrape-all-blogs";
 import { scrapeSingleBlog } from "./importers/scheduled/blogs/scrape-single-blog";
 
@@ -33,8 +32,6 @@ export const inngestFunctions = [
   dwarkeshPodcastScraper,
   macroVoicesScraper,
   a16zNewsScraper,
-  seedBlogs,
-  seedSingleFeed,
   scrapeAllBlogs,
   scrapeSingleBlog,
   backfillCompanyOverviews,

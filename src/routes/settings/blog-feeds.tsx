@@ -9,7 +9,7 @@ import {
   deleteBlogFeedSF,
   type BlogFeed,
 } from "~/server/blog-feeds";
-import { sendEventSeedBlogsSF } from "~/server/inggest";
+
 
 export const Route = createFileRoute("/settings/blog-feeds")({
   loader: async () => {
@@ -32,8 +32,6 @@ function BlogFeedsRoute() {
   const [articles, setArticles] = useState<FeedArticle[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [seeding, setSeeding] = useState(false);
-  const [seedStatus, setSeedStatus] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
   const [search, setSearch] = useState("");
   const [addUrl, setAddUrl] = useState("");
@@ -60,7 +58,6 @@ function BlogFeedsRoute() {
   }, [feeds, search]);
 
   const fetchArticles = useServerFn(fetchFeedArticlesSF);
-  const seedBlogs = useServerFn(sendEventSeedBlogsSF);
   const toggleEnabled = useServerFn(toggleBlogEnabledSF);
   const addBlogFeed = useServerFn(addBlogFeedSF);
   const deleteBlogFeed = useServerFn(deleteBlogFeedSF);
@@ -95,19 +92,6 @@ function BlogFeedsRoute() {
       setAddError(e instanceof Error ? e.message : "Failed to add feed");
     } finally {
       setAdding(false);
-    }
-  };
-
-  const handleSeedBlogs = async () => {
-    setSeeding(true);
-    setSeedStatus(null);
-    try {
-      await seedBlogs();
-      setSeedStatus("Seed job triggered");
-    } catch {
-      setSeedStatus("Failed to trigger seed job");
-    } finally {
-      setSeeding(false);
     }
   };
 
@@ -162,13 +146,10 @@ function BlogFeedsRoute() {
           <div
             className={`flex min-h-0 w-full flex-1 flex-col gap-3 md:w-72 md:flex-none md:shrink-0 ${selectedFeed ? "hidden md:flex" : ""}`}
           >
-            {/* Update blogs panel */}
+            {/* Add blog feed */}
             <div className="shrink-0 border border-gray-200 bg-white p-4">
-              <h2
-                className="text-sm font-semibold text-gray-900"
-                title="Add a feed by URL or bulk-import from the curated OPML list"
-              >
-                Update Blogs
+              <h2 className="text-sm font-semibold text-gray-900">
+                Add Blog Feed
               </h2>
               <form
                 onSubmit={(e) => {
@@ -198,21 +179,6 @@ function BlogFeedsRoute() {
               {addError ? (
                 <p className="mt-1 text-xs text-red-600">{addError}</p>
               ) : null}
-              <div className="mt-2 flex items-center justify-between">
-                {seedStatus ? (
-                  <span className="text-xs text-gray-500">{seedStatus}</span>
-                ) : (
-                  <span />
-                )}
-                <button
-                  type="button"
-                  onClick={handleSeedBlogs}
-                  disabled={seeding}
-                  className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
-                >
-                  {seeding ? "Updating..." : "Update Blogs"}
-                </button>
-              </div>
             </div>
 
             {/* Blog feeds list */}
