@@ -10,7 +10,6 @@ import {
   type BlogFeed,
 } from "~/server/blog-feeds";
 
-
 export const Route = createFileRoute("/settings/blog-feeds")({
   loader: async () => {
     const feeds = await listBlogFeedsSF();
