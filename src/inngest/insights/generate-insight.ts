@@ -90,7 +90,10 @@ export const generateInsight = inngest.createFunction(
     const insightId = await step.run(`save-insight`, async () => {
       console.log("##### INSIGHT RESPONSE PARSED #####");
 
-      const references = finalInsight.references;
+      const references = finalInsight.references.map((reference) => ({
+        ...reference,
+        reference_id: reference.reference_id.replace(/\s+/g, ""),
+      }));
 
       const uniqueReferences = Array.from(
         new Map(
