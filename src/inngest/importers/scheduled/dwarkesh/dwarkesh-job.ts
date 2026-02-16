@@ -2,6 +2,7 @@ import { inngest } from "~/inngest/client";
 import fetch from "node-fetch";
 import { db, schema } from "~/postgres/db";
 import { inArray } from "drizzle-orm";
+import { models } from "~/models";
 import {
   DwarkeshPodcastCandidate,
   dwarkeshPodcastTakeawayPrompt,
@@ -114,7 +115,7 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
           data: {
             documentId: doc.id,
             takeawayPrompt: dwarkeshPodcastTakeawayPrompt,
-            model: "gpt-5.2",
+            model: models.reasoning,
             user: { id: "", email: "" },
           },
         });

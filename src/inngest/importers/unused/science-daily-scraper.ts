@@ -2,6 +2,7 @@
 
 import { extractRssItems, scrapeLink } from "../scrapers/scientific-daily";
 import { inngest } from "../../client";
+import { models } from "~/models";
 
 export const scienceDailyScraper = inngest.createFunction(
   { id: "scraper.daily-science" },
@@ -38,7 +39,7 @@ export const scienceDailyScraper = inngest.createFunction(
             documentId,
             takeawayPrompt:
               "Focus on takeaways that are relevant on its potential for real impact to peoples lives.",
-            model: "gpt-5-mini",
+            model: models.standard,
             user: { id: "", email: "" },
           },
         });

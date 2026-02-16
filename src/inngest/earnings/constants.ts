@@ -1,3 +1,5 @@
+import { models } from "~/models";
+
 /**
  * Configuration constants for the earnings call system.
  */
@@ -32,4 +34,4 @@ export const EARNINGS_TRANSCRIPT_SOURCE = "Public Earnings Transcripts";
 /**
  * Model used for generating takeaways from earnings calls.
  */
-export const EARNINGS_TAKEAWAY_MODEL = "gpt-5.2";
+export const EARNINGS_TAKEAWAY_MODEL = models.reasoning;

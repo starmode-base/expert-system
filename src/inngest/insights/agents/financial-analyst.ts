@@ -7,6 +7,7 @@
 
 import { Agent, tool, type FunctionTool } from "@openai/agents";
 import { z } from "zod";
+import { models } from "~/models";
 import {
   fetchCompanyOverviewByMetric,
   fetchLatestBalanceSheetByMetric,
@@ -194,7 +195,7 @@ export function createFinancialAnalysisAgent() {
   return new Agent({
     name: "Financial Analysis Agent",
     instructions: financialAnalysisSystemPrompt,
-    model: "gpt-5-mini",
+    model: models.standard,
     tools: financialTools,
     outputType: financialAnalysisSchema,
   });

@@ -2,6 +2,7 @@ import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import { models } from "~/models";
 
 const client = new OpenAI();
 
@@ -24,7 +25,7 @@ const responseFormat = zodTextFormat(schema, "response");
 
 export async function getSummary(text: string) {
   const response = await client.responses.parse({
-    model: "gpt-5-mini",
+    model: models.standard,
     input: [
       {
         role: "user",

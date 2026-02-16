@@ -2,6 +2,7 @@ import { inngest } from "~/inngest/client";
 import fetch from "node-fetch";
 import { db, schema } from "~/postgres/db";
 import { inArray } from "drizzle-orm";
+import { models } from "~/models";
 import {
   MacroVoicesCandidate,
   fetchMacroVoicesTranscript,
@@ -136,7 +137,7 @@ export const macroVoicesScraper = inngest.createFunction(
           data: {
             documentId: doc.id,
             takeawayPrompt: macroVoicesTakeawayPrompt,
-            model: "gpt-5.2",
+            model: models.reasoning,
             user: { id: "", email: "" },
           },
         });

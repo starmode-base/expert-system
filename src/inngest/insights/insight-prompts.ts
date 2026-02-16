@@ -2,9 +2,10 @@ import { z } from "zod";
 import { TakeawaySearchResult } from "~/server/searchSFs";
 import { InsightAgentInput } from "./agents/insight-agent";
 import { invariant } from "@tanstack/react-router";
+import { models } from "~/models";
 
 export const agentParameters = {
-  model: "gpt-5.2",
+  model: models.reasoning,
   reasoning: { effort: "high" as const },
   parallel_tool_calls: true as const,
 };

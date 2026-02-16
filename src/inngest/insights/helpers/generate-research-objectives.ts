@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { invariant } from "@tanstack/react-router";
+import { models } from "~/models";
 
 const openAiClient = new OpenAI();
 
@@ -28,7 +29,7 @@ export async function generateResearchThemes(
   });
 
   const response = await openAiClient.responses.parse({
-    model: "gpt-5.2",
+    model: models.reasoning,
     reasoning: { effort: "low" },
     input: [
       {

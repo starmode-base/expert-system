@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import fetch from "node-fetch";
+import { models } from "~/models";
 
 const client = new OpenAI();
 
@@ -39,7 +40,7 @@ export async function extractBodyTextFromHtml(html: string): Promise<string> {
   const bodyHtml = truncateForModel(stripHeavyTags(getBodyHtml(html)));
 
   const response = await client.responses.parse({
-    model: "gpt-5-nano",
+    model: models.lightweight,
     input: [
       {
         role: "system",

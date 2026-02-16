@@ -2,6 +2,7 @@ import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import { models } from "~/models";
 
 const client = new OpenAI();
 
@@ -40,7 +41,7 @@ export async function getDocumentSummary(
       : articleText;
 
   const response = await client.responses.parse({
-    model: "gpt-5-nano",
+    model: models.lightweight,
     input: [
       {
         role: "system",

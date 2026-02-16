@@ -2,6 +2,7 @@ import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import { models } from "~/models";
 
 const client = new OpenAI();
 
@@ -55,7 +56,7 @@ const schema = z.object({
 export async function getTakeaways(
   articleText: string,
   takeawayInstructions?: string,
-  model = "gpt-5.2",
+  model: string = models.reasoning,
   sourceAttribution?: string,
 ) {
   const response = await client.responses.parse({
@@ -114,7 +115,7 @@ export async function getTakeaways(
 
 async function getTakeawayTitle(takeaway: string) {
   const completion = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: models.takeawayTitles,
     messages: [
       {
         role: "user",

@@ -10,6 +10,7 @@ import { invariant } from "@tanstack/react-router";
 import { createFinancialAnalysisAgent } from "./financial-analyst";
 import { createMacroResearcherAgent } from "./macro-researcher";
 import { createResearcherAgent } from "./researcher";
+import { models } from "~/models";
 
 // ---------------------------
 // Tools
@@ -128,7 +129,7 @@ function createInsightAgent() {
   return new Agent({
     name: "Insight Generator",
     instructions: systemPrompt,
-    model: "gpt-5.2",
+    model: models.reasoning,
     tools: [
       financialAnalystTool,
       macroResearcherTool,

@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { db } from "~/postgres/db";
+import { models } from "~/models";
 
 const client = new OpenAI();
 
@@ -35,7 +36,7 @@ export async function getCategory(text: string) {
     .join("\n");
 
   const response = await client.responses.parse({
-    model: "gpt-5-mini",
+    model: models.standard,
     input: [
       {
         role: "user",

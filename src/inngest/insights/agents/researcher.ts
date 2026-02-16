@@ -4,6 +4,7 @@ import {
   fetchTakeawayPreviews,
   fetchFormattedTakeawaysByIds,
 } from "../tool-functions/tools-takeaways";
+import { models } from "~/models";
 
 // ---------------------------
 // Tools
@@ -93,7 +94,7 @@ export function createResearcherAgent() {
   return new Agent({
     name: "Researcher Agent",
     instructions: researcherSystemPrompt,
-    model: "gpt-5-mini",
+    model: models.standard,
     tools: [fetchTakeawayPreviewsTool, fetchFormattedTakeawayPreviewsByIdsTool],
     toolUseBehavior: {
       stopAtToolNames: ["fetchFormattedTakeawayPreviewsByIds"],

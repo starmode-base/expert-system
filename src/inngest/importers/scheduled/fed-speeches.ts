@@ -6,6 +6,7 @@ import { db, schema } from "~/postgres/db";
 import { inngest } from "../../client";
 import { extractBodyTextFromHtml } from "~/inngest/importers/scrapers/extract-body-text";
 import { getDocumentSummary } from "../helpers/get-document-summary";
+import { models } from "~/models";
 
 interface FedRssItem {
   title?: (string | { _: string })[];
@@ -270,7 +271,7 @@ export const fedSpeechesScraper = inngest.createFunction(
           data: {
             documentId: doc.id,
             takeawayPrompt: fedSpeechesTakeawayPrompt,
-            model: "gpt-5.1",
+            model: models.reasoning,
             user: { id: "", email: "" },
           },
         });
