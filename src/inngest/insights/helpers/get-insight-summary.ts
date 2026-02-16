@@ -61,6 +61,10 @@ Based on the research below, create:
 2) A single-sentence core insight statement—the "aha" moment that makes someone stop and think.
 3) A post for social media.
 
+
+Speak like you are explaing the idea to a friend.
+NEVER use contrastive negation.
+
 Research:
 ${researchText}`,
       },
