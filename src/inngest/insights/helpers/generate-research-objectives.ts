@@ -21,7 +21,7 @@ export async function generateResearchThemes(
         z
           .string()
           .describe(
-            "A distinct 1-2 sentence research question pointing toward a non-obvious, surprising, or counterintuitive insight. Should connect multiple ideas and challenge conventional thinking.",
+            "A distinct 1-2 sentence research theme. The first theme must cover AI and technology advancement. The second theme must cover business, markets, or economics with an investable angle.",
           ),
       )
       .length(2),
@@ -35,7 +35,7 @@ export async function generateResearchThemes(
         role: "system",
         type: "message",
         content:
-          "You are a research director for a discovery-oriented insight engine. Your job is to propose research questions that surface non-obvious, surprising, and consequential ideas about how the world is changing. Optimize for novelty, cross-domain connections, and the potential to shift mental models.",
+          "You are a research director for a discovery-oriented insight engine. You operate across two domains: (1) the advancement of AI and technology, and (2) business, markets, and economics. Your job is to propose research themes that surface non-obvious, surprising, and consequential ideas in each domain. Optimize for novelty, cross-domain connections, and the potential to shift mental models.",
       },
       {
         role: "user",
@@ -45,8 +45,22 @@ export async function generateResearchThemes(
 Objective:
 Given recent takeaway summaries and recent insights, generate exactly 2 distinct research themes that will guide a research agent to discover relevant documents from a large corpus. These themes are inputs to downstream insight generation and must maximize novelty, optionality, and second-order discovery.
 
+Theme classes (strict — one theme per class):
+
+Theme 1 — AI & Technology Advancement:
+- Focus on the frontier of AI capabilities, infrastructure, tooling, adoption dynamics, or emergent behavior in AI systems.
+- Can include adjacent technology domains (compute, semiconductors, robotics, biotech, energy) when they intersect with or are reshaped by AI progress.
+- Favor themes about capability shifts, architectural changes, scaling dynamics, deployment bottlenecks, or second-order effects of AI integration into existing systems.
+- Strong themes expose a tension, constraint, or counterintuitive dynamic in how AI technology is actually progressing vs. the popular narrative.
+
+Theme 2 — Business, Markets & Economics (Investable):
+- Focus on market structure, capital flows, competitive dynamics, regulatory shifts, or macroeconomic forces that create asymmetric opportunities or risks.
+- Themes should point toward investable research areas — sectors, asset classes, structural trades, or emerging market dislocations that reward deeper investigation.
+- Can span public equities, private markets, commodities, credit, real estate, or macro when the theme identifies a specific mechanism or catalyst.
+- Strong themes reveal a mispricing, an under-appreciated structural shift, or a breakdown in consensus assumptions about economic fundamentals.
+
 Output rules (strict):
-- Output exactly 2 research themes.
+- Output exactly 2 research themes, one per class, in order (AI/tech first, markets/economics second).
 - Each theme must be phrased as a short research framing statement, not a question.
 - 1–2 sentences per theme.
 - No bullets, no numbering, no headings, no colons.
@@ -57,12 +71,6 @@ Novelty constraints (critical):
 - Each theme must target a different topic cluster and a different set of primary actors or systems.
 - Themes should be broad enough to pull diverse documents, but sharp enough to exclude generic material.
 - Penalize obvious continuations of known narratives or consensus views.
-
-Quality bar for a strong research theme:
-- Connects at least two different domains (e.g., technology + regulation, incentives + infrastructure, labor + capital).
-- Challenges a widely-held assumption or exposes a hidden constraint, bottleneck, or second-order effect.
-- Points toward an explanation for something confusing, unstable, or contradictory in the current landscape.
-- If explored deeply, could plausibly produce an investable or strategic insight.
 
 What makes a theme weak (avoid):
 - Restating or slightly generalizing existing takeaways.
