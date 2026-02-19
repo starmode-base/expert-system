@@ -23,10 +23,7 @@ function buildDescription(takeaway: Takeaway | null) {
   return `${normalized.slice(0, maxLength).trimEnd()}...`;
 }
 
-function buildHeadData(
-  takeaway: Takeaway | null,
-  takeawayId: string | number,
-) {
+function buildHeadData(takeaway: Takeaway | null, takeawayId: string | number) {
   const title = buildTitle(takeaway);
   const description = buildDescription(takeaway);
   const pageUrl = `${SITE_ORIGIN}/takeaway/${takeawayId}`;
