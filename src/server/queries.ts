@@ -221,7 +221,7 @@ export const queryPublicTakeawayById = createServerFn({ method: "GET" })
 
     return {
       id: takeaway.id,
-      documentId: takeaway.documentId ?? undefined,
+      documentId: takeaway.documentId,
       title: takeaway.title,
       publicationDate: takeaway.document.publicationDate,
       takeaway: takeaway.takeaway,
