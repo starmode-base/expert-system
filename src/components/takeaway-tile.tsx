@@ -1,12 +1,77 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import {
+  ArrowUpOnSquareIcon,
+  CheckIcon,
+  ClipboardDocumentCheckIcon,
+  ClipboardDocumentIcon,
+} from "@heroicons/react/24/outline";
 import {
   InsightReferences,
   type ReferenceItem,
 } from "~/components/shared/references";
 import { createInsightWithTakeawaySF } from "~/server/insights-studio-SFs";
 import { Takeaway } from "~/server/queries";
+
+async function copyToClipboard(text: string) {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    window.prompt("Copy link", text);
+    return false;
+  }
+}
+
+function formatTakeawayClipboardText(takeaway: Takeaway) {
+  const sections: string[] = [];
+  const takeawayText = takeaway.takeaway.trim();
+
+  if (takeawayText) {
+    sections.push(`Takeaway:\n${takeawayText}`);
+  }
+
+  const sortedRefs = takeaway.references
+    .slice()
+    .sort((a, b) => a.referenceNumber - b.referenceNumber);
+
+  if (sortedRefs.length > 0) {
+    const documentSource =
+      takeaway.documentSource ?? (takeaway as { source?: string }).source;
+
+    const formattedRefs = sortedRefs.map((ref) => {
+      const publishedDate = new Date(takeaway.publicationDate);
+      const publishedLabel = Number.isNaN(publishedDate.getTime())
+        ? null
+        : `Published ${publishedDate.toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}`;
+
+      const metaParts = [
+        takeaway.documentTitle,
+        documentSource,
+        publishedLabel,
+        takeaway.documentLink,
+      ].filter(Boolean);
+
+      const metaSuffix =
+        metaParts.length > 0 ? ` (${metaParts.join(" · ")})` : "";
+
+      return `${ref.referenceNumber}. ${ref.reference}${metaSuffix}`;
+    });
+
+    sections.push(`References:\n${formattedRefs.join("\n")}`);
+  }
+
+  return sections.join("\n\n");
+}
 
 export function TakeawayTile(props: {
   takeaway: Takeaway;
@@ -17,7 +82,10 @@ export function TakeawayTile(props: {
   const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [isCreatingInsight, setIsCreatingInsight] = useState(false);
   const [conceptExpanded, setConceptExpanded] = useState(false);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [takeawayCopied, setTakeawayCopied] = useState(false);
   const createInsightWithTakeaway = useServerFn(createInsightWithTakeawaySF);
+  const router = useRouter();
 
   const documentSource =
     takeaway.documentSource ?? (takeaway as { source?: string }).source;
@@ -65,6 +133,81 @@ export function TakeawayTile(props: {
         " border-b border-gray-200"
       }
     >
+      {/* Top bar: date + action buttons */}
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="shrink-0 text-xs text-gray-500">
+          {takeaway.publicationDate.toLocaleDateString()}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={
+              takeawayCopied
+                ? "inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs text-emerald-800"
+                : "inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs text-gray-500"
+            }
+            aria-label={
+              takeawayCopied
+                ? "Copied takeaway to clipboard"
+                : "Copy takeaway text and references"
+            }
+            onClick={async () => {
+              const clipboardText = formatTakeawayClipboardText(takeaway);
+              const copied = await copyToClipboard(clipboardText);
+              if (!copied) return;
+
+              setTakeawayCopied(true);
+              window.setTimeout(() => {
+                setTakeawayCopied(false);
+              }, 2000);
+            }}
+          >
+            {takeawayCopied ? (
+              <ClipboardDocumentCheckIcon
+                className="h-4 w-4"
+                aria-hidden="true"
+              />
+            ) : (
+              <ClipboardDocumentIcon className="h-4 w-4" aria-hidden="true" />
+            )}
+            <span>{takeawayCopied ? "Copied" : "Copy"}</span>
+          </button>
+          <button
+            type="button"
+            className={
+              shareLinkCopied
+                ? "inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs text-emerald-800"
+                : "inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs text-gray-500"
+            }
+            aria-label={
+              shareLinkCopied ? "Copied share link" : "Copy share link"
+            }
+            onClick={async () => {
+              const href = router.buildLocation({
+                to: "/takeaway/$takeawayId",
+                params: { takeawayId: takeaway.id },
+              }).href;
+
+              const fullUrl = new URL(href, window.location.origin).toString();
+              const copied = await copyToClipboard(fullUrl);
+              if (copied) {
+                setShareLinkCopied(true);
+                window.setTimeout(() => {
+                  setShareLinkCopied(false);
+                }, 2000);
+              }
+            }}
+          >
+            {shareLinkCopied ? (
+              <CheckIcon className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ArrowUpOnSquareIcon className="h-4 w-4" aria-hidden="true" />
+            )}
+            <span>{shareLinkCopied ? "Copied" : "Share"}</span>
+          </button>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
           <h2 className="text-base leading-tight font-semibold break-words text-gray-900 sm:text-lg">
@@ -176,11 +319,24 @@ export function TakeawayTile(props: {
             {takeaway.concept}
           </p>
         ) : null}
-
-        <hr className="my-3 border-gray-200" />
-
-        <InsightReferences references={references} />
       </div>
+
+      {/* References — amber provenance-style box */}
+      <section className="mt-5 rounded-xl border border-amber-100 bg-amber-50/80">
+        <div className="flex flex-wrap items-center justify-between px-3 py-2">
+          <p className="text-[11px] font-semibold tracking-[0.3em] text-amber-600 uppercase">
+            Provenance
+          </p>
+          <span className="rounded-full border border-amber-200 bg-white px-2 py-1 text-[10px] font-semibold tracking-[0.2em] text-amber-500 uppercase">
+            Sources
+          </span>
+        </div>
+        <div className="border-t border-amber-100">
+          <div className="bg-white/70 px-3 py-2 ring-1 ring-amber-100">
+            <InsightReferences references={references} />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
