@@ -11,7 +11,6 @@ import {
   InsightReferences,
   type ReferenceItem,
 } from "~/components/shared/references";
-import { createInsightWithTakeawaySF } from "~/server/insights-studio-SFs";
 import { Takeaway } from "~/server/queries";
 
 async function copyToClipboard(text: string) {
@@ -80,11 +79,8 @@ export function TakeawayTile(props: {
   const { takeaway, highlighted = false } = props;
   const [takeawayExpanded, setTakeawayExpanded] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(true);
-  const [isCreatingInsight, setIsCreatingInsight] = useState(false);
-  const [conceptExpanded, setConceptExpanded] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [takeawayCopied, setTakeawayCopied] = useState(false);
-  const createInsightWithTakeaway = useServerFn(createInsightWithTakeawaySF);
   const router = useRouter();
 
   const documentSource =
@@ -111,19 +107,6 @@ export function TakeawayTile(props: {
     documentLink: takeaway.documentLink,
   }));
 
-  const handleCreateInsight = async () => {
-    if (isCreatingInsight) return;
-    setIsCreatingInsight(true);
-    try {
-      void createInsightWithTakeaway({
-        data: { takeawayId: takeaway.id },
-      });
-      //sleep for 3 seconds
-      await new Promise((resolve) => setTimeout(resolve, 10000));
-    } finally {
-      setIsCreatingInsight(false);
-    }
-  };
 
   return (
     <div
@@ -243,40 +226,14 @@ export function TakeawayTile(props: {
           ) : null}
           <p className="text-xs text-gray-500">{secondaryMeta}</p>
         </div>
-        <div className="flex w-full items-center gap-2 sm:w-auto sm:justify-end">
-          <button
-            onClick={handleCreateInsight}
-            disabled={isCreatingInsight}
-            className="inline-flex w-full cursor-pointer items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-3 sm:py-1.5 sm:text-xs"
-          >
-            {isCreatingInsight ? (
-              <span className="animate-spin">⚪</span>
-            ) : (
-              "Create Insight"
-            )}
-          </button>
-        </div>
+
       </div>
 
       <div className="mt-4 flex flex-col space-y-1 text-sm text-gray-700">
-        <button
-          onClick={() => {
-            setSummaryExpanded((prev) => !prev);
-          }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-        >
-          <span
-            className={`inline-block text-[10px] transition-transform ${summaryExpanded ? "rotate-90" : ""}`}
-          >
-            ▶
-          </span>
-          Summary
-        </button>
-        {summaryExpanded ? (
-          <p className="pl-4 text-sm leading-relaxed break-words text-gray-700">
+
+          <p className=" text-sm leading-relaxed break-words text-gray-700">
             {takeaway.summary}
           </p>
-        ) : null}
 
         <hr className="my-3 border-gray-200" />
 
@@ -298,39 +255,10 @@ export function TakeawayTile(props: {
             {takeaway.takeaway}
           </p>
         ) : null}
-
-        <hr className="my-3 border-gray-200" />
-
-        <button
-          onClick={() => {
-            setConceptExpanded((prev) => !prev);
-          }}
-          className="flex w-full cursor-pointer items-center gap-1 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-        >
-          <span
-            className={`inline-block text-[10px] transition-transform ${conceptExpanded ? "rotate-90" : ""}`}
-          >
-            ▶
-          </span>
-          Concept
-        </button>
-        {conceptExpanded ? (
-          <p className="pl-4 text-sm leading-relaxed break-words text-gray-700">
-            {takeaway.concept}
-          </p>
-        ) : null}
       </div>
 
       {/* References — amber provenance-style box */}
       <section className="mt-5 rounded-xl border border-amber-100 bg-amber-50/80">
-        <div className="flex flex-wrap items-center justify-between px-3 py-2">
-          <p className="text-[11px] font-semibold tracking-[0.3em] text-amber-600 uppercase">
-            Provenance
-          </p>
-          <span className="rounded-full border border-amber-200 bg-white px-2 py-1 text-[10px] font-semibold tracking-[0.2em] text-amber-500 uppercase">
-            Sources
-          </span>
-        </div>
         <div className="border-t border-amber-100">
           <div className="bg-white/70 px-3 py-2 ring-1 ring-amber-100">
             <InsightReferences references={references} />

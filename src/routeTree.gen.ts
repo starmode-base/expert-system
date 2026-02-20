@@ -11,7 +11,6 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as TakeawayTakeawayIdImport } from './routes/takeaway.$takeawayId'
 import { Route as TakeawayFeedImport } from './routes/takeaway-feed'
 import { Route as SettingsImport } from './routes/settings'
 import { Route as ResearchFeedImport } from './routes/research-feed'
@@ -19,6 +18,7 @@ import { Route as IndexImport } from './routes/index'
 import { Route as SettingsIndexImport } from './routes/settings/index'
 import { Route as NewsFeedIndexImport } from './routes/news-feed.index'
 import { Route as InsightStudioIndexImport } from './routes/insight-studio.index'
+import { Route as TakeawayTakeawayIdImport } from './routes/takeaway.$takeawayId'
 import { Route as StocksSymbolImport } from './routes/stocks.$symbol'
 import { Route as SettingsXImport } from './routes/settings/x'
 import { Route as SettingsPublicStocksImport } from './routes/settings/public-stocks'
@@ -35,12 +35,6 @@ import { Route as SettingsKnowledgeGraphGraphTypeDocumentidImport } from './rout
 const TakeawayFeedRoute = TakeawayFeedImport.update({
   id: '/takeaway-feed',
   path: '/takeaway-feed',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const TakeawayTakeawayIdRoute = TakeawayTakeawayIdImport.update({
-  id: '/takeaway/$takeawayId',
-  path: '/takeaway/$takeawayId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -77,6 +71,12 @@ const NewsFeedIndexRoute = NewsFeedIndexImport.update({
 const InsightStudioIndexRoute = InsightStudioIndexImport.update({
   id: '/insight-studio/',
   path: '/insight-studio/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const TakeawayTakeawayIdRoute = TakeawayTakeawayIdImport.update({
+  id: '/takeaway/$takeawayId',
+  path: '/takeaway/$takeawayId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -174,13 +174,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TakeawayFeedImport
       parentRoute: typeof rootRoute
     }
-    '/takeaway/$takeawayId': {
-      id: '/takeaway/$takeawayId'
-      path: '/takeaway/$takeawayId'
-      fullPath: '/takeaway/$takeawayId'
-      preLoaderRoute: typeof TakeawayTakeawayIdImport
-      parentRoute: typeof rootRoute
-    }
     '/guest/research-feed': {
       id: '/guest/research-feed'
       path: '/guest/research-feed'
@@ -235,6 +228,13 @@ declare module '@tanstack/react-router' {
       path: '/stocks/$symbol'
       fullPath: '/stocks/$symbol'
       preLoaderRoute: typeof StocksSymbolImport
+      parentRoute: typeof rootRoute
+    }
+    '/takeaway/$takeawayId': {
+      id: '/takeaway/$takeawayId'
+      path: '/takeaway/$takeawayId'
+      fullPath: '/takeaway/$takeawayId'
+      preLoaderRoute: typeof TakeawayTakeawayIdImport
       parentRoute: typeof rootRoute
     }
     '/insight-studio/': {
@@ -305,7 +305,6 @@ export interface FileRoutesByFullPath {
   '/research-feed': typeof ResearchFeedRoute
   '/settings': typeof SettingsRouteWithChildren
   '/takeaway-feed': typeof TakeawayFeedRoute
-  '/takeaway/$takeawayId': typeof TakeawayTakeawayIdRoute
   '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
@@ -314,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/settings/public-stocks': typeof SettingsPublicStocksRoute
   '/settings/x': typeof SettingsXRoute
   '/stocks/$symbol': typeof StocksSymbolRoute
+  '/takeaway/$takeawayId': typeof TakeawayTakeawayIdRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
   '/settings/': typeof SettingsIndexRoute
@@ -325,7 +325,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/research-feed': typeof ResearchFeedRoute
   '/takeaway-feed': typeof TakeawayFeedRoute
-  '/takeaway/$takeawayId': typeof TakeawayTakeawayIdRoute
   '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
@@ -334,6 +333,7 @@ export interface FileRoutesByTo {
   '/settings/public-stocks': typeof SettingsPublicStocksRoute
   '/settings/x': typeof SettingsXRoute
   '/stocks/$symbol': typeof StocksSymbolRoute
+  '/takeaway/$takeawayId': typeof TakeawayTakeawayIdRoute
   '/insight-studio': typeof InsightStudioIndexRoute
   '/news-feed': typeof NewsFeedIndexRoute
   '/settings': typeof SettingsIndexRoute
@@ -347,7 +347,6 @@ export interface FileRoutesById {
   '/research-feed': typeof ResearchFeedRoute
   '/settings': typeof SettingsRouteWithChildren
   '/takeaway-feed': typeof TakeawayFeedRoute
-  '/takeaway/$takeawayId': typeof TakeawayTakeawayIdRoute
   '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
@@ -356,6 +355,7 @@ export interface FileRoutesById {
   '/settings/public-stocks': typeof SettingsPublicStocksRoute
   '/settings/x': typeof SettingsXRoute
   '/stocks/$symbol': typeof StocksSymbolRoute
+  '/takeaway/$takeawayId': typeof TakeawayTakeawayIdRoute
   '/insight-studio/': typeof InsightStudioIndexRoute
   '/news-feed/': typeof NewsFeedIndexRoute
   '/settings/': typeof SettingsIndexRoute
@@ -370,7 +370,6 @@ export interface FileRouteTypes {
     | '/research-feed'
     | '/settings'
     | '/takeaway-feed'
-    | '/takeaway/$takeawayId'
     | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
@@ -379,6 +378,7 @@ export interface FileRouteTypes {
     | '/settings/public-stocks'
     | '/settings/x'
     | '/stocks/$symbol'
+    | '/takeaway/$takeawayId'
     | '/insight-studio'
     | '/news-feed'
     | '/settings/'
@@ -389,7 +389,6 @@ export interface FileRouteTypes {
     | '/'
     | '/research-feed'
     | '/takeaway-feed'
-    | '/takeaway/$takeawayId'
     | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
@@ -398,6 +397,7 @@ export interface FileRouteTypes {
     | '/settings/public-stocks'
     | '/settings/x'
     | '/stocks/$symbol'
+    | '/takeaway/$takeawayId'
     | '/insight-studio'
     | '/news-feed'
     | '/settings'
@@ -409,7 +409,6 @@ export interface FileRouteTypes {
     | '/research-feed'
     | '/settings'
     | '/takeaway-feed'
-    | '/takeaway/$takeawayId'
     | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
@@ -418,6 +417,7 @@ export interface FileRouteTypes {
     | '/settings/public-stocks'
     | '/settings/x'
     | '/stocks/$symbol'
+    | '/takeaway/$takeawayId'
     | '/insight-studio/'
     | '/news-feed/'
     | '/settings/'
@@ -431,12 +431,12 @@ export interface RootRouteChildren {
   ResearchFeedRoute: typeof ResearchFeedRoute
   SettingsRoute: typeof SettingsRouteWithChildren
   TakeawayFeedRoute: typeof TakeawayFeedRoute
-  TakeawayTakeawayIdRoute: typeof TakeawayTakeawayIdRoute
   GuestResearchFeedRoute: typeof GuestResearchFeedRoute
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   InsightInsightIdRoute: typeof InsightInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
   StocksSymbolRoute: typeof StocksSymbolRoute
+  TakeawayTakeawayIdRoute: typeof TakeawayTakeawayIdRoute
   InsightStudioIndexRoute: typeof InsightStudioIndexRoute
   NewsFeedIndexRoute: typeof NewsFeedIndexRoute
 }
@@ -446,12 +446,12 @@ const rootRouteChildren: RootRouteChildren = {
   ResearchFeedRoute: ResearchFeedRoute,
   SettingsRoute: SettingsRouteWithChildren,
   TakeawayFeedRoute: TakeawayFeedRoute,
-  TakeawayTakeawayIdRoute: TakeawayTakeawayIdRoute,
   GuestResearchFeedRoute: GuestResearchFeedRoute,
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   InsightInsightIdRoute: InsightInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
   StocksSymbolRoute: StocksSymbolRoute,
+  TakeawayTakeawayIdRoute: TakeawayTakeawayIdRoute,
   InsightStudioIndexRoute: InsightStudioIndexRoute,
   NewsFeedIndexRoute: NewsFeedIndexRoute,
 }
@@ -470,12 +470,12 @@ export const routeTree = rootRoute
         "/research-feed",
         "/settings",
         "/takeaway-feed",
-        "/takeaway/$takeawayId",
         "/guest/research-feed",
         "/insight-studio/$insightId",
         "/insight/$insightId",
         "/news-feed/$documentid",
         "/stocks/$symbol",
+        "/takeaway/$takeawayId",
         "/insight-studio/",
         "/news-feed/"
       ]
@@ -499,9 +499,6 @@ export const routeTree = rootRoute
     },
     "/takeaway-feed": {
       "filePath": "takeaway-feed.tsx"
-    },
-    "/takeaway/$takeawayId": {
-      "filePath": "takeaway.$takeawayId.tsx"
     },
     "/guest/research-feed": {
       "filePath": "guest.research-feed.tsx"
@@ -529,6 +526,9 @@ export const routeTree = rootRoute
     },
     "/stocks/$symbol": {
       "filePath": "stocks.$symbol.tsx"
+    },
+    "/takeaway/$takeawayId": {
+      "filePath": "takeaway.$takeawayId.tsx"
     },
     "/insight-studio/": {
       "filePath": "insight-studio.index.tsx"
