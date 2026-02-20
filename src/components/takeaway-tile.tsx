@@ -107,7 +107,6 @@ export function TakeawayTile(props: {
     documentLink: takeaway.documentLink,
   }));
 
-
   return (
     <div
       className={
@@ -226,14 +225,12 @@ export function TakeawayTile(props: {
           ) : null}
           <p className="text-xs text-gray-500">{secondaryMeta}</p>
         </div>
-
       </div>
 
       <div className="mt-4 flex flex-col space-y-1 text-sm text-gray-700">
-
-          <p className=" text-sm leading-relaxed break-words text-gray-700">
-            {takeaway.summary}
-          </p>
+        <p className="text-sm leading-relaxed break-words text-gray-700">
+          {takeaway.summary}
+        </p>
 
         <hr className="my-3 border-gray-200" />
 
