@@ -28,8 +28,8 @@ export const dailyInsight = inngest.createFunction(
       return rows;
     });
 
-    const takeaways = await step.run("get-takeaways-last-3d", async () => {
-      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const takeaways = await step.run("get-takeaways-last-5d", async () => {
+      const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
 
       const usedInLast3Days = db
         .selectDistinct({ id: schema.insightTakeaways.takeawayId })
@@ -38,7 +38,7 @@ export const dailyInsight = inngest.createFunction(
           schema.insights,
           eq(schema.insightTakeaways.insightId, schema.insights.id),
         )
-        .where(gte(schema.insights.createdAt, threeDaysAgo));
+        .where(gte(schema.insights.createdAt, fiveDaysAgo));
 
       const rows = await db
         .select({
@@ -48,7 +48,7 @@ export const dailyInsight = inngest.createFunction(
         .from(schema.takeaways)
         .where(
           and(
-            gte(schema.takeaways.createdAt, threeDaysAgo),
+            gte(schema.takeaways.createdAt, fiveDaysAgo),
             notInArray(schema.takeaways.id, usedInLast3Days),
           ),
         )
