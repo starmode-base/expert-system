@@ -1,4 +1,5 @@
-import { db } from "~/postgres/db";
+import { and, desc, eq, gte, notInArray } from "drizzle-orm";
+import { db, schema } from "~/postgres/db";
 
 import { inngest } from "../client";
 import { generateResearchThemes } from "./helpers/generate-research-objectives";
@@ -27,16 +28,32 @@ export const dailyInsight = inngest.createFunction(
       return rows;
     });
 
-    const takeaways = await step.run("get-takeaways-last-3d", async () => {
-      // Query the 20 most recently created takeaways
-      // Query takeaways created in the last 3 days, limit 20
-      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
-      const rows = await db.query.takeaways.findMany({
-        columns: { id: true, summary: true },
-        where: (takeaways, { gte }) => gte(takeaways.createdAt, threeDaysAgo),
-        orderBy: (takeaways, { desc }) => desc(takeaways.createdAt),
-        limit: 20,
-      });
+    const takeaways = await step.run("get-takeaways-last-5d", async () => {
+      const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+
+      const usedInLast3Days = db
+        .selectDistinct({ id: schema.insightTakeaways.takeawayId })
+        .from(schema.insightTakeaways)
+        .innerJoin(
+          schema.insights,
+          eq(schema.insightTakeaways.insightId, schema.insights.id),
+        )
+        .where(gte(schema.insights.createdAt, fiveDaysAgo));
+
+      const rows = await db
+        .select({
+          id: schema.takeaways.id,
+          summary: schema.takeaways.summary,
+        })
+        .from(schema.takeaways)
+        .where(
+          and(
+            gte(schema.takeaways.createdAt, fiveDaysAgo),
+            notInArray(schema.takeaways.id, usedInLast3Days),
+          ),
+        )
+        .orderBy(desc(schema.takeaways.createdAt))
+        .limit(20);
 
       return rows;
     });
