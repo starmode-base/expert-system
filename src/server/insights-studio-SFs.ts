@@ -4,8 +4,6 @@ import { z } from "zod";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
 import type { InsightsItem } from "~/server/queries";
-import { sendEventGenerateInsightSF } from "./inggest";
-import { invariant } from "@tanstack/react-router";
 
 export const createInsightSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])

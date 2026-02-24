@@ -1,6 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowUpOnSquareIcon,
   CheckIcon,
@@ -78,7 +77,6 @@ export function TakeawayTile(props: {
 }) {
   const { takeaway, highlighted = false } = props;
   const [takeawayExpanded, setTakeawayExpanded] = useState(false);
-  const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [takeawayCopied, setTakeawayCopied] = useState(false);
   const router = useRouter();
