@@ -230,9 +230,13 @@ function InsightTakeaways(props: InsightTakeawaysProps) {
 
           return (
             <li key={takeaway.takeawayId} className="rounded-md px-3 py-2">
-              <p className="text-sm font-semibold text-gray-900">
+              <Link
+                to="/takeaway/$takeawayId"
+                params={{ takeawayId: takeaway.takeawayId }}
+                className="text-sm font-semibold text-gray-900 hover:text-blue-600 hover:underline"
+              >
                 {takeaway.title}
-              </p>
+              </Link>
               {metadataParts.length > 0 ? (
                 <div className="mt-1 text-xs text-gray-500">
                   {metadataParts.map((part, index) => (
