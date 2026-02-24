@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TakeawayTile } from "~/components/takeaway-tile";
 import { queryPublicTakeawayById, type Takeaway } from "~/server/queries";
-
-const SITE_ORIGIN = "https://expert-system.starmode.dev";
-const DEFAULT_IMAGE_URL = `${SITE_ORIGIN}/logo-x.jpg`;
+import { getSiteOrigin } from "~/lib/env";
 
 function buildTitle(takeaway: Takeaway | null) {
   return takeaway?.title ?? "Expert System takeaway";
@@ -24,10 +22,11 @@ function buildDescription(takeaway: Takeaway | null) {
 }
 
 function buildHeadData(takeaway: Takeaway | null, takeawayId: string | number) {
+  const siteOrigin = getSiteOrigin();
   const title = buildTitle(takeaway);
   const description = buildDescription(takeaway);
-  const pageUrl = `${SITE_ORIGIN}/takeaway/${takeawayId}`;
-  const imageUrl = DEFAULT_IMAGE_URL;
+  const pageUrl = `${siteOrigin}/takeaway/${takeawayId}`;
+  const imageUrl = `${siteOrigin}/logo-x.jpg`;
 
   return {
     meta: [

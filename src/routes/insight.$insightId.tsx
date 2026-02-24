@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { InsightCard } from "~/components/insight-feed/insight-card";
 import { queryPublicInsightById, type InsightsItem } from "~/server/queries";
-
-const SITE_ORIGIN = "https://expert-system.starmode.dev";
-const DEFAULT_IMAGE_URL = `${SITE_ORIGIN}/logo-x.jpg`;
+import { getSiteOrigin } from "~/lib/env";
 
 function buildTitle(insightItem: InsightsItem | null) {
   return insightItem?.insight.title ?? "Expert System insight";
@@ -29,10 +27,11 @@ function buildHeadData(
   insightItem: InsightsItem | null,
   insightId: string | number,
 ) {
+  const siteOrigin = getSiteOrigin();
   const title = buildTitle(insightItem);
   const description = buildDescription(insightItem);
-  const pageUrl = `${SITE_ORIGIN}/insight/${insightId}`;
-  const imageUrl = DEFAULT_IMAGE_URL;
+  const pageUrl = `${siteOrigin}/insight/${insightId}`;
+  const imageUrl = `${siteOrigin}/logo-x.jpg`;
 
   return {
     meta: [

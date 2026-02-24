@@ -21,14 +21,12 @@ import {
 import { createServerFn } from "@tanstack/react-start";
 import { getWebRequest } from "vinxi/http";
 import { getClerkUserId } from "~/server/auth";
+import { getSiteOrigin } from "~/lib/env";
 
 const checkAuth = createServerFn({ method: "GET" }).handler(async () => {
   const clerkUserId = await getClerkUserId(getWebRequest());
   return !!clerkUserId;
 });
-
-const SITE_ORIGIN = "https://expert-system.starmode.dev";
-const DEFAULT_IMAGE_URL = `${SITE_ORIGIN}/logo-x.jpg`;
 
 const head = {
   meta: [
@@ -44,7 +42,7 @@ const head = {
       name: "og:title",
       content: "ΞXPERT-SYSTΞM",
     },
-    { name: "og:image", content: DEFAULT_IMAGE_URL },
+    { name: "og:image", content: `${getSiteOrigin()}/logo-x.jpg` },
     {
       name: "description",
       content: "STΛR MODΞ - ΞXPERT-SYSTΞM",
