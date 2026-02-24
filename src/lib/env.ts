@@ -32,6 +32,12 @@ const rawEnv = {
   TWITTER_API_IO_KEY: process.env.TWITTER_API_IO_KEY,
 
   /**
+   * Site URL for canonical links and OG meta tags. When unset, falls back to
+   * VERCEL_URL (current deployment URL).
+   */
+  SITE_ORIGIN: process.env.SITE_ORIGIN ?? process.env.VITE_SITE_ORIGIN,
+
+  /**
    * Platform environment variables
    */
   // https://nextjs.org/docs/app/building-your-application/configuring/environment-variables#test-environment-variables
@@ -101,4 +107,18 @@ export function origin(
 ): string {
   const protocol = isDevelopment() ? "http:" : "https:";
   return new URL(`${protocol}//${ensureEnv(urlType)}`).origin;
+}
+
+/**
+ * Site origin for canonical URLs and OG meta tags. Uses SITE_ORIGIN when set,
+ * otherwise the current deployment URL (VERCEL_URL).
+ */
+export function getSiteOrigin(): string {
+  const override = rawEnv.SITE_ORIGIN;
+  if (typeof override === "string" && override.trim()) {
+    return new URL(
+      override.startsWith("http") ? override : `https://${override}`,
+    ).origin;
+  }
+  return origin("VERCEL_URL");
 }

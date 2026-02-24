@@ -1,17 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { InsightCard } from "~/components/insight-feed/insight-card";
-import { queryPublicInsightById, type InsightsItem } from "~/server/queries";
+import { TakeawayTile } from "~/components/takeaway-tile";
+import { queryPublicTakeawayById, type Takeaway } from "~/server/queries";
 import { getSiteOrigin } from "~/lib/env";
 
-function buildTitle(insightItem: InsightsItem | null) {
-  return insightItem?.insight.title ?? "Expert System insight";
+function buildTitle(takeaway: Takeaway | null) {
+  return takeaway?.title ?? "Expert System takeaway";
 }
 
-function buildDescription(insightItem: InsightsItem | null) {
+function buildDescription(takeaway: Takeaway | null) {
   const sourceText =
-    insightItem?.insight.summary ??
-    insightItem?.insight.insight ??
-    "ΞXPERT-SYSTΞM insight";
+    takeaway?.summary ?? takeaway?.takeaway ?? "ΞXPERT-SYSTΞM takeaway";
 
   const normalized = sourceText.replace(/\s+/g, " ").trim();
   const maxLength = 240;
@@ -23,14 +21,11 @@ function buildDescription(insightItem: InsightsItem | null) {
   return `${normalized.slice(0, maxLength).trimEnd()}...`;
 }
 
-function buildHeadData(
-  insightItem: InsightsItem | null,
-  insightId: string | number,
-) {
+function buildHeadData(takeaway: Takeaway | null, takeawayId: string | number) {
   const siteOrigin = getSiteOrigin();
-  const title = buildTitle(insightItem);
-  const description = buildDescription(insightItem);
-  const pageUrl = `${siteOrigin}/insight/${insightId}`;
+  const title = buildTitle(takeaway);
+  const description = buildDescription(takeaway);
+  const pageUrl = `${siteOrigin}/takeaway/${takeawayId}`;
   const imageUrl = `${siteOrigin}/logo-x.jpg`;
 
   return {
@@ -50,12 +45,12 @@ function buildHeadData(
   };
 }
 
-export const Route = createFileRoute("/insight/$insightId")({
-  loader: async ({ params: { insightId } }) => {
-    return await queryPublicInsightById({ data: insightId });
+export const Route = createFileRoute("/takeaway/$takeawayId")({
+  loader: async ({ params: { takeawayId } }) => {
+    return await queryPublicTakeawayById({ data: takeawayId });
   },
   head: ({ loaderData, params }) => {
-    return buildHeadData(loaderData, params.insightId);
+    return buildHeadData(loaderData, params.takeawayId);
   },
   component: RouteComponent,
 });
@@ -63,13 +58,15 @@ export const Route = createFileRoute("/insight/$insightId")({
 function RouteComponent() {
   const item = Route.useLoaderData();
 
-  console.log("######## LOADER DATA ########");
-
   return (
     <div className="min-h-dvh bg-slate-100 px-2 sm:px-8">
       <div className="mx-auto w-full max-w-4xl py-4">
         <Link
-          to="/guest/research-feed"
+          to="/takeaway-feed"
+          search={{
+            searchInput: undefined,
+            filters: undefined,
+          }}
           className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200/60 hover:text-slate-900"
         >
           <span aria-hidden>←</span>
@@ -78,14 +75,10 @@ function RouteComponent() {
 
         <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white">
           {item ? (
-            <InsightCard
-              insightFeedItem={item}
-              loading={false}
-              expanded={true}
-            />
+            <TakeawayTile takeaway={item} />
           ) : (
             <div className="p-4">
-              <p className="text-sm text-slate-700">Insight not found.</p>
+              <p className="text-sm text-slate-700">Takeaway not found.</p>
             </div>
           )}
         </div>

@@ -4,8 +4,6 @@ import { z } from "zod";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
 import type { InsightsItem } from "~/server/queries";
-import { sendEventGenerateInsightSF } from "./inggest";
-import { invariant } from "@tanstack/react-router";
 
 export const createInsightSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -114,20 +112,4 @@ export const updateInsightTitleSF = createServerFn({ method: "POST" })
       .update(schema.insights)
       .set({ title })
       .where(eq(schema.insights.id, id));
-  });
-
-export const createInsightWithTakeawaySF = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator(z.object({ takeawayId: z.string() }))
-  .handler(async ({ data: { takeawayId } }) => {
-    const takeaway = await db.query.takeaways.findFirst({
-      where: eq(schema.takeaways.id, takeawayId),
-    });
-    invariant(takeaway, "Takeaway not found");
-
-    void sendEventGenerateInsightSF({
-      data: {
-        seedText: takeaway.summary,
-      },
-    });
   });

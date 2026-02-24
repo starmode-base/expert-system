@@ -205,6 +205,36 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
     };
   });
 
+export const queryPublicTakeawayById = createServerFn({ method: "GET" })
+  .validator(z.string()) // takeawayId
+  .handler(async ({ data: takeawayId }): Promise<Takeaway | null> => {
+    const takeaway = await db.query.takeaways.findFirst({
+      where: eq(schema.takeaways.id, takeawayId),
+      with: {
+        category: true,
+        document: true,
+        takeawayReferences: true,
+      },
+    });
+
+    if (!takeaway) return null;
+
+    return {
+      id: takeaway.id,
+      documentId: takeaway.documentId,
+      title: takeaway.title,
+      publicationDate: takeaway.document.publicationDate,
+      takeaway: takeaway.takeaway,
+      summary: takeaway.summary,
+      concept: takeaway.concept,
+      category: takeaway.category?.name,
+      references: takeaway.takeawayReferences,
+      documentTitle: takeaway.document.title,
+      documentSource: takeaway.document.source,
+      documentLink: takeaway.document.link,
+    };
+  });
+
 // Shared mapping for paginated insight feed queries
 interface InsightDocumentRef {
   id: string;
