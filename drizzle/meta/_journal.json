@@ -183,6 +183,13 @@
       "when": 1770938791960,
       "tag": "0025_glorious_starbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1772900626744,
+      "tag": "0026_warm_king_cobra",
+      "breakpoints": true
     }
   ]
 }
