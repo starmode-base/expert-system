@@ -157,7 +157,7 @@ function Section({ children }: { children: React.ReactNode }) {
 // Page
 // ---------------------------------------------------------------------------
 
-export default function ApiDocsPage() {
+export function ApiDocsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="mb-2 text-2xl font-semibold text-gray-900">
