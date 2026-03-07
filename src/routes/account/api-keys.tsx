@@ -79,7 +79,7 @@ function ApiKeysPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-8">
       <h1 className="mb-8 text-2xl font-semibold text-gray-900">API Keys</h1>
 
       {/* Create key form */}
@@ -152,33 +152,75 @@ function ApiKeysPage() {
             No API keys yet. Create one above.
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-medium tracking-wide text-gray-500 uppercase">
-                <th className="px-6 py-3">Name</th>
-                <th className="px-6 py-3">Prefix</th>
-                <th className="px-6 py-3">Created</th>
-                <th className="px-6 py-3">Last used</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+          <>
+            {/* Desktop table */}
+            <table className="hidden w-full text-sm md:table">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-medium tracking-wide text-gray-500 uppercase">
+                  <th className="px-6 py-3">Name</th>
+                  <th className="px-6 py-3">Prefix</th>
+                  <th className="px-6 py-3">Created</th>
+                  <th className="px-6 py-3">Last used</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {apiKeys.map((key: ApiKeyListItem) => (
+                  <tr
+                    key={key.id}
+                    className={key.revokedAt ? "opacity-50" : ""}
+                  >
+                    <td className="px-6 py-4 font-medium text-gray-900">
+                      {key.name}
+                    </td>
+                    <td className="px-6 py-4 font-mono text-gray-600">
+                      {key.keyPrefix}…
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {formatDate(key.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {formatDate(key.lastUsedAt)}
+                    </td>
+                    <td className="px-6 py-4">
+                      {key.revokedAt ? (
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                          Revoked
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                          Active
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {!key.revokedAt ? (
+                        <button
+                          onClick={() => handleRevoke(key.id)}
+                          disabled={revoking === key.id}
+                          className="cursor-pointer rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {revoking === key.id ? "Revoking..." : "Revoke"}
+                        </button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Mobile cards */}
+            <div className="divide-y divide-gray-100 md:hidden">
               {apiKeys.map((key: ApiKeyListItem) => (
-                <tr key={key.id} className={key.revokedAt ? "opacity-50" : ""}>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {key.name}
-                  </td>
-                  <td className="px-6 py-4 font-mono text-gray-600">
-                    {key.keyPrefix}…
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {formatDate(key.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {formatDate(key.lastUsedAt)}
-                  </td>
-                  <td className="px-6 py-4">
+                <div
+                  key={key.id}
+                  className={`px-4 py-4 ${key.revokedAt ? "opacity-50" : ""}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900">
+                      {key.name}
+                    </span>
                     {key.revokedAt ? (
                       <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
                         Revoked
@@ -188,8 +230,15 @@ function ApiKeysPage() {
                         Active
                       </span>
                     )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
+                  </div>
+                  <p className="mt-1 font-mono text-sm text-gray-600">
+                    {key.keyPrefix}…
+                  </p>
+                  <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                    <span>
+                      Created {formatDate(key.createdAt)} · Last used{" "}
+                      {formatDate(key.lastUsedAt)}
+                    </span>
                     {!key.revokedAt ? (
                       <button
                         onClick={() => handleRevoke(key.id)}
@@ -199,11 +248,11 @@ function ApiKeysPage() {
                         {revoking === key.id ? "Revoking..." : "Revoke"}
                       </button>
                     ) : null}
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </section>
     </div>
