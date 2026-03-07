@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
@@ -10,8 +10,12 @@ import {
 
 export const Route = createFileRoute("/account/api-keys")({
   loader: async () => {
-    const apiKeys = await listApiKeysSF();
-    return { apiKeys };
+    try {
+      const apiKeys = await listApiKeysSF();
+      return { apiKeys };
+    } catch {
+      throw redirect({ to: "/guest/research-feed" });
+    }
   },
   component: ApiKeysPage,
 });

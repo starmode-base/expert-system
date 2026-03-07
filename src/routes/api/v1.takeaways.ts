@@ -2,14 +2,8 @@ import { json } from "@tanstack/react-start";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { and, desc, eq, lt, or } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
-import { resolveApiKey } from "~/server/api-keys";
+import { authenticate } from "~/server/api-keys";
 import type { TakeawaySelect } from "~/postgres/schema";
-
-async function authenticate(request: Request): Promise<string | null> {
-  const auth = request.headers.get("authorization") ?? "";
-  if (!auth.startsWith("Bearer ")) return null;
-  return (await resolveApiKey(auth.slice(7).trim()))?.userId ?? null;
-}
 
 export const APIRoute = createAPIFileRoute("/api/v1/takeaways")({
   GET: async ({ request }) => {
@@ -20,12 +14,21 @@ export const APIRoute = createAPIFileRoute("/api/v1/takeaways")({
 
     const url = new URL(request.url);
     const cursor = url.searchParams.get("cursor") ?? null;
-    const limitParam = Number(url.searchParams.get("limit") ?? "20");
+    const limitRaw = url.searchParams.get("limit");
+    const limitParam = limitRaw ? Number(limitRaw) : 20;
     const limit = Math.min(Math.max(1, limitParam), 100);
 
-    const parsedCursor = cursor
-      ? (JSON.parse(cursor) as { publicationDate: string; id: string })
-      : null;
+    let parsedCursor: { publicationDate: string; id: string } | null = null;
+    if (cursor) {
+      try {
+        parsedCursor = JSON.parse(cursor) as {
+          publicationDate: string;
+          id: string;
+        };
+      } catch {
+        return new Response("Invalid cursor", { status: 400 });
+      }
+    }
 
     const conditions = [];
     if (parsedCursor) {

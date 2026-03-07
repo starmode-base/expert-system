@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "~/postgres/db";
 import { authMiddleware } from "~/middleware/auth-middleware";
@@ -9,7 +9,7 @@ import type { ApiKeySelect } from "~/postgres/schema";
 // Pure helpers
 // ---------------------------------------------------------------------------
 
-export async function hashApiKey(rawKey: string): Promise<string> {
+async function hashApiKey(rawKey: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(rawKey);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
@@ -17,7 +17,7 @@ export async function hashApiKey(rawKey: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function generateApiKey(): Promise<{
+async function generateApiKey(): Promise<{
   rawKey: string;
   keyHash: string;
   keyPrefix: string;
@@ -71,6 +71,12 @@ export async function resolveApiKey(
   return { userId: row.userId };
 }
 
+export async function authenticate(request: Request): Promise<string | null> {
+  const auth = request.headers.get("authorization") ?? "";
+  if (!auth.startsWith("Bearer ")) return null;
+  return (await resolveApiKey(auth.slice(7).trim()))?.userId ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Server functions
 // ---------------------------------------------------------------------------
@@ -89,6 +95,19 @@ export const createApiKeySF = createServerFn({ method: "POST" })
       rawKey: string;
       createdAt: Date;
     }> => {
+      const [countRow] = await db
+        .select({ activeCount: count() })
+        .from(schema.apiKeys)
+        .where(
+          and(
+            eq(schema.apiKeys.userId, context.viewer.id),
+            isNull(schema.apiKeys.revokedAt),
+          ),
+        );
+      if ((countRow?.activeCount ?? 0) >= 10) {
+        throw new Error("Maximum of 10 active API keys allowed");
+      }
+
       const { rawKey, keyHash, keyPrefix } = await generateApiKey();
 
       const [row] = await db
