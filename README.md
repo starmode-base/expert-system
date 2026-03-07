@@ -8,7 +8,7 @@ Production deployment: https://sworks.starmode.app/
 
 1. Install [Node.js](https://nodejs.org/) (v22.x)
 1. Install [Bun](https://bun.sh/)
-1. Clone the [git repo](https://github.com/starmode-base/starmode-sworks)
+1. Clone the [git repo](https://github.com/starmode-base/expert-system)
 1. Install dependencies: `bun install`
 1. Link the Vercel project, to be able to pull development environment variables from Vercel: `bunx vercel link`
    - Set up “~/GitHub/starmode-base/starmode-sworks”? yes

@@ -130,6 +130,7 @@ function NavBar() {
     { key: "research", to: "/research-feed", label: "Research" },
     { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
     { key: "news-feed", to: "/news-feed", label: "News" },
+    { key: "api", to: "/account/api-keys", label: "API" },
   ];
 
   const devNavItems = [

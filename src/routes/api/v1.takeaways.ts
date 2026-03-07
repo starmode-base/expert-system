@@ -1,0 +1,75 @@
+import { json } from "@tanstack/react-start";
+import { createAPIFileRoute } from "@tanstack/react-start/api";
+import { db } from "~/postgres/db";
+import { authenticate } from "~/server/api-keys";
+
+const MAX_IDS = 50;
+
+const apiError = (message: string, status: number) =>
+  new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+
+export const APIRoute = createAPIFileRoute("/api/v1/takeaways")({
+  GET: async ({ request }) => {
+    const userId = await authenticate(request);
+    if (!userId) {
+      return apiError("Unauthorized", 401);
+    }
+
+    const url = new URL(request.url);
+    const idsParam = url.searchParams.get("ids");
+    if (!idsParam) {
+      return apiError("Missing required parameter: ids", 400);
+    }
+
+    const ids = idsParam
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    if (ids.length === 0) {
+      return apiError("No valid IDs provided", 400);
+    }
+
+    if (ids.length > MAX_IDS) {
+      return apiError(`Maximum ${MAX_IDS} IDs per request`, 400);
+    }
+
+    const takeaways = await db.query.takeaways.findMany({
+      columns: {
+        id: true,
+        title: true,
+        takeaway: true,
+      },
+      with: {
+        document: {
+          columns: {
+            id: true,
+            title: true,
+            source: true,
+            link: true,
+            publicationDate: true,
+          },
+        },
+        takeawayReferences: {
+          columns: {
+            referenceNumber: true,
+            reference: true,
+          },
+          orderBy: (refs, { asc }) => asc(refs.referenceNumber),
+        },
+      },
+      where: (t, { inArray }) => inArray(t.id, ids),
+    });
+
+    // Preserve request order
+    const orderMap = new Map(ids.map((id, i) => [id, i]));
+    takeaways.sort(
+      (a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0),
+    );
+
+    return json({ items: takeaways });
+  },
+});
