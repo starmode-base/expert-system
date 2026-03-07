@@ -164,7 +164,7 @@ export function ApiDocsPage() {
         API Reference
       </h1>
       <p className="mb-8 text-sm text-gray-500">
-        REST API for programmatic access to takeaways, insights, and documents.
+        REST API for programmatic access to takeaways, research, and documents.
       </p>
 
       {/* Authentication */}
@@ -186,7 +186,7 @@ export function ApiDocsPage() {
 
         <H3>Example — curl</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     https://your-domain.com/api/v1/takeaways`}</Pre>
+     https://your-domain.com/api/v1/takeaways/recent`}</Pre>
 
         <P>
           A missing or invalid key returns <Code>401 Unauthorized</Code>.
@@ -194,97 +194,35 @@ export function ApiDocsPage() {
         </P>
       </Section>
 
-      {/* Pagination */}
+      {/* GET /api/v1/takeaways/recent */}
       <Section>
-        <H2>Cursor Pagination</H2>
+        <H2>Recent Takeaways</H2>
         <P>
-          All list endpoints use cursor-based pagination. Every response
-          includes a <Code>nextCursor</Code> field. When it is <Code>null</Code>
-          , you have reached the last page.
-        </P>
-        <P>
-          Pass the opaque cursor string back as the <Code>cursor</Code> query
-          parameter on the next request to fetch the following page. Do not
-          parse or construct cursor values — treat them as opaque strings.
+          Returns the most recent takeaways ordered by source document
+          publication date (newest first). Use this as a starting point to
+          discover current content and retrieve IDs to pass to the{" "}
+          <Code>/api/v1/takeaways</Code> endpoint.
         </P>
 
-        <H3>Fetch first page</H3>
-        <Pre>{`GET /api/v1/takeaways?limit=50`}</Pre>
-
-        <H3>Fetch next page</H3>
-        <Pre>{`GET /api/v1/takeaways?limit=50&cursor=<nextCursor from previous response>`}</Pre>
-
-        <H3>Walk all pages</H3>
-        <Pre>{`let cursor = null;
-const allItems = [];
-
-do {
-  const params = new URLSearchParams({ limit: "100" });
-  if (cursor) params.set("cursor", cursor);
-
-  const res = await fetch(\`/api/v1/takeaways?\${params}\`, {
-    headers: { Authorization: \`Bearer \${apiKey}\` },
-  });
-  const { items, nextCursor } = await res.json();
-
-  allItems.push(...items);
-  cursor = nextCursor;
-} while (cursor !== null);`}</Pre>
-
-        <H3>Common parameters</H3>
-        <ParamTable>
-          <ParamRow
-            name="cursor"
-            type="string"
-            description="Opaque pagination cursor from the previous response's nextCursor field. Omit to start from the beginning."
-          />
-          <ParamRow
-            name="limit"
-            type="number"
-            description="Number of items per page. Default: 20. Max: 100."
-          />
-        </ParamTable>
-      </Section>
-
-      {/* GET /api/v1/takeaways */}
-      <Section>
-        <H2>Takeaways</H2>
-        <P>
-          Key insights extracted from source documents. Sorted by document
-          publication date (newest first). Shared across all users — not scoped
-          to the API key owner.
-        </P>
-
-        <EndpointBadge method="GET" path="/api/v1/takeaways" />
+        <EndpointBadge method="GET" path="/api/v1/takeaways/recent" />
 
         <H3>Query parameters</H3>
         <ParamTable>
           <ParamRow
-            name="cursor"
-            type="string"
-            description="Pagination cursor from a previous response."
-          />
-          <ParamRow
             name="limit"
             type="number"
-            description="Items per page. Default: 20. Max: 100."
+            description="Number of takeaways to return. Default: 10. Max: 100."
           />
         </ParamTable>
 
         <H3>Response</H3>
         <Pre>{`{
-  "items": [ TakeawayObject, ... ],
-  "nextCursor": "<string> | null"
+  "items": [ TakeawayObject, ... ]
 }`}</Pre>
 
         <H3>Takeaway object</H3>
         <FieldTable>
           <FieldRow name="id" type="string" description="Unique identifier." />
-          <FieldRow
-            name="documentId"
-            type="string"
-            description="ID of the source document this takeaway was extracted from."
-          />
           <FieldRow
             name="title"
             type="string"
@@ -296,172 +234,120 @@ do {
             description="Full takeaway text — the actionable or notable finding."
           />
           <FieldRow
-            name="concept"
-            type="string"
-            description="Broader concept or theme the takeaway belongs to."
-          />
-          <FieldRow
-            name="summary"
-            type="string"
-            description="Concise summary of the takeaway in 1–2 sentences."
-          />
-          <FieldRow
-            name="categoryId"
-            type="string | null"
-            description="Category ID if the takeaway has been categorised, otherwise null."
-          />
-          <FieldRow
-            name="retrievalSummary"
-            type="string | null"
-            description="Optimised text used for semantic search retrieval. May be null."
-          />
-          <FieldRow
-            name="createdAt"
-            type="string (ISO 8601)"
-            description="When the takeaway was created."
-          />
-          <FieldRow
-            name="updatedAt"
-            type="string (ISO 8601)"
-            description="When the takeaway was last updated."
+            name="document"
+            type="object"
+            description="Source document metadata: id, title, source, link, publicationDate."
           />
         </FieldTable>
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://your-domain.com/api/v1/takeaways?limit=20"`}</Pre>
+     "https://your-domain.com/api/v1/takeaways/recent?limit=5"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
   "items": [
     {
       "id": "tak_abc123",
-      "documentId": "doc_xyz789",
       "title": "Fed signals pause through Q2",
       "takeaway": "The Federal Reserve indicated it will hold rates...",
-      "concept": "Monetary policy",
-      "summary": "Rate hold expected through mid-year.",
-      "categoryId": "cat_macro",
-      "retrievalSummary": null,
-      "createdAt": "2026-03-01T10:00:00.000Z",
-      "updatedAt": "2026-03-01T10:00:00.000Z"
+      "document": {
+        "id": "doc_xyz789",
+        "title": "Remarks on the Economic Outlook",
+        "source": "Fed Speeches",
+        "link": "https://www.federalreserve.gov/...",
+        "publicationDate": "2026-03-01T00:00:00.000Z"
+      }
     }
-  ],
-  "nextCursor": "eyJwdWJsaWNhdGlvbkRhdGUiOiIyMDI2LTAz..."
+  ]
 }`}</Pre>
       </Section>
 
-      {/* GET /api/v1/insights */}
+      {/* GET /api/v1/takeaways */}
       <Section>
-        <H2>Insights</H2>
+        <H2>Takeaways by ID</H2>
         <P>
-          AI-generated research insights. Scoped to the user who owns the API
-          key — each key only returns insights belonging to that user.
+          Fetch up to 50 takeaways by their IDs in a single request. Results are
+          returned in the same order as the IDs provided. Each takeaway includes
+          its source document metadata and any inline references.
         </P>
 
-        <EndpointBadge method="GET" path="/api/v1/insights" />
+        <EndpointBadge method="GET" path="/api/v1/takeaways" />
 
         <H3>Query parameters</H3>
         <ParamTable>
           <ParamRow
-            name="cursor"
+            name="ids"
             type="string"
-            description="Pagination cursor from a previous response."
-          />
-          <ParamRow
-            name="limit"
-            type="number"
-            description="Items per page. Default: 20. Max: 100."
+            required
+            description="Comma-separated list of takeaway IDs. Maximum 50 IDs per request."
           />
         </ParamTable>
 
         <H3>Response</H3>
         <Pre>{`{
-  "items": [ InsightObject, ... ],
-  "nextCursor": "<string> | null"
+  "items": [ TakeawayObject, ... ]
 }`}</Pre>
 
-        <H3>Insight object</H3>
+        <H3>Takeaway object</H3>
         <FieldTable>
           <FieldRow name="id" type="string" description="Unique identifier." />
           <FieldRow
-            name="userId"
-            type="string"
-            description="ID of the user who generated this insight."
-          />
-          <FieldRow
             name="title"
             type="string"
-            description="Title of the insight."
+            description="Short headline summarising the takeaway."
           />
           <FieldRow
-            name="summary"
-            type="string | null"
-            description="Short summary of the insight's main finding."
+            name="takeaway"
+            type="string"
+            description="Full takeaway text — the actionable or notable finding."
           />
           <FieldRow
-            name="insight"
-            type="string | null"
-            description="Full insight text. Only insights with a non-null value are returned."
+            name="document"
+            type="object"
+            description="Source document metadata: id, title, source, link, publicationDate."
           />
           <FieldRow
-            name="research"
-            type="string | null"
-            description="Background research notes used to generate the insight."
-          />
-          <FieldRow
-            name="seedText"
-            type="string | null"
-            description="The seed prompt or text that initiated insight generation."
-          />
-          <FieldRow
-            name="insightPrompt"
-            type="string | null"
-            description="The prompt used to generate the insight."
-          />
-          <FieldRow
-            name="createdAt"
-            type="string (ISO 8601)"
-            description="When the insight was created."
-          />
-          <FieldRow
-            name="updatedAt"
-            type="string (ISO 8601)"
-            description="When the insight was last updated."
+            name="takeawayReferences"
+            type="array"
+            description="Ordered list of inline references. Each entry has referenceNumber (integer) and reference (string)."
           />
         </FieldTable>
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://your-domain.com/api/v1/insights?limit=10"`}</Pre>
+     "https://your-domain.com/api/v1/takeaways?ids=tak_abc123,tak_def456"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
   "items": [
     {
-      "id": "ins_def456",
-      "userId": "usr_abc123",
-      "title": "Rate cycle and tech valuations",
-      "summary": "Rising rates historically compress growth multiples...",
-      "insight": "Analysis shows a strong inverse correlation between...",
-      "research": null,
-      "seedText": "How do rate cycles affect tech valuations?",
-      "insightPrompt": null,
-      "createdAt": "2026-03-05T14:30:00.000Z",
-      "updatedAt": "2026-03-05T14:30:00.000Z"
+      "id": "tak_abc123",
+      "title": "Fed signals pause through Q2",
+      "takeaway": "The Federal Reserve indicated it will hold rates...",
+      "document": {
+        "id": "doc_xyz789",
+        "title": "Remarks on the Economic Outlook",
+        "source": "Fed Speeches",
+        "link": "https://www.federalreserve.gov/...",
+        "publicationDate": "2026-03-01T00:00:00.000Z"
+      },
+      "takeawayReferences": [
+        { "referenceNumber": 1, "reference": "Federal Reserve Press Release, Jan 2026" }
+      ]
     }
-  ],
-  "nextCursor": null
+  ]
 }`}</Pre>
       </Section>
 
       {/* GET /api/v1/documents */}
       <Section>
-        <H2>Documents</H2>
+        <H2>Documents by ID</H2>
         <P>
-          Source documents (articles, transcripts, reports) that have been
-          ingested and processed. Sorted by publication date (newest first).
-          Shared across all users — not scoped to the API key owner.
+          Fetch up to 50 source documents by their IDs in a single request.
+          Document IDs are available on takeaway objects returned by the
+          takeaway endpoints. Results are returned in the same order as the IDs
+          provided.
         </P>
 
         <EndpointBadge method="GET" path="/api/v1/documents" />
@@ -469,21 +355,16 @@ do {
         <H3>Query parameters</H3>
         <ParamTable>
           <ParamRow
-            name="cursor"
+            name="ids"
             type="string"
-            description="Pagination cursor from a previous response."
-          />
-          <ParamRow
-            name="limit"
-            type="number"
-            description="Items per page. Default: 20. Max: 100."
+            required
+            description="Comma-separated list of document IDs. Maximum 50 IDs per request."
           />
         </ParamTable>
 
         <H3>Response</H3>
         <Pre>{`{
-  "items": [ DocumentObject, ... ],
-  "nextCursor": "<string> | null"
+  "items": [ DocumentObject, ... ]
 }`}</Pre>
 
         <H3>Document object</H3>
@@ -534,7 +415,7 @@ do {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://your-domain.com/api/v1/documents?limit=5"`}</Pre>
+     "https://your-domain.com/api/v1/documents?ids=doc_xyz789,doc_abc123"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
@@ -551,15 +432,136 @@ do {
       "createdAt": "2026-03-01T08:15:00.000Z",
       "updatedAt": "2026-03-01T08:15:00.000Z"
     }
+  ]
+}`}</Pre>
+      </Section>
+
+      {/* GET /api/v1/research */}
+      <Section>
+        <H2>Research</H2>
+        <P>
+          AI-generated research insights. Scoped to the user who owns the API
+          key — each key only returns research belonging to that user. Sorted by
+          creation date (newest first).
+        </P>
+
+        <EndpointBadge method="GET" path="/api/v1/research" />
+
+        <H3>Query parameters</H3>
+        <ParamTable>
+          <ParamRow
+            name="cursor"
+            type="string"
+            description="Opaque pagination cursor from the previous response's nextCursor field. Omit to start from the beginning."
+          />
+          <ParamRow
+            name="limit"
+            type="number"
+            description="Items per page. Default: 4. Max: 100."
+          />
+          <ParamRow
+            name="date"
+            type="string"
+            description="Filter to a single day in YYYY-MM-DD format (UTC). Returns only research created on that date."
+          />
+        </ParamTable>
+
+        <H3>Response</H3>
+        <Pre>{`{
+  "items": [ ResearchObject, ... ],
+  "nextCursor": "<string> | null"
+}`}</Pre>
+
+        <H3>Research object</H3>
+        <FieldTable>
+          <FieldRow name="id" type="string" description="Unique identifier." />
+          <FieldRow
+            name="title"
+            type="string"
+            description="Title of the research insight."
+          />
+          <FieldRow
+            name="summary"
+            type="string | null"
+            description="Short summary of the insight's main finding."
+          />
+          <FieldRow
+            name="insight"
+            type="string | null"
+            description="Full insight text. Only insights with a non-null value are returned."
+          />
+          <FieldRow
+            name="research"
+            type="string | null"
+            description="Background research notes used to generate the insight."
+          />
+          <FieldRow
+            name="takeaways"
+            type="array"
+            description="Takeaways linked to this insight. Each entry has id and title."
+          />
+          <FieldRow
+            name="createdAt"
+            type="string (ISO 8601)"
+            description="When the insight was created."
+          />
+          <FieldRow
+            name="updatedAt"
+            type="string (ISO 8601)"
+            description="When the insight was last updated."
+          />
+        </FieldTable>
+
+        <H3>Cursor pagination</H3>
+        <P>
+          Pass the opaque <Code>nextCursor</Code> value from a response as the{" "}
+          <Code>cursor</Code> parameter on the next request. When{" "}
+          <Code>nextCursor</Code> is <Code>null</Code>, you have reached the
+          last page. Do not parse or construct cursor values — treat them as
+          opaque strings.
+        </P>
+
+        <H3>Example request</H3>
+        <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
+     "https://your-domain.com/api/v1/research?limit=10"`}</Pre>
+
+        <H3>Example request — filter by date</H3>
+        <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
+     "https://your-domain.com/api/v1/research?date=2026-03-05"`}</Pre>
+
+        <H3>Example response</H3>
+        <Pre>{`{
+  "items": [
+    {
+      "id": "ins_def456",
+      "title": "Rate cycle and tech valuations",
+      "summary": "Rising rates historically compress growth multiples...",
+      "insight": "Analysis shows a strong inverse correlation between...",
+      "research": null,
+      "takeaways": [
+        { "id": "tak_abc123", "title": "Fed signals pause through Q2" }
+      ],
+      "createdAt": "2026-03-05T14:30:00.000Z",
+      "updatedAt": "2026-03-05T14:30:00.000Z"
+    }
   ],
-  "nextCursor": "eyJwdWJsaWNhdGlvbkRhdGUiOiIyMDI2LTAz..."
+  "nextCursor": null
 }`}</Pre>
       </Section>
 
       {/* Error reference */}
       <Section>
         <H2>Error responses</H2>
+        <P>
+          Errors return a JSON body with an <Code>error</Code> field and the
+          corresponding HTTP status code.
+        </P>
         <FieldTable>
+          <FieldRow
+            name="400 Bad Request"
+            type=""
+            description="Missing or invalid parameter (e.g. missing ids, invalid limit, malformed cursor or date)."
+          />
           <FieldRow
             name="401 Unauthorized"
             type=""
@@ -568,13 +570,11 @@ do {
           <FieldRow
             name="200 OK"
             type=""
-            description="Successful response. Always returns items array and nextCursor."
+            description="Successful response. Always returns an items array."
           />
         </FieldTable>
-        <P>
-          All successful responses return HTTP 200 with a JSON body. Errors
-          return a plain-text body with the HTTP status code.
-        </P>
+        <H3>Example error body</H3>
+        <Pre>{`{ "error": "Missing required parameter: ids" }`}</Pre>
       </Section>
     </div>
   );
