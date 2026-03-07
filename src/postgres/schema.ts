@@ -415,3 +415,25 @@ export const blogs = pgTable("blogs", {
 
 export type BlogSelect = typeof blogs.$inferSelect;
 export type BlogInsert = typeof blogs.$inferInsert;
+
+/**
+ * API Keys - Secret keys for external REST API access
+ */
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    ...baseSchema,
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    keyHash: text().notNull().unique(), // SHA-256 hex of raw key
+    keyPrefix: text().notNull(), // first 13 chars for display
+    lastUsedAt: timestamp(),
+    revokedAt: timestamp(), // null = active; non-null = revoked
+  },
+  (table) => [index("api_keys_user_id_idx").on(table.userId)],
+);
+
+export type ApiKeySelect = typeof apiKeys.$inferSelect;
+export type ApiKeyInsert = typeof apiKeys.$inferInsert;

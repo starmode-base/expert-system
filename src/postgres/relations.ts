@@ -21,6 +21,7 @@ import {
   insightReferences,
   xBookmarksAuth,
   blogs,
+  apiKeys,
 } from "./schema";
 
 export const conceptEmbeddingsRelations = relations(
@@ -75,6 +76,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   trackedCompanies: many(trackedCompanies),
   organizationMembers: many(organizationMembers),
   xBookmarksAuth: many(xBookmarksAuth),
+  apiKeys: many(apiKeys),
 }));
 
 export const xBookmarksAuthRelations = relations(xBookmarksAuth, ({ one }) => ({
@@ -217,3 +219,10 @@ export const insightReferencesRelations = relations(
 );
 
 export const blogsRelations = relations(blogs, () => ({}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  user: one(users, {
+    fields: [apiKeys.userId],
+    references: [users.id],
+  }),
+}));
