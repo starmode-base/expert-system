@@ -1,11 +1,10 @@
 import { json } from "@tanstack/react-start";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { and, desc, eq, isNotNull, lt, or } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, lt, or } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import { authenticate } from "~/server/api-keys";
-import type { InsightSelect } from "~/postgres/schema";
 
-export const APIRoute = createAPIFileRoute("/api/v1/insights")({
+export const APIRoute = createAPIFileRoute("/api/v1/research")({
   GET: async ({ request }) => {
     const userId = await authenticate(request);
     if (!userId) {
@@ -15,8 +14,9 @@ export const APIRoute = createAPIFileRoute("/api/v1/insights")({
     const url = new URL(request.url);
     const cursor = url.searchParams.get("cursor") ?? null;
     const limitRaw = url.searchParams.get("limit");
-    const limitParam = limitRaw ? Number(limitRaw) : 20;
+    const limitParam = limitRaw ? Number(limitRaw) : 4;
     const limit = Math.min(Math.max(1, limitParam), 100);
+    const dateParam = url.searchParams.get("date"); // YYYY-MM-DD
 
     let parsedCursor: { createdAt: string; id: string } | null = null;
     if (cursor) {
@@ -25,6 +25,17 @@ export const APIRoute = createAPIFileRoute("/api/v1/insights")({
       } catch {
         return new Response("Invalid cursor", { status: 400 });
       }
+    }
+
+    let dateStart: Date | undefined;
+    let dateEnd: Date | undefined;
+    if (dateParam) {
+      dateStart = new Date(`${dateParam}T00:00:00Z`);
+      if (isNaN(dateStart.getTime())) {
+        return new Response("Invalid date", { status: 400 });
+      }
+      dateEnd = new Date(dateStart);
+      dateEnd.setUTCDate(dateEnd.getUTCDate() + 1);
     }
 
     const cursorCondition = parsedCursor
@@ -38,9 +49,30 @@ export const APIRoute = createAPIFileRoute("/api/v1/insights")({
       : undefined;
 
     const rows = await db.query.insights.findMany({
+      columns: {
+        id: true,
+        title: true,
+        summary: true,
+        insight: true,
+        research: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      with: {
+        insightTakeaways: {
+          columns: {},
+          with: {
+            takeaway: {
+              columns: { id: true, title: true },
+            },
+          },
+        },
+      },
       where: and(
         eq(schema.insights.userId, userId),
         isNotNull(schema.insights.insight),
+        dateStart ? gte(schema.insights.createdAt, dateStart) : undefined,
+        dateEnd ? lt(schema.insights.createdAt, dateEnd) : undefined,
         cursorCondition,
       ),
       orderBy: [desc(schema.insights.createdAt), desc(schema.insights.id)],
@@ -58,6 +90,14 @@ export const APIRoute = createAPIFileRoute("/api/v1/insights")({
           })
         : null;
 
-    return json({ items: pageItems as InsightSelect[], nextCursor });
+    const items = pageItems.map(({ insightTakeaways, ...insight }) => ({
+      ...insight,
+      takeaways: insightTakeaways.map(({ takeaway }) => ({
+        id: takeaway.id,
+        title: takeaway.title,
+      })),
+    }));
+
+    return json({ items, nextCursor });
   },
 });
