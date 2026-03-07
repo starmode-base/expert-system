@@ -54,7 +54,9 @@ function ApiKeysPage() {
     if (!newRawKey) return;
     await navigator.clipboard.writeText(newRawKey);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
   };
 
   const handleRevoke = async (keyId: string) => {
@@ -89,7 +91,9 @@ function ApiKeysPage() {
             type="text"
             placeholder="Key name (e.g. My App)"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+            }}
             disabled={creating}
             className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:ring-2 focus:ring-gray-200 focus:outline-none disabled:opacity-50"
           />
@@ -124,7 +128,9 @@ function ApiKeysPage() {
             </button>
           </div>
           <button
-            onClick={() => setNewRawKey(null)}
+            onClick={() => {
+              setNewRawKey(null);
+            }}
             className="cursor-pointer text-sm font-medium text-amber-700 underline hover:text-amber-900"
           >
             I've saved it — dismiss
