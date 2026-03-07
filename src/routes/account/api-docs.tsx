@@ -167,6 +167,20 @@ export function ApiDocsPage() {
         REST API for programmatic access to takeaways, research, and documents.
       </p>
 
+      {/* Machine-readable docs */}
+      <Section>
+        <H2>Machine-Readable Docs</H2>
+        <P>
+          A plain-text version of this documentation is available for AI agents
+          and programmatic access — no authentication required.
+        </P>
+        <EndpointBadge method="GET" path="/api/v1/docs" />
+        <Pre>{`curl https://your-domain.com/api/v1/docs`}</Pre>
+        <P>
+          Returns this entire reference as Markdown (<Code>text/plain</Code>).
+        </P>
+      </Section>
+
       {/* Authentication */}
       <Section>
         <H2>Authentication</H2>
