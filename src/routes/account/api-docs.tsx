@@ -175,7 +175,7 @@ export function ApiDocsPage() {
           and programmatic access — no authentication required.
         </P>
         <EndpointBadge method="GET" path="/api/v1/docs" />
-        <Pre>{`curl https://your-domain.com/api/v1/docs`}</Pre>
+        <Pre>{`curl https://expert-system.starmode.dev/api/v1/docs`}</Pre>
         <P>
           Returns this entire reference as Markdown (<Code>text/plain</Code>).
         </P>
@@ -200,7 +200,7 @@ export function ApiDocsPage() {
 
         <H3>Example — curl</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     https://your-domain.com/api/v1/takeaways/recent`}</Pre>
+     https://expert-system.starmode.dev/api/v1/takeaways/recent`}</Pre>
 
         <P>
           A missing or invalid key returns <Code>401 Unauthorized</Code>.
@@ -256,7 +256,7 @@ export function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://your-domain.com/api/v1/takeaways/recent?limit=5"`}</Pre>
+     "https://expert-system.starmode.dev/api/v1/takeaways/recent?limit=5"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
@@ -330,7 +330,7 @@ export function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://your-domain.com/api/v1/takeaways?ids=tak_abc123,tak_def456"`}</Pre>
+     "https://expert-system.starmode.dev/api/v1/takeaways?ids=tak_abc123,tak_def456"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
@@ -429,7 +429,7 @@ export function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://your-domain.com/api/v1/documents?ids=doc_xyz789,doc_abc123"`}</Pre>
+     "https://expert-system.starmode.dev/api/v1/documents?ids=doc_xyz789,doc_abc123"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
@@ -537,11 +537,11 @@ export function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://your-domain.com/api/v1/research?limit=10"`}</Pre>
+     "https://expert-system.starmode.dev/api/v1/research?limit=10"`}</Pre>
 
         <H3>Example request — filter by date</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://your-domain.com/api/v1/research?date=2026-03-05"`}</Pre>
+     "https://expert-system.starmode.dev/api/v1/research?date=2026-03-05"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{

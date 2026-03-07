@@ -40,7 +40,7 @@ Returns the most recent takeaways ordered by source document publication date (n
 ### Example request
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://your-domain.com/api/v1/takeaways/recent?limit=5"
+         "https://expert-system.starmode.dev/api/v1/takeaways/recent?limit=5"
 
 ### Example response
 
@@ -90,7 +90,7 @@ Fetch up to 50 takeaways by their IDs in a single request. Results are returned 
 ### Example request
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://your-domain.com/api/v1/takeaways?ids=tak_abc123,tak_def456"
+         "https://expert-system.starmode.dev/api/v1/takeaways?ids=tak_abc123,tak_def456"
 
 ---
 
@@ -126,7 +126,7 @@ Fetch up to 50 source documents by their IDs in a single request. Document IDs a
 ### Example request
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://your-domain.com/api/v1/documents?ids=doc_xyz789,doc_abc123"
+         "https://expert-system.starmode.dev/api/v1/documents?ids=doc_xyz789,doc_abc123"
 
 ---
 
@@ -169,12 +169,12 @@ Pass the opaque nextCursor value from a response as the cursor parameter on the 
 ### Example request
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://your-domain.com/api/v1/research?limit=10"
+         "https://expert-system.starmode.dev/api/v1/research?limit=10"
 
 ### Example request — filter by date
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://your-domain.com/api/v1/research?date=2026-03-05"
+         "https://expert-system.starmode.dev/api/v1/research?date=2026-03-05"
 
 ---
 
