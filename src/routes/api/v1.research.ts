@@ -4,26 +4,49 @@ import { and, desc, eq, gte, isNotNull, lt, or } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import { authenticate } from "~/server/api-keys";
 
+const apiError = (message: string, status: number) =>
+  new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+
 export const APIRoute = createAPIFileRoute("/api/v1/research")({
   GET: async ({ request }) => {
     const userId = await authenticate(request);
     if (!userId) {
-      return new Response("Unauthorized", { status: 401 });
+      return apiError("Unauthorized", 401);
     }
 
     const url = new URL(request.url);
     const cursor = url.searchParams.get("cursor") ?? null;
     const limitRaw = url.searchParams.get("limit");
     const limitParam = limitRaw ? Number(limitRaw) : 4;
+    if (limitRaw && isNaN(limitParam)) {
+      return apiError("Invalid limit: must be a number", 400);
+    }
     const limit = Math.min(Math.max(1, limitParam), 100);
     const dateParam = url.searchParams.get("date"); // YYYY-MM-DD
 
     let parsedCursor: { createdAt: string; id: string } | null = null;
     if (cursor) {
       try {
-        parsedCursor = JSON.parse(cursor) as { createdAt: string; id: string };
+        const raw = JSON.parse(cursor);
+        if (
+          typeof raw !== "object" ||
+          raw === null ||
+          typeof (raw as Record<string, unknown>).createdAt !== "string" ||
+          typeof (raw as Record<string, unknown>).id !== "string" ||
+          isNaN(
+            new Date(
+              (raw as Record<string, unknown>).createdAt as string,
+            ).getTime(),
+          )
+        ) {
+          return apiError("Invalid cursor", 400);
+        }
+        parsedCursor = raw as { createdAt: string; id: string };
       } catch {
-        return new Response("Invalid cursor", { status: 400 });
+        return apiError("Invalid cursor", 400);
       }
     }
 
@@ -32,7 +55,7 @@ export const APIRoute = createAPIFileRoute("/api/v1/research")({
     if (dateParam) {
       dateStart = new Date(`${dateParam}T00:00:00Z`);
       if (isNaN(dateStart.getTime())) {
-        return new Response("Invalid date", { status: 400 });
+        return apiError("Invalid date: expected YYYY-MM-DD", 400);
       }
       dateEnd = new Date(dateStart);
       dateEnd.setUTCDate(dateEnd.getUTCDate() + 1);
