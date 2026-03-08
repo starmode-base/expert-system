@@ -209,6 +209,86 @@ Pass the opaque nextCursor value from a response as the cursor parameter on the 
 
 ---
 
+## POST /api/v1/query/macro
+
+Natural language query interface for macroeconomic data. An AI agent translates your question into FRED API calls and returns the results.
+
+### Request body (JSON)
+
+| Field | Type   | Required | Description                                          |
+|-------|--------|----------|------------------------------------------------------|
+| query | string | yes      | Natural-language macro question (e.g. "What is the current unemployment rate?"). |
+
+### Response
+
+    {
+      "analysis": "...",
+      "supportingData": "..."
+    }
+
+### Response fields
+
+| Field          | Type   | Description                                                  |
+|----------------|--------|--------------------------------------------------------------|
+| analysis       | string | Concise analysis answering the question, grounded in data.   |
+| supportingData | string | Raw data points with series IDs and periods.                 |
+
+### Example request
+
+    curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
+         -H "Content-Type: application/json" \\
+         -d '{"query": "What is the current unemployment rate?"}' \\
+         "https://expert-system.starmode.dev/api/v1/query/macro"
+
+### Example response
+
+    {
+      "analysis": "The unemployment rate stands at 4.1% as of January 2026...",
+      "supportingData": "UNRATE: 4.1% (2026-01), 4.2% (2025-12), 4.1% (2025-11)"
+    }
+
+---
+
+## POST /api/v1/query/financial
+
+Natural language query interface for company financial data. An AI agent translates your question into Alpha Vantage API calls and returns the results.
+
+### Request body (JSON)
+
+| Field | Type   | Required | Description                                          |
+|-------|--------|----------|------------------------------------------------------|
+| query | string | yes      | Natural-language financial question (e.g. "What is Apple's revenue trend?"). |
+
+### Response
+
+    {
+      "analysis": "...",
+      "supportingData": "..."
+    }
+
+### Response fields
+
+| Field          | Type   | Description                                                  |
+|----------------|--------|--------------------------------------------------------------|
+| analysis       | string | Concise analysis answering the question, grounded in data.   |
+| supportingData | string | Raw data points with tickers and periods.                    |
+
+### Example request
+
+    curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
+         -H "Content-Type: application/json" \\
+         -d '{"query": "What is Apple\\'s latest quarterly revenue?"}' \\
+         "https://expert-system.starmode.dev/api/v1/query/financial"
+
+### Example response
+
+    {
+      "analysis": "Apple reported $124.3B in revenue for Q1 FY2026...",
+      "supportingData": "AAPL totalRevenue: $124.3B (2025-12-28), $94.9B (2025-09-28)"
+    }
+
+---
+
 ## Error responses
 
 Errors return a JSON body with an error field and the corresponding HTTP status code.
