@@ -134,22 +134,63 @@ function FieldTable({ children }: { children: React.ReactNode }) {
   );
 }
 
-function EndpointBadge({ method, path }: { method: string; path: string }) {
-  return (
-    <div className="mb-4 flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
-      <span className="rounded bg-emerald-100 px-2 py-0.5 font-mono text-xs font-bold text-emerald-700">
-        {method}
-      </span>
-      <code className="font-mono text-sm text-gray-800">{path}</code>
-    </div>
-  );
-}
-
 function Section({ children }: { children: React.ReactNode }) {
   return (
     <section className="mb-2 rounded-lg border border-gray-200 bg-white p-6">
       {children}
     </section>
+  );
+}
+
+function EndpointSection({
+  title,
+  method,
+  path,
+  description,
+  children,
+}: {
+  title: string;
+  method: string;
+  path: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  const methodColor =
+    method === "POST"
+      ? "bg-blue-100 text-blue-700"
+      : "bg-emerald-100 text-emerald-700";
+
+  return (
+    <details className="group mb-2 rounded-lg border border-gray-200 bg-white">
+      <summary className="flex cursor-pointer list-none items-start gap-4 p-5 [&::-webkit-details-marker]:hidden">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <div className="flex items-center gap-3">
+            <span
+              className={`shrink-0 rounded px-2 py-0.5 font-mono text-xs font-bold ${methodColor}`}
+            >
+              {method}
+            </span>
+            <code className="font-mono text-sm text-gray-800">{path}</code>
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+          <p className="text-xs leading-relaxed text-gray-500">{description}</p>
+        </div>
+        <svg
+          className="mt-1 h-4 w-4 shrink-0 text-gray-400 transition-transform group-open:rotate-180"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </summary>
+      <div className="border-t border-gray-100 px-6 pt-4 pb-6">{children}</div>
+    </details>
   );
 }
 
@@ -167,38 +208,23 @@ export function ApiDocsPage() {
         REST API for programmatic access to takeaways, research, and documents.
       </p>
 
-      {/* Machine-readable docs */}
+      {/* Getting Started */}
       <Section>
-        <H2>Machine-Readable Docs</H2>
-        <P>
-          A plain-text version of this documentation is available for AI agents
-          and programmatic access — no authentication required.
-        </P>
-        <EndpointBadge method="GET" path="/api/v1/docs" />
-        <Pre>{`curl https://expert-system.starmode.dev/api/v1/docs`}</Pre>
-        <P>
-          Returns this entire reference as Markdown (<Code>text/plain</Code>).
-        </P>
-      </Section>
+        <H2>Getting Started</H2>
 
-      {/* Authentication */}
-      <Section>
-        <H2>Authentication</H2>
         <P>
-          All API requests must include an API key in the{" "}
-          <Code>Authorization</Code> header using the Bearer scheme. Generate a
-          key on the{" "}
+          All API requests require an API key. Generate one on the{" "}
           <a
             href="/account/api-keys"
             className="text-blue-600 underline hover:text-blue-800"
           >
             API Keys
           </a>{" "}
-          page.
+          page, then include it in every request:
         </P>
         <Pre>{`Authorization: Bearer esak_<your-key>`}</Pre>
 
-        <H3>Example — curl</H3>
+        <H3>Example</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
      https://expert-system.starmode.dev/api/v1/takeaways/recent`}</Pre>
 
@@ -206,20 +232,27 @@ export function ApiDocsPage() {
           A missing or invalid key returns <Code>401 Unauthorized</Code>.
           Revoked keys are rejected immediately.
         </P>
+
+        <H3>Machine-readable docs</H3>
+        <P>
+          A plain-text Markdown version of this documentation is available for
+          AI agents — no authentication required. Point your agent at this URL
+          to ingest the full API reference:
+        </P>
+        <Pre>{`curl https://expert-system.starmode.dev/api/v1/docs`}</Pre>
       </Section>
 
+      <h2 className="mt-8 mb-3 text-lg font-semibold text-gray-900">
+        Endpoints
+      </h2>
+
       {/* GET /api/v1/takeaways/recent */}
-      <Section>
-        <H2>Recent Takeaways</H2>
-        <P>
-          Returns the most recent takeaways ordered by source document
-          publication date (newest first). Returns lightweight results — use the
-          returned IDs with <Code>/api/v1/takeaways</Code> to fetch full
-          details.
-        </P>
-
-        <EndpointBadge method="GET" path="/api/v1/takeaways/recent" />
-
+      <EndpointSection
+        title="Recent Takeaways"
+        method="GET"
+        path="/api/v1/takeaways/recent"
+        description="Returns the most recent takeaways ordered by publication date (newest first)."
+      >
         <H3>Query parameters</H3>
         <ParamTable>
           <ParamRow
@@ -273,19 +306,15 @@ export function ApiDocsPage() {
     }
   ]
 }`}</Pre>
-      </Section>
+      </EndpointSection>
 
       {/* GET /api/v1/takeaways */}
-      <Section>
-        <H2>Takeaways by ID</H2>
-        <P>
-          Fetch up to 50 takeaways by their IDs in a single request. Results are
-          returned in the same order as the IDs provided. Each takeaway includes
-          its source document metadata and any inline references.
-        </P>
-
-        <EndpointBadge method="GET" path="/api/v1/takeaways" />
-
+      <EndpointSection
+        title="Takeaways by ID"
+        method="GET"
+        path="/api/v1/takeaways"
+        description="Fetch up to 50 takeaways by ID with full details, document metadata, and inline references."
+      >
         <H3>Query parameters</H3>
         <ParamTable>
           <ParamRow
@@ -350,21 +379,15 @@ export function ApiDocsPage() {
     }
   ]
 }`}</Pre>
-      </Section>
+      </EndpointSection>
 
       {/* GET /api/v1/takeaways/search */}
-      <Section>
-        <H2>Takeaway Search</H2>
-        <P>
-          Semantic search across all takeaways using vector similarity. Returns
-          lightweight results ranked by relevance. Use the returned IDs with{" "}
-          <Code>/api/v1/takeaways</Code> to fetch full takeaway details.
-          Optionally applies a time-weighted reranking to favour more recent
-          content.
-        </P>
-
-        <EndpointBadge method="GET" path="/api/v1/takeaways/search" />
-
+      <EndpointSection
+        title="Takeaway Search"
+        method="GET"
+        path="/api/v1/takeaways/search"
+        description="Semantic search across all takeaways using vector similarity, with optional time-weighted reranking."
+      >
         <H3>Query parameters</H3>
         <ParamTable>
           <ParamRow
@@ -433,20 +456,15 @@ export function ApiDocsPage() {
     }
   ]
 }`}</Pre>
-      </Section>
+      </EndpointSection>
 
       {/* GET /api/v1/documents */}
-      <Section>
-        <H2>Documents by ID</H2>
-        <P>
-          Fetch up to 50 source documents by their IDs in a single request.
-          Document IDs are available on takeaway objects returned by the
-          takeaway endpoints. Results are returned in the same order as the IDs
-          provided.
-        </P>
-
-        <EndpointBadge method="GET" path="/api/v1/documents" />
-
+      <EndpointSection
+        title="Documents by ID"
+        method="GET"
+        path="/api/v1/documents"
+        description="Fetch up to 50 source documents by ID, including full article text and metadata."
+      >
         <H3>Query parameters</H3>
         <ParamTable>
           <ParamRow
@@ -529,19 +547,15 @@ export function ApiDocsPage() {
     }
   ]
 }`}</Pre>
-      </Section>
+      </EndpointSection>
 
       {/* GET /api/v1/research */}
-      <Section>
-        <H2>Research</H2>
-        <P>
-          AI-generated research insights. Scoped to the user who owns the API
-          key — each key only returns research belonging to that user. Sorted by
-          creation date (newest first).
-        </P>
-
-        <EndpointBadge method="GET" path="/api/v1/research" />
-
+      <EndpointSection
+        title="Research"
+        method="GET"
+        path="/api/v1/research"
+        description="AI-generated research insights scoped to the API key owner. Supports cursor pagination and date filtering."
+      >
         <H3>Query parameters</H3>
         <ParamTable>
           <ParamRow
@@ -642,7 +656,232 @@ export function ApiDocsPage() {
   ],
   "nextCursor": null
 }`}</Pre>
-      </Section>
+      </EndpointSection>
+
+      {/* POST /api/v1/query/macro */}
+      <EndpointSection
+        title="Query Macro Data"
+        method="POST"
+        path="/api/v1/query/macro"
+        description="Natural language interface for macroeconomic data. An AI agent translates your question into FRED API calls and returns structured data."
+      >
+        <H3>Available data</H3>
+        <P>
+          Ask about any of the series below using plain English — the agent
+          resolves series IDs automatically.
+        </P>
+        <div className="mb-4 space-y-2 text-xs leading-relaxed text-gray-600">
+          <p>
+            <span className="font-semibold text-gray-700">
+              Growth / Real Economy:
+            </span>{" "}
+            Real GDP, Industrial Production, Capacity Utilization, Real Personal
+            Consumption, Real Business Fixed Investment.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">Labor Market:</span>{" "}
+            Unemployment Rate, Labor Force Participation, Employment-Population
+            Ratio, Nonfarm Payrolls, Initial Jobless Claims, Continuing Jobless
+            Claims, Job Openings Rate, Quits Rate.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Inflation / Prices:
+            </span>{" "}
+            CPI All Items, Core CPI, PCE Price Index, Core PCE, Trimmed Mean
+            PCE, Median CPI.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">Wages / Income:</span>{" "}
+            Average Hourly Earnings, Employment Cost Index, Real Disposable
+            Personal Income.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Monetary Policy / Liquidity:
+            </span>{" "}
+            Fed Funds Rate, Effective Fed Funds Rate, Interest on Reserve
+            Balances, Fed Total Assets, Reserve Balances, Overnight Reverse
+            Repo, M2 Money Supply.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Rates / Yield Curve:
+            </span>{" "}
+            2-Year Treasury, 10-Year Treasury, 10Y-2Y Spread, 10-Year Term
+            Premium, 10-Year Breakeven Inflation.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Credit / Financial Stress:
+            </span>{" "}
+            Baa Corporate Spread, High Yield OAS, Senior Loan Officer Survey,
+            Financial Conditions Index, Bank Credit.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">Housing:</span>{" "}
+            Housing Starts, Building Permits, Existing Home Sales, Case-Shiller
+            Home Price Index, 30-Year Mortgage Rate.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">Sentiment:</span>{" "}
+            Consumer Sentiment.
+          </p>
+        </div>
+
+        <H3>Request body (JSON)</H3>
+        <ParamTable>
+          <ParamRow
+            name="query"
+            type="string"
+            required
+            description='Natural-language macro question (e.g. "What is the current unemployment rate?").'
+          />
+        </ParamTable>
+
+        <H3>Response</H3>
+        <Pre>{`{
+  "data": [ { ... }, ... ],
+  "seriesQueried": [ "UNRATE", ... ]
+}`}</Pre>
+
+        <H3>Response fields</H3>
+        <FieldTable>
+          <FieldRow
+            name="data"
+            type="array"
+            description="Array of result objects from tool calls, preserving original structure (e.g. seriesId, observations, metadata)."
+          />
+          <FieldRow
+            name="seriesQueried"
+            type="string[]"
+            description="List of FRED series IDs that were queried."
+          />
+        </FieldTable>
+
+        <H3>Example request</H3>
+        <Pre>{`curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
+     -H "Content-Type: application/json" \\
+     -d '{"query": "What is the current unemployment rate?"}' \\
+     "https://expert-system.starmode.dev/api/v1/query/macro"`}</Pre>
+
+        <H3>Example response</H3>
+        <Pre>{`{
+  "data": [
+    {
+      "seriesId": "UNRATE",
+      "observations": [
+        { "date": "2026-02-01", "value": "4.4" },
+        { "date": "2026-01-01", "value": "4.0" }
+      ]
+    }
+  ],
+  "seriesQueried": ["UNRATE"]
+}`}</Pre>
+      </EndpointSection>
+
+      {/* POST /api/v1/query/financial */}
+      <EndpointSection
+        title="Query Financial Data"
+        method="POST"
+        path="/api/v1/query/financial"
+        description="Natural language interface for company financial data. An AI agent translates your question into Alpha Vantage API calls and returns structured data."
+      >
+        <H3>Available data</H3>
+        <P>
+          Ask about any public company by name or ticker — the agent resolves
+          symbols automatically.
+        </P>
+        <div className="mb-4 space-y-2 text-xs leading-relaxed text-gray-600">
+          <p>
+            <span className="font-semibold text-gray-700">
+              Company Overview:
+            </span>{" "}
+            Name, Sector, Industry, Market Cap, EBITDA, P/E Ratio, PEG Ratio,
+            Book Value, Dividend Yield, EPS, Revenue Per Share, Profit Margin,
+            Operating Margin, ROA, ROE, Revenue TTM, Analyst Target Price,
+            Forward P/E, EV/Revenue, EV/EBITDA, Beta, 52-Week High/Low, Moving
+            Averages, Shares Outstanding.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Income Statement (quarterly):
+            </span>{" "}
+            Total Revenue, Gross Profit, Cost of Revenue, Operating Income,
+            Operating Expenses, SG&A, R&D, Interest Expense, Income Before Tax,
+            Tax Expense, Net Income, EBIT, EBITDA, D&A.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Balance Sheet (quarterly):
+            </span>{" "}
+            Total Assets, Current Assets, Cash & Equivalents, Inventory,
+            Receivables, PP&E, Goodwill, Intangible Assets, Total Liabilities,
+            Current Liabilities, Accounts Payable, Short-Term Debt, Long-Term
+            Debt, Total Shareholder Equity, Retained Earnings, Shares
+            Outstanding.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Cash Flow (quarterly):
+            </span>{" "}
+            Operating Cash Flow, Capital Expenditures, Cash Flow from Investing,
+            Cash Flow from Financing, Dividend Payout, Share Repurchases, Debt
+            Issuance, Net Income, D&A, Change in Receivables, Change in
+            Inventory.
+          </p>
+        </div>
+
+        <H3>Request body (JSON)</H3>
+        <ParamTable>
+          <ParamRow
+            name="query"
+            type="string"
+            required
+            description='Natural-language financial question (e.g. "What is Apple&#39;s revenue trend?").'
+          />
+        </ParamTable>
+
+        <H3>Response</H3>
+        <Pre>{`{
+  "data": [ { ... }, ... ],
+  "tickersQueried": [ "AAPL", ... ]
+}`}</Pre>
+
+        <H3>Response fields</H3>
+        <FieldTable>
+          <FieldRow
+            name="data"
+            type="array"
+            description="Array of result objects from tool calls, preserving original structure (e.g. symbol, metric, quarterly reports)."
+          />
+          <FieldRow
+            name="tickersQueried"
+            type="string[]"
+            description="List of ticker symbols that were queried."
+          />
+        </FieldTable>
+
+        <H3>Example request</H3>
+        <Pre>{`curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
+     -H "Content-Type: application/json" \\
+     -d '{"query": "What is Apple'\\''s latest quarterly revenue?"}' \\
+     "https://expert-system.starmode.dev/api/v1/query/financial"`}</Pre>
+
+        <H3>Example response</H3>
+        <Pre>{`{
+  "data": [
+    {
+      "symbol": "AAPL",
+      "metric": "totalRevenue",
+      "reports": [
+        { "fiscalDateEnding": "2025-12-31", "value": "143756000000" }
+      ]
+    }
+  ],
+  "tickersQueried": ["AAPL"]
+}`}</Pre>
+      </EndpointSection>
 
       {/* Error reference */}
       <Section>

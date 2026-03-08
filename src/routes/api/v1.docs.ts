@@ -209,6 +209,132 @@ Pass the opaque nextCursor value from a response as the cursor parameter on the 
 
 ---
 
+## POST /api/v1/query/macro
+
+Natural language query interface for macroeconomic data. An AI agent translates your question into FRED API calls and returns structured data. Ask about any of the series listed below using plain English — the agent resolves series IDs automatically.
+
+### Available data
+
+Growth / Real Economy: Real GDP (GDPC1), Industrial Production (INDPRO), Capacity Utilization (TCU), Real Personal Consumption (PCEC96), Real Business Fixed Investment (PNFIC1).
+
+Labor Market: Unemployment Rate (UNRATE), Labor Force Participation (CIVPART), Employment-Population Ratio (EMRATIO), Nonfarm Payrolls (PAYEMS), Initial Jobless Claims (ICSA), Continuing Jobless Claims (CCSA), Job Openings Rate (JTSJOR), Quits Rate (JTSQUR).
+
+Inflation / Prices: CPI All Items (CPIAUCSL), Core CPI (CPILFESL), PCE Price Index (PCEPI), Core PCE (PCEPILFE), Trimmed Mean PCE (PCETRIM1M158SFRBDAL), Median CPI (MEDCPIM158SFRBCLE).
+
+Wages / Income: Average Hourly Earnings (CES0500000003), Employment Cost Index (ECIALLCIV), Real Disposable Personal Income (DSPIC96).
+
+Monetary Policy / Liquidity: Fed Funds Rate (FEDFUNDS), Effective Fed Funds Rate (EFFR), Interest on Reserve Balances (IORB), Fed Total Assets (WALCL), Reserve Balances (WRESBAL), Overnight Reverse Repo (RRPONTSYD), M2 Money Supply (M2SL).
+
+Rates / Yield Curve: 2-Year Treasury (DGS2), 10-Year Treasury (DGS10), 10Y-2Y Spread (T10Y2Y), 10-Year Term Premium (THREEFYTP10), 10-Year Breakeven Inflation (T10YIE).
+
+Credit / Financial Stress: Baa Corporate Spread (BAA10Y), High Yield OAS (BAMLH0A0HYM2), Senior Loan Officer Survey (DRTSCILM), Financial Conditions Index (NFCI), Bank Credit (TOTBKCR).
+
+Housing: Housing Starts (HOUST), Building Permits (PERMIT), Existing Home Sales (EXHOSLUSM495S), Case-Shiller Home Price Index (CSUSHPINSA), 30-Year Mortgage Rate (MORTGAGE30US).
+
+Sentiment: Consumer Sentiment (UMCSENT).
+
+### Request body (JSON)
+
+| Field | Type   | Required | Description                                          |
+|-------|--------|----------|------------------------------------------------------|
+| query | string | yes      | Natural-language macro question (e.g. "What is the current unemployment rate?"). |
+
+### Response
+
+    {
+      "data": [ { ... }, ... ],
+      "seriesQueried": [ "UNRATE", ... ]
+    }
+
+### Response fields
+
+| Field         | Type     | Description                                                        |
+|---------------|----------|--------------------------------------------------------------------|
+| data          | array    | Array of result objects from tool calls, preserving original structure (e.g. seriesId, observations, metadata). |
+| seriesQueried | string[] | List of FRED series IDs that were queried.                         |
+
+### Example request
+
+    curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
+         -H "Content-Type: application/json" \\
+         -d '{"query": "What is the current unemployment rate?"}' \\
+         "https://expert-system.starmode.dev/api/v1/query/macro"
+
+### Example response
+
+    {
+      "data": [
+        {
+          "seriesId": "UNRATE",
+          "observations": [
+            { "date": "2026-02-01", "value": "4.4" },
+            { "date": "2026-01-01", "value": "4.0" }
+          ]
+        }
+      ],
+      "seriesQueried": ["UNRATE"]
+    }
+
+---
+
+## POST /api/v1/query/financial
+
+Natural language query interface for company financial data. An AI agent translates your question into Alpha Vantage API calls and returns structured data. Ask about any public company by name or ticker — the agent resolves symbols automatically.
+
+### Available data
+
+Company Overview: Symbol, Name, Description, Sector, Industry, MarketCapitalization, EBITDA, PERatio, PEGRatio, BookValue, DividendPerShare, DividendYield, EPS, RevenuePerShareTTM, ProfitMargin, OperatingMarginTTM, ReturnOnAssetsTTM, ReturnOnEquityTTM, RevenueTTM, GrossProfitTTM, DilutedEPSTTM, QuarterlyEarningsGrowthYOY, QuarterlyRevenueGrowthYOY, AnalystTargetPrice, TrailingPE, ForwardPE, PriceToSalesRatioTTM, PriceToBookRatio, EVToRevenue, EVToEBITDA, Beta, 52WeekHigh, 52WeekLow, 50DayMovingAverage, 200DayMovingAverage, SharesOutstanding, SharesFloat.
+
+Income Statement (quarterly): totalRevenue, grossProfit, costOfRevenue, operatingIncome, operatingExpenses, sellingGeneralAndAdministrative, researchAndDevelopment, interestExpense, incomeBeforeTax, incomeTaxExpense, netIncome, ebit, ebitda, netIncomeFromContinuingOperations, depreciationAndAmortization.
+
+Balance Sheet (quarterly): totalAssets, totalCurrentAssets, cashAndCashEquivalentsAtCarryingValue, cashAndShortTermInvestments, inventory, currentNetReceivables, totalNonCurrentAssets, propertyPlantEquipment, goodwill, intangibleAssets, totalLiabilities, totalCurrentLiabilities, currentAccountsPayable, currentDebt, shortTermDebt, longTermDebt, shortLongTermDebtTotal, totalShareholderEquity, retainedEarnings, commonStockSharesOutstanding.
+
+Cash Flow (quarterly): operatingCashflow, capitalExpenditures, cashflowFromInvestment, cashflowFromFinancing, dividendPayout, paymentsForRepurchaseOfCommonStock, proceedsFromIssuanceOfLongTermDebtAndCapitalSecuritiesNet, changeInCashAndCashEquivalents, netIncome, profitLoss, depreciationDepletionAndAmortization, changeInReceivables, changeInInventory.
+
+### Request body (JSON)
+
+| Field | Type   | Required | Description                                          |
+|-------|--------|----------|------------------------------------------------------|
+| query | string | yes      | Natural-language financial question (e.g. "What is Apple's revenue trend?"). |
+
+### Response
+
+    {
+      "data": [ { ... }, ... ],
+      "tickersQueried": [ "AAPL", ... ]
+    }
+
+### Response fields
+
+| Field          | Type     | Description                                                        |
+|----------------|----------|--------------------------------------------------------------------|
+| data           | array    | Array of result objects from tool calls, preserving original structure (e.g. symbol, metric, quarterly reports). |
+| tickersQueried | string[] | List of ticker symbols that were queried.                          |
+
+### Example request
+
+    curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
+         -H "Content-Type: application/json" \\
+         -d '{"query": "What is Apple\\'s latest quarterly revenue?"}' \\
+         "https://expert-system.starmode.dev/api/v1/query/financial"
+
+### Example response
+
+    {
+      "data": [
+        {
+          "symbol": "AAPL",
+          "metric": "totalRevenue",
+          "reports": [
+            { "fiscalDateEnding": "2025-12-31", "value": "143756000000" }
+          ]
+        }
+      ],
+      "tickersQueried": ["AAPL"]
+    }
+
+---
+
 ## Error responses
 
 Errors return a JSON body with an error field and the corresponding HTTP status code.
