@@ -55,7 +55,7 @@ const schema = z.object({
 export async function getTakeaways(
   articleText: string,
   takeawayInstructions?: string,
-  model = "gpt-5.2",
+  model = "gpt-5.4",
   sourceAttribution?: string,
 ) {
   const response = await client.responses.parse({
@@ -114,7 +114,7 @@ export async function getTakeaways(
 
 async function getTakeawayTitle(takeaway: string) {
   const completion = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-5-nano",
     messages: [
       {
         role: "user",

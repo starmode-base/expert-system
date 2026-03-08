@@ -16,7 +16,7 @@ A missing or invalid key returns 401 Unauthorized. Revoked keys are rejected imm
 
 ## GET /api/v1/takeaways/recent
 
-Returns the most recent takeaways ordered by source document publication date (newest first).
+Returns the most recent takeaways ordered by source document publication date (newest first). Returns lightweight results — use the returned IDs with /api/v1/takeaways to fetch full details.
 
 ### Query parameters
 
@@ -30,12 +30,12 @@ Returns the most recent takeaways ordered by source document publication date (n
 
 ### Takeaway object
 
-| Field    | Type   | Description                                                        |
-|----------|--------|--------------------------------------------------------------------|
-| id       | string | Unique identifier.                                                 |
-| title    | string | Short headline summarising the takeaway.                           |
-| takeaway | string | Full takeaway text — the actionable or notable finding.            |
-| document | object | Source document metadata: id, title, source, link, publicationDate.|
+| Field      | Type   | Description                              |
+|------------|--------|------------------------------------------|
+| id         | string | Takeaway unique identifier.              |
+| documentId | string | ID of the source document.               |
+| title      | string | Short headline summarising the takeaway. |
+| summary    | string | Brief summary of the takeaway.           |
 
 ### Example request
 
@@ -48,15 +48,9 @@ Returns the most recent takeaways ordered by source document publication date (n
       "items": [
         {
           "id": "tak_abc123",
+          "documentId": "doc_xyz789",
           "title": "Fed signals pause through Q2",
-          "takeaway": "The Federal Reserve indicated it will hold rates...",
-          "document": {
-            "id": "doc_xyz789",
-            "title": "Remarks on the Economic Outlook",
-            "source": "Fed Speeches",
-            "link": "https://www.federalreserve.gov/...",
-            "publicationDate": "2026-03-01T00:00:00.000Z"
-          }
+          "summary": "The Federal Reserve indicated it will hold rates..."
         }
       ]
     }

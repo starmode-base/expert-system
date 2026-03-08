@@ -213,9 +213,9 @@ export function ApiDocsPage() {
         <H2>Recent Takeaways</H2>
         <P>
           Returns the most recent takeaways ordered by source document
-          publication date (newest first). Use this as a starting point to
-          discover current content and retrieve IDs to pass to the{" "}
-          <Code>/api/v1/takeaways</Code> endpoint.
+          publication date (newest first). Returns lightweight results — use the
+          returned IDs with <Code>/api/v1/takeaways</Code> to fetch full
+          details.
         </P>
 
         <EndpointBadge method="GET" path="/api/v1/takeaways/recent" />
@@ -236,21 +236,25 @@ export function ApiDocsPage() {
 
         <H3>Takeaway object</H3>
         <FieldTable>
-          <FieldRow name="id" type="string" description="Unique identifier." />
+          <FieldRow
+            name="id"
+            type="string"
+            description="Takeaway unique identifier."
+          />
+          <FieldRow
+            name="documentId"
+            type="string"
+            description="ID of the source document."
+          />
           <FieldRow
             name="title"
             type="string"
             description="Short headline summarising the takeaway."
           />
           <FieldRow
-            name="takeaway"
+            name="summary"
             type="string"
-            description="Full takeaway text — the actionable or notable finding."
-          />
-          <FieldRow
-            name="document"
-            type="object"
-            description="Source document metadata: id, title, source, link, publicationDate."
+            description="Brief summary of the takeaway."
           />
         </FieldTable>
 
@@ -263,15 +267,9 @@ export function ApiDocsPage() {
   "items": [
     {
       "id": "tak_abc123",
+      "documentId": "doc_xyz789",
       "title": "Fed signals pause through Q2",
-      "takeaway": "The Federal Reserve indicated it will hold rates...",
-      "document": {
-        "id": "doc_xyz789",
-        "title": "Remarks on the Economic Outlook",
-        "source": "Fed Speeches",
-        "link": "https://www.federalreserve.gov/...",
-        "publicationDate": "2026-03-01T00:00:00.000Z"
-      }
+      "summary": "The Federal Reserve indicated it will hold rates..."
     }
   ]
 }`}</Pre>

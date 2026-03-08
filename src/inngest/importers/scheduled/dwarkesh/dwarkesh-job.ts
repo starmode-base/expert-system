@@ -114,7 +114,7 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
           data: {
             documentId: doc.id,
             takeawayPrompt: dwarkeshPodcastTakeawayPrompt,
-            model: "gpt-5.2",
+            model: "gpt-5.4",
             user: { id: "", email: "" },
           },
         });

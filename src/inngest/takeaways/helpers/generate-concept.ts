@@ -24,7 +24,7 @@ const responseFormat = zodTextFormat(schema, "response");
 
 export async function getConcept(takeaway: string) {
   const response = await client.responses.parse({
-    model: "gpt-5.2",
+    model: "gpt-5-mini",
     input: [
       {
         role: "user",

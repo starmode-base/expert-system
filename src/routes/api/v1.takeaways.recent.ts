@@ -46,18 +46,7 @@ export const APIRoute = createAPIFileRoute("/api/v1/takeaways/recent")({
 
     const ids = idRows.map((r) => r.id);
     const takeaways = await db.query.takeaways.findMany({
-      columns: { id: true, title: true, takeaway: true },
-      with: {
-        document: {
-          columns: {
-            id: true,
-            title: true,
-            source: true,
-            link: true,
-            publicationDate: true,
-          },
-        },
-      },
+      columns: { id: true, documentId: true, title: true, summary: true },
       where: (t, { inArray }) => inArray(t.id, ids),
     });
 

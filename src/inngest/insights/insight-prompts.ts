@@ -4,7 +4,7 @@ import { InsightAgentInput } from "./agents/insight-agent";
 import { invariant } from "@tanstack/react-router";
 
 export const agentParameters = {
-  model: "gpt-5.2",
+  model: "gpt-5.4",
   reasoning: { effort: "high" as const },
   parallel_tool_calls: true as const,
 };

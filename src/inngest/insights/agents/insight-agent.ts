@@ -128,7 +128,7 @@ function createInsightAgent() {
   return new Agent({
     name: "Insight Generator",
     instructions: systemPrompt,
-    model: "gpt-5.2",
+    model: "gpt-5.4",
     tools: [
       financialAnalystTool,
       macroResearcherTool,

@@ -122,7 +122,7 @@ export const a16zNewsScraper = inngest.createFunction(
           data: {
             documentId: doc.id,
             takeawayPrompt: a16zTakeawayPrompt,
-            model: "gpt-5.2",
+            model: "gpt-5.4",
             user: { id: "", email: "" },
           },
         });

@@ -50,7 +50,7 @@ const responseFormat = zodTextFormat(schema, "response");
 
 export async function getInsightSummary(researchText: string) {
   const response = await client.responses.parse({
-    model: "gpt-4.1",
+    model: "gpt-5-mini",
     input: [
       {
         role: "user",

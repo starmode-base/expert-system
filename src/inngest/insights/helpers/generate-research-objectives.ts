@@ -28,7 +28,7 @@ export async function generateResearchThemes(
   });
 
   const response = await openAiClient.responses.parse({
-    model: "gpt-5.2",
+    model: "gpt-5.4",
     reasoning: { effort: "low" },
     input: [
       {
