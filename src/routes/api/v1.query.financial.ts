@@ -38,6 +38,7 @@ export const APIRoute = createAPIFileRoute("/api/v1/query/financial")({
 
     try {
       const agent = createQueryFinancialAgent();
+      // maxTurns: 15 — these are simple data lookups, not open-ended research.
       const result = await run(agent, query, { maxTurns: 15 });
 
       if (!result.finalOutput || result.finalOutput instanceof Error) {
@@ -45,18 +46,26 @@ export const APIRoute = createAPIFileRoute("/api/v1/query/financial")({
       }
 
       const outputSchema = z.object({
-        Analysis: z.string(),
-        "Supporting Data": z.string(),
+        data: z.string(),
+        tickersQueried: z.array(z.string()),
       });
       const parsed = outputSchema.safeParse(result.finalOutput);
       if (!parsed.success) {
         return apiError("Agent produced invalid output", 500);
       }
 
+      // See v1.query.macro.ts for rationale on the JSON parse + fallback pattern.
+      let data: unknown;
+      try {
+        data = JSON.parse(parsed.data.data);
+      } catch {
+        data = parsed.data.data;
+      }
+
       return new Response(
         JSON.stringify({
-          analysis: parsed.data.Analysis,
-          supportingData: parsed.data["Supporting Data"],
+          data,
+          tickersQueried: parsed.data.tickersQueried,
         }),
         {
           status: 200,

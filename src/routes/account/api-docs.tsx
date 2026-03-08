@@ -663,8 +663,72 @@ export function ApiDocsPage() {
         title="Query Macro Data"
         method="POST"
         path="/api/v1/query/macro"
-        description="Natural language interface for macroeconomic data. An AI agent translates your question into FRED API calls."
+        description="Natural language interface for macroeconomic data. An AI agent translates your question into FRED API calls and returns structured data."
       >
+        <H3>Available data</H3>
+        <P>
+          Ask about any of the series below using plain English — the agent
+          resolves series IDs automatically.
+        </P>
+        <div className="mb-4 space-y-2 text-xs leading-relaxed text-gray-600">
+          <p>
+            <span className="font-semibold text-gray-700">
+              Growth / Real Economy:
+            </span>{" "}
+            Real GDP, Industrial Production, Capacity Utilization, Real Personal
+            Consumption, Real Business Fixed Investment.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">Labor Market:</span>{" "}
+            Unemployment Rate, Labor Force Participation, Employment-Population
+            Ratio, Nonfarm Payrolls, Initial Jobless Claims, Continuing Jobless
+            Claims, Job Openings Rate, Quits Rate.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Inflation / Prices:
+            </span>{" "}
+            CPI All Items, Core CPI, PCE Price Index, Core PCE, Trimmed Mean
+            PCE, Median CPI.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">Wages / Income:</span>{" "}
+            Average Hourly Earnings, Employment Cost Index, Real Disposable
+            Personal Income.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Monetary Policy / Liquidity:
+            </span>{" "}
+            Fed Funds Rate, Effective Fed Funds Rate, Interest on Reserve
+            Balances, Fed Total Assets, Reserve Balances, Overnight Reverse
+            Repo, M2 Money Supply.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Rates / Yield Curve:
+            </span>{" "}
+            2-Year Treasury, 10-Year Treasury, 10Y-2Y Spread, 10-Year Term
+            Premium, 10-Year Breakeven Inflation.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Credit / Financial Stress:
+            </span>{" "}
+            Baa Corporate Spread, High Yield OAS, Senior Loan Officer Survey,
+            Financial Conditions Index, Bank Credit.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">Housing:</span>{" "}
+            Housing Starts, Building Permits, Existing Home Sales, Case-Shiller
+            Home Price Index, 30-Year Mortgage Rate.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">Sentiment:</span>{" "}
+            Consumer Sentiment.
+          </p>
+        </div>
+
         <H3>Request body (JSON)</H3>
         <ParamTable>
           <ParamRow
@@ -677,21 +741,21 @@ export function ApiDocsPage() {
 
         <H3>Response</H3>
         <Pre>{`{
-  "analysis": "...",
-  "supportingData": "..."
+  "data": [ { ... }, ... ],
+  "seriesQueried": [ "UNRATE", ... ]
 }`}</Pre>
 
         <H3>Response fields</H3>
         <FieldTable>
           <FieldRow
-            name="analysis"
-            type="string"
-            description="Concise analysis answering the question, grounded in data."
+            name="data"
+            type="array"
+            description="Array of result objects from tool calls, preserving original structure (e.g. seriesId, observations, metadata)."
           />
           <FieldRow
-            name="supportingData"
-            type="string"
-            description="Raw data points with series IDs and periods."
+            name="seriesQueried"
+            type="string[]"
+            description="List of FRED series IDs that were queried."
           />
         </FieldTable>
 
@@ -703,8 +767,16 @@ export function ApiDocsPage() {
 
         <H3>Example response</H3>
         <Pre>{`{
-  "analysis": "The unemployment rate stands at 4.1% as of January 2026...",
-  "supportingData": "UNRATE: 4.1% (2026-01), 4.2% (2025-12), 4.1% (2025-11)"
+  "data": [
+    {
+      "seriesId": "UNRATE",
+      "observations": [
+        { "date": "2026-02-01", "value": "4.4" },
+        { "date": "2026-01-01", "value": "4.0" }
+      ]
+    }
+  ],
+  "seriesQueried": ["UNRATE"]
 }`}</Pre>
       </EndpointSection>
 
@@ -713,8 +785,53 @@ export function ApiDocsPage() {
         title="Query Financial Data"
         method="POST"
         path="/api/v1/query/financial"
-        description="Natural language interface for company financial data. An AI agent translates your question into Alpha Vantage API calls."
+        description="Natural language interface for company financial data. An AI agent translates your question into Alpha Vantage API calls and returns structured data."
       >
+        <H3>Available data</H3>
+        <P>
+          Ask about any public company by name or ticker — the agent resolves
+          symbols automatically.
+        </P>
+        <div className="mb-4 space-y-2 text-xs leading-relaxed text-gray-600">
+          <p>
+            <span className="font-semibold text-gray-700">
+              Company Overview:
+            </span>{" "}
+            Name, Sector, Industry, Market Cap, EBITDA, P/E Ratio, PEG Ratio,
+            Book Value, Dividend Yield, EPS, Revenue Per Share, Profit Margin,
+            Operating Margin, ROA, ROE, Revenue TTM, Analyst Target Price,
+            Forward P/E, EV/Revenue, EV/EBITDA, Beta, 52-Week High/Low, Moving
+            Averages, Shares Outstanding.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Income Statement (quarterly):
+            </span>{" "}
+            Total Revenue, Gross Profit, Cost of Revenue, Operating Income,
+            Operating Expenses, SG&A, R&D, Interest Expense, Income Before Tax,
+            Tax Expense, Net Income, EBIT, EBITDA, D&A.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Balance Sheet (quarterly):
+            </span>{" "}
+            Total Assets, Current Assets, Cash & Equivalents, Inventory,
+            Receivables, PP&E, Goodwill, Intangible Assets, Total Liabilities,
+            Current Liabilities, Accounts Payable, Short-Term Debt, Long-Term
+            Debt, Total Shareholder Equity, Retained Earnings, Shares
+            Outstanding.
+          </p>
+          <p>
+            <span className="font-semibold text-gray-700">
+              Cash Flow (quarterly):
+            </span>{" "}
+            Operating Cash Flow, Capital Expenditures, Cash Flow from Investing,
+            Cash Flow from Financing, Dividend Payout, Share Repurchases, Debt
+            Issuance, Net Income, D&A, Change in Receivables, Change in
+            Inventory.
+          </p>
+        </div>
+
         <H3>Request body (JSON)</H3>
         <ParamTable>
           <ParamRow
@@ -727,21 +844,21 @@ export function ApiDocsPage() {
 
         <H3>Response</H3>
         <Pre>{`{
-  "analysis": "...",
-  "supportingData": "..."
+  "data": [ { ... }, ... ],
+  "tickersQueried": [ "AAPL", ... ]
 }`}</Pre>
 
         <H3>Response fields</H3>
         <FieldTable>
           <FieldRow
-            name="analysis"
-            type="string"
-            description="Concise analysis answering the question, grounded in data."
+            name="data"
+            type="array"
+            description="Array of result objects from tool calls, preserving original structure (e.g. symbol, metric, quarterly reports)."
           />
           <FieldRow
-            name="supportingData"
-            type="string"
-            description="Raw data points with tickers and periods."
+            name="tickersQueried"
+            type="string[]"
+            description="List of ticker symbols that were queried."
           />
         </FieldTable>
 
@@ -753,8 +870,16 @@ export function ApiDocsPage() {
 
         <H3>Example response</H3>
         <Pre>{`{
-  "analysis": "Apple reported $124.3B in revenue for Q1 FY2026...",
-  "supportingData": "AAPL totalRevenue: $124.3B (2025-12-28), $94.9B (2025-09-28)"
+  "data": [
+    {
+      "symbol": "AAPL",
+      "metric": "totalRevenue",
+      "reports": [
+        { "fiscalDateEnding": "2025-12-31", "value": "143756000000" }
+      ]
+    }
+  ],
+  "tickersQueried": ["AAPL"]
 }`}</Pre>
       </EndpointSection>
 

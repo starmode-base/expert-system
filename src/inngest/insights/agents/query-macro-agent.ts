@@ -1,9 +1,21 @@
+// ---------------------------------------------------------------------------
+// Query Macro Agent — lightweight natural-language → FRED data bridge.
+//
+// Designed for machine consumers (e.g. OpenClaw). The agent's only job is to
+// translate a question into the right FRED tool calls and pass the raw results
+// through. No analysis or prose — just structured data.
+//
+// Lives alongside the other insight agents (macro-researcher, financial-analyst)
+// because it reuses their tool definitions. The API route is the HTTP boundary;
+// the agent logic stays with the rest of the agent code.
+// ---------------------------------------------------------------------------
+
 import { Agent } from "@openai/agents";
 import { z } from "zod";
 import { fredTools } from "./macro-researcher";
 
 const queryMacroSystemPrompt = `
-You have access to FRED (Federal Reserve Economic Data) tools. Answer the user's question by calling the appropriate tools. Return the data.
+You have access to FRED (Federal Reserve Economic Data) tools. Translate the user's question into the appropriate tool calls, then return the raw data from those calls. Do not interpret, analyze, or editorialize — just organize the tool results into structured objects.
 
 Available series by category:
 
@@ -75,17 +87,22 @@ Rules:
 - If you need more data then take an additional turn.
 `;
 
+// Output schema: `data` is a JSON string, not a native object, because OpenAI
+// structured outputs requires all object fields to be statically known. Since
+// tool results have variable shapes (observations vs metadata vs multi-series),
+// we serialize to a string here and JSON.parse it in the route handler so the
+// API consumer receives real structured JSON. If the agent produces malformed
+// JSON, the route falls back to returning the raw string — degraded but not
+// broken.
 const queryMacroOutputSchema = z.object({
-  Analysis: z
+  data: z
     .string()
     .describe(
-      "Concise, objective macroeconomic analysis answering the question. Only include information directly supported by the data.",
+      "JSON-serialized array of result objects from tool calls. Each object should contain the raw data returned by a tool, preserving its original structure (e.g. seriesId, observations, metadata). Must be valid JSON.",
     ),
-  "Supporting Data": z
-    .string()
-    .describe(
-      "Key figures with periods and series identifiers that support the analysis. Just provide a list of the raw data.",
-    ),
+  seriesQueried: z
+    .array(z.string())
+    .describe("List of FRED series IDs that were queried."),
 });
 
 export function createQueryMacroAgent() {

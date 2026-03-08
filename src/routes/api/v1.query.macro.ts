@@ -38,6 +38,7 @@ export const APIRoute = createAPIFileRoute("/api/v1/query/macro")({
 
     try {
       const agent = createQueryMacroAgent();
+      // maxTurns: 15 — these are simple data lookups, not open-ended research.
       const result = await run(agent, query, { maxTurns: 15 });
 
       if (!result.finalOutput || result.finalOutput instanceof Error) {
@@ -45,18 +46,29 @@ export const APIRoute = createAPIFileRoute("/api/v1/query/macro")({
       }
 
       const outputSchema = z.object({
-        Analysis: z.string(),
-        "Supporting Data": z.string(),
+        data: z.string(),
+        seriesQueried: z.array(z.string()),
       });
       const parsed = outputSchema.safeParse(result.finalOutput);
       if (!parsed.success) {
         return apiError("Agent produced invalid output", 500);
       }
 
+      // The agent returns `data` as a JSON string (see query-macro-agent.ts for
+      // why). We parse it here so the API consumer gets real structured JSON.
+      // If the agent produced malformed JSON, we fall back to the raw string —
+      // the consumer still gets the data, just as a string instead of an object.
+      let data: unknown;
+      try {
+        data = JSON.parse(parsed.data.data);
+      } catch {
+        data = parsed.data.data;
+      }
+
       return new Response(
         JSON.stringify({
-          analysis: parsed.data.Analysis,
-          supportingData: parsed.data["Supporting Data"],
+          data,
+          seriesQueried: parsed.data.seriesQueried,
         }),
         {
           status: 200,

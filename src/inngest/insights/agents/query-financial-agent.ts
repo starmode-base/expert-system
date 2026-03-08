@@ -1,9 +1,17 @@
+// ---------------------------------------------------------------------------
+// Query Financial Agent — lightweight natural-language → Alpha Vantage bridge.
+//
+// Same design as query-macro-agent: translate a question into tool calls, pass
+// the raw results through. No analysis or prose — just structured data for
+// machine consumers.
+// ---------------------------------------------------------------------------
+
 import { Agent } from "@openai/agents";
 import { z } from "zod";
 import { financialTools } from "./financial-analyst";
 
 const queryFinancialSystemPrompt = `
-You have access to company financial data tools. Answer the user's question by calling the appropriate tools. Return the data.
+You have access to company financial data tools. Translate the user's question into the appropriate tool calls, then return the raw data from those calls. Do not interpret, analyze, or editorialize — just organize the tool results into structured objects.
 
 Available tools:
 - fetchCompanyOverviewByMetric: Get company overview metrics (sector, market cap, beta, etc.)
@@ -16,17 +24,17 @@ Rules:
 - If you need more data then take an additional turn.
 `;
 
+// See query-macro-agent.ts for rationale on why `data` is a JSON string rather
+// than a native object (OpenAI structured outputs constraint).
 const queryFinancialOutputSchema = z.object({
-  Analysis: z
+  data: z
     .string()
     .describe(
-      "Concise, objective financial analysis answering the question. Only include information directly supported by the data.",
+      "JSON-serialized array of result objects from tool calls. Each object should contain the raw data returned by a tool, preserving its original structure (e.g. symbol, metric, quarterly reports). Must be valid JSON.",
     ),
-  "Supporting Data": z
-    .string()
-    .describe(
-      "Key figures with periods/tickers that support the analysis. Just provide a list of the raw data.",
-    ),
+  tickersQueried: z
+    .array(z.string())
+    .describe("List of ticker symbols that were queried."),
 });
 
 export function createQueryFinancialAgent() {
