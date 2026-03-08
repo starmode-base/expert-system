@@ -94,6 +94,43 @@ Fetch up to 50 takeaways by their IDs in a single request. Results are returned 
 
 ---
 
+## GET /api/v1/takeaways/search
+
+Semantic search across all takeaways using vector similarity. Returns lightweight results ranked by relevance. Use the returned IDs with /api/v1/takeaways to fetch full takeaway details. Optionally applies a time-weighted reranking to favour more recent content.
+
+### Query parameters
+
+| Parameter | Type   | Required | Description                                                                 |
+|-----------|--------|----------|-----------------------------------------------------------------------------|
+| query     | string | yes      | Natural-language search query.                                              |
+| limit     | number | no       | Number of results to return. Default: 10. Max: 100.                         |
+| recent    | string | no       | Set to "true" to apply time-weighted reranking that favours newer content.  |
+
+### Response
+
+    { "items": [ SearchResultObject, ... ] }
+
+### Search result object
+
+| Field      | Type   | Description                              |
+|------------|--------|------------------------------------------|
+| id         | string | Takeaway unique identifier.              |
+| documentId | string | ID of the source document.               |
+| title      | string | Short headline summarising the takeaway. |
+| summary    | string | Brief summary of the takeaway.           |
+
+### Example request
+
+    curl -H "Authorization: Bearer esak_<your-key>" \\
+         "https://expert-system.starmode.dev/api/v1/takeaways/search?query=inflation+expectations&limit=5"
+
+### Example request — time-weighted
+
+    curl -H "Authorization: Bearer esak_<your-key>" \\
+         "https://expert-system.starmode.dev/api/v1/takeaways/search?query=inflation+expectations&recent=true"
+
+---
+
 ## GET /api/v1/documents
 
 Fetch up to 50 source documents by their IDs in a single request. Document IDs are available on takeaway objects returned by the takeaway endpoints.

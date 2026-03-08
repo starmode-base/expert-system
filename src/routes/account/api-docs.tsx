@@ -354,6 +354,89 @@ export function ApiDocsPage() {
 }`}</Pre>
       </Section>
 
+      {/* GET /api/v1/takeaways/search */}
+      <Section>
+        <H2>Takeaway Search</H2>
+        <P>
+          Semantic search across all takeaways using vector similarity. Returns
+          lightweight results ranked by relevance. Use the returned IDs with{" "}
+          <Code>/api/v1/takeaways</Code> to fetch full takeaway details.
+          Optionally applies a time-weighted reranking to favour more recent
+          content.
+        </P>
+
+        <EndpointBadge method="GET" path="/api/v1/takeaways/search" />
+
+        <H3>Query parameters</H3>
+        <ParamTable>
+          <ParamRow
+            name="query"
+            type="string"
+            required
+            description="Natural-language search query."
+          />
+          <ParamRow
+            name="limit"
+            type="number"
+            description="Number of results to return. Default: 10. Max: 100."
+          />
+          <ParamRow
+            name="recent"
+            type="string"
+            description='Set to "true" to apply time-weighted reranking that favours newer content.'
+          />
+        </ParamTable>
+
+        <H3>Response</H3>
+        <Pre>{`{
+  "items": [ SearchResultObject, ... ]
+}`}</Pre>
+
+        <H3>Search result object</H3>
+        <FieldTable>
+          <FieldRow
+            name="id"
+            type="string"
+            description="Takeaway unique identifier."
+          />
+          <FieldRow
+            name="documentId"
+            type="string"
+            description="ID of the source document."
+          />
+          <FieldRow
+            name="title"
+            type="string"
+            description="Short headline summarising the takeaway."
+          />
+          <FieldRow
+            name="summary"
+            type="string"
+            description="Brief summary of the takeaway."
+          />
+        </FieldTable>
+
+        <H3>Example request</H3>
+        <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
+     "https://expert-system.starmode.dev/api/v1/takeaways/search?query=inflation+expectations&limit=5"`}</Pre>
+
+        <H3>Example request — time-weighted</H3>
+        <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
+     "https://expert-system.starmode.dev/api/v1/takeaways/search?query=inflation+expectations&recent=true"`}</Pre>
+
+        <H3>Example response</H3>
+        <Pre>{`{
+  "items": [
+    {
+      "id": "tak_abc123",
+      "documentId": "doc_xyz789",
+      "title": "Inflation expectations remain anchored",
+      "summary": "Long-term inflation expectations hold steady near 2%..."
+    }
+  ]
+}`}</Pre>
+      </Section>
+
       {/* GET /api/v1/documents */}
       <Section>
         <H2>Documents by ID</H2>
