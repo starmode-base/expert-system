@@ -8,10 +8,7 @@ import { generateResearchThemes } from "./helpers/generate-research-objectives";
  * Generate daily insights for each user based on takeaways created in the last 3 days.
  * Runs daily at 7 AM Phoenix time.
  */
-const trigger =
-  process.env.NODE_ENV === "production"
-    ? ({ cron: "TZ=America/Phoenix 0 7 * * *" } as const)
-    : ({ event: "dev/scheduler.daily-insight.manual" } as const);
+const trigger = { event: "dev/scheduler.daily-insight.manual" } as const;
 
 export const dailyInsight = inngest.createFunction(
   { id: "scheduler.daily-insight" },
