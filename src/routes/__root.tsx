@@ -16,6 +16,7 @@ import {
   SignedIn,
   SignedOut,
   useAuth,
+  useUser,
   UserButton,
 } from "@clerk/tanstack-start";
 import { createServerFn } from "@tanstack/react-start";
@@ -126,10 +127,14 @@ function RootDocument(props: React.PropsWithChildren) {
 
 function NavBar() {
   const auth = useAuth();
+  const { user } = useUser();
+  const researchLabel = user?.firstName
+    ? `${user.firstName}'s Research`
+    : "Research";
   const publicNavItems = [
-    { key: "research", to: "/research-feed", label: "Research" },
     { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
     { key: "news-feed", to: "/news-feed", label: "News" },
+    { key: "research", to: "/research-feed", label: researchLabel },
     { key: "api", to: "/account/api-keys", label: "API" },
   ];
 
