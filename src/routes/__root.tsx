@@ -74,9 +74,9 @@ export const Route = createRootRoute({
     // Paths accessible without authentication
     const isPublicPath =
       location.pathname === "/" ||
+      location.pathname.startsWith("/research-feed") ||
       location.pathname.startsWith("/takeaway-feed") ||
       location.pathname.startsWith("/news-feed") ||
-      location.pathname.startsWith("/guest/") ||
       location.pathname.startsWith("/insight/");
 
     if (!isAuthenticated && !isPublicPath) {
@@ -84,10 +84,6 @@ export const Route = createRootRoute({
         to: "/takeaway-feed",
         search: { searchInput: undefined, filters: undefined },
       });
-    }
-
-    if (isAuthenticated && location.pathname.startsWith("/guest/")) {
-      throw redirect({ to: "/research-feed" });
     }
   },
   head: () => head,
@@ -144,11 +140,13 @@ function NavBar() {
   ];
 
   const devNavItems = [
+    { key: "research", to: "/research-feed", label: researchLabel },
     { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
     { key: "settings", to: "/settings", label: "Settings" },
   ];
 
   const unauthNavItems = [
+    { key: "research", to: "/research-feed", label: researchLabel },
     { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
     { key: "news-feed", to: "/news-feed", label: "News" },
   ];

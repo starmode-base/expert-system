@@ -27,7 +27,6 @@ import { Route as SettingsBlogFeedsImport } from './routes/settings/blog-feeds'
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
 import { Route as InsightInsightIdImport } from './routes/insight.$insightId'
 import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$insightId'
-import { Route as GuestResearchFeedImport } from './routes/guest.research-feed'
 import { Route as AccountApiKeysImport } from './routes/account/api-keys'
 import { Route as AccountApiDocsImport } from './routes/account/api-docs'
 import { Route as SettingsKnowledgeGraphIndexImport } from './routes/settings/knowledge-graph.index'
@@ -131,12 +130,6 @@ const InsightStudioInsightIdRoute = InsightStudioInsightIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const GuestResearchFeedRoute = GuestResearchFeedImport.update({
-  id: '/guest/research-feed',
-  path: '/guest/research-feed',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const AccountApiKeysRoute = AccountApiKeysImport.update({
   id: '/api-keys',
   path: '/api-keys',
@@ -215,13 +208,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/api-keys'
       preLoaderRoute: typeof AccountApiKeysImport
       parentRoute: typeof AccountImport
-    }
-    '/guest/research-feed': {
-      id: '/guest/research-feed'
-      path: '/guest/research-feed'
-      fullPath: '/guest/research-feed'
-      preLoaderRoute: typeof GuestResearchFeedImport
-      parentRoute: typeof rootRoute
     }
     '/insight-studio/$insightId': {
       id: '/insight-studio/$insightId'
@@ -363,7 +349,6 @@ export interface FileRoutesByFullPath {
   '/takeaway-feed': typeof TakeawayFeedRoute
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
-  '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -386,7 +371,6 @@ export interface FileRoutesByTo {
   '/takeaway-feed': typeof TakeawayFeedRoute
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
-  '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -411,7 +395,6 @@ export interface FileRoutesById {
   '/takeaway-feed': typeof TakeawayFeedRoute
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
-  '/guest/research-feed': typeof GuestResearchFeedRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -437,7 +420,6 @@ export interface FileRouteTypes {
     | '/takeaway-feed'
     | '/account/api-docs'
     | '/account/api-keys'
-    | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
@@ -459,7 +441,6 @@ export interface FileRouteTypes {
     | '/takeaway-feed'
     | '/account/api-docs'
     | '/account/api-keys'
-    | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
@@ -482,7 +463,6 @@ export interface FileRouteTypes {
     | '/takeaway-feed'
     | '/account/api-docs'
     | '/account/api-keys'
-    | '/guest/research-feed'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
@@ -505,7 +485,6 @@ export interface RootRouteChildren {
   ResearchFeedRoute: typeof ResearchFeedRoute
   SettingsRoute: typeof SettingsRouteWithChildren
   TakeawayFeedRoute: typeof TakeawayFeedRoute
-  GuestResearchFeedRoute: typeof GuestResearchFeedRoute
   InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   InsightInsightIdRoute: typeof InsightInsightIdRoute
   NewsFeedDocumentidRoute: typeof NewsFeedDocumentidRoute
@@ -521,7 +500,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResearchFeedRoute: ResearchFeedRoute,
   SettingsRoute: SettingsRouteWithChildren,
   TakeawayFeedRoute: TakeawayFeedRoute,
-  GuestResearchFeedRoute: GuestResearchFeedRoute,
   InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   InsightInsightIdRoute: InsightInsightIdRoute,
   NewsFeedDocumentidRoute: NewsFeedDocumentidRoute,
@@ -546,7 +524,6 @@ export const routeTree = rootRoute
         "/research-feed",
         "/settings",
         "/takeaway-feed",
-        "/guest/research-feed",
         "/insight-studio/$insightId",
         "/insight/$insightId",
         "/news-feed/$documentid",
@@ -590,9 +567,6 @@ export const routeTree = rootRoute
     "/account/api-keys": {
       "filePath": "account/api-keys.tsx",
       "parent": "/account"
-    },
-    "/guest/research-feed": {
-      "filePath": "guest.research-feed.tsx"
     },
     "/insight-studio/$insightId": {
       "filePath": "insight-studio.$insightId.tsx"

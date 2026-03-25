@@ -323,7 +323,6 @@ function buildInsightNextCursor<T extends { createdAt: Date; id: string }>(
 }
 
 export const queryInsightsFeedPaginated = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
   .validator(
     z.object({
       cursor: z.string().nullable(),
@@ -337,7 +336,6 @@ export const queryInsightsFeedPaginated = createServerFn({ method: "GET" })
     }): Promise<PaginatedResult<InsightsItem>> => {
       const cursorCondition = buildInsightCursorCondition(cursor);
       const conditions = [
-        eq(schema.insights.userId, context.viewer.id),
         isNotNull(schema.insights.insight),
       ];
       if (cursorCondition) conditions.push(cursorCondition);
