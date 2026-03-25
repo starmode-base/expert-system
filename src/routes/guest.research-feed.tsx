@@ -1,19 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { SignedOutExperience } from "~/components/signed-out";
-import { queryPublicInsightsFeedPaginated } from "~/server/queries";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/guest/research-feed")({
-  loader: async () => {
-    const page = await queryPublicInsightsFeedPaginated({
-      data: { cursor: null, limit: 10 },
+  beforeLoad: () => {
+    throw redirect({
+      to: "/takeaway-feed",
+      search: { searchInput: undefined, filters: undefined },
     });
-    return { page };
   },
-  component: RouteComponent,
 });
-
-function RouteComponent() {
-  const { page } = Route.useLoaderData();
-
-  return <SignedOutExperience initialPage={page} />;
-}

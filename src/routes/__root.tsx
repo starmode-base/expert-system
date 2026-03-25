@@ -15,6 +15,7 @@ import {
   ClerkProvider,
   SignedIn,
   SignedOut,
+  SignInButton,
   useAuth,
   useUser,
   UserButton,
@@ -70,15 +71,22 @@ export const Route = createRootRoute({
   beforeLoad: async ({ location }) => {
     const isAuthenticated = await checkAuth();
 
-    const isGuestPath =
+    // Paths accessible without authentication
+    const isPublicPath =
+      location.pathname === "/" ||
+      location.pathname.startsWith("/takeaway-feed") ||
+      location.pathname.startsWith("/news-feed") ||
       location.pathname.startsWith("/guest/") ||
       location.pathname.startsWith("/insight/");
 
-    if (!isAuthenticated && !isGuestPath) {
-      throw redirect({ to: "/guest/research-feed" });
+    if (!isAuthenticated && !isPublicPath) {
+      throw redirect({
+        to: "/takeaway-feed",
+        search: { searchInput: undefined, filters: undefined },
+      });
     }
 
-    if (isAuthenticated && location.pathname === "/guest/research-feed") {
+    if (isAuthenticated && location.pathname.startsWith("/guest/")) {
       throw redirect({ to: "/research-feed" });
     }
   },
@@ -110,13 +118,10 @@ function RootDocument(props: React.PropsWithChildren) {
           <HeadContent />
         </head>
         <body>
-          <SignedOut>{props.children}</SignedOut>
-          <SignedIn>
-            <div className="min-h-dvh bg-slate-100">
-              <NavBar />
-              {props.children}
-            </div>
-          </SignedIn>
+          <div className="min-h-dvh bg-slate-100">
+            <NavBar />
+            {props.children}
+          </div>
           <TanStackRouterDevtools position="bottom-right" />
           <Scripts />
         </body>
@@ -143,18 +148,26 @@ function NavBar() {
     { key: "settings", to: "/settings", label: "Settings" },
   ];
 
+  const unauthNavItems = [
+    { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
+    { key: "news-feed", to: "/news-feed", label: "News" },
+  ];
+
   // TODO: add user role for dev permissions.
   const navItems: { key: string; to: string; label: string }[] =
-    auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3"
-      ? publicNavItems.concat(devNavItems)
-      : publicNavItems;
+    !auth.isSignedIn
+      ? unauthNavItems
+      : auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3"
+        ? publicNavItems.concat(devNavItems)
+        : publicNavItems;
 
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <nav className="mx-auto flex h-full max-w-4xl items-center gap-3 px-3 sm:px-6">
         <div className="flex shrink-0 items-center gap-3">
           <Link
-            to="/research-feed"
+            to="/takeaway-feed"
+            search={{ searchInput: undefined, filters: undefined }}
             className="group inline-flex flex-col items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-100"
           >
             <img
@@ -188,7 +201,16 @@ function NavBar() {
         </div>
 
         <div className="shrink-0">
-          <UserButton />
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="cursor-pointer rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
+                Sign in
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         </div>
       </nav>
     </header>
