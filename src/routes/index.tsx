@@ -7,9 +7,6 @@ import { listOrganizationsSF } from "~/server/organizations";
  * Route
  */
 export const Route = createFileRoute("/")({
-  loader: () => {
-    return listOrganizationsSF();
-  },
   component: RouteComponentProvider,
 });
 
@@ -17,12 +14,9 @@ export const Route = createFileRoute("/")({
  * Route component
  */
 function RouteComponentProvider() {
-  const { viewerId } = Route.useLoaderData();
 
   return (
-    <PubSubProvider viewerId={viewerId}>
       <RouteComponent />
-    </PubSubProvider>
   );
 }
 

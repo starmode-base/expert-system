@@ -8,24 +8,10 @@ export const Route = createFileRoute("/account")({
 function AccountLayout() {
   const auth = useAuth();
 
-  if (!auth.userId) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <h1 className="text-lg font-semibold text-red-800">
-            Sign in required
-          </h1>
-          <p className="mt-2 text-sm text-red-600">
-            Please sign in to access your account.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const subNavItems = [
-    { key: "api-keys", to: "/account/api-keys", label: "API Keys" },
     { key: "api-docs", to: "/account/api-docs", label: "API Docs" },
+    { key: "api-keys", to: "/account/api-keys", label: "API Keys" },
   ];
 
   return (

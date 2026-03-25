@@ -4,7 +4,6 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
-  redirect,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
@@ -20,15 +19,7 @@ import {
   useUser,
   UserButton,
 } from "@clerk/tanstack-start";
-import { createServerFn } from "@tanstack/react-start";
-import { getWebRequest } from "vinxi/http";
-import { getClerkUserId } from "~/server/auth";
 import { getSiteOrigin } from "~/lib/env";
-
-const checkAuth = createServerFn({ method: "GET" }).handler(async () => {
-  const clerkUserId = await getClerkUserId(getWebRequest());
-  return !!clerkUserId;
-});
 
 const head = {
   meta: [
@@ -68,24 +59,6 @@ const head = {
 };
 
 export const Route = createRootRoute({
-  beforeLoad: async ({ location }) => {
-    const isAuthenticated = await checkAuth();
-
-    // Paths accessible without authentication
-    const isPublicPath =
-      location.pathname === "/" ||
-      location.pathname.startsWith("/research-feed") ||
-      location.pathname.startsWith("/takeaway-feed") ||
-      location.pathname.startsWith("/news-feed") ||
-      location.pathname.startsWith("/insight/");
-
-    if (!isAuthenticated && !isPublicPath) {
-      throw redirect({
-        to: "/takeaway-feed",
-        search: { searchInput: undefined, filters: undefined },
-      });
-    }
-  },
   head: () => head,
   errorComponent: (props) => {
     return (
@@ -132,32 +105,23 @@ function NavBar() {
   const researchLabel = user?.firstName
     ? `${user.firstName}'s Research`
     : "Research";
-  const publicNavItems = [
+  const navItems = [
     { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
     { key: "news-feed", to: "/news-feed", label: "News" },
     { key: "research", to: "/research-feed", label: researchLabel },
-    { key: "api", to: "/account/api-keys", label: "API" },
+    { key: "api", to: "/account/api-docs", label: "API" },
   ];
 
+  // TODO: add user role for dev permissions.
   const devNavItems = [
-    { key: "research", to: "/research-feed", label: researchLabel },
     { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
     { key: "settings", to: "/settings", label: "Settings" },
   ];
 
-  const unauthNavItems = [
-    { key: "research", to: "/research-feed", label: researchLabel },
-    { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
-    { key: "news-feed", to: "/news-feed", label: "News" },
-  ];
-
-  // TODO: add user role for dev permissions.
-  const navItems: { key: string; to: string; label: string }[] =
-    !auth.isSignedIn
-      ? unauthNavItems
-      : auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3"
-        ? publicNavItems.concat(devNavItems)
-        : publicNavItems;
+  const allNavItems =
+    auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3"
+      ? navItems.concat(devNavItems)
+      : navItems;
 
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
@@ -181,7 +145,7 @@ function NavBar() {
 
         <div className="min-w-0 flex-1 overflow-x-auto">
           <div className="flex w-max items-center gap-1.5 sm:gap-2">
-            {navItems.map((item) => (
+            {allNavItems.map((item) => (
               <Link
                 key={item.key}
                 className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
