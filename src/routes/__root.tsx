@@ -16,7 +16,6 @@ import {
   SignedOut,
   SignInButton,
   useAuth,
-  useUser,
   UserButton,
 } from "@clerk/tanstack-start";
 import { getSiteOrigin } from "~/lib/env";
@@ -101,7 +100,6 @@ function RootDocument(props: React.PropsWithChildren) {
 
 function NavBar() {
   const auth = useAuth();
-  const { user } = useUser();
 
   const navItems = [
     { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
