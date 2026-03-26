@@ -1,14 +1,10 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { useAuth } from "@clerk/tanstack-start";
 
 export const Route = createFileRoute("/account")({
   component: AccountLayout,
 });
 
 function AccountLayout() {
-  const auth = useAuth();
-
-
   const subNavItems = [
     { key: "api-docs", to: "/account/api-docs", label: "API Docs" },
     { key: "api-keys", to: "/account/api-keys", label: "API Keys" },

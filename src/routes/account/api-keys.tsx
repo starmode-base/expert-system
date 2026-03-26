@@ -27,6 +27,17 @@ export const Route = createFileRoute("/account/api-keys")({
 
 function ApiKeysPage() {
   const { authenticated, apiKeys } = Route.useLoaderData();
+  const router = useRouter();
+
+  const createApiKey = useServerFn(createApiKeySF);
+  const revokeApiKey = useServerFn(revokeApiKeySF);
+
+  const [name, setName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [newRawKey, setNewRawKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [revoking, setRevoking] = useState<string | null>(null);
 
   if (!authenticated) {
     return (
@@ -45,17 +56,6 @@ function ApiKeysPage() {
       </div>
     );
   }
-  const router = useRouter();
-
-  const createApiKey = useServerFn(createApiKeySF);
-  const revokeApiKey = useServerFn(revokeApiKeySF);
-
-  const [name, setName] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [newRawKey, setNewRawKey] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [revoking, setRevoking] = useState<string | null>(null);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

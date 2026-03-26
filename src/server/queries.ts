@@ -24,7 +24,6 @@ import {
   InsightSelect,
   TakeawayReferenceSelect,
 } from "~/postgres/schema";
-import { authMiddleware } from "~/middleware/auth-middleware";
 
 export const queryDocumentsPaginated = createServerFn({
   method: "GET",
@@ -323,58 +322,6 @@ function buildInsightNextCursor<T extends { createdAt: Date; id: string }>(
 }
 
 export const queryInsightsFeedPaginated = createServerFn({ method: "GET" })
-  .validator(
-    z.object({
-      cursor: z.string().nullable(),
-      limit: z.number().default(10),
-    }),
-  )
-  .handler(
-    async ({
-      context,
-      data: { cursor, limit },
-    }): Promise<PaginatedResult<InsightsItem>> => {
-      const cursorCondition = buildInsightCursorCondition(cursor);
-      const conditions = [
-        isNotNull(schema.insights.insight),
-      ];
-      if (cursorCondition) conditions.push(cursorCondition);
-
-      const insights = await db.query.insights.findMany({
-        where: and(...conditions),
-        with: {
-          insightTakeaways: {
-            with: {
-              takeaway: {
-                with: {
-                  document: true,
-                },
-              },
-            },
-          },
-          insightReferences: {
-            with: {
-              takeawayReference: {
-                with: { takeaway: { with: { document: true } } },
-              },
-            },
-            orderBy: (insightReferences, { asc }) => [
-              asc(insightReferences.insightReferenceNumber),
-            ],
-          },
-        },
-        orderBy: [desc(schema.insights.createdAt), desc(schema.insights.id)],
-        limit: limit + 1,
-      });
-
-      const { pageItems, nextCursor } = buildInsightNextCursor(insights, limit);
-      return { items: pageItems.map(mapInsightToItem), nextCursor };
-    },
-  );
-
-export const queryPublicInsightsFeedPaginated = createServerFn({
-  method: "GET",
-})
   .validator(
     z.object({
       cursor: z.string().nullable(),

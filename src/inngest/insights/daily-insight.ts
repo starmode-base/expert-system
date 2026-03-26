@@ -13,7 +13,6 @@ const trigger =
     ? ({ cron: "TZ=America/Phoenix 0 7 */2 * *" } as const)
     : ({ event: "dev/scheduler.daily-insight.manual" } as const);
 
-
 export const dailyInsight = inngest.createFunction(
   { id: "scheduler.daily-insight" },
   trigger,
