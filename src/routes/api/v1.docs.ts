@@ -78,6 +78,7 @@ Fetch up to 50 takeaways by their IDs in a single request. Results are returned 
 | id                 | string | Unique identifier.                                                                       |
 | title              | string | Short headline summarising the takeaway.                                                 |
 | takeaway           | string | Full takeaway text — the actionable or notable finding.                                  |
+| url                | string | Link to the takeaway on expert-system.                                                   |
 | document           | object | Source document metadata: id, title, source, link, publicationDate.                      |
 | takeawayReferences | array  | Ordered list of inline references. Each entry has referenceNumber (integer) and reference (string). |
 
@@ -189,6 +190,7 @@ AI-generated research insights. Scoped to the user who owns the API key — each
 | summary   | string or null   | Short summary of the insight's main finding.                  |
 | insight   | string or null   | Full insight text. Only insights with a non-null value are returned. |
 | research  | string or null   | Background research notes used to generate the insight.       |
+| url       | string           | Link to the research insight on expert-system.                |
 | takeaways | array            | Takeaways linked to this insight. Each entry has id and title.|
 | createdAt | string (ISO 8601)| When the insight was created.                                 |
 | updatedAt | string (ISO 8601)| When the insight was last updated.                            |

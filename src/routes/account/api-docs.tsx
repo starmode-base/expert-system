@@ -344,6 +344,11 @@ export function ApiDocsPage() {
             description="Full takeaway text — the actionable or notable finding."
           />
           <FieldRow
+            name="url"
+            type="string"
+            description="Link to the takeaway on expert-system."
+          />
+          <FieldRow
             name="document"
             type="object"
             description="Source document metadata: id, title, source, link, publicationDate."
@@ -366,6 +371,7 @@ export function ApiDocsPage() {
       "id": "tak_abc123",
       "title": "Fed signals pause through Q2",
       "takeaway": "The Federal Reserve indicated it will hold rates...",
+      "url": "https://expert-system.starmode.dev/takeaway/tak_abc123",
       "document": {
         "id": "doc_xyz789",
         "title": "Remarks on the Economic Outlook",
@@ -605,6 +611,11 @@ export function ApiDocsPage() {
             description="Background research notes used to generate the insight."
           />
           <FieldRow
+            name="url"
+            type="string"
+            description="Link to the research insight on expert-system."
+          />
+          <FieldRow
             name="takeaways"
             type="array"
             description="Takeaways linked to this insight. Each entry has id and title."
@@ -647,6 +658,7 @@ export function ApiDocsPage() {
       "summary": "Rising rates historically compress growth multiples...",
       "insight": "Analysis shows a strong inverse correlation between...",
       "research": null,
+      "url": "https://expert-system.starmode.dev/insight/ins_def456",
       "takeaways": [
         { "id": "tak_abc123", "title": "Fed signals pause through Q2" }
       ],
