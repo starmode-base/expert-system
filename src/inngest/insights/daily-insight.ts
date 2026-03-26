@@ -10,7 +10,7 @@ import { generateResearchThemes } from "./helpers/generate-research-objectives";
  */
 const trigger =
   process.env.NODE_ENV === "production"
-    ? ({ cron: "TZ=America/Phoenix 0 7 * * *" } as const)
+    ? ({ cron: "TZ=America/Phoenix 0 7 */2 * *" } as const)
     : ({ event: "dev/scheduler.daily-insight.manual" } as const);
 
 export const dailyInsight = inngest.createFunction(

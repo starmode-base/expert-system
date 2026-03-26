@@ -4,7 +4,6 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
-  redirect,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
@@ -15,18 +14,11 @@ import {
   ClerkProvider,
   SignedIn,
   SignedOut,
+  SignInButton,
   useAuth,
   UserButton,
 } from "@clerk/tanstack-start";
-import { createServerFn } from "@tanstack/react-start";
-import { getWebRequest } from "vinxi/http";
-import { getClerkUserId } from "~/server/auth";
 import { getSiteOrigin } from "~/lib/env";
-
-const checkAuth = createServerFn({ method: "GET" }).handler(async () => {
-  const clerkUserId = await getClerkUserId(getWebRequest());
-  return !!clerkUserId;
-});
 
 const head = {
   meta: [
@@ -66,21 +58,6 @@ const head = {
 };
 
 export const Route = createRootRoute({
-  beforeLoad: async ({ location }) => {
-    const isAuthenticated = await checkAuth();
-
-    const isGuestPath =
-      location.pathname.startsWith("/guest/") ||
-      location.pathname.startsWith("/insight/");
-
-    if (!isAuthenticated && !isGuestPath) {
-      throw redirect({ to: "/guest/research-feed" });
-    }
-
-    if (isAuthenticated && location.pathname === "/guest/research-feed") {
-      throw redirect({ to: "/research-feed" });
-    }
-  },
   head: () => head,
   errorComponent: (props) => {
     return (
@@ -109,13 +86,10 @@ function RootDocument(props: React.PropsWithChildren) {
           <HeadContent />
         </head>
         <body>
-          <SignedOut>{props.children}</SignedOut>
-          <SignedIn>
-            <div className="min-h-dvh bg-slate-100">
-              <NavBar />
-              {props.children}
-            </div>
-          </SignedIn>
+          <div className="min-h-dvh bg-slate-100">
+            <NavBar />
+            {props.children}
+          </div>
           <TanStackRouterDevtools position="bottom-right" />
           <Scripts />
         </body>
@@ -126,30 +100,32 @@ function RootDocument(props: React.PropsWithChildren) {
 
 function NavBar() {
   const auth = useAuth();
-  const publicNavItems = [
-    { key: "research", to: "/research-feed", label: "Research" },
+
+  const navItems = [
     { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
     { key: "news-feed", to: "/news-feed", label: "News" },
-    { key: "api", to: "/account/api-keys", label: "API" },
+    { key: "research", to: "/research-feed", label: "Research" },
+    { key: "api", to: "/account/api-docs", label: "API" },
   ];
 
+  // TODO: add user role for dev permissions.
   const devNavItems = [
     { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
     { key: "settings", to: "/settings", label: "Settings" },
   ];
 
-  // TODO: add user role for dev permissions.
-  const navItems: { key: string; to: string; label: string }[] =
+  const allNavItems =
     auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3"
-      ? publicNavItems.concat(devNavItems)
-      : publicNavItems;
+      ? navItems.concat(devNavItems)
+      : navItems;
 
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <nav className="mx-auto flex h-full max-w-4xl items-center gap-3 px-3 sm:px-6">
         <div className="flex shrink-0 items-center gap-3">
           <Link
-            to="/research-feed"
+            to="/takeaway-feed"
+            search={{ searchInput: undefined, filters: undefined }}
             className="group inline-flex flex-col items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-100"
           >
             <img
@@ -165,7 +141,7 @@ function NavBar() {
 
         <div className="min-w-0 flex-1 overflow-x-auto">
           <div className="flex w-max items-center gap-1.5 sm:gap-2">
-            {navItems.map((item) => (
+            {allNavItems.map((item) => (
               <Link
                 key={item.key}
                 className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
@@ -183,7 +159,16 @@ function NavBar() {
         </div>
 
         <div className="shrink-0">
-          <UserButton />
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="cursor-pointer rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
+                Sign in
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         </div>
       </nav>
     </header>

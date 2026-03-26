@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import fetch from "node-fetch";
 import { parseStringPromise } from "xml2js";
 
 export interface BlogArticleCandidate {
@@ -88,10 +89,12 @@ interface AtomEntry {
 }
 
 /**
- * Detect whether a parsed feed includes full article content in items.
- * Checks for `content:encoded` or `<content>` with >200 chars of plain text.
+ * Extract the longest content text and the first article link from a parsed feed.
+ * Returns null if no usable content/link is found.
  */
-export function detectContentInFeed(parsed: Record<string, unknown>): boolean {
+function extractFirstItemContentAndLink(
+  parsed: Record<string, unknown>,
+): { feedText: string; link: string } | null {
   // RSS 2.0
   const rss = parsed as {
     rss?: { channel?: { item?: RssItem[] | RssItem }[] };
@@ -102,25 +105,104 @@ export function detectContentInFeed(parsed: Record<string, unknown>): boolean {
     const firstItem = items[0];
     if (firstItem) {
       const encoded = extractXmlText(firstItem["content:encoded"]);
-      if (encoded && htmlToPlainText(encoded).length > 200) {
-        return true;
+      const feedText = encoded ? htmlToPlainText(encoded) : "";
+      const rawLink =
+        extractXmlText(firstItem.guid) ?? extractXmlText(firstItem.link);
+      const link = rawLink ? normalizeLink(rawLink) : "";
+      if (feedText.length > 0 && link) {
+        return { feedText, link };
       }
     }
-    return false;
+    return null;
   }
 
   // Atom
   const atom = parsed as { feed?: { entry?: AtomEntry[] } };
   if (atom.feed?.entry?.[0]) {
     const entry = atom.feed.entry[0];
-    const content = entry.content?.[0];
-    const contentText = extractXmlText(content);
-    if (contentText && htmlToPlainText(contentText).length > 200) {
-      return true;
+    const contentRaw = extractXmlText(entry.content?.[0]);
+    const feedText = contentRaw ? htmlToPlainText(contentRaw) : "";
+    const altLink = entry.link?.find(
+      (l) => (l.$ as { rel?: string }).rel === "alternate",
+    );
+    const linkEl = altLink ?? entry.link?.[0];
+    const rawLink = linkEl?.$.href;
+    const link = rawLink ? normalizeLink(rawLink) : "";
+    if (feedText.length > 0 && link) {
+      return { feedText, link };
     }
   }
 
-  return false;
+  return null;
+}
+
+/**
+ * Extract plain text from an HTML page using cheerio (no LLM call).
+ * Strips nav, footer, script, style, and other boilerplate tags.
+ */
+function extractPagePlainText(html: string): string {
+  const $ = cheerio.load(html);
+  $(
+    "script, style, noscript, svg, nav, footer, header, aside, [role='navigation'], [role='banner'], [role='contentinfo']",
+  ).remove();
+
+  // Prefer <article> or <main> if present
+  const article = $("article").first();
+  const main = $("main").first();
+  const target = article.length ? article : main.length ? main : $("body");
+
+  return target
+    .text()
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/**
+ * Detect whether a parsed feed includes full article content by comparing
+ * the feed's inline content against the actual page content.
+ *
+ * Fetches the first article's URL and compares text lengths.
+ * If the feed content is >= 50% of the page content, assumes full articles
+ * are embedded in the feed.
+ */
+export async function detectContentInFeed(
+  parsed: Record<string, unknown>,
+): Promise<boolean> {
+  const extracted = extractFirstItemContentAndLink(parsed);
+  if (!extracted) {
+    return false;
+  }
+
+  const { feedText, link } = extracted;
+
+  // Fetch the actual page and compare
+  try {
+    const res = await fetch(link, {
+      headers: { "User-Agent": "ExpertSystem/1.0 RSS Reader" },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) {
+      // Can't verify — assume not full content
+      return false;
+    }
+    const html = await res.text();
+    const pageText = extractPagePlainText(html);
+
+    if (pageText.length === 0) {
+      // Can't extract page text — fall back to false
+      return false;
+    }
+
+    return feedText.length >= pageText.length * 0.5;
+  } catch {
+    // Network/timeout error — default to false (will scrape pages)
+    return false;
+  }
 }
 
 /**
@@ -340,5 +422,5 @@ export async function detectContentInFeedFromXml(
     trim: true,
     explicitArray: true,
   })) as Record<string, unknown>;
-  return detectContentInFeed(parsed);
+  return await detectContentInFeed(parsed);
 }

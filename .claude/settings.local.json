@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(bun run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(bunx drizzle-kit:*)",
+      "Bash(git checkout:*)",
+      "Bash(grep \"\"version\"\":*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(__NEW_LINE_776f67e064ceb0d6__ echo:*)",
+      "Bash(__NEW_LINE_811f8b8f8e566ca8__ echo:*)",
+      "Bash(ls:*)",
+      "Bash(API_KEY=esak_7XlktYfO46yhUKW2t80wt3VJcOZnZ6qsHFH8BhmREIw bun run:*)",
+      "Bash(npx prettier:*)",
+      "Bash(bun pm:*)",
+      "Bash(bun install:*)",
+      "Bash(bun outdated:*)",
+      "Bash(bun add:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)",
+      "Bash(grep -r \"globalMiddlewareEntry\\\\|globalMiddleware\" node_modules/@tanstack/react-start-plugin/src/ 2>/dev/null | head -20\ngrep -r \"globalMiddlewareEntry\\\\|globalMiddleware\" node_modules/@tanstack/start-plugin-core/src/ 2>/dev/null | head -20)",
+      "Bash(grep -r \"createStartAPIHandler\\\\|defaultAPIFileRouteHandler\" node_modules/@tanstack/react-start/dist/ 2>/dev/null | grep \"\\\\.js:\" | head -5\ngrep -r \"createStartAPIHandler\\\\|defaultAPIFileRouteHandler\" node_modules/@tanstack/react-start-server/dist/ 2>/dev/null | grep \"\\\\.js\\\\b\\\\|\\\\.js:\" | head -5)",
+      "Bash(python3:*)",
+      "Bash(bun info:*)"
+    ]
+  }
+}

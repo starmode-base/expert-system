@@ -1,34 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { PubSubProvider } from "~/lib/ably";
-import { listOrganizationsSF } from "~/server/organizations";
-
 /**
  * Route
  */
 export const Route = createFileRoute("/")({
-  loader: () => {
-    return listOrganizationsSF();
-  },
-  component: RouteComponentProvider,
+  component: RouteComponent,
 });
 
-/**
- * Route component
- */
-function RouteComponentProvider() {
-  const { viewerId } = Route.useLoaderData();
-
-  return (
-    <PubSubProvider viewerId={viewerId}>
-      <RouteComponent />
-    </PubSubProvider>
-  );
-}
-
-/**
- * Route component
- */
 function RouteComponent() {
   return (
     <div className="justify-center_ items-center_ flex h-[calc(100dvh-64px)] flex-col gap-8 bg-slate-100 p-8">
