@@ -102,13 +102,11 @@ function RootDocument(props: React.PropsWithChildren) {
 function NavBar() {
   const auth = useAuth();
   const { user } = useUser();
-  const researchLabel = user?.firstName
-    ? `${user.firstName}'s Research`
-    : "Research";
+
   const navItems = [
     { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
     { key: "news-feed", to: "/news-feed", label: "News" },
-    { key: "research", to: "/research-feed", label: researchLabel },
+    { key: "research", to: "/research-feed", label: "Research" },
     { key: "api", to: "/account/api-docs", label: "API" },
   ];
 
