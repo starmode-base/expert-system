@@ -115,6 +115,7 @@ export const APIRoute = createAPIFileRoute("/api/v1/research")({
 
     const items = pageItems.map(({ insightTakeaways, ...insight }) => ({
       ...insight,
+      url: `https://expert-system.starmode.dev/insight/${insight.id}`,
       takeaways: insightTakeaways.map(({ takeaway }) => ({
         id: takeaway.id,
         title: takeaway.title,

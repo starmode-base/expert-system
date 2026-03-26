@@ -70,6 +70,11 @@ export const APIRoute = createAPIFileRoute("/api/v1/takeaways")({
       (a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0),
     );
 
-    return json({ items: takeaways });
+    const items = takeaways.map((t) => ({
+      ...t,
+      url: `https://expert-system.starmode.dev/takeaway/${t.id}`,
+    }));
+
+    return json({ items });
   },
 });
