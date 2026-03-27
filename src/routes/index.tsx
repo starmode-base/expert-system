@@ -146,7 +146,7 @@ function LandingPage() {
         {/* What's inside */}
         <div>
           <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-            What&apos;s inside
+            Hundreds of sources. Thousands of takeaways.
           </h2>
           <img
             src="/expert-system-explainer.png"
