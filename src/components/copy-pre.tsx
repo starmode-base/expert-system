@@ -23,7 +23,7 @@ export function CopyPre({
       <pre
         className={
           className ??
-          "overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-slate-200 bg-slate-50 p-3 pr-10 font-mono text-xs leading-relaxed text-slate-700"
+          "overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-3 pr-10 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap text-slate-700"
         }
       >
         {children}
@@ -31,7 +31,7 @@ export function CopyPre({
       <button
         type="button"
         onClick={handleCopy}
-        className="absolute top-2 right-2 rounded-md border border-slate-200 bg-white p-1.5 text-slate-400 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 hover:text-slate-600"
+        className="absolute top-2 right-2 rounded-md border border-slate-200 bg-white p-1.5 text-slate-400 opacity-100 transition-opacity hover:text-slate-600 sm:opacity-0 sm:group-hover:opacity-100"
         aria-label="Copy to clipboard"
       >
         {copied ? (
