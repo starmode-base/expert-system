@@ -1,27 +1,268 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { CopyPre } from "~/components/copy-pre";
 
-/**
- * Route
- */
 export const Route = createFileRoute("/")({
-  component: RouteComponent,
+  component: LandingPage,
 });
 
-function RouteComponent() {
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function SectionCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="justify-center_ items-center_ flex h-[calc(100dvh-64px)] flex-col gap-8 bg-slate-100 p-8">
-      <img
-        src="/starmode-logo.svg"
-        alt="STΛR MODΞ logo"
-        className="mx-auto max-w-sm"
-      />
-      <div className="flex flex-1 flex-col items-center justify-center gap-8 pb-10">
-        <div className="max-w-4xl text-center text-5xl text-slate-800 sm:text-8xl">
+    <section className="rounded-lg border border-slate-200 bg-white p-6 sm:p-8">
+      {children}
+    </section>
+  );
+}
+
+function StepCard({
+  step,
+  title,
+  description,
+  example,
+}: {
+  step: string;
+  title: string;
+  description: React.ReactNode;
+  example: string;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-5">
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+          {step}
+        </span>
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      </div>
+      <p className="text-sm leading-relaxed text-slate-600">{description}</p>
+      <pre className="overflow-x-auto rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-700">
+        {example}
+      </pre>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
+function LandingPage() {
+  return (
+    <div className="min-h-[calc(100dvh-64px)]">
+      {/* Hero */}
+      <div className="flex flex-col items-center gap-4 px-4 pt-16 pb-12 sm:pt-24 sm:pb-16">
+        <img
+          src="/starmode-logo.svg"
+          alt="STΛR MODΞ logo"
+          className="h-6 w-auto opacity-70"
+        />
+        <h1 className="text-center text-4xl font-medium tracking-tight text-slate-900 sm:text-6xl">
           ΞXPERT-SYSTΞM
+        </h1>
+        <p className="max-w-2xl text-center text-lg leading-relaxed text-slate-600 sm:text-xl">
+          Every earnings call, blog, and podcast,{" "}
+          <span className="font-medium text-amber-600">indexed by insight</span>
+          , not by keyword.
+        </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <Link
+            to="/account/api-keys"
+            className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+          >
+            Get an API key
+          </Link>
+          <a
+            href="#how-it-works"
+            className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            How it works
+          </a>
         </div>
-        <small className="block text-2xl font-extralight tracking-[0.15em]">
-          Augmented Reasoning Engine
-        </small>
+      </div>
+
+      {/* Content */}
+      <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 pb-16 sm:px-6">
+        {/* Value prop */}
+        <SectionCard>
+          <h2 className="mb-3 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+            The most effective research system available for AI agents
+          </h2>
+          <p className="text-center text-sm leading-relaxed text-slate-600">
+            AI, markets, and technology are moving faster than any person can
+            track.{" "}
+            <span className="font-medium text-amber-600">
+              Don&apos;t burn your agent&apos;s context window searching the
+              open web.
+            </span>{" "}
+            Expert System continuously processes hundreds of earnings calls,
+            technical blogs, podcasts, and expert commentary, so your agent
+            stays current and finds{" "}
+            <span className="font-medium text-amber-600">
+              the right insight in one query, not ten pages.
+            </span>
+          </p>
+        </SectionCard>
+
+        {/* How it works */}
+        <div id="how-it-works" className="scroll-mt-20">
+          <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+            Progressive disclosure for industry research
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StepCard
+              step="1"
+              title="Search takeaways"
+              description={
+                <>
+                  Semantic search across{" "}
+                  <span className="font-medium text-amber-600">
+                    thousands of pre-extracted insights
+                  </span>
+                  . Each result is 2-3 sentences, enough to decide if it's
+                  relevant without burning context.
+                </>
+              }
+              example={`GET /api/v1/takeaways/search
+  ?query=AI+infrastructure+spending
+
+→ 3 results, ~200 tokens total`}
+            />
+            <StepCard
+              step="2"
+              title="Drill into sources"
+              description="Found something relevant? Pull the full earnings transcript, blog post, or research note with metadata and provenance."
+              example={`GET /api/v1/documents
+  ?ids=doc_xyz789
+
+→ Full article text + source link`}
+            />
+            <StepCard
+              step="3"
+              title="Query structured data"
+              description={
+                <>
+                  Ask natural language questions about macroeconomic indicators
+                  or company financials. Get clean JSON back,{" "}
+                  <span className="font-medium text-amber-600">
+                    no scraping, no parsing.
+                  </span>
+                </>
+              }
+              example={`POST /api/v1/query/macro
+  {"query": "Current GDP growth"}
+
+→ Structured FRED data`}
+            />
+          </div>
+        </div>
+
+        {/* What's inside */}
+        <div>
+          <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+            Hundreds of sources. Thousands of takeaways.
+          </h2>
+          <img
+            src="/expert-system-explainer.png"
+            alt="Sources like earnings transcripts, tech blogs, podcasts, and expert commentary flow into Expert System and become searchable atomic takeaways"
+            className="w-full rounded-lg border border-slate-200 bg-white"
+          />
+        </div>
+
+        {/* Install */}
+        <div>
+          <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+            Get started in 30 seconds
+          </h2>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* Step 1 */}
+            <div className="rounded-lg border border-slate-200 bg-white p-5">
+              <div className="mb-3 flex items-center gap-2.5">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                  1
+                </span>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Get an API key
+                </h3>
+              </div>
+              <p className="mb-4 text-sm leading-relaxed text-slate-600">
+                Create a free account and generate your key.
+              </p>
+              <Link
+                to="/account/api-keys"
+                className="inline-block rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+              >
+                Get API key
+              </Link>
+            </div>
+
+            {/* Step 2 */}
+            <div className="rounded-lg border border-slate-200 bg-white p-5">
+              <div className="mb-3 flex items-center gap-2.5">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                  2
+                </span>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Install the skill
+                </h3>
+              </div>
+              <p className="mb-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                Claude Code
+              </p>
+              <div className="mb-3">
+                <CopyPre>
+                  {`/plugin install github://starmode-base/expert-system-plugin`}
+                </CopyPre>
+              </div>
+              <p className="mb-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                Any agent (Cursor, Copilot, Cline, Codex)
+              </p>
+              <CopyPre>
+                {`npx skills add starmode-base/expert-system-plugin`}
+              </CopyPre>
+            </div>
+          </div>
+
+          <p className="mt-4 text-center text-xs text-slate-500">
+            Works with any agent that supports the{" "}
+            <a
+              href="https://agentskills.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline hover:text-blue-800"
+            >
+              Agent Skills
+            </a>{" "}
+            standard. Or use the{" "}
+            <Link
+              to="/account/api-docs"
+              className="text-blue-600 underline hover:text-blue-800"
+            >
+              API directly
+            </Link>
+            .
+          </p>
+        </div>
+
+        {/* Footer links */}
+        <div className="flex justify-center gap-3 py-8">
+          <Link
+            to="/account/api-docs"
+            className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            API reference
+          </Link>
+          <a
+            href="https://github.com/starmode-base/expert-system-plugin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            GitHub
+          </a>
+        </div>
       </div>
     </div>
   );
