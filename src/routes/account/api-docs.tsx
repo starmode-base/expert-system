@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CopyPre } from "~/components/copy-pre";
+import { CopyPre } from "~/lib/copy-pre";
 
 export const Route = createFileRoute("/account/api-docs")({
   component: ApiDocsPage,

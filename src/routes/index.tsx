@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { CopyPre } from "~/components/copy-pre";
+import { CopyPre } from "~/lib/copy-pre";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -105,6 +105,18 @@ function LandingPage() {
           </p>
         </SectionCard>
 
+        {/* What's inside */}
+        <div>
+          <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+            Hundreds of sources. Thousands of takeaways.
+          </h2>
+          <img
+            src="/expert-system-explainer.png"
+            alt="Sources like earnings transcripts, tech blogs, podcasts, and expert commentary flow into Expert System and become searchable atomic takeaways"
+            className="w-full rounded-lg border border-slate-200 bg-white"
+          />
+        </div>
+
         {/* How it works */}
         <div id="how-it-works" className="scroll-mt-20">
           <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
@@ -156,18 +168,6 @@ function LandingPage() {
 → Structured FRED data`}
             />
           </div>
-        </div>
-
-        {/* What's inside */}
-        <div>
-          <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-            Hundreds of sources. Thousands of takeaways.
-          </h2>
-          <img
-            src="/expert-system-explainer.png"
-            alt="Sources like earnings transcripts, tech blogs, podcasts, and expert commentary flow into Expert System and become searchable atomic takeaways"
-            className="w-full rounded-lg border border-slate-200 bg-white"
-          />
         </div>
 
         {/* Install */}
