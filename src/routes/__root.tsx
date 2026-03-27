@@ -102,6 +102,7 @@ function NavBar() {
   const auth = useAuth();
 
   const navItems = [
+    { key: "about", to: "/", label: "About" },
     { key: "takeaways", to: "/takeaway-feed", label: "Takeaways" },
     { key: "news-feed", to: "/news-feed", label: "News" },
     { key: "research", to: "/research-feed", label: "Research" },
@@ -150,7 +151,7 @@ function NavBar() {
                   className:
                     "border-slate-200 bg-slate-900 text-white hover:bg-slate-900 hover:text-white",
                 }}
-                activeOptions={{ exact: false }}
+                activeOptions={{ exact: item.to === "/" }}
               >
                 {item.label}
               </Link>

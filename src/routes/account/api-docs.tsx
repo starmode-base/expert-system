@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CopyPre } from "~/components/copy-pre";
 
 export const Route = createFileRoute("/account/api-docs")({
   component: ApiDocsPage,
@@ -206,11 +207,71 @@ export function ApiDocsPage() {
       </h1>
       <p className="mb-8 text-sm text-gray-500">
         REST API for programmatic access to takeaways, research, and documents.
+        See the{" "}
+        <a href="/" className="text-blue-600 underline hover:text-blue-800">
+          overview
+        </a>{" "}
+        for how the progressive disclosure model works.
+      </p>
+
+      {/* Quick start */}
+      <div className="mb-2 grid gap-4 sm:grid-cols-2">
+        {/* Step 1 */}
+        <section className="rounded-lg border border-gray-200 bg-white p-5">
+          <div className="mb-3 flex items-center gap-2.5">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
+              1
+            </span>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Get an API key
+            </h3>
+          </div>
+          <P>Create a free account and generate your key.</P>
+          <a
+            href="/account/api-keys"
+            className="inline-block rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+          >
+            Get API key
+          </a>
+        </section>
+
+        {/* Step 2 */}
+        <section className="rounded-lg border border-gray-200 bg-white p-5">
+          <div className="mb-3 flex items-center gap-2.5">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
+              2
+            </span>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Install the skill
+            </h3>
+          </div>
+          <H3>Claude Code</H3>
+          <CopyPre className="mb-4 overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-4 pr-10 font-mono text-xs leading-relaxed text-gray-800">
+            {`/plugin install github://starmode-base/expert-system-plugin`}
+          </CopyPre>
+          <H3>Any agent (Cursor, Copilot, Cline, Codex)</H3>
+          <CopyPre className="mb-4 overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-4 pr-10 font-mono text-xs leading-relaxed text-gray-800">
+            {`npx skills add starmode-base/expert-system-plugin`}
+          </CopyPre>
+        </section>
+      </div>
+      <p className="mb-6 text-center text-xs text-gray-500">
+        The plugin ships three focused skills that trigger automatically based
+        on context. See the{" "}
+        <a
+          href="https://github.com/starmode-base/expert-system-plugin"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline hover:text-blue-800"
+        >
+          plugin repository
+        </a>{" "}
+        for details.
       </p>
 
       {/* Getting Started */}
       <Section>
-        <H2>Getting Started</H2>
+        <H2>Direct API access</H2>
 
         <P>
           All API requests require an API key. Generate one on the{" "}

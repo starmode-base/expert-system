@@ -25,5 +25,8 @@
       "Bash(python3:*)",
       "Bash(bun info:*)"
     ]
+  },
+  "enabledPlugins": {
+    "skill-creator@claude-plugins-official": true
   }
 }
