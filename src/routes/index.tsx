@@ -63,9 +63,7 @@ function LandingPage() {
         </h1>
         <p className="max-w-2xl text-center text-lg leading-relaxed text-slate-600 sm:text-xl">
           Every earnings call, blog, and podcast,{" "}
-          <span className="font-medium text-amber-600">
-            indexed by insight
-          </span>
+          <span className="font-medium text-amber-600">indexed by insight</span>
           , not by keyword.
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
@@ -116,7 +114,16 @@ function LandingPage() {
             <StepCard
               step="1"
               title="Search takeaways"
-              description={<>Semantic search across <span className="font-medium text-amber-600">thousands of pre-extracted insights</span>. Each result is 2-3 sentences, enough to decide if it's relevant without burning context.</>}
+              description={
+                <>
+                  Semantic search across{" "}
+                  <span className="font-medium text-amber-600">
+                    thousands of pre-extracted insights
+                  </span>
+                  . Each result is 2-3 sentences, enough to decide if it's
+                  relevant without burning context.
+                </>
+              }
               example={`GET /api/v1/takeaways/search
   ?query=AI+infrastructure+spending
 
@@ -134,7 +141,15 @@ function LandingPage() {
             <StepCard
               step="3"
               title="Query structured data"
-              description={<>Ask natural language questions about macroeconomic indicators or company financials. Get clean JSON back, <span className="font-medium text-amber-600">no scraping, no parsing.</span></>}
+              description={
+                <>
+                  Ask natural language questions about macroeconomic indicators
+                  or company financials. Get clean JSON back,{" "}
+                  <span className="font-medium text-amber-600">
+                    no scraping, no parsing.
+                  </span>
+                </>
+              }
               example={`POST /api/v1/query/macro
   {"query": "Current GDP growth"}
 

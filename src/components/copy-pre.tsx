@@ -12,7 +12,9 @@ export function CopyPre({
   const handleCopy = () => {
     void navigator.clipboard.writeText(children).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
     });
   };
 
@@ -29,7 +31,7 @@ export function CopyPre({
       <button
         type="button"
         onClick={handleCopy}
-        className="absolute top-2 right-2 rounded-md border border-slate-200 bg-white p-1.5 text-slate-400 opacity-0 transition-opacity hover:text-slate-600 group-hover:opacity-100"
+        className="absolute top-2 right-2 rounded-md border border-slate-200 bg-white p-1.5 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-slate-600"
         aria-label="Copy to clipboard"
       >
         {copied ? (
