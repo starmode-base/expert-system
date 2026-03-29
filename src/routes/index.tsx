@@ -98,17 +98,10 @@ function StepCard({
   );
 }
 
-const SUGGESTED_QUERIES = [
-  "enterprise AI adoption barriers",
-  "vibe coding",
-  "ai capex trends",
-];
-
 function ApiPlayground() {
-  const [query, setQuery] = useState(SUGGESTED_QUERIES[0] ?? "");
-  const [searchCount, setSearchCount] = useState(0);
   const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState("enterprise AI adoption barriers");
 
   const requestUrl = query.trim()
     ? `GET /api/v1/takeaways/search?query=${encodeURIComponent(query.trim())}&limit=10&recent=true`
@@ -126,14 +119,6 @@ function ApiPlayground() {
       setResponse(JSON.stringify({ error: "Something went wrong" }, null, 2));
     } finally {
       setLoading(false);
-      const next = searchCount + 1;
-      setSearchCount(next);
-      const nextQuery = SUGGESTED_QUERIES[next];
-      if (nextQuery) {
-        setQuery(nextQuery);
-      } else {
-        setQuery("");
-      }
     }
   }
 
@@ -185,28 +170,39 @@ function LandingPage() {
   return (
     <div className="min-h-[calc(100dvh-64px)]">
       {/* Hero */}
-      <div className="flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center gap-8 px-4">
-        <div className="flex w-full max-w-2xl flex-col items-center gap-3 rounded-lg border border-slate-200 bg-white p-6 sm:p-8">
-          <img
-            src="/starmode-logo.svg"
-            alt="STΛR MODΞ logo"
-            className="h-6 w-auto opacity-70"
-          />
-          <h1 className="text-center text-2xl font-medium tracking-tight text-slate-900 sm:text-4xl">
+      <div className="flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center px-4">
+        <div className="flex w-full max-w-2xl flex-col items-center gap-6">
+          <div className="flex items-center gap-2 opacity-60">
+            <img
+              src="/starmode-logo.svg"
+              alt="STΛR MODΞ logo"
+              className="h-5 w-auto"
+            />
+          </div>
+          <h1 className="text-center text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
             ΞXPERT-SYSTΞM
           </h1>
-        </div>
-        <div className="w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-6 sm:p-8">
-          <p className="text-center text-xl leading-relaxed text-slate-600 sm:text-3xl">
+          <p className="text-center text-xl leading-relaxed text-slate-600 sm:text-2xl">
             <span className="font-medium text-amber-600">
               The knowledge layer for your agent.
             </span>{" "}
-            <br />
             Every earnings call, blog, and podcast, indexed by insight.
           </p>
-        </div>
-        <section className="w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-6 sm:p-8">
-          <p className="text-center text-sm leading-relaxed text-slate-600">
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              to="/account/api-keys"
+              className="rounded-full bg-amber-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-amber-700"
+            >
+              Get an API key
+            </Link>
+            <a
+              href="#how-it-works"
+              className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              How it works
+            </a>
+          </div>
+          <p className="mt-4 max-w-lg text-center text-sm leading-relaxed text-slate-500">
             AI, markets, and technology are moving faster than any person can
             track.{" "}
             <span className="font-medium text-amber-600">
@@ -220,20 +216,6 @@ function LandingPage() {
               the right insight in one query, not ten pages.
             </span>
           </p>
-        </section>
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
-          <Link
-            to="/account/api-keys"
-            className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
-          >
-            Get an API key
-          </Link>
-          <a
-            href="#how-it-works"
-            className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-          >
-            How it works
-          </a>
         </div>
       </div>
 
