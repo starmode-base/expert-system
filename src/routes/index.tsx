@@ -238,7 +238,7 @@ function LandingPage() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto flex max-w-4xl flex-col gap-32 px-4 pb-32 sm:px-6">
+      <div className="mx-auto flex max-w-4xl flex-col gap-16 px-4 pb-16 sm:gap-32 sm:px-6 sm:pb-32">
         {/* What's inside */}
         <FadeIn>
           <div>
