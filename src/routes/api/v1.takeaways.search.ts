@@ -1,6 +1,6 @@
 import { json } from "@tanstack/react-start";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { authenticate } from "~/server/api-keys";
+import { authorizeApiRequest } from "~/server/quota";
 import {
   vectorTakeawaySearch,
   vectorTakeawaySearchTimeWeighted,
@@ -14,10 +14,8 @@ const apiError = (message: string, status: number) =>
 
 export const APIRoute = createAPIFileRoute("/api/v1/takeaways/search")({
   GET: async ({ request }) => {
-    const userId = await authenticate(request);
-    if (!userId) {
-      return apiError("Unauthorized", 401);
-    }
+    const auth = await authorizeApiRequest(request, "takeaways.search");
+    if (auth.type === "error") return auth.response;
 
     const url = new URL(request.url);
     const query = url.searchParams.get("query");

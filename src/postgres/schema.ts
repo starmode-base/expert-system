@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   ...baseSchema,
   email: text().notNull(),
   clerkUserId: text().notNull().unique(),
+  planTier: text().$type<"free" | "unlimited">().notNull().default("free"),
 });
 
 export type UserSelect = typeof users.$inferSelect;
@@ -437,3 +438,23 @@ export const apiKeys = pgTable(
 
 export type ApiKeySelect = typeof apiKeys.$inferSelect;
 export type ApiKeyInsert = typeof apiKeys.$inferInsert;
+
+/**
+ * API Usage — per-user, per-endpoint monthly request counters
+ */
+export const apiUsage = pgTable(
+  "api_usage",
+  {
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    month: text().notNull(), // "YYYY-MM"
+    endpoint: text().notNull(),
+    requestCount: integer().notNull().default(0),
+    createdAt: createdAtField,
+    updatedAt: updatedAtField,
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.month, table.endpoint] })],
+);
+
+export type ApiUsageSelect = typeof apiUsage.$inferSelect;

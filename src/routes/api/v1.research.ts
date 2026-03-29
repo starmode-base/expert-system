@@ -2,7 +2,7 @@ import { json } from "@tanstack/react-start";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { and, desc, eq, gte, isNotNull, lt, or } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
-import { authenticate } from "~/server/api-keys";
+import { authorizeApiRequest } from "~/server/quota";
 
 const apiError = (message: string, status: number) =>
   new Response(JSON.stringify({ error: message }), {
@@ -12,10 +12,9 @@ const apiError = (message: string, status: number) =>
 
 export const APIRoute = createAPIFileRoute("/api/v1/research")({
   GET: async ({ request }) => {
-    const userId = await authenticate(request);
-    if (!userId) {
-      return apiError("Unauthorized", 401);
-    }
+    const auth = await authorizeApiRequest(request, "research");
+    if (auth.type === "error") return auth.response;
+    const { userId } = auth;
 
     const url = new URL(request.url);
     const cursor = url.searchParams.get("cursor") ?? null;

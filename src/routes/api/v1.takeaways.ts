@@ -1,7 +1,7 @@
 import { json } from "@tanstack/react-start";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { db } from "~/postgres/db";
-import { authenticate } from "~/server/api-keys";
+import { authorizeApiRequest } from "~/server/quota";
 
 const MAX_IDS = 50;
 
@@ -13,10 +13,8 @@ const apiError = (message: string, status: number) =>
 
 export const APIRoute = createAPIFileRoute("/api/v1/takeaways")({
   GET: async ({ request }) => {
-    const userId = await authenticate(request);
-    if (!userId) {
-      return apiError("Unauthorized", 401);
-    }
+    const auth = await authorizeApiRequest(request, "takeaways");
+    if (auth.type === "error") return auth.response;
 
     const url = new URL(request.url);
     const idsParam = url.searchParams.get("ids");

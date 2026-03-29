@@ -22,6 +22,7 @@ import {
   xBookmarksAuth,
   blogs,
   apiKeys,
+  apiUsage,
 } from "./schema";
 
 export const conceptEmbeddingsRelations = relations(
@@ -77,6 +78,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   organizationMembers: many(organizationMembers),
   xBookmarksAuth: many(xBookmarksAuth),
   apiKeys: many(apiKeys),
+  apiUsage: many(apiUsage),
 }));
 
 export const xBookmarksAuthRelations = relations(xBookmarksAuth, ({ one }) => ({
@@ -223,6 +225,13 @@ export const blogsRelations = relations(blogs, () => ({}));
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
   user: one(users, {
     fields: [apiKeys.userId],
+    references: [users.id],
+  }),
+}));
+
+export const apiUsageRelations = relations(apiUsage, ({ one }) => ({
+  user: one(users, {
+    fields: [apiUsage.userId],
     references: [users.id],
   }),
 }));
