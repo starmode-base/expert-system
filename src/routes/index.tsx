@@ -34,7 +34,7 @@ function StepCard({
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
           {step}
         </span>
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <h3 className="text-sm font-medium text-slate-900">{title}</h3>
       </div>
       <p className="text-sm leading-relaxed text-slate-600">{description}</p>
       <pre className="overflow-x-auto rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-700">
@@ -58,13 +58,13 @@ function LandingPage() {
           alt="STΛR MODΞ logo"
           className="h-6 w-auto opacity-70"
         />
-        <h1 className="text-center text-4xl font-medium tracking-tight text-slate-900 sm:text-6xl">
+        <h1 className="text-center text-2xl font-medium tracking-tight text-slate-900 sm:text-4xl">
           ΞXPERT-SYSTΞM
         </h1>
-        <p className="max-w-2xl text-center text-lg leading-relaxed text-slate-600 sm:text-xl">
+        <p className="max-w-2xl text-center text-xl leading-relaxed text-slate-600 sm:text-2xl">
           Every earnings call, blog, and podcast,{" "}
-          <span className="font-medium text-amber-600">indexed by insight</span>
-          , not by keyword.
+          <span className="font-medium text-amber-600">indexed by insight</span>{" "}
+          for your agents.
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <Link
@@ -83,12 +83,9 @@ function LandingPage() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 pb-16 sm:px-6">
+      <div className="mx-auto flex max-w-4xl flex-col gap-16 px-4 pb-24 sm:px-6">
         {/* Value prop */}
         <SectionCard>
-          <h2 className="mb-3 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-            The most effective research system available for AI agents
-          </h2>
           <p className="text-center text-sm leading-relaxed text-slate-600">
             AI, markets, and technology are moving faster than any person can
             track.{" "}
@@ -108,11 +105,11 @@ function LandingPage() {
         {/* What's inside */}
         <div>
           <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-            Hundreds of sources. Thousands of takeaways.
+            The most effective research system available for AI agents
           </h2>
           <img
-            src="/expert-system-explainer.png"
-            alt="Sources like earnings transcripts, tech blogs, podcasts, and expert commentary flow into Expert System and become searchable atomic takeaways"
+            src="/expert-system-explainer.svg"
+            alt="Sources like earnings transcripts, tech blogs, podcasts, and expert commentary flow into Expert System and become searchable atomic insights"
             className="w-full rounded-lg border border-slate-200 bg-white"
           />
         </div>
@@ -125,7 +122,7 @@ function LandingPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <StepCard
               step="1"
-              title="Search takeaways"
+              title="Search insights"
               description={
                 <>
                   Semantic search across{" "}
@@ -183,7 +180,7 @@ function LandingPage() {
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
                   1
                 </span>
-                <h3 className="text-sm font-semibold text-slate-900">
+                <h3 className="text-sm font-medium text-slate-900">
                   Get an API key
                 </h3>
               </div>
@@ -204,11 +201,11 @@ function LandingPage() {
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
                   2
                 </span>
-                <h3 className="text-sm font-semibold text-slate-900">
+                <h3 className="text-sm font-medium text-slate-900">
                   Install the skill
                 </h3>
               </div>
-              <p className="mb-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              <p className="mb-3 text-xs font-medium tracking-wide text-slate-500 uppercase">
                 Claude Code
               </p>
               <div className="mb-3">
@@ -216,7 +213,7 @@ function LandingPage() {
                   {`/plugin install github://starmode-base/expert-system-plugin`}
                 </CopyPre>
               </div>
-              <p className="mb-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              <p className="mb-3 text-xs font-medium tracking-wide text-slate-500 uppercase">
                 Any agent (Cursor, Copilot, Cline, Codex)
               </p>
               <CopyPre>
@@ -244,6 +241,90 @@ function LandingPage() {
             </Link>
             .
           </p>
+        </div>
+
+        {/* Pricing */}
+        <div>
+          <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+            Simple pricing
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* Free */}
+            <div className="rounded-lg border border-slate-200 bg-white p-6">
+              <h3 className="text-lg font-semibold text-slate-900">Free</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                For testing and evaluation
+              </p>
+              <p className="mt-4 text-3xl font-bold text-slate-900">
+                $0
+                <span className="text-sm font-normal text-slate-500">/mo</span>
+              </p>
+              <ul className="mt-5 flex flex-col gap-2.5 text-sm text-slate-600">
+                <li className="flex items-center gap-2">
+                  <span className="text-slate-400">&#10003;</span>
+                  100 queries per month
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-slate-400">&#10003;</span>1 API key
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-slate-400">&#10003;</span>
+                  All endpoints
+                </li>
+              </ul>
+              <Link
+                to="/account/api-keys"
+                className="mt-6 block rounded-full border border-slate-300 bg-white py-2.5 text-center text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                Get started
+              </Link>
+            </div>
+
+            {/* Unlimited */}
+            <div className="rounded-lg border-2 border-slate-900 bg-white p-6">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Unlimited
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">
+                For production agents
+              </p>
+              <div className="mt-4 flex items-baseline gap-2">
+                <p className="text-3xl font-bold text-slate-900">
+                  $4
+                  <span className="text-sm font-normal text-slate-500">
+                    /mo
+                  </span>
+                </p>
+                <span className="text-sm text-slate-500">or</span>
+                <p className="text-lg font-semibold text-slate-900">
+                  $30
+                  <span className="text-sm font-normal text-slate-500">
+                    /yr
+                  </span>
+                </p>
+              </div>
+              <ul className="mt-5 flex flex-col gap-2.5 text-sm text-slate-600">
+                <li className="flex items-center gap-2">
+                  <span className="text-amber-600">&#10003;</span>
+                  Unlimited queries
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-amber-600">&#10003;</span>
+                  Up to 10 API keys
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-amber-600">&#10003;</span>
+                  All endpoints
+                </li>
+              </ul>
+              <Link
+                to="/account/api-keys"
+                className="mt-6 block rounded-full bg-slate-900 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-slate-800"
+              >
+                Upgrade
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Footer links */}
