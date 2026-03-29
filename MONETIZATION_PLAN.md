@@ -185,7 +185,7 @@ This lets users cancel, update payment methods, and view invoices without you bu
 
 ---
 
-## Phase 3 — Pricing Page
+## Phase 3 — Pricing Page -
 
 ### `src/routes/index.tsx`
 
