@@ -124,7 +124,7 @@ function NavBar() {
     <header className="sticky top-0 z-40 h-16 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <nav className="mx-auto flex h-full max-w-4xl items-center gap-3 px-3 sm:px-6">
         <div className="min-w-0 flex-1 overflow-x-auto">
-          <div className="flex w-max items-center gap-1.5 sm:gap-2">
+          <div className="mx-auto flex w-max items-center gap-1.5 sm:gap-2">
             {allNavItems.map((item) => (
               <Link
                 key={item.key}
