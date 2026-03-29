@@ -502,6 +502,11 @@ export function ApiDocsPage() {
             type="string"
             description="Brief summary of the takeaway."
           />
+          <FieldRow
+            name="publicationDate"
+            type="string"
+            description="ISO 8601 publication date of the source document."
+          />
         </FieldTable>
 
         <H3>Example request</H3>
@@ -519,7 +524,8 @@ export function ApiDocsPage() {
       "id": "tak_abc123",
       "documentId": "doc_xyz789",
       "title": "Inflation expectations remain anchored",
-      "summary": "Long-term inflation expectations hold steady near 2%..."
+      "summary": "Long-term inflation expectations hold steady near 2%...",
+      "publicationDate": "2026-03-01T00:00:00.000Z"
     }
   ]
 }`}</Pre>

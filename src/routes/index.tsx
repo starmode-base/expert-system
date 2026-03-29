@@ -1,5 +1,29 @@
+import { useEffect, useRef, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { CopyPre } from "~/lib/copy-pre";
+import { vectorTakeawaySearchTimeWeighted } from "~/server/vector-queries";
+
+const demoSearchFn = createServerFn({ method: "GET" })
+  .validator(z.object({ query: z.string().min(1).max(200) }))
+  .handler(async ({ data: { query } }) => {
+    const results = await vectorTakeawaySearchTimeWeighted(query, {
+      limit: 10,
+    });
+    return {
+      items: results.map((r) => ({
+        id: r.id,
+        documentId: r.documentId,
+        title: r.title,
+        summary: r.summary,
+        source: r.source,
+        documentTitle: r.documentTitle,
+        documentLink: r.documentLink,
+        publicationDate: r.publicationDate,
+      })),
+    };
+  });
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -9,11 +33,41 @@ export const Route = createFileRoute("/")({
 // Helpers
 // ---------------------------------------------------------------------------
 
-function SectionCard({ children }: { children: React.ReactNode }) {
+function FadeIn({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.15 },
+    );
+
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-6 sm:p-8">
+    <div
+      ref={ref}
+      style={{
+        opacity: 0,
+        transform: "translateY(1.5rem)",
+        transition: "opacity 0.7s ease-out, transform 0.7s ease-out",
+      }}
+    >
       {children}
-    </section>
+    </div>
   );
 }
 
@@ -34,12 +88,76 @@ function StepCard({
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
           {step}
         </span>
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <h3 className="text-sm font-medium text-slate-900">{title}</h3>
       </div>
       <p className="text-sm leading-relaxed text-slate-600">{description}</p>
       <pre className="overflow-x-auto rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-700">
         {example}
       </pre>
+    </div>
+  );
+}
+
+function ApiPlayground() {
+  const [response, setResponse] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState("enterprise AI adoption barriers");
+
+  const requestUrl = query.trim()
+    ? `GET /api/v1/takeaways/search?query=${encodeURIComponent(query.trim())}&limit=10&recent=true`
+    : "GET /api/v1/takeaways/search?query=…&recent=true";
+
+  async function handleSearch() {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    setLoading(true);
+    setResponse(null);
+    try {
+      const result = await demoSearchFn({ data: { query: trimmed } });
+      setResponse(JSON.stringify(result, null, 2));
+    } catch {
+      setResponse(JSON.stringify({ error: "Something went wrong" }, null, 2));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Input */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void handleSearch();
+          }}
+          placeholder="enterprise AI adoption barriers"
+          className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none"
+        />
+        <button
+          onClick={() => void handleSearch()}
+          disabled={loading || !query.trim()}
+          className="shrink-0 rounded-lg bg-slate-900 px-5 py-2.5 font-mono text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-40"
+        >
+          {loading ? "…" : "Run"}
+        </button>
+      </div>
+
+      {/* Request preview */}
+      <pre className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900 p-3 font-mono text-xs leading-relaxed text-emerald-400">
+        {requestUrl}
+      </pre>
+
+      {/* Response */}
+      {(response ?? loading) ? (
+        <pre className="max-h-96 overflow-auto rounded-lg border border-slate-700 bg-slate-900 p-3 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-slate-200">
+          {loading ? "Searching…" : response}
+        </pre>
+      ) : null}
     </div>
   );
 }
@@ -52,199 +170,301 @@ function LandingPage() {
   return (
     <div className="min-h-[calc(100dvh-64px)]">
       {/* Hero */}
-      <div className="flex flex-col items-center gap-4 px-4 pt-16 pb-12 sm:pt-24 sm:pb-16">
-        <img
-          src="/starmode-logo.svg"
-          alt="STΛR MODΞ logo"
-          className="h-6 w-auto opacity-70"
-        />
-        <h1 className="text-center text-4xl font-medium tracking-tight text-slate-900 sm:text-6xl">
-          ΞXPERT-SYSTΞM
-        </h1>
-        <p className="max-w-2xl text-center text-lg leading-relaxed text-slate-600 sm:text-xl">
-          Every earnings call, blog, and podcast,{" "}
-          <span className="font-medium text-amber-600">indexed by insight</span>
-          , not by keyword.
-        </p>
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
-          <Link
-            to="/account/api-keys"
-            className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
-          >
-            Get an API key
-          </Link>
-          <a
-            href="#how-it-works"
-            className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-          >
-            How it works
-          </a>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 pb-16 sm:px-6">
-        {/* Value prop */}
-        <SectionCard>
-          <h2 className="mb-3 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-            The most effective research system available for AI agents
-          </h2>
-          <p className="text-center text-sm leading-relaxed text-slate-600">
+      <div className="flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center px-4 sm:px-6">
+        <div className="flex w-full max-w-4xl flex-col items-center gap-6 rounded-lg border border-slate-200 bg-white p-6 sm:p-10">
+          <div className="flex items-center gap-2 opacity-60">
+            <img
+              src="/starmode-logo.svg"
+              alt="STΛR MODΞ logo"
+              className="h-5 w-auto"
+            />
+          </div>
+          <h1 className="text-center text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+            ΞXPERT-SYSTΞM
+          </h1>
+          <p className="text-center text-xl leading-relaxed text-slate-600 sm:text-2xl">
+            <span className="font-medium text-amber-600">
+              The knowledge layer for your agent.
+            </span>{" "}
+            Every earnings call, blog, and podcast, indexed by insight.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              to="/account/api-keys"
+              className="rounded-full bg-amber-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-amber-700"
+            >
+              Get an API key
+            </Link>
+            <a
+              href="#how-it-works"
+              className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              How it works
+            </a>
+          </div>
+          <p className="mt-4 max-w-lg text-center text-sm leading-relaxed text-slate-500">
             AI, markets, and technology are moving faster than any person can
             track.{" "}
             <span className="font-medium text-amber-600">
               Don&apos;t burn your agent&apos;s context window searching the
               open web.
             </span>{" "}
-            Expert System continuously processes hundreds of earnings calls,
-            technical blogs, podcasts, and expert commentary, so your agent
-            stays current and finds{" "}
+            ΞXPERT-SYSTΞM continuously reads, distills, and indexes hundreds of
+            earnings calls, technical blogs, podcasts, and expert commentary, so
+            your agent finds{" "}
             <span className="font-medium text-amber-600">
               the right insight in one query, not ten pages.
             </span>
           </p>
-        </SectionCard>
-
-        {/* What's inside */}
-        <div>
-          <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-            Hundreds of sources. Thousands of takeaways.
-          </h2>
-          <img
-            src="/expert-system-explainer.png"
-            alt="Sources like earnings transcripts, tech blogs, podcasts, and expert commentary flow into Expert System and become searchable atomic takeaways"
-            className="w-full rounded-lg border border-slate-200 bg-white"
-          />
         </div>
+      </div>
+
+      {/* Content */}
+      <div className="mx-auto flex max-w-4xl flex-col gap-16 px-4 pb-16 sm:gap-32 sm:px-6 sm:pb-32">
+        {/* What's inside */}
+        <FadeIn>
+          <div>
+            <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+              The most effective research system available for AI agents
+            </h2>
+            <img
+              src="/expert-system-explainer.svg"
+              alt="Sources like earnings transcripts, tech blogs, podcasts, and expert commentary flow into Expert System and become searchable atomic insights"
+              className="w-full rounded-lg border border-slate-200 bg-white"
+            />
+          </div>
+        </FadeIn>
 
         {/* How it works */}
-        <div id="how-it-works" className="scroll-mt-20">
-          <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-            Progressive disclosure for industry research
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StepCard
-              step="1"
-              title="Search takeaways"
-              description={
-                <>
-                  Semantic search across{" "}
-                  <span className="font-medium text-amber-600">
-                    thousands of pre-extracted insights
-                  </span>
-                  . Each result is 2-3 sentences, enough to decide if it's
-                  relevant without burning context.
-                </>
-              }
-              example={`GET /api/v1/takeaways/search
+        <FadeIn>
+          <div id="how-it-works" className="scroll-mt-20">
+            <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+              Progressive disclosure for industry research
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <StepCard
+                step="1"
+                title="Search insights"
+                description={
+                  <>
+                    Semantic search across{" "}
+                    <span className="font-medium text-amber-600">
+                      thousands of pre-extracted insights
+                    </span>
+                    . Each result is 2-3 sentences, enough to decide if it's
+                    relevant without burning context.
+                  </>
+                }
+                example={`GET /api/v1/takeaways/search
   ?query=AI+infrastructure+spending
 
 → 3 results, ~200 tokens total`}
-            />
-            <StepCard
-              step="2"
-              title="Drill into sources"
-              description="Found something relevant? Pull the full earnings transcript, blog post, or research note with metadata and provenance."
-              example={`GET /api/v1/documents
+              />
+              <StepCard
+                step="2"
+                title="Drill into sources"
+                description="Found something relevant? Pull the full earnings transcript, blog post, or research note with metadata and provenance."
+                example={`GET /api/v1/documents
   ?ids=doc_xyz789
 
 → Full article text + source link`}
-            />
-            <StepCard
-              step="3"
-              title="Query structured data"
-              description={
-                <>
-                  Ask natural language questions about macroeconomic indicators
-                  or company financials. Get clean JSON back,{" "}
-                  <span className="font-medium text-amber-600">
-                    no scraping, no parsing.
-                  </span>
-                </>
-              }
-              example={`POST /api/v1/query/macro
+              />
+              <StepCard
+                step="3"
+                title="Query structured data"
+                description={
+                  <>
+                    Ask natural language questions about macroeconomic
+                    indicators or company financials. Get clean JSON back,{" "}
+                    <span className="font-medium text-amber-600">
+                      no scraping, no parsing.
+                    </span>
+                  </>
+                }
+                example={`POST /api/v1/query/macro
   {"query": "Current GDP growth"}
 
 → Structured FRED data`}
-            />
+              />
+            </div>
           </div>
-        </div>
+        </FadeIn>
+
+        {/* Try it */}
+        <FadeIn>
+          <div>
+            <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+              Try it now
+            </h2>
+            <ApiPlayground />
+          </div>
+        </FadeIn>
 
         {/* Install */}
-        <div>
-          <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-            Get started in 30 seconds
-          </h2>
+        <FadeIn>
+          <div>
+            <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+              Get started in 30 seconds
+            </h2>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {/* Step 1 */}
-            <div className="rounded-lg border border-slate-200 bg-white p-5">
-              <div className="mb-3 flex items-center gap-2.5">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-                  1
-                </span>
-                <h3 className="text-sm font-semibold text-slate-900">
-                  Get an API key
-                </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* Step 1 */}
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="mb-3 flex items-center gap-2.5">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                    1
+                  </span>
+                  <h3 className="text-sm font-medium text-slate-900">
+                    Get an API key
+                  </h3>
+                </div>
+                <p className="mb-4 text-sm leading-relaxed text-slate-600">
+                  Create a free account and generate your key.
+                </p>
+                <Link
+                  to="/account/api-keys"
+                  className="inline-block rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                >
+                  Get API key
+                </Link>
               </div>
-              <p className="mb-4 text-sm leading-relaxed text-slate-600">
-                Create a free account and generate your key.
-              </p>
-              <Link
-                to="/account/api-keys"
-                className="inline-block rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
-              >
-                Get API key
-              </Link>
-            </div>
 
-            {/* Step 2 */}
-            <div className="rounded-lg border border-slate-200 bg-white p-5">
-              <div className="mb-3 flex items-center gap-2.5">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-                  2
-                </span>
-                <h3 className="text-sm font-semibold text-slate-900">
-                  Install the skill
-                </h3>
-              </div>
-              <p className="mb-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                Claude Code
-              </p>
-              <div className="mb-3">
+              {/* Step 2 */}
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="mb-3 flex items-center gap-2.5">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                    2
+                  </span>
+                  <h3 className="text-sm font-medium text-slate-900">
+                    Install the skill
+                  </h3>
+                </div>
+                <p className="mb-3 text-xs font-medium tracking-wide text-slate-500 uppercase">
+                  Claude Code
+                </p>
+                <div className="mb-3">
+                  <CopyPre>
+                    {`/plugin install github://starmode-base/expert-system-plugin`}
+                  </CopyPre>
+                </div>
+                <p className="mb-3 text-xs font-medium tracking-wide text-slate-500 uppercase">
+                  Any agent (Cursor, Copilot, Cline, Codex)
+                </p>
                 <CopyPre>
-                  {`/plugin install github://starmode-base/expert-system-plugin`}
+                  {`npx skills add starmode-base/expert-system-plugin`}
                 </CopyPre>
               </div>
-              <p className="mb-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                Any agent (Cursor, Copilot, Cline, Codex)
-              </p>
-              <CopyPre>
-                {`npx skills add starmode-base/expert-system-plugin`}
-              </CopyPre>
+            </div>
+
+            <p className="mt-4 text-center text-xs text-slate-500">
+              Works with any agent that supports the{" "}
+              <a
+                href="https://agentskills.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline hover:text-blue-800"
+              >
+                Agent Skills
+              </a>{" "}
+              standard. Or use the{" "}
+              <Link
+                to="/account/api-docs"
+                className="text-blue-600 underline hover:text-blue-800"
+              >
+                API directly
+              </Link>
+              .
+            </p>
+          </div>
+        </FadeIn>
+
+        {/* Pricing */}
+        <FadeIn>
+          <div>
+            <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+              Simple pricing
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* Free */}
+              <div className="rounded-lg border border-slate-200 bg-white p-6">
+                <h3 className="text-lg font-semibold text-slate-900">Free</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  For testing and evaluation
+                </p>
+                <p className="mt-4 text-3xl font-bold text-slate-900">
+                  $0
+                  <span className="text-sm font-normal text-slate-500">
+                    /mo
+                  </span>
+                </p>
+                <ul className="mt-5 flex flex-col gap-2.5 text-sm text-slate-600">
+                  <li className="flex items-center gap-2">
+                    <span className="text-slate-400">&#10003;</span>
+                    100 queries per month
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-slate-400">&#10003;</span>1 API key
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-slate-400">&#10003;</span>
+                    All endpoints
+                  </li>
+                </ul>
+                <Link
+                  to="/account/api-keys"
+                  className="mt-6 block rounded-full border border-slate-300 bg-white py-2.5 text-center text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Get started
+                </Link>
+              </div>
+
+              {/* Unlimited */}
+              <div className="rounded-lg border-2 border-slate-900 bg-white p-6">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Unlimited
+                </h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  For production agents
+                </p>
+                <div className="mt-4 flex items-baseline gap-2">
+                  <p className="text-3xl font-bold text-slate-900">
+                    $4
+                    <span className="text-sm font-normal text-slate-500">
+                      /mo
+                    </span>
+                  </p>
+                  <span className="text-sm text-slate-500">or</span>
+                  <p className="text-lg font-semibold text-slate-900">
+                    $30
+                    <span className="text-sm font-normal text-slate-500">
+                      /yr
+                    </span>
+                  </p>
+                </div>
+                <ul className="mt-5 flex flex-col gap-2.5 text-sm text-slate-600">
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-600">&#10003;</span>
+                    Unlimited queries
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-600">&#10003;</span>
+                    Up to 10 API keys
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-600">&#10003;</span>
+                    All endpoints
+                  </li>
+                </ul>
+                <Link
+                  to="/account/api-keys"
+                  className="mt-6 block rounded-full bg-slate-900 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                >
+                  Upgrade
+                </Link>
+              </div>
             </div>
           </div>
-
-          <p className="mt-4 text-center text-xs text-slate-500">
-            Works with any agent that supports the{" "}
-            <a
-              href="https://agentskills.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline hover:text-blue-800"
-            >
-              Agent Skills
-            </a>{" "}
-            standard. Or use the{" "}
-            <Link
-              to="/account/api-docs"
-              className="text-blue-600 underline hover:text-blue-800"
-            >
-              API directly
-            </Link>
-            .
-          </p>
-        </div>
+        </FadeIn>
 
         {/* Footer links */}
         <div className="flex justify-center gap-3 py-8">
