@@ -107,12 +107,13 @@ Semantic search across all takeaways using vector similarity. Returns lightweigh
 
 ### Search result object
 
-| Field      | Type   | Description                              |
-|------------|--------|------------------------------------------|
-| id         | string | Takeaway unique identifier.              |
-| documentId | string | ID of the source document.               |
-| title      | string | Short headline summarising the takeaway. |
-| summary    | string | Brief summary of the takeaway.           |
+| Field           | Type              | Description                              |
+|-----------------|-------------------|------------------------------------------|
+| id              | string            | Takeaway unique identifier.              |
+| documentId      | string            | ID of the source document.               |
+| title           | string            | Short headline summarising the takeaway. |
+| summary         | string            | Brief summary of the takeaway.           |
+| publicationDate | string (ISO 8601) | Publication date of the source document. |
 
 ### Example request
 

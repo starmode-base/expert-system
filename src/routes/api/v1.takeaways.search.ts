@@ -43,6 +43,7 @@ export const APIRoute = createAPIFileRoute("/api/v1/takeaways/search")({
       documentId: result.documentId,
       title: result.title,
       summary: result.summary,
+      publicationDate: result.publicationDate,
     }));
 
     return json({ items });

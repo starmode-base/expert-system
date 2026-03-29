@@ -1,6 +1,29 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { CopyPre } from "~/lib/copy-pre";
+import { vectorTakeawaySearchTimeWeighted } from "~/server/vector-queries";
+
+const demoSearchFn = createServerFn({ method: "GET" })
+  .validator(z.object({ query: z.string().min(1).max(200) }))
+  .handler(async ({ data: { query } }) => {
+    const results = await vectorTakeawaySearchTimeWeighted(query, {
+      limit: 10,
+    });
+    return {
+      items: results.map((r) => ({
+        id: r.id,
+        documentId: r.documentId,
+        title: r.title,
+        summary: r.summary,
+        source: r.source,
+        documentTitle: r.documentTitle,
+        documentLink: r.documentLink,
+        publicationDate: r.publicationDate,
+      })),
+    };
+  });
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -71,6 +94,85 @@ function StepCard({
       <pre className="overflow-x-auto rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-700">
         {example}
       </pre>
+    </div>
+  );
+}
+
+const SUGGESTED_QUERIES = [
+  "enterprise AI adoption barriers",
+  "vibe coding",
+  "ai capex trends",
+];
+
+function ApiPlayground() {
+  const [query, setQuery] = useState(SUGGESTED_QUERIES[0] ?? "");
+  const [searchCount, setSearchCount] = useState(0);
+  const [response, setResponse] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const requestUrl = query.trim()
+    ? `GET /api/v1/takeaways/search?query=${encodeURIComponent(query.trim())}&limit=10&recent=true`
+    : "GET /api/v1/takeaways/search?query=…&recent=true";
+
+  async function handleSearch() {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    setLoading(true);
+    setResponse(null);
+    try {
+      const result = await demoSearchFn({ data: { query: trimmed } });
+      setResponse(JSON.stringify(result, null, 2));
+    } catch {
+      setResponse(JSON.stringify({ error: "Something went wrong" }, null, 2));
+    } finally {
+      setLoading(false);
+      const next = searchCount + 1;
+      setSearchCount(next);
+      const nextQuery = SUGGESTED_QUERIES[next];
+      if (nextQuery) {
+        setQuery(nextQuery);
+      } else {
+        setQuery("");
+      }
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Input */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void handleSearch();
+          }}
+          placeholder="enterprise AI adoption barriers"
+          className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none"
+        />
+        <button
+          onClick={() => void handleSearch()}
+          disabled={loading || !query.trim()}
+          className="shrink-0 rounded-lg bg-slate-900 px-5 py-2.5 font-mono text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-40"
+        >
+          {loading ? "…" : "Run"}
+        </button>
+      </div>
+
+      {/* Request preview */}
+      <pre className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-900 p-3 font-mono text-xs leading-relaxed text-emerald-400">
+        {requestUrl}
+      </pre>
+
+      {/* Response */}
+      {(response ?? loading) ? (
+        <pre className="max-h-96 overflow-auto rounded-lg border border-slate-700 bg-slate-900 p-3 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-slate-200">
+          {loading ? "Searching…" : response}
+        </pre>
+      ) : null}
     </div>
   );
 }
@@ -203,6 +305,16 @@ function LandingPage() {
 → Structured FRED data`}
               />
             </div>
+          </div>
+        </FadeIn>
+
+        {/* Try it */}
+        <FadeIn>
+          <div>
+            <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
+              Try it now
+            </h2>
+            <ApiPlayground />
           </div>
         </FadeIn>
 
