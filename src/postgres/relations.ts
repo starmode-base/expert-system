@@ -8,20 +8,19 @@ import {
   organizations,
   categories,
   tags,
-  insights,
+  documents,
   earningsSchedule,
   earningsFetchJobs,
   trackedCompanies,
   stockSymbols,
-  stockSymbolEmbeddings,
-  documents,
+  insights,
   takeawayReferences,
+  xBookmarksAuth,
+  stockSymbolEmbeddings,
+  apiKeys,
   insightTakeaways,
   organizationMembers,
   insightReferences,
-  xBookmarksAuth,
-  blogs,
-  apiKeys,
   apiUsage,
 } from "./schema";
 
@@ -73,19 +72,12 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
-  insights: many(insights),
   trackedCompanies: many(trackedCompanies),
-  organizationMembers: many(organizationMembers),
-  xBookmarksAuth: many(xBookmarksAuth),
+  insights: many(insights),
+  xBookmarksAuths: many(xBookmarksAuth),
   apiKeys: many(apiKeys),
-  apiUsage: many(apiUsage),
-}));
-
-export const xBookmarksAuthRelations = relations(xBookmarksAuth, ({ one }) => ({
-  user: one(users, {
-    fields: [xBookmarksAuth.userId],
-    references: [users.id],
-  }),
+  organizationMembers: many(organizationMembers),
+  apiUsages: many(apiUsage),
 }));
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
@@ -105,13 +97,8 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
   takeaways: many(takeaways),
 }));
 
-export const insightsRelations = relations(insights, ({ one, many }) => ({
-  user: one(users, {
-    fields: [insights.userId],
-    references: [users.id],
-  }),
-  insightTakeaways: many(insightTakeaways),
-  insightReferences: many(insightReferences),
+export const documentsRelations = relations(documents, ({ many }) => ({
+  takeaways: many(takeaways),
 }));
 
 export const earningsFetchJobsRelations = relations(
@@ -145,26 +132,18 @@ export const trackedCompaniesRelations = relations(
   }),
 );
 
-export const stockSymbolsRelations = relations(
-  stockSymbols,
-  ({ many, one }) => ({
-    trackedCompanies: many(trackedCompanies),
-    stockSymbolEmbedding: one(stockSymbolEmbeddings),
-  }),
-);
+export const stockSymbolsRelations = relations(stockSymbols, ({ many }) => ({
+  trackedCompanies: many(trackedCompanies),
+  stockSymbolEmbeddings: many(stockSymbolEmbeddings),
+}));
 
-export const stockSymbolEmbeddingsRelations = relations(
-  stockSymbolEmbeddings,
-  ({ one }) => ({
-    stockSymbol: one(stockSymbols, {
-      fields: [stockSymbolEmbeddings.stockSymbolId],
-      references: [stockSymbols.id],
-    }),
+export const insightsRelations = relations(insights, ({ one, many }) => ({
+  user: one(users, {
+    fields: [insights.userId],
+    references: [users.id],
   }),
-);
-
-export const documentsRelations = relations(documents, ({ many }) => ({
-  takeaways: many(takeaways),
+  insightTakeaways: many(insightTakeaways),
+  insightReferences: many(insightReferences),
 }));
 
 export const takeawayReferencesRelations = relations(
@@ -177,6 +156,30 @@ export const takeawayReferencesRelations = relations(
     insightReferences: many(insightReferences),
   }),
 );
+
+export const xBookmarksAuthRelations = relations(xBookmarksAuth, ({ one }) => ({
+  user: one(users, {
+    fields: [xBookmarksAuth.userId],
+    references: [users.id],
+  }),
+}));
+
+export const stockSymbolEmbeddingsRelations = relations(
+  stockSymbolEmbeddings,
+  ({ one }) => ({
+    stockSymbol: one(stockSymbols, {
+      fields: [stockSymbolEmbeddings.stockSymbolId],
+      references: [stockSymbols.id],
+    }),
+  }),
+);
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  user: one(users, {
+    fields: [apiKeys.userId],
+    references: [users.id],
+  }),
+}));
 
 export const insightTakeawaysRelations = relations(
   insightTakeaways,
@@ -219,15 +222,6 @@ export const insightReferencesRelations = relations(
     }),
   }),
 );
-
-export const blogsRelations = relations(blogs, () => ({}));
-
-export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
-  user: one(users, {
-    fields: [apiKeys.userId],
-    references: [users.id],
-  }),
-}));
 
 export const apiUsageRelations = relations(apiUsage, ({ one }) => ({
   user: one(users, {

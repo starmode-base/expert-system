@@ -190,6 +190,13 @@
       "when": 1772900626744,
       "tag": "0026_warm_king_cobra",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1774887893639,
+      "tag": "0027_rainy_thanos",
+      "breakpoints": true
     }
   ]
 }
