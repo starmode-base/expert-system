@@ -70,7 +70,7 @@ export const APIRoute = createAPIFileRoute("/api/stripe/checkout")({
       client_reference_id: userId,
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${siteOrigin}/account/api-keys?checkout=success`,
+      success_url: `${siteOrigin}/account/plan?checkout=success`,
       cancel_url: `${siteOrigin}/#pricing`,
     });
 

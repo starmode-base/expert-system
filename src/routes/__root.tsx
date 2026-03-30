@@ -106,6 +106,7 @@ function NavBar() {
     { key: "takeaways", to: "/takeaway-feed", label: "Insights" },
     { key: "news-feed", to: "/news-feed", label: "News" },
     { key: "research", to: "/research-feed", label: "Research" },
+    { key: "pricing", to: "/pricing", label: "Pricing" },
     { key: "api", to: "/account/api-docs", label: "API" },
   ];
 

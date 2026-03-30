@@ -101,17 +101,9 @@ export const APIRoute = createAPIFileRoute("/api/stripe/webhook")({
       }
 
       case "invoice.payment_failed": {
-        const invoice = event.data.object;
-        const customerId =
-          typeof invoice.customer === "string"
-            ? invoice.customer
-            : invoice.customer?.id;
-        if (customerId) {
-          await db
-            .update(users)
-            .set({ planTier: "free" })
-            .where(eq(users.stripeCustomerId, customerId));
-        }
+        // TODO: Add a "past_due" planTier state instead of revoking "unlimited".
+        // This would allow showing a warning banner while Stripe retries payment,
+        // rather than immediately cutting off access.
         break;
       }
     }

@@ -30,7 +30,7 @@ export const APIRoute = createAPIFileRoute("/api/stripe/portal")({
 
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${getSiteOrigin()}/account/api-keys`,
+      return_url: `${getSiteOrigin()}/account/plan`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

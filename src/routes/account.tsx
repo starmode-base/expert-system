@@ -8,6 +8,7 @@ function AccountLayout() {
   const subNavItems = [
     { key: "api-docs", to: "/account/api-docs", label: "API Docs" },
     { key: "api-keys", to: "/account/api-keys", label: "API Keys" },
+    { key: "plan", to: "/account/plan", label: "Plan" },
   ];
 
   return (
