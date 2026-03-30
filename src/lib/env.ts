@@ -30,6 +30,10 @@ const rawEnv = {
   ALPACA_API_KEY: process.env.ALPACA_API_KEY,
   ALPACA_SECRET_KEY: process.env.ALPACA_SECRET_KEY,
   TWITTER_API_IO_KEY: process.env.TWITTER_API_IO_KEY,
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  STRIPE_MONTHLY_PRICE_ID: process.env.STRIPE_MONTHLY_PRICE_ID,
+  STRIPE_ANNUAL_PRICE_ID: process.env.STRIPE_ANNUAL_PRICE_ID,
 
   /**
    * Site URL for canonical links and OG meta tags. When unset, falls back to

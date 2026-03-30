@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as TakeawayFeedImport } from './routes/takeaway-feed'
 import { Route as SettingsImport } from './routes/settings'
 import { Route as ResearchFeedImport } from './routes/research-feed'
+import { Route as PricingImport } from './routes/pricing'
 import { Route as AccountImport } from './routes/account'
 import { Route as IndexImport } from './routes/index'
 import { Route as SettingsIndexImport } from './routes/settings/index'
@@ -27,6 +28,7 @@ import { Route as SettingsBlogFeedsImport } from './routes/settings/blog-feeds'
 import { Route as NewsFeedDocumentidImport } from './routes/news-feed.$documentid'
 import { Route as InsightInsightIdImport } from './routes/insight.$insightId'
 import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$insightId'
+import { Route as AccountPlanImport } from './routes/account/plan'
 import { Route as AccountApiKeysImport } from './routes/account/api-keys'
 import { Route as AccountApiDocsImport } from './routes/account/api-docs'
 import { Route as SettingsKnowledgeGraphIndexImport } from './routes/settings/knowledge-graph.index'
@@ -49,6 +51,12 @@ const SettingsRoute = SettingsImport.update({
 const ResearchFeedRoute = ResearchFeedImport.update({
   id: '/research-feed',
   path: '/research-feed',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PricingRoute = PricingImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -130,6 +138,12 @@ const InsightStudioInsightIdRoute = InsightStudioInsightIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AccountPlanRoute = AccountPlanImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => AccountRoute,
+} as any)
+
 const AccountApiKeysRoute = AccountApiKeysImport.update({
   id: '/api-keys',
   path: '/api-keys',
@@ -174,6 +188,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountImport
       parentRoute: typeof rootRoute
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingImport
+      parentRoute: typeof rootRoute
+    }
     '/research-feed': {
       id: '/research-feed'
       path: '/research-feed'
@@ -207,6 +228,13 @@ declare module '@tanstack/react-router' {
       path: '/api-keys'
       fullPath: '/account/api-keys'
       preLoaderRoute: typeof AccountApiKeysImport
+      parentRoute: typeof AccountImport
+    }
+    '/account/plan': {
+      id: '/account/plan'
+      path: '/plan'
+      fullPath: '/account/plan'
+      preLoaderRoute: typeof AccountPlanImport
       parentRoute: typeof AccountImport
     }
     '/insight-studio/$insightId': {
@@ -308,11 +336,13 @@ declare module '@tanstack/react-router' {
 interface AccountRouteChildren {
   AccountApiDocsRoute: typeof AccountApiDocsRoute
   AccountApiKeysRoute: typeof AccountApiKeysRoute
+  AccountPlanRoute: typeof AccountPlanRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
   AccountApiDocsRoute: AccountApiDocsRoute,
   AccountApiKeysRoute: AccountApiKeysRoute,
+  AccountPlanRoute: AccountPlanRoute,
 }
 
 const AccountRouteWithChildren =
@@ -344,11 +374,13 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/research-feed': typeof ResearchFeedRoute
   '/settings': typeof SettingsRouteWithChildren
   '/takeaway-feed': typeof TakeawayFeedRoute
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
+  '/account/plan': typeof AccountPlanRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -367,10 +399,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/research-feed': typeof ResearchFeedRoute
   '/takeaway-feed': typeof TakeawayFeedRoute
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
+  '/account/plan': typeof AccountPlanRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -390,11 +424,13 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/research-feed': typeof ResearchFeedRoute
   '/settings': typeof SettingsRouteWithChildren
   '/takeaway-feed': typeof TakeawayFeedRoute
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
+  '/account/plan': typeof AccountPlanRoute
   '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
   '/news-feed/$documentid': typeof NewsFeedDocumentidRoute
@@ -415,11 +451,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/pricing'
     | '/research-feed'
     | '/settings'
     | '/takeaway-feed'
     | '/account/api-docs'
     | '/account/api-keys'
+    | '/account/plan'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
@@ -437,10 +475,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/account'
+    | '/pricing'
     | '/research-feed'
     | '/takeaway-feed'
     | '/account/api-docs'
     | '/account/api-keys'
+    | '/account/plan'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
@@ -458,11 +498,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/account'
+    | '/pricing'
     | '/research-feed'
     | '/settings'
     | '/takeaway-feed'
     | '/account/api-docs'
     | '/account/api-keys'
+    | '/account/plan'
     | '/insight-studio/$insightId'
     | '/insight/$insightId'
     | '/news-feed/$documentid'
@@ -482,6 +524,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRouteWithChildren
+  PricingRoute: typeof PricingRoute
   ResearchFeedRoute: typeof ResearchFeedRoute
   SettingsRoute: typeof SettingsRouteWithChildren
   TakeawayFeedRoute: typeof TakeawayFeedRoute
@@ -497,6 +540,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRouteWithChildren,
+  PricingRoute: PricingRoute,
   ResearchFeedRoute: ResearchFeedRoute,
   SettingsRoute: SettingsRouteWithChildren,
   TakeawayFeedRoute: TakeawayFeedRoute,
@@ -521,6 +565,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/account",
+        "/pricing",
         "/research-feed",
         "/settings",
         "/takeaway-feed",
@@ -540,8 +585,12 @@ export const routeTree = rootRoute
       "filePath": "account.tsx",
       "children": [
         "/account/api-docs",
-        "/account/api-keys"
+        "/account/api-keys",
+        "/account/plan"
       ]
+    },
+    "/pricing": {
+      "filePath": "pricing.tsx"
     },
     "/research-feed": {
       "filePath": "research-feed.tsx"
@@ -566,6 +615,10 @@ export const routeTree = rootRoute
     },
     "/account/api-keys": {
       "filePath": "account/api-keys.tsx",
+      "parent": "/account"
+    },
+    "/account/plan": {
+      "filePath": "account/plan.tsx",
       "parent": "/account"
     },
     "/insight-studio/$insightId": {

@@ -170,8 +170,8 @@ function LandingPage() {
   return (
     <div className="min-h-[calc(100dvh-64px)]">
       {/* Hero */}
-      <div className="flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center px-4">
-        <div className="flex w-full max-w-2xl flex-col items-center gap-6">
+      <div className="flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center px-4 sm:px-6">
+        <div className="flex w-full max-w-4xl flex-col items-center gap-6 rounded-lg border border-slate-200 bg-white p-6 sm:p-10">
           <div className="flex items-center gap-2 opacity-60">
             <img
               src="/starmode-logo.svg"
@@ -456,7 +456,7 @@ function LandingPage() {
                   </li>
                 </ul>
                 <Link
-                  to="/account/api-keys"
+                  to="/pricing"
                   className="mt-6 block rounded-full bg-slate-900 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-slate-800"
                 >
                   Upgrade

@@ -102,7 +102,13 @@ function BlogFeedsRoute() {
 
     try {
       const result = await fetchArticles({ data: { xmlUrl: feed.xmlUrl } });
-      setArticles(result.articles);
+      setArticles(
+        [...result.articles].sort((a, b) => {
+          if (!a.pubDate) return 1;
+          if (!b.pubDate) return -1;
+          return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+        }),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load articles");
     } finally {

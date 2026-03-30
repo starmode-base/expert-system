@@ -1,7 +1,7 @@
 import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { run } from "@openai/agents";
 import { z } from "zod";
-import { authenticate } from "~/server/api-keys";
+import { authorizeApiRequest } from "~/server/quota";
 import { createQueryFinancialAgent } from "~/inngest/insights/agents/query-financial-agent";
 
 const apiError = (message: string, status: number) =>
@@ -12,10 +12,8 @@ const apiError = (message: string, status: number) =>
 
 export const APIRoute = createAPIFileRoute("/api/v1/query/financial")({
   POST: async ({ request }) => {
-    const userId = await authenticate(request);
-    if (!userId) {
-      return apiError("Unauthorized", 401);
-    }
+    const auth = await authorizeApiRequest(request, "query.financial");
+    if (auth.type === "error") return auth.response;
 
     let body: unknown;
     try {
