@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { SignInButton } from "@clerk/tanstack-start";
+import { createPortalSessionSF } from "~/server/stripe";
 
 const loadPlan = createServerFn({ method: "GET" }).handler(async () => {
   const { getWebRequest } = await import("vinxi/http");
@@ -37,8 +38,8 @@ const loadPlan = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const Route = createFileRoute("/account/plan")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    checkout: (search.checkout as string) || undefined,
+  validateSearch: (search: Record<string, unknown>): { checkout?: string } => ({
+    checkout: typeof search.checkout === "string" ? search.checkout : undefined,
   }),
   loader: () => loadPlan(),
   component: PlanPage,
@@ -49,18 +50,13 @@ function PlanPage() {
   const [loading, setLoading] = useState(false);
   const search = Route.useSearch();
   const checkoutSuccess = search.checkout === "success";
+  const createPortalSession = useServerFn(createPortalSessionSF);
 
   const handleManageSubscription = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/stripe/portal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (data.url) {
-        window.location.href = data.url;
-      }
+      const { url } = await createPortalSession();
+      window.location.href = url;
     } finally {
       setLoading(false);
     }

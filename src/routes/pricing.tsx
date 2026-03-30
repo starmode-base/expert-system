@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { SignInButton, useAuth } from "@clerk/tanstack-start";
+import { createCheckoutSessionSF } from "~/server/stripe";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
@@ -11,19 +13,19 @@ function PricingPage() {
   const navigate = useNavigate();
   const [interval, setInterval] = useState<"month" | "year">("month");
   const [loading, setLoading] = useState(false);
+  const createCheckoutSession = useServerFn(createCheckoutSessionSF);
 
   const handleCheckout = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interval }),
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (data.url) {
-        window.location.href = data.url;
+      const { url } = await createCheckoutSession({ data: { interval } });
+      window.location.href = url;
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("Already subscribed")) {
+        void navigate({ to: "/account/plan" });
+        return;
       }
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -39,12 +41,12 @@ function PricingPage() {
       </div>
 
       {/* Interval toggle */}
-      <div className="mb-8 flex items-center justify-center gap-2">
+      <div className="mx-auto mb-8 flex w-fit items-center justify-center gap-1 rounded-full border border-slate-200 bg-white p-1">
         <button
           onClick={() => {
             setInterval("month");
           }}
-          className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+          className={`cursor-pointer rounded-full px-5 py-2 text-base font-medium transition-colors ${
             interval === "month"
               ? "bg-slate-900 text-white"
               : "text-slate-600 hover:bg-slate-100"
@@ -56,14 +58,14 @@ function PricingPage() {
           onClick={() => {
             setInterval("year");
           }}
-          className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+          className={`cursor-pointer rounded-full px-5 py-2 text-base font-medium transition-colors ${
             interval === "year"
               ? "bg-slate-900 text-white"
               : "text-slate-600 hover:bg-slate-100"
           }`}
         >
           Annual
-          <span className="ml-1.5 text-xs font-normal text-emerald-600">
+          <span className="ml-1.5 text-sm font-normal text-emerald-600">
             Save 37%
           </span>
         </button>
