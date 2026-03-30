@@ -167,24 +167,6 @@ function ApiPlayground() {
 // ---------------------------------------------------------------------------
 
 function LandingPage() {
-  const handleUpgrade = async (interval: "month" | "year") => {
-    const res = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ interval }),
-    });
-    const data: unknown = await res.json();
-    if (
-      res.ok &&
-      data &&
-      typeof data === "object" &&
-      "url" in data &&
-      typeof data.url === "string"
-    ) {
-      window.location.href = data.url;
-    }
-  };
-
   return (
     <div className="min-h-[calc(100dvh-64px)]">
       {/* Hero */}
@@ -473,24 +455,12 @@ function LandingPage() {
                     All endpoints
                   </li>
                 </ul>
-                <div className="mt-6 flex gap-2">
-                  <button
-                    onClick={() => {
-                      void handleUpgrade("month");
-                    }}
-                    className="flex-1 rounded-full bg-slate-900 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-slate-800"
-                  >
-                    $4/mo
-                  </button>
-                  <button
-                    onClick={() => {
-                      void handleUpgrade("year");
-                    }}
-                    className="flex-1 rounded-full border-2 border-slate-900 py-2.5 text-center text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50"
-                  >
-                    $30/yr
-                  </button>
-                </div>
+                <Link
+                  to="/pricing"
+                  className="mt-6 block rounded-full bg-slate-900 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                >
+                  Upgrade
+                </Link>
               </div>
             </div>
           </div>
