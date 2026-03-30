@@ -1,7 +1,9 @@
 # Monetization: Free vs Unlimited Tiers
 
 ## Context
+
 Expert-System is an API-first research tool for AI agents. Currently there is no monetization — API keys are free with no usage limits. The goal is to add two tiers:
+
 - **Free**: 100 queries/month, hard cutoff with 429 response
 - **Unlimited**: $4/month or $30/year via Stripe, unrestricted API access
 
@@ -14,23 +16,29 @@ Implementation is split into four phases. Phase 1 (usage tracking + enforcement)
 ### 1. Schema changes (`src/postgres/schema.ts`)
 
 **Add `planTier` to `users` table:**
+
 ```ts
 planTier: text().$type<"free" | "unlimited">().notNull().default("free"),
 ```
 
 **Add `apiUsage` table (new, at end of file):**
+
 ```ts
 export const apiUsage = pgTable(
   "api_usage",
   {
-    userId: text().notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     month: text().notNull(), // "YYYY-MM"
     endpoint: text().notNull(), // e.g. "takeaways.search", "documents", "query.macro"
     requestCount: integer().notNull().default(0),
     createdAt: createdAtField,
     updatedAt: updatedAtField,
   },
-  (table) => [primaryKey({ columns: [table.userId, table.month, table.endpoint] })],
+  (table) => [
+    primaryKey({ columns: [table.userId, table.month, table.endpoint] }),
+  ],
 );
 export type ApiUsageSelect = typeof apiUsage.$inferSelect;
 ```
@@ -38,6 +46,7 @@ export type ApiUsageSelect = typeof apiUsage.$inferSelect;
 ### 2. Relations (`src/postgres/relations.ts`)
 
 Add `apiUsage` import and wire to users:
+
 - Add `apiUsage: many(apiUsage)` to `usersRelations`
 - Add new `apiUsageRelations` with `one(users)` pointing back
 
@@ -53,14 +62,16 @@ const FREE_TIER_LIMIT = 100;
 export async function checkAndIncrementQuota(
   userId: string,
   endpoint: string,
-): Promise<{ allowed: boolean; remaining: number }>
+): Promise<{ allowed: boolean; remaining: number }>;
 
 // Wraps authenticate() + checkAndIncrementQuota().
 // Returns { type: "ok", userId } or { type: "error", response: Response (401 | 429) }
 export async function authorizeApiRequest(
   request: Request,
   endpoint: string,
-): Promise<{ type: "ok"; userId: string } | { type: "error"; response: Response }>
+): Promise<
+  { type: "ok"; userId: string } | { type: "error"; response: Response }
+>;
 ```
 
 **Endpoint identifiers** (passed by each route):
@@ -75,6 +86,7 @@ export async function authorizeApiRequest(
 | `v1.research.ts` | `"research"` |
 
 **Quota logic:**
+
 1. Fetch `user.planTier` from db
 2. Upsert into `api_usage` for this endpoint with atomic increment:
    ```sql
@@ -92,14 +104,19 @@ export async function authorizeApiRequest(
 5. If `total > 100` → `allowed: false`
 
 **429 response shape:**
+
 ```json
-{ "error": "Monthly quota exceeded. Upgrade to Unlimited at expert-system.com/pricing." }
+{
+  "error": "Monthly quota exceeded. Upgrade to Unlimited at expert-system.com/pricing."
+}
 ```
+
 Headers: `X-RateLimit-Limit: 100`, `X-RateLimit-Remaining: 0`
 
 ### 4. Update all REST API routes
 
 Replace the current two-line auth pattern in each file:
+
 ```ts
 // Before
 const userId = await authenticate(request);
@@ -112,6 +129,7 @@ const { userId } = auth;
 ```
 
 Files to update:
+
 - `src/routes/api/v1.takeaways.search.ts`
 - `src/routes/api/v1.takeaways.ts`
 - `src/routes/api/v1.takeaways.recent.ts`
@@ -121,6 +139,7 @@ Files to update:
 - `src/routes/api/v1.research.ts`
 
 ### 5. Apply schema changes
+
 ```bash
 bun run db:push
 ```
@@ -130,6 +149,7 @@ bun run db:push
 ## Phase 2 — Stripe Subscription
 
 ### 1. Install Stripe SDK
+
 ```bash
 bun add stripe
 ```
@@ -137,6 +157,7 @@ bun add stripe
 ### 2. Env vars (`src/lib/env.ts`)
 
 Add to `rawEnv`:
+
 ```ts
 STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
 STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
@@ -147,6 +168,7 @@ STRIPE_ANNUAL_PRICE_ID: process.env.STRIPE_ANNUAL_PRICE_ID,   // $30/yr price ID
 ### 3. Schema additions (`src/postgres/schema.ts`)
 
 Add to `users` table:
+
 ```ts
 stripeCustomerId: text(),        // nullable
 stripeSubscriptionId: text(),    // nullable
@@ -155,6 +177,7 @@ stripeSubscriptionId: text(),    // nullable
 ### 4. New file: `src/routes/api/stripe.checkout.ts`
 
 POST endpoint. Creates a Stripe Checkout session and returns the URL.
+
 - Requires Clerk auth (not API key auth — this is a UI action)
 - Accepts `{ interval: "month" | "year" }` in the request body to select billing cadence
 - Creates or retrieves Stripe customer linked to `user.stripeCustomerId`
@@ -167,6 +190,7 @@ POST endpoint. Creates a Stripe Checkout session and returns the URL.
 POST endpoint. **Note:** Stripe signature verification requires the raw request body. Ensure this route reads the body as text/buffer before any JSON parsing — TanStack Start / Vinxi may auto-parse otherwise.
 
 Handles Stripe webhook events:
+
 - `checkout.session.completed` → look up user by `client_reference_id` (fallback) or `stripeCustomerId`, save `stripeCustomerId` if not already set, store `stripeSubscriptionId`
 - `customer.subscription.created` + `customer.subscription.updated` (status=`active`) → set `planTier = "unlimited"`, store `stripeSubscriptionId`
 - `customer.subscription.deleted` + `invoice.payment_failed` → set `planTier = "free"`, clear `stripeSubscriptionId`
@@ -176,6 +200,7 @@ Handles Stripe webhook events:
 ### 6. New file: `src/routes/api/stripe.portal.ts`
 
 POST endpoint. Creates a Stripe Billing Portal session so users can manage/cancel their subscription.
+
 - Requires Clerk auth
 - Looks up `user.stripeCustomerId` — returns 400 if none exists
 - Creates a portal session with `return_url` pointing back to the account page
@@ -209,10 +234,11 @@ export async function getUsageSummary(
   total: number;
   limit: number | null; // null for unlimited users
   endpoints: { endpoint: string; count: number }[];
-}>
+}>;
 ```
 
 **Query:**
+
 ```sql
 SELECT endpoint, request_count
 FROM api_usage
@@ -227,6 +253,7 @@ Sum `request_count` in application code for the `total`. Look up `user.planTier`
 New route at `/account/usage`. Uses a `createServerFn` to call `getUsageSummary` for the current Clerk user.
 
 **UI:**
+
 - **Summary bar** at top: "X / 100 queries used" (free) or "X queries this month" (unlimited) with a progress bar (free only)
 - **Endpoint breakdown table**: rows for each endpoint showing name and count, sorted by count descending. Simple `<table>` with endpoint name and request count columns.
 - **Month selector**: dropdown or left/right arrows to view previous months' usage
@@ -239,21 +266,22 @@ Add a "Usage" link to the account navigation (wherever API keys and API docs are
 
 ## Critical Files
 
-| File | Change |
-|---|---|
-| `src/postgres/schema.ts` | Add `planTier` to users; add `apiUsage` table; add Stripe fields to users (Phase 2) |
-| `src/postgres/relations.ts` | Add `apiUsage` relation to users |
-| `src/lib/env.ts` | Add Stripe env vars (Phase 2) |
-| `src/server/quota.ts` | **NEW** — quota logic + `authorizeApiRequest` |
-| `src/routes/api/v1.*.ts` (7 files) | Replace `authenticate` with `authorizeApiRequest` |
-| `src/routes/api/stripe.checkout.ts` | **NEW** — Stripe checkout session (Phase 2) |
-| `src/routes/api/stripe.webhook.ts` | **NEW** — Stripe webhook handler (Phase 2) |
-| `src/routes/api/stripe.portal.ts` | **NEW** — Stripe billing portal session (Phase 2) |
-| `src/routes/index.tsx` | Wire existing pricing CTA to Stripe checkout |
-| `src/server/usage.ts` | **NEW** — usage query functions (Phase 3) |
-| `src/routes/account/usage.tsx` | **NEW** — usage dashboard page (Phase 3) |
+| File                                | Change                                                                              |
+| ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `src/postgres/schema.ts`            | Add `planTier` to users; add `apiUsage` table; add Stripe fields to users (Phase 2) |
+| `src/postgres/relations.ts`         | Add `apiUsage` relation to users                                                    |
+| `src/lib/env.ts`                    | Add Stripe env vars (Phase 2)                                                       |
+| `src/server/quota.ts`               | **NEW** — quota logic + `authorizeApiRequest`                                       |
+| `src/routes/api/v1.*.ts` (7 files)  | Replace `authenticate` with `authorizeApiRequest`                                   |
+| `src/routes/api/stripe.checkout.ts` | **NEW** — Stripe checkout session (Phase 2)                                         |
+| `src/routes/api/stripe.webhook.ts`  | **NEW** — Stripe webhook handler (Phase 2)                                          |
+| `src/routes/api/stripe.portal.ts`   | **NEW** — Stripe billing portal session (Phase 2)                                   |
+| `src/routes/index.tsx`              | Wire existing pricing CTA to Stripe checkout                                        |
+| `src/server/usage.ts`               | **NEW** — usage query functions (Phase 3)                                           |
+| `src/routes/account/usage.tsx`      | **NEW** — usage dashboard page (Phase 3)                                            |
 
 ## Reuse
+
 - `authenticate()` from `src/server/api-keys.ts` — call inside `authorizeApiRequest`
 - `db`, `schema` from `~/postgres/db` — standard import pattern
 - `ensureEnv()` from `~/lib/env` — for Stripe keys

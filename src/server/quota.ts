@@ -37,7 +37,11 @@ export async function checkAndIncrementQuota(
     .insert(schema.apiUsage)
     .values({ userId, month, endpoint, requestCount: 1 })
     .onConflictDoUpdate({
-      target: [schema.apiUsage.userId, schema.apiUsage.month, schema.apiUsage.endpoint],
+      target: [
+        schema.apiUsage.userId,
+        schema.apiUsage.month,
+        schema.apiUsage.endpoint,
+      ],
       set: { requestCount: sql`${schema.apiUsage.requestCount} + 1` },
     });
 
@@ -51,7 +55,9 @@ export async function checkAndIncrementQuota(
       total: sql<number>`coalesce(sum(${schema.apiUsage.requestCount}), 0)`,
     })
     .from(schema.apiUsage)
-    .where(and(eq(schema.apiUsage.userId, userId), eq(schema.apiUsage.month, month)));
+    .where(
+      and(eq(schema.apiUsage.userId, userId), eq(schema.apiUsage.month, month)),
+    );
 
   const total = Number(row?.total ?? 0);
   const remaining = Math.max(0, FREE_TIER_LIMIT - total);
@@ -66,7 +72,9 @@ export async function checkAndIncrementQuota(
 export async function authorizeApiRequest(
   request: Request,
   endpoint: ApiEndpoint,
-): Promise<{ type: "ok"; userId: string } | { type: "error"; response: Response }> {
+): Promise<
+  { type: "ok"; userId: string } | { type: "error"; response: Response }
+> {
   const userId = await authenticate(request);
   if (!userId) {
     return {
@@ -84,7 +92,8 @@ export async function authorizeApiRequest(
       type: "error",
       response: new Response(
         JSON.stringify({
-          error: "Monthly quota exceeded. Upgrade to Unlimited at expert-system.com/pricing.",
+          error:
+            "Monthly quota exceeded. Upgrade to Unlimited at expert-system.com/pricing.",
         }),
         {
           status: 429,
