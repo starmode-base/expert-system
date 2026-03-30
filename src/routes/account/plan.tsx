@@ -22,6 +22,7 @@ const loadPlan = createServerFn({ method: "GET" }).handler(async () => {
       planTier: true,
       stripeCustomerId: true,
       stripeSubscriptionId: true,
+      paymentStatus: true,
     },
   });
 
@@ -32,6 +33,7 @@ const loadPlan = createServerFn({ method: "GET" }).handler(async () => {
           tier: user.planTier,
           hasSubscription: !!user.stripeSubscriptionId,
           hasStripeAccount: !!user.stripeCustomerId,
+          paymentStatus: user.paymentStatus,
         }
       : null,
   };
@@ -92,6 +94,22 @@ function PlanPage() {
           <p className="text-sm font-medium text-emerald-800">
             You're on the Unlimited plan. Welcome aboard!
           </p>
+        </div>
+      ) : null}
+
+      {plan?.paymentStatus === "past_due" ? (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm font-medium text-amber-800">
+            Your last payment failed. Please update your payment method to avoid
+            losing access.
+          </p>
+          <button
+            onClick={handleManageSubscription}
+            disabled={loading}
+            className="mt-2 cursor-pointer text-sm font-medium text-amber-700 underline hover:text-amber-900 disabled:opacity-50"
+          >
+            {loading ? "Redirecting..." : "Update payment method"}
+          </button>
         </div>
       ) : null}
 

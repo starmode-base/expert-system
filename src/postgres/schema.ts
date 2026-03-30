@@ -41,6 +41,7 @@ export const users = pgTable("users", {
   planTier: text().$type<"free" | "unlimited">().notNull().default("free"),
   stripeCustomerId: text(),
   stripeSubscriptionId: text(),
+  paymentStatus: text().$type<"ok" | "past_due">().notNull().default("ok"),
 });
 
 export type UserSelect = typeof users.$inferSelect;
@@ -460,5 +461,3 @@ export const apiUsage = pgTable(
     primaryKey({ columns: [table.userId, table.month, table.endpoint] }),
   ],
 );
-
-export type ApiUsageSelect = typeof apiUsage.$inferSelect;
