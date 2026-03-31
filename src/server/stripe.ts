@@ -48,7 +48,7 @@ export const createCheckoutSessionSF = createServerFn({ method: "POST" })
 
     const siteOrigin = getSiteOrigin();
 
-    // TODO: remove after verifying fix
+    // TODO: remove after verifying the fix
     console.log("[stripe] VERCEL_URL:", process.env.VERCEL_URL);
     console.log("[stripe] VITE_VERCEL_URL:", process.env.VITE_VERCEL_URL);
     console.log(
