@@ -207,7 +207,7 @@ export function TakeawayTile(props: {
                   </a>
                 ) : takeaway.documentId ? (
                   <Link
-                    to="/news-feed/$documentid"
+                    to="/feeds/news/$documentid"
                     params={{ documentid: takeaway.documentId }}
                     className="hover:underline"
                   >

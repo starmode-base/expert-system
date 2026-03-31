@@ -101,45 +101,84 @@ function RootDocument(props: React.PropsWithChildren) {
 function NavBar() {
   const auth = useAuth();
 
-  const navItems = [
-    { key: "about", to: "/", label: "About" },
-    { key: "takeaways", to: "/takeaway-feed", label: "Insights" },
-    { key: "news-feed", to: "/news-feed", label: "News" },
-    { key: "research", to: "/research-feed", label: "Research" },
-    { key: "pricing", to: "/pricing", label: "Pricing" },
-    { key: "api", to: "/account/api-docs", label: "API" },
-  ];
-
   // TODO: add user role for dev permissions.
   const devNavItems = [
     { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
     { key: "settings", to: "/settings", label: "Settings" },
   ];
 
-  const allNavItems =
-    auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3"
-      ? navItems.concat(devNavItems)
-      : navItems;
+  const isDev = auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3";
 
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <nav className="mx-auto flex h-full max-w-4xl items-center gap-3 px-3 sm:px-6">
-        <div className="min-w-0 flex-1 overflow-x-auto">
+        <div className="min-w-0 flex-1">
           <div className="mx-auto flex w-max items-center gap-1.5 sm:gap-2">
-            {allNavItems.map((item) => (
-              <Link
-                key={item.key}
-                className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
-                to={item.to}
-                activeProps={{
-                  className:
-                    "border-slate-200 bg-slate-900 text-white hover:bg-slate-900 hover:text-white",
-                }}
-                activeOptions={{ exact: item.to === "/" }}
-              >
-                {item.label}
-              </Link>
-            ))}
+            <Link
+              key="about"
+              className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              to="/"
+              activeProps={{
+                className:
+                  "border-slate-200 bg-slate-900 text-white hover:bg-slate-900 hover:text-white",
+              }}
+              activeOptions={{ exact: true }}
+            >
+              About
+            </Link>
+            <Link
+              key="api"
+              className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              to="/account/api-docs"
+              activeProps={{
+                className:
+                  "border-slate-200 bg-slate-900 text-white hover:bg-slate-900 hover:text-white",
+              }}
+              activeOptions={{ exact: false }}
+            >
+              API
+            </Link>
+            <Link
+              key="feeds"
+              className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              to="/feeds/insights"
+              search={{ searchInput: undefined, filters: undefined }}
+              activeProps={{
+                className:
+                  "border-slate-200 bg-slate-900 text-white hover:bg-slate-900 hover:text-white",
+              }}
+              activeOptions={{ exact: false }}
+            >
+              Feeds
+            </Link>
+            <Link
+              key="pricing"
+              className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              to="/pricing"
+              activeProps={{
+                className:
+                  "border-slate-200 bg-slate-900 text-white hover:bg-slate-900 hover:text-white",
+              }}
+              activeOptions={{ exact: true }}
+            >
+              Pricing
+            </Link>
+            {isDev
+              ? devNavItems.map((item) => (
+                  <Link
+                    key={item.key}
+                    className="cursor-pointer rounded-full border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    to={item.to}
+                    activeProps={{
+                      className:
+                        "border-slate-200 bg-slate-900 text-white hover:bg-slate-900 hover:text-white",
+                    }}
+                    activeOptions={{ exact: false }}
+                  >
+                    {item.label}
+                  </Link>
+                ))
+              : null}
           </div>
         </div>
 

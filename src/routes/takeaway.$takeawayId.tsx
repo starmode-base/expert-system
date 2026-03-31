@@ -62,7 +62,7 @@ function RouteComponent() {
     <div className="min-h-dvh bg-slate-100 px-2 sm:px-8">
       <div className="mx-auto w-full max-w-4xl py-4">
         <Link
-          to="/takeaway-feed"
+          to="/feeds/insights"
           search={{
             searchInput: undefined,
             filters: undefined,

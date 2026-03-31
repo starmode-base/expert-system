@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { NewsFeedList } from "~/components/news-feed-list";
 import { queryDocumentsPaginated } from "~/server/queries";
 
-export const Route = createFileRoute("/news-feed/")({
+export const Route = createFileRoute("/feeds/news/")({
   loader: async () => {
     const page = await queryDocumentsPaginated({
       data: { cursor: null, limit: 25 },
@@ -17,7 +17,7 @@ function RouteComponent() {
   const { page } = Route.useLoaderData();
 
   return (
-    <div className="flex h-[calc(100dvh-64px)] overflow-hidden bg-gray-50">
+    <div className="flex h-[calc(100dvh-109px)] overflow-hidden bg-gray-50">
       {/* Feed List */}
       <div className="flex w-full flex-col border-r border-gray-200 bg-white md:w-1/3">
         <div className="border-b border-gray-200 p-4 sm:p-6">
