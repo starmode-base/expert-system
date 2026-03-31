@@ -51,8 +51,14 @@ export const createCheckoutSessionSF = createServerFn({ method: "POST" })
     // TODO: remove after verifying fix
     console.log("[stripe] VERCEL_URL:", process.env.VERCEL_URL);
     console.log("[stripe] VITE_VERCEL_URL:", process.env.VITE_VERCEL_URL);
-    console.log("[stripe] VERCEL_PROJECT_PRODUCTION_URL:", process.env.VERCEL_PROJECT_PRODUCTION_URL);
-    console.log("[stripe] VITE_VERCEL_PROJECT_PRODUCTION_URL:", process.env.VITE_VERCEL_PROJECT_PRODUCTION_URL);
+    console.log(
+      "[stripe] VERCEL_PROJECT_PRODUCTION_URL:",
+      process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    );
+    console.log(
+      "[stripe] VITE_VERCEL_PROJECT_PRODUCTION_URL:",
+      process.env.VITE_VERCEL_PROJECT_PRODUCTION_URL,
+    );
     console.log("[stripe] SITE_ORIGIN:", process.env.SITE_ORIGIN);
     console.log("[stripe] getSiteOrigin():", siteOrigin);
 
