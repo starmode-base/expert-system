@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { SignInButton } from "@clerk/tanstack-start";
+import { useState } from "react";
 
 // ---------------------------------------------------------------------------
 // Endpoint display config
@@ -153,9 +154,13 @@ function formatMonth(month: string): string {
 function StackedBarChart({
   data,
   showLimit,
+  selectedMonth,
+  onSelectMonth,
 }: {
   data: MonthData[];
   showLimit: boolean;
+  selectedMonth: string;
+  onSelectMonth: (month: string) => void;
 }) {
   const chartWidth = 600;
   const chartHeight = 240;
@@ -248,9 +253,25 @@ function StackedBarChart({
       {data.map((d, i) => {
         const x = offsetX + i * (barWidth + gap);
         let yOffset = 0;
+        const isSelected = d.month === selectedMonth;
+        const dimmed = !isSelected;
 
         return (
-          <g key={d.month}>
+          <g
+            key={d.month}
+            onClick={() => {
+              onSelectMonth(d.month);
+            }}
+            className="cursor-pointer"
+          >
+            {/* Invisible hit area for empty bars */}
+            <rect
+              x={x}
+              y={paddingTop}
+              width={barWidth}
+              height={plotHeight}
+              fill="transparent"
+            />
             {d.segments.map((seg) => {
               const segHeight = (seg.count / yMax) * plotHeight;
               const y = yScale(yOffset + seg.count);
@@ -266,6 +287,7 @@ function StackedBarChart({
                   height={segHeight}
                   rx={segHeight > 4 ? 2 : 0}
                   fill={meta?.color ?? "#94a3b8"}
+                  opacity={dimmed ? 0.4 : 1}
                 >
                   <title>
                     {meta?.label ?? seg.endpoint}: {seg.count}
@@ -278,7 +300,11 @@ function StackedBarChart({
               x={x + barWidth / 2}
               y={chartHeight - 8}
               textAnchor="middle"
-              className="fill-gray-500 text-[10px]"
+              className={
+                isSelected
+                  ? "fill-gray-900 text-[10px] font-medium"
+                  : "fill-gray-400 text-[10px]"
+              }
             >
               {formatMonth(d.month)}
             </text>
@@ -295,6 +321,9 @@ function StackedBarChart({
 
 function UsagePage() {
   const { authenticated, rows, planTier } = Route.useLoaderData();
+  const data = buildMonthData(rows);
+  const latestMonth = data[data.length - 1];
+  const [selectedMonth, setSelectedMonth] = useState(latestMonth?.month ?? "");
 
   if (!authenticated) {
     return (
@@ -314,18 +343,20 @@ function UsagePage() {
     );
   }
 
-  const data = buildMonthData(rows);
-  const currentMonth = data[data.length - 1];
   const isFree = planTier === "free";
+  const selected = data.find((d) => d.month === selectedMonth);
+
+  // Current month stats for the header
+  const currentMonthData = data[data.length - 1];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">API Usage</h1>
-        {isFree && currentMonth ? (
+        {isFree && currentMonthData ? (
           <span className="text-xs text-gray-400">
             <span className="font-mono font-medium text-gray-600">
-              {currentMonth.total}
+              {currentMonthData.total}
             </span>{" "}
             / {FREE_TIER_LIMIT} requests this month
           </span>
@@ -334,7 +365,12 @@ function UsagePage() {
 
       {/* Chart */}
       <section className="mb-6 rounded-lg border border-gray-200 bg-white p-5">
-        <StackedBarChart data={data} showLimit={isFree} />
+        <StackedBarChart
+          data={data}
+          showLimit={isFree}
+          selectedMonth={selectedMonth}
+          onSelectMonth={setSelectedMonth}
+        />
 
         {/* Legend */}
         <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
@@ -350,42 +386,53 @@ function UsagePage() {
         </div>
       </section>
 
-      {/* Current month breakdown */}
-      {currentMonth && currentMonth.total > 0 ? (
+      {/* Selected month breakdown */}
+      {selected ? (
         <section className="rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-100 px-5 py-3">
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
             <h2 className="text-sm font-medium text-gray-700">
-              {formatMonth(currentMonth.month)} breakdown
+              {formatMonth(selected.month)} breakdown
             </h2>
+            <span className="font-mono text-xs text-gray-400">
+              {selected.total} requests
+            </span>
           </div>
-          <table className="w-full">
-            <tbody>
-              {currentMonth.segments.map((seg) => {
-                const meta = ENDPOINT_META[seg.endpoint];
-                return (
-                  <tr
-                    key={seg.endpoint}
-                    className="border-b border-gray-50 last:border-0"
-                  >
-                    <td className="px-5 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="inline-block h-2.5 w-2.5 rounded-sm"
-                          style={{ backgroundColor: meta?.color ?? "#94a3b8" }}
-                        />
-                        <span className="text-sm text-gray-700">
-                          {meta?.label ?? seg.endpoint}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-2.5 text-right font-mono text-sm text-gray-600">
-                      {seg.count}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          {selected.total > 0 ? (
+            <table className="w-full">
+              <tbody>
+                {selected.segments.map((seg) => {
+                  const meta = ENDPOINT_META[seg.endpoint];
+                  return (
+                    <tr
+                      key={seg.endpoint}
+                      className="border-b border-gray-50 last:border-0"
+                    >
+                      <td className="px-5 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-block h-2.5 w-2.5 rounded-sm"
+                            style={{
+                              backgroundColor: meta?.color ?? "#94a3b8",
+                            }}
+                          />
+                          <span className="text-sm text-gray-700">
+                            {meta?.label ?? seg.endpoint}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-2.5 text-right font-mono text-sm text-gray-600">
+                        {seg.count}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <p className="px-5 py-4 text-sm text-gray-400">
+              No requests this month.
+            </p>
+          )}
         </section>
       ) : null}
     </div>
