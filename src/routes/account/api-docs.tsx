@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CopyPre } from "~/lib/copy-pre";
+import { CopyIcon, CheckIcon } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/account/api-docs")({
   component: ApiDocsPage,
@@ -196,23 +198,52 @@ function EndpointSection({
 }
 
 // ---------------------------------------------------------------------------
+// LLM docs label
+// ---------------------------------------------------------------------------
+
+function LlmDocsLabel() {
+  const [copied, setCopied] = useState(false);
+  const curlCommand = "curl https://expert-system.starmode.dev/api/v1/docs";
+
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(curlCommand).then(() => {
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    });
+  };
+
+  return (
+    <div className="flex items-center gap-2 text-xs text-gray-400">
+      <code className="font-mono text-gray-500">{curlCommand}</code>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="rounded p-0.5 text-gray-400 transition-colors hover:text-gray-600"
+        aria-label="Copy curl command"
+      >
+        {copied ? (
+          <CheckIcon className="h-3.5 w-3.5 text-emerald-500" />
+        ) : (
+          <CopyIcon className="h-3.5 w-3.5" />
+        )}
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
 export function ApiDocsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="mb-2 text-2xl font-semibold text-gray-900">
-        API Reference
-      </h1>
-      <p className="mb-8 text-sm text-gray-500">
-        REST API for programmatic access to takeaways, research, and documents.
-        See the{" "}
-        <a href="/" className="text-blue-600 underline hover:text-blue-800">
-          overview
-        </a>{" "}
-        for how the progressive disclosure model works.
-      </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <h1 className="text-2xl font-semibold text-gray-900">API Reference</h1>
+        <LlmDocsLabel />
+      </div>
 
       {/* Quick start */}
       <div className="mb-2 grid gap-4 sm:grid-cols-2">
@@ -293,14 +324,6 @@ export function ApiDocsPage() {
           A missing or invalid key returns <Code>401 Unauthorized</Code>.
           Revoked keys are rejected immediately.
         </P>
-
-        <H3>Machine-readable docs</H3>
-        <P>
-          A plain-text Markdown version of this documentation is available for
-          AI agents — no authentication required. Point your agent at this URL
-          to ingest the full API reference:
-        </P>
-        <Pre>{`curl https://expert-system.starmode.dev/api/v1/docs`}</Pre>
       </Section>
 
       <h2 className="mt-8 mb-3 text-lg font-semibold text-gray-900">
