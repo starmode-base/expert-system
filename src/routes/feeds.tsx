@@ -6,9 +6,9 @@ export const Route = createFileRoute("/feeds")({
 
 function FeedsLayout() {
   const subNavItems = [
+    { key: "research", to: "/feeds/research", label: "Research" },
     { key: "insights", to: "/feeds/insights", label: "Insights" },
     { key: "news", to: "/feeds/news", label: "News" },
-    { key: "research", to: "/feeds/research", label: "Research" },
   ];
 
   return (
