@@ -48,6 +48,14 @@ export const createCheckoutSessionSF = createServerFn({ method: "POST" })
 
     const siteOrigin = getSiteOrigin();
 
+    // TODO: remove after verifying fix
+    console.log("[stripe] VERCEL_URL:", process.env.VERCEL_URL);
+    console.log("[stripe] VITE_VERCEL_URL:", process.env.VITE_VERCEL_URL);
+    console.log("[stripe] VERCEL_PROJECT_PRODUCTION_URL:", process.env.VERCEL_PROJECT_PRODUCTION_URL);
+    console.log("[stripe] VITE_VERCEL_PROJECT_PRODUCTION_URL:", process.env.VITE_VERCEL_PROJECT_PRODUCTION_URL);
+    console.log("[stripe] SITE_ORIGIN:", process.env.SITE_ORIGIN);
+    console.log("[stripe] getSiteOrigin():", siteOrigin);
+
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       client_reference_id: context.viewer.id,

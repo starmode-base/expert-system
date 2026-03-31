@@ -50,20 +50,26 @@ const rawEnv = {
 
   // https://vercel.com/docs/environment-variables/system-environment-variables#VERCEL_ENV
   // https://vercel.com/docs/environment-variables/framework-environment-variables#VITE_VERCEL_ENV
-  VERCEL_ENV: process.env.VITE_VERCEL_ENV ?? "development",
+  VERCEL_ENV:
+    process.env.VERCEL_ENV ?? process.env.VITE_VERCEL_ENV ?? "development",
 
   // https://vercel.com/docs/environment-variables/system-environment-variables#VERCEL_URL
   // https://vercel.com/docs/environment-variables/framework-environment-variables#VITE_VERCEL_URL
-  VERCEL_URL: process.env.VITE_VERCEL_URL ?? devHost,
+  VERCEL_URL: process.env.VERCEL_URL ?? process.env.VITE_VERCEL_URL ?? devHost,
 
   // https://vercel.com/docs/environment-variables/system-environment-variables#VERCEL_BRANCH_URL
   // https://vercel.com/docs/environment-variables/framework-environment-variables#VITE_VERCEL_BRANCH_URL
-  VERCEL_BRANCH_URL: process.env.VITE_VERCEL_BRANCH_URL ?? devHost,
+  VERCEL_BRANCH_URL:
+    process.env.VERCEL_BRANCH_URL ??
+    process.env.VITE_VERCEL_BRANCH_URL ??
+    devHost,
 
   // https://vercel.com/docs/environment-variables/system-environment-variables#VERCEL_PROJECT_PRODUCTION_URL
   // https://vercel.com/docs/environment-variables/framework-environment-variables#VITE_VERCEL_PROJECT_PRODUCTION_URL
   VERCEL_PROJECT_PRODUCTION_URL:
-    process.env.VITE_VERCEL_PROJECT_PRODUCTION_URL ?? devHost,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ??
+    process.env.VITE_VERCEL_PROJECT_PRODUCTION_URL ??
+    devHost,
 };
 
 export function ensureEnv(name: keyof typeof rawEnv): string {
@@ -115,7 +121,7 @@ export function origin(
 
 /**
  * Site origin for canonical URLs and OG meta tags. Uses SITE_ORIGIN when set,
- * otherwise the current deployment URL (VERCEL_URL).
+ * otherwise the production URL (VERCEL_PROJECT_PRODUCTION_URL).
  */
 export function getSiteOrigin(): string {
   const override = rawEnv.SITE_ORIGIN;
@@ -124,5 +130,5 @@ export function getSiteOrigin(): string {
       override.startsWith("http") ? override : `https://${override}`,
     ).origin;
   }
-  return origin("VERCEL_URL");
+  return origin("VERCEL_PROJECT_PRODUCTION_URL");
 }
