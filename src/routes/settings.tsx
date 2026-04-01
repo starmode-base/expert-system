@@ -36,11 +36,6 @@ function SettingsLayout() {
       label: "Public Stocks",
     },
     { key: "x", to: "/settings/x", label: "X Settings" },
-    {
-      key: "knowledge-graph",
-      to: "/settings/knowledge-graph",
-      label: "Knowledge Graph",
-    },
     { key: "blog-feeds", to: "/settings/blog-feeds", label: "Blog Feeds" },
   ];
 
