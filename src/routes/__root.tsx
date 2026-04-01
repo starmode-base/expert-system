@@ -102,10 +102,7 @@ function NavBar() {
   const auth = useAuth();
 
   // TODO: add user role for dev permissions.
-  const devNavItems = [
-    { key: "insight-studio", to: "/insight-studio", label: "Insight Studio" },
-    { key: "settings", to: "/settings", label: "Settings" },
-  ];
+  const devNavItems = [{ key: "settings", to: "/settings", label: "Dev" }];
 
   const isDev = auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3";
 

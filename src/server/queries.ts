@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { db, schema } from "../postgres/db";
 
 import {
+  type SQL,
   and,
   desc,
   eq,
@@ -42,23 +43,22 @@ export const queryDocumentsPaginated = createServerFn({
         ? (JSON.parse(cursor) as { publicationDate: string; id: string })
         : null;
 
-      const conditions = [];
+      const conditions: SQL[] = [eq(schema.documents.isSubstantive, true)];
       if (parsedCursor) {
-        conditions.push(
-          or(
-            lt(
+        const cursorCondition = or(
+          lt(
+            schema.documents.publicationDate,
+            new Date(parsedCursor.publicationDate),
+          ),
+          and(
+            eq(
               schema.documents.publicationDate,
               new Date(parsedCursor.publicationDate),
             ),
-            and(
-              eq(
-                schema.documents.publicationDate,
-                new Date(parsedCursor.publicationDate),
-              ),
-              lt(schema.documents.id, parsedCursor.id),
-            ),
+            lt(schema.documents.id, parsedCursor.id),
           ),
         );
+        if (cursorCondition) conditions.push(cursorCondition);
       }
 
       const documents = await db.query.documents.findMany({

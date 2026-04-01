@@ -12,7 +12,7 @@ const documentSummarySchema = z.object({
   isSubstantive: z
     .boolean()
     .describe(
-      "True if the article contains meaningful analysis, original insights, data, research, or technical depth. False if the article is primarily logistical (event announcements, hiring, schedule changes), self-promotional (product marketing, fundraising, company milestones), a link roundup without original commentary, or a short news recap without analysis.",
+      "True if the article contains meaningful analysis, original insights, data, research, or technical depth. False if the article is primarily logistical (event announcements, hiring, schedule changes), promotional (product marketing, fundraising, company milestones), a link roundup without original commentary, a short news recap without analysis, or is it is too short to be substantive (less than 150 words).",
     ),
 });
 

@@ -26,6 +26,11 @@ function SettingsLayout() {
 
   const subNavItems = [
     {
+      key: "insight-studio",
+      to: "/insight-studio",
+      label: "Insight Studio",
+    },
+    {
       key: "public-stocks",
       to: "/settings/public-stocks",
       label: "Public Stocks",
