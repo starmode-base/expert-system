@@ -37,7 +37,7 @@ const denormalizeFilters = (filters: FilterParams, sources: string[]) => {
   };
 };
 
-export const Route = createFileRoute("/takeaway-feed")({
+export const Route = createFileRoute("/feeds/insights")({
   validateSearch: (search: Record<string, unknown> | undefined) => {
     // validate and parse the search params into a typed state
     return {
@@ -125,7 +125,7 @@ function RouteComponent() {
   };
 
   return (
-    <div className="h-[calc(100dvh-64px)] overflow-hidden">
+    <div className="h-[calc(100dvh-109px)] overflow-hidden">
       <div className="mx-auto flex h-full max-w-4xl flex-col px-2 sm:px-4">
         <div className="flex flex-col gap-3 bg-white p-4">
           <div className="flex flex-col gap-2 sm:flex-row">

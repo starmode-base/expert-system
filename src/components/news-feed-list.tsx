@@ -44,7 +44,7 @@ function NewsFeedItem(props: { document: DocumentItem; isSelected: boolean }) {
       }
     >
       <Link
-        to="/news-feed/$documentid"
+        to="/feeds/news/$documentid"
         params={{ documentid: document.id }}
         className="block"
       >

@@ -1,15 +1,14 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/account")({
-  component: AccountLayout,
+export const Route = createFileRoute("/feeds")({
+  component: FeedsLayout,
 });
 
-function AccountLayout() {
+function FeedsLayout() {
   const subNavItems = [
-    { key: "api-docs", to: "/account/api-docs", label: "Docs" },
-    { key: "api-keys", to: "/account/api-keys", label: "Keys" },
-    { key: "usage", to: "/account/usage", label: "Usage" },
-    { key: "plan", to: "/account/plan", label: "Plan" },
+    { key: "research", to: "/feeds/research", label: "Research" },
+    { key: "insights", to: "/feeds/insights", label: "Insights" },
+    { key: "news", to: "/feeds/news", label: "News" },
   ];
 
   return (

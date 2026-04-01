@@ -207,7 +207,7 @@ function InsightTakeaways(props: InsightTakeawaysProps) {
               </a>
             ) : takeaway.documentId ? (
               <Link
-                to="/news-feed/$documentid"
+                to="/feeds/news/$documentid"
                 params={{ documentid: takeaway.documentId }}
                 className="text-blue-500 underline decoration-blue-300 underline-offset-2 hover:text-blue-800"
               >

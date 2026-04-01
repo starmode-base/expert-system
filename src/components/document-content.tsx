@@ -79,7 +79,7 @@ export function DocumentContent(props: { selectedDoc: Document | null }) {
       <div className="border-b border-gray-200 p-4 sm:p-6">
         {/* Mobile back button */}
         <Link
-          to="/news-feed"
+          to="/feeds/news"
           className="mb-3 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 md:hidden"
         >
           <span aria-hidden="true">&larr;</span>

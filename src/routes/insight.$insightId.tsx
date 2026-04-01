@@ -69,7 +69,7 @@ function RouteComponent() {
     <div className="min-h-dvh bg-slate-100 px-2 sm:px-8">
       <div className="mx-auto w-full max-w-4xl py-4">
         <Link
-          to="/research-feed"
+          to="/feeds/research"
           className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200/60 hover:text-slate-900"
         >
           <span aria-hidden>←</span>
