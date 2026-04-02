@@ -22,7 +22,7 @@ function PricingPage() {
       window.location.href = url;
     } catch (err) {
       if (err instanceof Error && err.message.includes("Already subscribed")) {
-        void navigate({ to: "/account/plan" });
+        void navigate({ to: "/account/api-keys" });
         return;
       }
       throw err;

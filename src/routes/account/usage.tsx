@@ -327,7 +327,7 @@ function UsagePage() {
 
   if (!authenticated) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="mb-8 text-2xl font-semibold text-gray-900">API Usage</h1>
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
           <p className="mb-4 text-sm text-gray-600">
@@ -350,7 +350,7 @@ function UsagePage() {
   const currentMonthData = data[data.length - 1];
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">API Usage</h1>
         {isFree && currentMonthData ? (

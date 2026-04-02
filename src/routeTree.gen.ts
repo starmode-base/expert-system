@@ -28,7 +28,6 @@ import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$
 import { Route as FeedsResearchImport } from './routes/feeds/research'
 import { Route as FeedsInsightsImport } from './routes/feeds/insights'
 import { Route as AccountUsageImport } from './routes/account/usage'
-import { Route as AccountPlanImport } from './routes/account/plan'
 import { Route as AccountApiKeysImport } from './routes/account/api-keys'
 import { Route as AccountApiDocsImport } from './routes/account/api-docs'
 import { Route as FeedsNewsIndexImport } from './routes/feeds/news.index'
@@ -138,12 +137,6 @@ const AccountUsageRoute = AccountUsageImport.update({
   getParentRoute: () => AccountRoute,
 } as any)
 
-const AccountPlanRoute = AccountPlanImport.update({
-  id: '/plan',
-  path: '/plan',
-  getParentRoute: () => AccountRoute,
-} as any)
-
 const AccountApiKeysRoute = AccountApiKeysImport.update({
   id: '/api-keys',
   path: '/api-keys',
@@ -219,13 +212,6 @@ declare module '@tanstack/react-router' {
       path: '/api-keys'
       fullPath: '/account/api-keys'
       preLoaderRoute: typeof AccountApiKeysImport
-      parentRoute: typeof AccountImport
-    }
-    '/account/plan': {
-      id: '/account/plan'
-      path: '/plan'
-      fullPath: '/account/plan'
-      preLoaderRoute: typeof AccountPlanImport
       parentRoute: typeof AccountImport
     }
     '/account/usage': {
@@ -334,14 +320,12 @@ declare module '@tanstack/react-router' {
 interface AccountRouteChildren {
   AccountApiDocsRoute: typeof AccountApiDocsRoute
   AccountApiKeysRoute: typeof AccountApiKeysRoute
-  AccountPlanRoute: typeof AccountPlanRoute
   AccountUsageRoute: typeof AccountUsageRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
   AccountApiDocsRoute: AccountApiDocsRoute,
   AccountApiKeysRoute: AccountApiKeysRoute,
-  AccountPlanRoute: AccountPlanRoute,
   AccountUsageRoute: AccountUsageRoute,
 }
 
@@ -390,7 +374,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRouteWithChildren
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
-  '/account/plan': typeof AccountPlanRoute
   '/account/usage': typeof AccountUsageRoute
   '/feeds/insights': typeof FeedsInsightsRoute
   '/feeds/research': typeof FeedsResearchRoute
@@ -414,7 +397,6 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
-  '/account/plan': typeof AccountPlanRoute
   '/account/usage': typeof AccountUsageRoute
   '/feeds/insights': typeof FeedsInsightsRoute
   '/feeds/research': typeof FeedsResearchRoute
@@ -440,7 +422,6 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRouteWithChildren
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
-  '/account/plan': typeof AccountPlanRoute
   '/account/usage': typeof AccountUsageRoute
   '/feeds/insights': typeof FeedsInsightsRoute
   '/feeds/research': typeof FeedsResearchRoute
@@ -467,7 +448,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/account/api-docs'
     | '/account/api-keys'
-    | '/account/plan'
     | '/account/usage'
     | '/feeds/insights'
     | '/feeds/research'
@@ -490,7 +470,6 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/account/api-docs'
     | '/account/api-keys'
-    | '/account/plan'
     | '/account/usage'
     | '/feeds/insights'
     | '/feeds/research'
@@ -514,7 +493,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/account/api-docs'
     | '/account/api-keys'
-    | '/account/plan'
     | '/account/usage'
     | '/feeds/insights'
     | '/feeds/research'
@@ -588,7 +566,6 @@ export const routeTree = rootRoute
       "children": [
         "/account/api-docs",
         "/account/api-keys",
-        "/account/plan",
         "/account/usage"
       ]
     },
@@ -619,10 +596,6 @@ export const routeTree = rootRoute
     },
     "/account/api-keys": {
       "filePath": "account/api-keys.tsx",
-      "parent": "/account"
-    },
-    "/account/plan": {
-      "filePath": "account/plan.tsx",
       "parent": "/account"
     },
     "/account/usage": {

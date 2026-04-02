@@ -239,7 +239,7 @@ function LlmDocsLabel() {
 
 function ApiDocsPage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6 flex items-start justify-between gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">API Reference</h1>
         <LlmDocsLabel />
@@ -248,43 +248,51 @@ function ApiDocsPage() {
       {/* Quick start */}
       <div className="mb-2 grid gap-4 sm:grid-cols-2">
         {/* Step 1 */}
-        <section className="rounded-lg border border-gray-200 bg-white p-5">
+        <div className="rounded-lg border border-gray-200 bg-white p-5">
           <div className="mb-3 flex items-center gap-2.5">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
               1
             </span>
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-sm font-medium text-gray-900">
               Get an API key
             </h3>
           </div>
-          <P>Create a free account and generate your key.</P>
+          <p className="mb-4 text-sm leading-relaxed text-gray-600">
+            Create a free account and generate your key.
+          </p>
           <a
             href="/account/api-keys"
             className="inline-block rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
           >
             Get API key
           </a>
-        </section>
+        </div>
 
         {/* Step 2 */}
-        <section className="rounded-lg border border-gray-200 bg-white p-5">
+        <div className="rounded-lg border border-gray-200 bg-white p-5">
           <div className="mb-3 flex items-center gap-2.5">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
               2
             </span>
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-sm font-medium text-gray-900">
               Install the skill
             </h3>
           </div>
-          <H3>Claude Code</H3>
-          <CopyPre className="mb-4 overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-4 pr-10 font-mono text-xs leading-relaxed text-gray-800">
-            {`/plugin install github://starmode-base/expert-system-plugin`}
-          </CopyPre>
-          <H3>Any agent (Cursor, Copilot, Cline, Codex)</H3>
-          <CopyPre className="mb-4 overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-4 pr-10 font-mono text-xs leading-relaxed text-gray-800">
+          <p className="mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase">
+            Claude Code
+          </p>
+          <div className="mb-3">
+            <CopyPre>
+              {`/plugin install github://starmode-base/expert-system-plugin`}
+            </CopyPre>
+          </div>
+          <p className="mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase">
+            Any agent (Cursor, Copilot, Cline, Codex)
+          </p>
+          <CopyPre>
             {`npx skills add starmode-base/expert-system-plugin`}
           </CopyPre>
-        </section>
+        </div>
       </div>
       <p className="mb-6 text-center text-xs text-gray-500">
         The plugin ships three focused skills that trigger automatically based
