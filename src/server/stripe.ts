@@ -53,7 +53,7 @@ export const createCheckoutSessionSF = createServerFn({ method: "POST" })
       client_reference_id: context.viewer.id,
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${siteOrigin}/account/plan?checkout=success`,
+      success_url: `${siteOrigin}/account/api-keys?checkout=success`,
       cancel_url: `${siteOrigin}/pricing`,
     });
 
@@ -78,7 +78,7 @@ export const createPortalSessionSF = createServerFn({ method: "POST" })
 
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${getSiteOrigin()}/account/plan`,
+      return_url: `${getSiteOrigin()}/account/api-keys`,
     });
 
     return { url: session.url };

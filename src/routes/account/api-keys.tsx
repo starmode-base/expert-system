@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { SignInButton } from "@clerk/tanstack-start";
@@ -8,16 +8,43 @@ import {
   revokeApiKeySF,
   type ApiKeyListItem,
 } from "~/server/api-keys";
+import { createPortalSessionSF } from "~/server/stripe";
 
 const loadApiKeys = createServerFn({ method: "GET" }).handler(async () => {
   const { getWebRequest } = await import("vinxi/http");
   const { getClerkUserId } = await import("~/server/auth");
+  const { db } = await import("~/postgres/db");
+  const { users } = await import("~/postgres/schema");
+  const { eq } = await import("drizzle-orm");
+
   const userId = await getClerkUserId(getWebRequest());
   if (!userId) {
-    return { authenticated: false as const, apiKeys: [] };
+    return { authenticated: false as const, apiKeys: [], plan: null };
   }
   const apiKeys = await listApiKeysSF();
-  return { authenticated: true as const, apiKeys };
+
+  const user = await db.query.users.findFirst({
+    where: eq(users.clerkUserId, userId),
+    columns: {
+      planTier: true,
+      stripeCustomerId: true,
+      stripeSubscriptionId: true,
+      paymentStatus: true,
+    },
+  });
+
+  return {
+    authenticated: true as const,
+    apiKeys,
+    plan: user
+      ? {
+          tier: user.planTier,
+          hasSubscription: !!user.stripeSubscriptionId,
+          hasStripeAccount: !!user.stripeCustomerId,
+          paymentStatus: user.paymentStatus,
+        }
+      : null,
+  };
 });
 
 export const Route = createFileRoute("/account/api-keys")({
@@ -26,11 +53,12 @@ export const Route = createFileRoute("/account/api-keys")({
 });
 
 function ApiKeysPage() {
-  const { authenticated, apiKeys } = Route.useLoaderData();
+  const { authenticated, apiKeys, plan } = Route.useLoaderData();
   const router = useRouter();
 
   const createApiKey = useServerFn(createApiKeySF);
   const revokeApiKey = useServerFn(revokeApiKeySF);
+  const createPortalSession = useServerFn(createPortalSessionSF);
 
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -38,6 +66,20 @@ function ApiKeysPage() {
   const [newRawKey, setNewRawKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [managingAccount, setManagingAccount] = useState(false);
+
+  const tier = plan?.tier ?? "free";
+  const isUnlimited = tier === "unlimited";
+
+  const handleManageAccount = async () => {
+    setManagingAccount(true);
+    try {
+      const { url } = await createPortalSession();
+      window.location.href = url;
+    } finally {
+      setManagingAccount(false);
+    }
+  };
 
   if (!authenticated) {
     return (
@@ -103,7 +145,34 @@ function ApiKeysPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="mb-8 text-2xl font-semibold text-gray-900">API Keys</h1>
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-gray-900">API Keys</h1>
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            isUnlimited
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-gray-100 text-gray-600"
+          }`}
+        >
+          {isUnlimited ? "Unlimited" : "Free tier"}
+        </span>
+      </div>
+
+      {plan?.paymentStatus === "past_due" ? (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm font-medium text-amber-800">
+            Your last payment failed. Please update your payment method to avoid
+            losing access.
+          </p>
+          <button
+            onClick={handleManageAccount}
+            disabled={managingAccount}
+            className="mt-2 cursor-pointer text-sm font-medium text-amber-700 underline hover:text-amber-900 disabled:opacity-50"
+          >
+            {managingAccount ? "Redirecting..." : "Update payment method"}
+          </button>
+        </div>
+      ) : null}
 
       {/* Create key form */}
       <section className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
@@ -277,6 +346,36 @@ function ApiKeysPage() {
             </div>
           </>
         )}
+      </section>
+
+      {/* Manage account */}
+      <section className="mt-8 rounded-lg border border-gray-200 bg-white p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-medium text-gray-900">Account</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              {isUnlimited
+                ? "Unlimited API queries"
+                : "100 API queries per month"}
+            </p>
+          </div>
+          {isUnlimited && plan?.hasSubscription ? (
+            <button
+              onClick={handleManageAccount}
+              disabled={managingAccount}
+              className="cursor-pointer rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+            >
+              {managingAccount ? "Redirecting..." : "Manage account"}
+            </button>
+          ) : (
+            <Link
+              to="/pricing"
+              className="inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+            >
+              Upgrade to Unlimited
+            </Link>
+          )}
+        </div>
       </section>
     </div>
   );

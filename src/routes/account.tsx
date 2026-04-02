@@ -9,7 +9,6 @@ function AccountLayout() {
     { key: "api-docs", to: "/account/api-docs", label: "Docs" },
     { key: "api-keys", to: "/account/api-keys", label: "Keys" },
     { key: "usage", to: "/account/usage", label: "Usage" },
-    { key: "plan", to: "/account/plan", label: "Plan" },
   ];
 
   return (

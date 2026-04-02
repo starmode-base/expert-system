@@ -28,13 +28,10 @@ import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$
 import { Route as FeedsResearchImport } from './routes/feeds/research'
 import { Route as FeedsInsightsImport } from './routes/feeds/insights'
 import { Route as AccountUsageImport } from './routes/account/usage'
-import { Route as AccountPlanImport } from './routes/account/plan'
 import { Route as AccountApiKeysImport } from './routes/account/api-keys'
 import { Route as AccountApiDocsImport } from './routes/account/api-docs'
-import { Route as SettingsKnowledgeGraphIndexImport } from './routes/settings/knowledge-graph.index'
 import { Route as FeedsNewsIndexImport } from './routes/feeds/news.index'
 import { Route as FeedsNewsDocumentidImport } from './routes/feeds/news.$documentid'
-import { Route as SettingsKnowledgeGraphGraphTypeDocumentidImport } from './routes/settings/knowledge-graph.$graphType.$documentid'
 
 // Create/Update Routes
 
@@ -140,12 +137,6 @@ const AccountUsageRoute = AccountUsageImport.update({
   getParentRoute: () => AccountRoute,
 } as any)
 
-const AccountPlanRoute = AccountPlanImport.update({
-  id: '/plan',
-  path: '/plan',
-  getParentRoute: () => AccountRoute,
-} as any)
-
 const AccountApiKeysRoute = AccountApiKeysImport.update({
   id: '/api-keys',
   path: '/api-keys',
@@ -158,13 +149,6 @@ const AccountApiDocsRoute = AccountApiDocsImport.update({
   getParentRoute: () => AccountRoute,
 } as any)
 
-const SettingsKnowledgeGraphIndexRoute =
-  SettingsKnowledgeGraphIndexImport.update({
-    id: '/knowledge-graph/',
-    path: '/knowledge-graph/',
-    getParentRoute: () => SettingsRoute,
-  } as any)
-
 const FeedsNewsIndexRoute = FeedsNewsIndexImport.update({
   id: '/news/',
   path: '/news/',
@@ -176,13 +160,6 @@ const FeedsNewsDocumentidRoute = FeedsNewsDocumentidImport.update({
   path: '/news/$documentid',
   getParentRoute: () => FeedsRoute,
 } as any)
-
-const SettingsKnowledgeGraphGraphTypeDocumentidRoute =
-  SettingsKnowledgeGraphGraphTypeDocumentidImport.update({
-    id: '/knowledge-graph/$graphType/$documentid',
-    path: '/knowledge-graph/$graphType/$documentid',
-    getParentRoute: () => SettingsRoute,
-  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -235,13 +212,6 @@ declare module '@tanstack/react-router' {
       path: '/api-keys'
       fullPath: '/account/api-keys'
       preLoaderRoute: typeof AccountApiKeysImport
-      parentRoute: typeof AccountImport
-    }
-    '/account/plan': {
-      id: '/account/plan'
-      path: '/plan'
-      fullPath: '/account/plan'
-      preLoaderRoute: typeof AccountPlanImport
       parentRoute: typeof AccountImport
     }
     '/account/usage': {
@@ -342,20 +312,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedsNewsIndexImport
       parentRoute: typeof FeedsImport
     }
-    '/settings/knowledge-graph/': {
-      id: '/settings/knowledge-graph/'
-      path: '/knowledge-graph'
-      fullPath: '/settings/knowledge-graph'
-      preLoaderRoute: typeof SettingsKnowledgeGraphIndexImport
-      parentRoute: typeof SettingsImport
-    }
-    '/settings/knowledge-graph/$graphType/$documentid': {
-      id: '/settings/knowledge-graph/$graphType/$documentid'
-      path: '/knowledge-graph/$graphType/$documentid'
-      fullPath: '/settings/knowledge-graph/$graphType/$documentid'
-      preLoaderRoute: typeof SettingsKnowledgeGraphGraphTypeDocumentidImport
-      parentRoute: typeof SettingsImport
-    }
   }
 }
 
@@ -364,14 +320,12 @@ declare module '@tanstack/react-router' {
 interface AccountRouteChildren {
   AccountApiDocsRoute: typeof AccountApiDocsRoute
   AccountApiKeysRoute: typeof AccountApiKeysRoute
-  AccountPlanRoute: typeof AccountPlanRoute
   AccountUsageRoute: typeof AccountUsageRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
   AccountApiDocsRoute: AccountApiDocsRoute,
   AccountApiKeysRoute: AccountApiKeysRoute,
-  AccountPlanRoute: AccountPlanRoute,
   AccountUsageRoute: AccountUsageRoute,
 }
 
@@ -399,8 +353,6 @@ interface SettingsRouteChildren {
   SettingsPublicStocksRoute: typeof SettingsPublicStocksRoute
   SettingsXRoute: typeof SettingsXRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
-  SettingsKnowledgeGraphIndexRoute: typeof SettingsKnowledgeGraphIndexRoute
-  SettingsKnowledgeGraphGraphTypeDocumentidRoute: typeof SettingsKnowledgeGraphGraphTypeDocumentidRoute
 }
 
 const SettingsRouteChildren: SettingsRouteChildren = {
@@ -408,9 +360,6 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsPublicStocksRoute: SettingsPublicStocksRoute,
   SettingsXRoute: SettingsXRoute,
   SettingsIndexRoute: SettingsIndexRoute,
-  SettingsKnowledgeGraphIndexRoute: SettingsKnowledgeGraphIndexRoute,
-  SettingsKnowledgeGraphGraphTypeDocumentidRoute:
-    SettingsKnowledgeGraphGraphTypeDocumentidRoute,
 }
 
 const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
@@ -425,7 +374,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRouteWithChildren
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
-  '/account/plan': typeof AccountPlanRoute
   '/account/usage': typeof AccountUsageRoute
   '/feeds/insights': typeof FeedsInsightsRoute
   '/feeds/research': typeof FeedsResearchRoute
@@ -440,8 +388,6 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof SettingsIndexRoute
   '/feeds/news/$documentid': typeof FeedsNewsDocumentidRoute
   '/feeds/news': typeof FeedsNewsIndexRoute
-  '/settings/knowledge-graph': typeof SettingsKnowledgeGraphIndexRoute
-  '/settings/knowledge-graph/$graphType/$documentid': typeof SettingsKnowledgeGraphGraphTypeDocumentidRoute
 }
 
 export interface FileRoutesByTo {
@@ -451,7 +397,6 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
-  '/account/plan': typeof AccountPlanRoute
   '/account/usage': typeof AccountUsageRoute
   '/feeds/insights': typeof FeedsInsightsRoute
   '/feeds/research': typeof FeedsResearchRoute
@@ -466,8 +411,6 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsIndexRoute
   '/feeds/news/$documentid': typeof FeedsNewsDocumentidRoute
   '/feeds/news': typeof FeedsNewsIndexRoute
-  '/settings/knowledge-graph': typeof SettingsKnowledgeGraphIndexRoute
-  '/settings/knowledge-graph/$graphType/$documentid': typeof SettingsKnowledgeGraphGraphTypeDocumentidRoute
 }
 
 export interface FileRoutesById {
@@ -479,7 +422,6 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRouteWithChildren
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
-  '/account/plan': typeof AccountPlanRoute
   '/account/usage': typeof AccountUsageRoute
   '/feeds/insights': typeof FeedsInsightsRoute
   '/feeds/research': typeof FeedsResearchRoute
@@ -494,8 +436,6 @@ export interface FileRoutesById {
   '/settings/': typeof SettingsIndexRoute
   '/feeds/news/$documentid': typeof FeedsNewsDocumentidRoute
   '/feeds/news/': typeof FeedsNewsIndexRoute
-  '/settings/knowledge-graph/': typeof SettingsKnowledgeGraphIndexRoute
-  '/settings/knowledge-graph/$graphType/$documentid': typeof SettingsKnowledgeGraphGraphTypeDocumentidRoute
 }
 
 export interface FileRouteTypes {
@@ -508,7 +448,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/account/api-docs'
     | '/account/api-keys'
-    | '/account/plan'
     | '/account/usage'
     | '/feeds/insights'
     | '/feeds/research'
@@ -523,8 +462,6 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/feeds/news/$documentid'
     | '/feeds/news'
-    | '/settings/knowledge-graph'
-    | '/settings/knowledge-graph/$graphType/$documentid'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -533,7 +470,6 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/account/api-docs'
     | '/account/api-keys'
-    | '/account/plan'
     | '/account/usage'
     | '/feeds/insights'
     | '/feeds/research'
@@ -548,8 +484,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/feeds/news/$documentid'
     | '/feeds/news'
-    | '/settings/knowledge-graph'
-    | '/settings/knowledge-graph/$graphType/$documentid'
   id:
     | '__root__'
     | '/'
@@ -559,7 +493,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/account/api-docs'
     | '/account/api-keys'
-    | '/account/plan'
     | '/account/usage'
     | '/feeds/insights'
     | '/feeds/research'
@@ -574,8 +507,6 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/feeds/news/$documentid'
     | '/feeds/news/'
-    | '/settings/knowledge-graph/'
-    | '/settings/knowledge-graph/$graphType/$documentid'
   fileRoutesById: FileRoutesById
 }
 
@@ -635,7 +566,6 @@ export const routeTree = rootRoute
       "children": [
         "/account/api-docs",
         "/account/api-keys",
-        "/account/plan",
         "/account/usage"
       ]
     },
@@ -657,9 +587,7 @@ export const routeTree = rootRoute
         "/settings/blog-feeds",
         "/settings/public-stocks",
         "/settings/x",
-        "/settings/",
-        "/settings/knowledge-graph/",
-        "/settings/knowledge-graph/$graphType/$documentid"
+        "/settings/"
       ]
     },
     "/account/api-docs": {
@@ -668,10 +596,6 @@ export const routeTree = rootRoute
     },
     "/account/api-keys": {
       "filePath": "account/api-keys.tsx",
-      "parent": "/account"
-    },
-    "/account/plan": {
-      "filePath": "account/plan.tsx",
       "parent": "/account"
     },
     "/account/usage": {
@@ -724,14 +648,6 @@ export const routeTree = rootRoute
     "/feeds/news/": {
       "filePath": "feeds/news.index.tsx",
       "parent": "/feeds"
-    },
-    "/settings/knowledge-graph/": {
-      "filePath": "settings/knowledge-graph.index.tsx",
-      "parent": "/settings"
-    },
-    "/settings/knowledge-graph/$graphType/$documentid": {
-      "filePath": "settings/knowledge-graph.$graphType.$documentid.tsx",
-      "parent": "/settings"
     }
   }
 }
