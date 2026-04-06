@@ -86,6 +86,15 @@ export const queryDocumentsPaginated = createServerFn({
     },
   );
 
+export interface DocumentImage {
+  id: string;
+  blobUrl: string;
+  altText: string | null;
+  position: number;
+  widthPx: number | null;
+  heightPx: number | null;
+}
+
 export interface Document {
   id: string;
   title: string;
@@ -95,6 +104,7 @@ export interface Document {
   source: string;
   articleText: string;
   takeaways: Takeaway[];
+  images: DocumentImage[];
   selectedTakeawayId?: string;
 }
 
@@ -382,6 +392,9 @@ export const queryDocument = createServerFn({
             takeawayReferences: true,
           },
         },
+        images: {
+          orderBy: (images, { asc }) => [asc(images.position)],
+        },
       },
     });
 
@@ -397,6 +410,14 @@ export const queryDocument = createServerFn({
       link: document.link,
       source: document.source,
       articleText: document.articleText,
+      images: document.images.map((img) => ({
+        id: img.id,
+        blobUrl: img.blobUrl,
+        altText: img.altText,
+        position: img.position,
+        widthPx: img.widthPx,
+        heightPx: img.heightPx,
+      })),
       takeaways: document.takeaways.map((takeaway) => ({
         id: takeaway.id,
         documentId: document.id,

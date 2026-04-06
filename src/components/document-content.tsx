@@ -25,6 +25,84 @@ export function TakeawaysSection(props: { selectedDoc: Document }) {
 
 export function ArticleSection(props: { selectedDoc: Document }) {
   const selectedDoc = props.selectedDoc;
+  const images = selectedDoc.images;
+
+  // Split text into paragraphs and interleave images
+  const paragraphs = selectedDoc.articleText.split("\n\n");
+
+  // Distribute images evenly across paragraphs
+  const imageStep =
+    images.length > 0 && paragraphs.length > 0
+      ? Math.floor(paragraphs.length / (images.length + 1))
+      : 0;
+
+  const elements: React.ReactNode[] = [];
+  let imageIndex = 0;
+
+  for (let i = 0; i < paragraphs.length; i++) {
+    elements.push(
+      <p
+        key={`p-${String(i)}`}
+        className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700"
+      >
+        {paragraphs[i]}
+      </p>,
+    );
+
+    // Insert image after every `imageStep` paragraphs
+    if (
+      imageStep > 0 &&
+      imageIndex < images.length &&
+      (i + 1) % imageStep === 0
+    ) {
+      const img = images[imageIndex];
+      if (img) {
+        elements.push(
+          <figure key={`img-${img.id}`} className="my-4">
+            <img
+              src={img.blobUrl}
+              alt={img.altText ?? ""}
+              width={img.widthPx ?? undefined}
+              height={img.heightPx ?? undefined}
+              className="max-w-full rounded"
+              loading="lazy"
+            />
+            {img.altText ? (
+              <figcaption className="mt-1 text-center text-xs text-gray-400">
+                {img.altText}
+              </figcaption>
+            ) : null}
+          </figure>,
+        );
+        imageIndex++;
+      }
+    }
+  }
+
+  // Append any remaining images at the end
+  while (imageIndex < images.length) {
+    const img = images[imageIndex];
+    if (img) {
+      elements.push(
+        <figure key={`img-${img.id}`} className="my-4">
+          <img
+            src={img.blobUrl}
+            alt={img.altText ?? ""}
+            width={img.widthPx ?? undefined}
+            height={img.heightPx ?? undefined}
+            className="max-w-full rounded"
+            loading="lazy"
+          />
+          {img.altText ? (
+            <figcaption className="mt-1 text-center text-xs text-gray-400">
+              {img.altText}
+            </figcaption>
+          ) : null}
+        </figure>,
+      );
+    }
+    imageIndex++;
+  }
 
   return (
     <div className="h-full flex-1 overflow-y-auto p-4 sm:p-6">
@@ -40,11 +118,7 @@ export function ArticleSection(props: { selectedDoc: Document }) {
           })}
         </p>
       </div>
-      <div>
-        <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
-          {selectedDoc.articleText}
-        </p>
-      </div>
+      <div className="space-y-3">{elements}</div>
     </div>
   );
 }
