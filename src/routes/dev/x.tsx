@@ -9,7 +9,7 @@ import {
   type XBookmarkFolderInfo,
 } from "~/server/x-bookmarks";
 
-export const Route = createFileRoute("/settings/x")({
+export const Route = createFileRoute("/dev/x")({
   validateSearch: (search: Record<string, unknown>) => ({
     x_connected: search.x_connected === "true",
   }),
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/settings/x")({
 
 function XSettingsPage() {
   const { xBookmarksStatus } = Route.useLoaderData();
-  const { x_connected } = useSearch({ from: "/settings/x" });
+  const { x_connected } = useSearch({ from: "/dev/x" });
   const router = useRouter();
   const [disconnecting, setDisconnecting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(x_connected);

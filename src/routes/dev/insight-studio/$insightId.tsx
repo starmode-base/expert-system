@@ -5,11 +5,11 @@ import { PubSubProvider } from "~/lib/ably";
 import { getInsightsSF, listInsightsSF } from "~/server/insights-studio-SFs";
 import { listOrganizationsSF } from "~/server/organizations";
 import { getinsightTakeawaysSF, type InsightsItem } from "~/server/queries";
-import { InsightCard } from "../components/insight-feed/insight-card";
+import { InsightCard } from "~/components/insight-feed/insight-card";
 import { TakeawaySearchResult } from "~/server/searchSFs";
 import { TakeawayTile } from "~/components/takeaway-tile";
 
-export const Route = createFileRoute("/insight-studio/$insightId")({
+export const Route = createFileRoute("/dev/insight-studio/$insightId")({
   loader: async ({ params: { insightId } }) => {
     const { viewerId } = await listOrganizationsSF();
     const insights = await listInsightsSF();
@@ -201,14 +201,13 @@ function RouteComponentProvider() {
     </PubSubProvider>
   );
 }
-// RouteComponent.tsx
 
 export function RouteComponent() {
   const { insights, selectedInsightItem, takeawaysSummary, takeawaysConcepts } =
     Route.useLoaderData();
 
   return (
-    <div className="flex h-[calc(100dvh-64px)] overflow-hidden bg-white">
+    <div className="flex h-[calc(100dvh-64px-49px)] overflow-hidden bg-white">
       {/* Left Pane */}
       <InsightList insights={insights} />
 
