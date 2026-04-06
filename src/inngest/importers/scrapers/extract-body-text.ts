@@ -35,6 +35,11 @@ function truncateForModel(html: string): string {
   return html.slice(0, maxChars);
 }
 
+/**
+ * @deprecated Use `scrapePageFromHtml` from `./scrape-page` instead.
+ * This function uses GPT-5-nano for extraction. The new scraper uses
+ * Readability for deterministic extraction with a light LLM QA pass.
+ */
 export async function extractBodyTextFromHtml(html: string): Promise<string> {
   const bodyHtml = truncateForModel(stripHeavyTags(getBodyHtml(html)));
 
@@ -58,8 +63,32 @@ export async function extractBodyTextFromHtml(html: string): Promise<string> {
   return response.output_parsed.text.trim();
 }
 
+/**
+ * @deprecated Use `scrapePage` from `./scrape-page` instead.
+ * This function uses node-fetch + GPT-5-nano for extraction. The new scraper
+ * uses Playwright + Readability for robust extraction with image support.
+ */
 export async function extractBodyTextFromUrl(url: string): Promise<string> {
   const res = await fetch(url);
   const html = await res.text();
-  return extractBodyTextFromHtml(html);
+  const bodyHtml = truncateForModel(stripHeavyTags(getBodyHtml(html)));
+
+  const response = await client.responses.parse({
+    model: "gpt-5-nano",
+    input: [
+      {
+        role: "system",
+        content:
+          "You extract the main article/document body text from HTML. Return only the Title, author, publication date, primary content text and any text relevent to the reader. Exclude navigation, headers/footers, sidebars, cookie banners, subscription prompts, ads, related links, and comments. Preserve paragraph breaks with blank lines. Do not add or paraphrase any content; only extract what is present. If there is no clear main body content, return an empty string.",
+      },
+      {
+        role: "user",
+        content: `Extract the main body text from this HTML:\n\n${bodyHtml}`,
+      },
+    ],
+    text: { format: zodTextFormat(outputSchema, "extracted_body_text") },
+  });
+
+  invariant(response.output_parsed?.text !== undefined, "No extracted text");
+  return response.output_parsed.text.trim();
 }

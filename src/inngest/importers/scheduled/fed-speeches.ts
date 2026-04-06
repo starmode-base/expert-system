@@ -4,7 +4,11 @@ import { invariant } from "@tanstack/react-router";
 import { inArray } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import { inngest } from "../../client";
-import { extractBodyTextFromHtml } from "~/inngest/importers/scrapers/extract-body-text";
+import { scrapePageFromHtml } from "~/inngest/importers/scrapers/scrape-page";
+import {
+  processAndUploadImages,
+  type ProcessedImage,
+} from "~/inngest/importers/scrapers/process-images";
 import { getDocumentSummary } from "../helpers/get-document-summary";
 
 interface FedRssItem {
@@ -94,10 +98,17 @@ function normalizeLink(rawLink: string) {
   }
 }
 
-async function scrapePageText(url: string) {
+async function scrapePageContent(url: string) {
   const res = await fetch(url);
   const html = await res.text();
-  return await extractBodyTextFromHtml(html);
+  const scraped = await scrapePageFromHtml(html, url);
+
+  const images =
+    scraped.images.length > 0
+      ? await processAndUploadImages(scraped.images, url)
+      : [];
+
+  return { articleText: scraped.articleText, images };
 }
 
 /**
@@ -209,11 +220,11 @@ export const fedSpeechesScraper = inngest.createFunction(
 
     const scraped = await Promise.allSettled(
       toScrape.map(async (candidate, index) => {
-        const articleText = await step.run(`scrape-page-${index}`, async () => {
-          return await scrapePageText(candidate.link);
+        const content = await step.run(`scrape-page-${index}`, async () => {
+          return await scrapePageContent(candidate.link);
         });
 
-        return { candidate, articleText };
+        return { candidate, ...content };
       }),
     );
 
@@ -223,6 +234,7 @@ export const fedSpeechesScraper = inngest.createFunction(
       ): result is PromiseFulfilledResult<{
         candidate: FedCandidate;
         articleText: string;
+        images: ProcessedImage[];
       }> => result.status === "fulfilled",
     );
 
@@ -247,10 +259,12 @@ export const fedSpeechesScraper = inngest.createFunction(
     );
 
     const inserted = await step.run("insert-documents", async () => {
-      return await db
-        .insert(schema.documents)
-        .values(
-          withSummaries.map((doc) => ({
+      const results: { id: string }[] = [];
+
+      for (const doc of withSummaries) {
+        const [row] = await db
+          .insert(schema.documents)
+          .values({
             source: FED_SOURCE,
             title: doc.candidate.title,
             description: doc.summaryResult.summary,
@@ -258,9 +272,28 @@ export const fedSpeechesScraper = inngest.createFunction(
             publicationDate: new Date(doc.candidate.publicationDate),
             link: doc.candidate.link,
             articleText: doc.articleText,
-          })),
-        )
-        .returning({ id: schema.documents.id });
+          })
+          .returning({ id: schema.documents.id });
+
+        if (!row) continue;
+        results.push(row);
+
+        if (doc.images.length > 0) {
+          await db.insert(schema.documentImages).values(
+            doc.images.map((img) => ({
+              documentId: row.id,
+              blobUrl: img.blobUrl,
+              altText: img.altText,
+              position: img.position,
+              widthPx: img.widthPx,
+              heightPx: img.heightPx,
+              sizeBytes: img.sizeBytes,
+            })),
+          );
+        }
+      }
+
+      return results;
     });
 
     await Promise.all(

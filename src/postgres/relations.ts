@@ -22,6 +22,7 @@ import {
   organizationMembers,
   insightReferences,
   apiUsage,
+  documentImages,
 } from "./schema";
 
 export const conceptEmbeddingsRelations = relations(
@@ -99,6 +100,14 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
 
 export const documentsRelations = relations(documents, ({ many }) => ({
   takeaways: many(takeaways),
+  images: many(documentImages),
+}));
+
+export const documentImagesRelations = relations(documentImages, ({ one }) => ({
+  document: one(documents, {
+    fields: [documentImages.documentId],
+    references: [documents.id],
+  }),
 }));
 
 export const earningsFetchJobsRelations = relations(

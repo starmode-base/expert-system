@@ -3,7 +3,11 @@ import { eq, inArray } from "drizzle-orm";
 import { inngest } from "~/inngest/client";
 import { db, schema } from "~/postgres/db";
 import { parseFeedItems, type BlogArticleCandidate } from "./blog-helpers";
-import { extractBodyTextFromUrl } from "~/inngest/importers/scrapers/extract-body-text";
+import { scrapePage } from "~/inngest/importers/scrapers/scrape-page";
+import {
+  processAndUploadImages,
+  type ProcessedImage,
+} from "~/inngest/importers/scrapers/process-images";
 import { getDocumentSummary } from "../../helpers/get-document-summary";
 
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
@@ -92,23 +96,39 @@ export const scrapeSingleBlog = inngest.createFunction(
     }
 
     // Extract article text for candidates that don't have it from the feed
-    type CandidateWithText = BlogArticleCandidate & { articleText: string };
+    type CandidateWithText = BlogArticleCandidate & {
+      articleText: string;
+      scrapedImages: ProcessedImage[];
+    };
 
     const withText: CandidateWithText[] = await step.run(
       "extract-article-text",
       async () => {
         if (blog.contentInFeed) {
-          // Filter out any that failed to extract from feed
-          return newCandidates.filter(
-            (c): c is CandidateWithText => c.articleText !== null,
-          );
+          // Filter out any that failed to extract from feed (no images from RSS)
+          return newCandidates
+            .filter(
+              (c): c is BlogArticleCandidate & { articleText: string } =>
+                c.articleText !== null,
+            )
+            .map((c) => ({ ...c, scrapedImages: [] as ProcessedImage[] }));
         }
 
-        // Fetch article text from URLs via GPT-5-nano
+        // Fetch article text from URLs via Readability + Playwright
         const results = await Promise.allSettled(
           newCandidates.map(async (c) => {
-            const text = await extractBodyTextFromUrl(c.link);
-            return { ...c, articleText: text };
+            const scraped = await scrapePage(c.link);
+            if (!scraped.isArticle || scraped.articleText.length === 0) {
+              throw new Error(`Not an article: ${c.link}`);
+            }
+
+            // Process and upload images
+            const scrapedImages =
+              scraped.images.length > 0
+                ? await processAndUploadImages(scraped.images, c.link)
+                : [];
+
+            return { ...c, articleText: scraped.articleText, scrapedImages };
           }),
         );
 
@@ -148,22 +168,47 @@ export const scrapeSingleBlog = inngest.createFunction(
       }),
     );
 
-    // Insert all documents
+    // Insert all documents and their images
     const inserted = await step.run("insert-documents", async () => {
-      const values = withSummaries.map((doc) => ({
-        source: blog.title,
-        title: doc.title,
-        description: doc.summaryResult.summary,
-        publicationDate: new Date(doc.publicationDate),
-        link: doc.link,
-        articleText: doc.articleText,
-        isSubstantive: doc.summaryResult.isSubstantive,
-      }));
+      const results: { id: string; isSubstantive: boolean }[] = [];
 
-      return await db.insert(schema.documents).values(values).returning({
-        id: schema.documents.id,
-        isSubstantive: schema.documents.isSubstantive,
-      });
+      for (const doc of withSummaries) {
+        const [row] = await db
+          .insert(schema.documents)
+          .values({
+            source: blog.title,
+            title: doc.title,
+            description: doc.summaryResult.summary,
+            publicationDate: new Date(doc.publicationDate),
+            link: doc.link,
+            articleText: doc.articleText,
+            isSubstantive: doc.summaryResult.isSubstantive,
+          })
+          .returning({
+            id: schema.documents.id,
+            isSubstantive: schema.documents.isSubstantive,
+          });
+
+        if (!row) continue;
+        results.push(row);
+
+        // Insert associated images
+        if (doc.scrapedImages.length > 0) {
+          await db.insert(schema.documentImages).values(
+            doc.scrapedImages.map((img) => ({
+              documentId: row.id,
+              blobUrl: img.blobUrl,
+              altText: img.altText,
+              position: img.position,
+              widthPx: img.widthPx,
+              heightPx: img.heightPx,
+              sizeBytes: img.sizeBytes,
+            })),
+          );
+        }
+      }
+
+      return results;
     });
 
     // Only fan out takeaway generation for substantive articles

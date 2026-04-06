@@ -119,6 +119,25 @@ export const documents = pgTable("documents", {
 export type DocumentSelect = typeof documents.$inferSelect;
 export type DocumentInsert = typeof documents.$inferInsert;
 
+/**
+ * Document Images — images extracted from scraped articles, stored in Vercel Blob
+ */
+export const documentImages = pgTable("document_images", {
+  ...baseSchema,
+  documentId: text()
+    .notNull()
+    .references(() => documents.id, { onDelete: "cascade" }),
+  blobUrl: text().notNull(),
+  altText: text(),
+  position: integer().notNull(),
+  widthPx: integer(),
+  heightPx: integer(),
+  sizeBytes: integer(),
+});
+
+export type DocumentImageSelect = typeof documentImages.$inferSelect;
+export type DocumentImageInsert = typeof documentImages.$inferInsert;
+
 export const takeaways = pgTable("takeaways", {
   ...baseSchema,
   documentId: text()

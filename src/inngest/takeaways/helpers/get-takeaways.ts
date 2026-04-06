@@ -57,7 +57,98 @@ export async function getTakeaways(
   takeawayInstructions?: string,
   model = "gpt-5.4",
   sourceAttribution?: string,
+  images?: { blobUrl: string; position: number; altText: string | null }[],
 ) {
+  // Build the content — either a simple string or multipart with images
+  const preamble = `# Role
+You are a Lead Systems Analyst. Your job is to compress raw information into high-signal and evidence-backed findings. You are processing a mix of Financial News, Earnings Transcripts, and Scientific Research.
+${images && images.length > 0 ? "\nWhen charts, graphs, or figures are present, analyze the visual data and incorporate quantitative findings into your takeaways.\n" : ""}
+${
+  sourceAttribution
+    ? `# Source Attribution
+This document is from: ${sourceAttribution}
+When attributing quotes or claims, this source can be used for correct attribution.`
+    : ""
+}`;
+
+  const closing = `${
+    takeawayInstructions
+      ? `Instructions:
+${takeawayInstructions}\n`
+      : ""
+  }
+Create a structured list of the 1-5 most novel and important findings from the document.
+  - Novelty = contradicts consensus / non-obvious second-order effect / new quantified datapoint / new mechanism / changes expected distribution.
+Make sure to heavily reference the text to support the facts, quotes, claims and data.
+Better to have more references to support the findings.
+It is better to have less findings, if they are not unique and unrelated.`;
+
+  type ContentBlock =
+    | { type: "input_text"; text: string }
+    | { type: "input_image"; image_url: string; detail: "auto" };
+
+  let content: string | ContentBlock[];
+
+  if (images && images.length > 0) {
+    // Build interleaved content blocks
+    const blocks: ContentBlock[] = [{ type: "input_text", text: preamble }];
+
+    // Split article text into paragraphs and interleave images
+    const paragraphs = articleText.split("\n\n");
+    const imagesByPosition = new Map(images.map((img) => [img.position, img]));
+
+    // Distribute images roughly evenly across paragraph breaks
+    const step =
+      paragraphs.length > images.length
+        ? Math.floor(paragraphs.length / (images.length + 1))
+        : 1;
+    const imageQueue = [...images];
+
+    for (let i = 0; i < paragraphs.length; i++) {
+      const paragraph = paragraphs[i];
+      if (paragraph === undefined) continue;
+      blocks.push({ type: "input_text", text: paragraph });
+
+      // Insert an image after every `step` paragraphs, or at the image's position
+      const imgAtPosition = imagesByPosition.get(i);
+      if (imgAtPosition) {
+        blocks.push({
+          type: "input_image",
+          image_url: imgAtPosition.blobUrl,
+          detail: "auto",
+        });
+        // Remove from queue
+        const idx = imageQueue.findIndex(
+          (img) => img.position === imgAtPosition.position,
+        );
+        if (idx >= 0) imageQueue.splice(idx, 1);
+      } else if (imageQueue.length > 0 && i > 0 && i % step === 0 && step > 0) {
+        const img = imageQueue.shift();
+        if (img) {
+          blocks.push({
+            type: "input_image",
+            image_url: img.blobUrl,
+            detail: "auto",
+          });
+        }
+      }
+    }
+
+    // Append any remaining images
+    for (const img of imageQueue) {
+      blocks.push({
+        type: "input_image",
+        image_url: img.blobUrl,
+        detail: "auto",
+      });
+    }
+
+    blocks.push({ type: "input_text", text: closing });
+    content = blocks;
+  } else {
+    content = `${preamble}\n\nDocument Text:\n${articleText}\n\n${closing}`;
+  }
+
   const response = await client.responses.parse({
     model,
     text: { format: zodTextFormat(schema, "takeaways") },
@@ -65,34 +156,7 @@ export async function getTakeaways(
       {
         role: "user",
         type: "message",
-        content: `
-        # Role
-        You are a Lead Systems Analyst. Your job is to compress raw information into high-signal and evidence-backed findings. You are processing a mix of Financial News, Earnings Transcripts, and Scientific Research.
-
-        ${
-          sourceAttribution
-            ? `# Source Attribution
-        This document is from: ${sourceAttribution}
-        When attributing quotes or claims, this source can be used for correct attribution.`
-            : ""
-        }
-
-        Document Text:
-        ${articleText}
-
-        ${
-          takeawayInstructions
-            ? `Instructions:
-        ${takeawayInstructions}`
-            : ""
-        }
-
-        Create a structured list of the 1-5 most novel and important findings from the document.
-          - Novelty = contradicts consensus / non-obvious second-order effect / new quantified datapoint / new mechanism / changes expected distribution.
-        Make sure to heavily reference the text to support the facts, quotes, claims and data.
-        Better to have more references to support the findings.
-        It is better to have less findings, if they are not unique and unrelated.
-        `,
+        content,
       },
     ],
   });
