@@ -86,7 +86,7 @@ function RootDocument(props: React.PropsWithChildren) {
           <HeadContent />
         </head>
         <body>
-          <div className="min-h-dvh bg-slate-100">
+          <div className="min-h-dvh bg-white">
             <NavBar />
             {props.children}
           </div>

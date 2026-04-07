@@ -85,10 +85,10 @@ function StepCard({
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-5">
       <div className="flex items-center gap-2.5">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-white">
           {step}
         </span>
-        <h3 className="text-sm font-medium text-slate-900">{title}</h3>
+        <h3 className="text-lg font-medium text-slate-900">{title}</h3>
       </div>
       <p className="text-sm leading-relaxed text-slate-600">{description}</p>
       <pre className="overflow-x-auto rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-700">
@@ -167,11 +167,14 @@ function ApiPlayground() {
 // ---------------------------------------------------------------------------
 
 function LandingPage() {
+  const openingStatementClassName =
+    "text-center text-2xl leading-relaxed text-slate-600 sm:text-3xl";
+
   return (
     <div className="min-h-[calc(100dvh-64px)]">
       {/* Hero */}
       <div className="flex min-h-[calc(100dvh-64px)] flex-col items-center justify-center px-4 sm:px-6">
-        <div className="flex w-full max-w-4xl flex-col items-center gap-6 rounded-lg border border-slate-200 bg-white p-6 sm:p-10">
+        <div className="flex w-full max-w-4xl flex-col items-center gap-6 rounded-lg bg-white p-6 sm:p-10">
           <div className="flex items-center gap-2 opacity-60">
             <img
               src="/starmode-logo.svg"
@@ -182,7 +185,7 @@ function LandingPage() {
           <h1 className="text-center text-3xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
             ΞXPERT-SYSTΞM
           </h1>
-          <p className="text-center text-xl leading-relaxed text-slate-600 sm:text-2xl">
+          <p className={openingStatementClassName}>
             <span className="font-medium text-amber-600">
               The knowledge layer for your agent.
             </span>{" "}
@@ -202,20 +205,6 @@ function LandingPage() {
               How it works
             </a>
           </div>
-          <p className="mt-4 max-w-lg text-center text-sm leading-relaxed text-slate-500">
-            AI, markets, and technology are moving faster than any person can
-            track.{" "}
-            <span className="font-medium text-amber-600">
-              Don&apos;t burn your agent&apos;s context window searching the
-              open web.
-            </span>{" "}
-            ΞXPERT-SYSTΞM continuously reads, distills, and indexes hundreds of
-            earnings calls, technical blogs, podcasts, and expert commentary, so
-            your agent finds{" "}
-            <span className="font-medium text-amber-600">
-              the right insight in one query, not ten pages.
-            </span>
-          </p>
         </div>
       </div>
 
@@ -224,24 +213,36 @@ function LandingPage() {
         {/* What's inside */}
         <FadeIn>
           <div>
-            <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-              The most effective research system available for AI agents
+            <h2 className={`mb-4 ${openingStatementClassName}`}>
+            The most effective research system available for AI agents
             </h2>
             <img
               src="/expert-system-explainer.svg"
               alt="Sources like earnings transcripts, tech blogs, podcasts, and expert commentary flow into Expert System and become searchable atomic insights"
-              className="w-full rounded-lg border border-slate-200 bg-white"
+              className="w-full rounded-lg   bg-white"
             />
+            <p className="mx-auto mt-24  text-2xl text-center leading-relaxed text-slate-500">
+              AI, markets, and technology are moving faster than any person can
+              track.{" "}
+              <span className="font-medium text-amber-600">
+                Don&apos;t burn your agent&apos;s context window searching the
+                open web.
+              </span>{" "} <br/> <br />
+              ΞXPERT-SYSTΞM continuously reads, distills, and indexes hundreds
+              of earnings calls, technical blogs, podcasts, and expert
+              commentary, so your agent finds{" "}
+              <span className="font-medium text-amber-600">
+                the right insight in one query, not ten pages.
+              </span>
+            </p>
           </div>
         </FadeIn>
 
         {/* How it works */}
         <FadeIn>
           <div id="how-it-works" className="scroll-mt-20">
-            <h2 className="mb-4 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-              Progressive disclosure for industry research
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-3">
+
+            <div className="grid gap-4 sm:grid-cols-2 mb-4">
               <StepCard
                 step="1"
                 title="Search insights"
@@ -255,8 +256,7 @@ function LandingPage() {
                     relevant without burning context.
                   </>
                 }
-                example={`GET /api/v1/takeaways/search
-  ?query=AI+infrastructure+spending
+                example={`GET /api/v1/takeaways/search?query=AI+infrastructure+spending
 
 → 3 results, ~200 tokens total`}
               />
@@ -264,12 +264,14 @@ function LandingPage() {
                 step="2"
                 title="Drill into sources"
                 description="Found something relevant? Pull the full earnings transcript, blog post, or research note with metadata and provenance."
-                example={`GET /api/v1/documents
-  ?ids=doc_xyz789
+                example={`GET /api/v1/documents?ids=doc_xyz789
 
 → Full article text + source link`}
               />
-              <StepCard
+
+            </div>
+
+            <StepCard
                 step="3"
                 title="Query structured data"
                 description={
@@ -286,16 +288,14 @@ function LandingPage() {
 
 → Structured FRED data`}
               />
-            </div>
+
           </div>
         </FadeIn>
 
         {/* Try it */}
         <FadeIn>
           <div>
-            <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-              Try it now
-            </h2>
+
             <ApiPlayground />
           </div>
         </FadeIn>
@@ -303,8 +303,8 @@ function LandingPage() {
         {/* Install */}
         <FadeIn>
           <div>
-            <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-              Get started in 30 seconds
+            <h2 className={`mb-5 ${openingStatementClassName}`}>
+            Get started in 30 seconds
             </h2>
 
             <div className="grid gap-4 sm:grid-cols-2">
