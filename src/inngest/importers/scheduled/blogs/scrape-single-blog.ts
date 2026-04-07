@@ -8,7 +8,10 @@ import {
   processAndUploadImages,
   type ProcessedImage,
 } from "~/inngest/importers/scrapers/process-images";
-import { getDocumentSummary } from "../../helpers/get-document-summary";
+import {
+  ingestDocuments,
+  type IngestCandidate,
+} from "../../helpers/ingest-pipeline";
 
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 const MAX_ARTICLES_PER_RUN = 5;
@@ -177,81 +180,24 @@ export const scrapeSingleBlog = inngest.createFunction(
       };
     }
 
-    // Generate summaries and assess substantiveness
-    const withSummaries = await Promise.all(
-      withText.map(async (doc, index) => {
-        const summaryResult = await step.run(
-          `generate-summary-${index}`,
-          async () => {
-            return await getDocumentSummary(doc.articleText, doc.title);
-          },
-        );
-        return { ...doc, summaryResult };
-      }),
-    );
-
-    // Insert all documents and their images
-    const inserted = await step.run("insert-documents", async () => {
-      const results: { id: string; isSubstantive: boolean }[] = [];
-
-      for (const doc of withSummaries) {
-        const [row] = await db
-          .insert(schema.documents)
-          .values({
-            source: blog.title,
-            title: doc.title,
-            description: doc.summaryResult.summary,
-            publicationDate: new Date(doc.publicationDate),
-            link: doc.link,
-            articleText: doc.articleText,
-            isSubstantive: doc.summaryResult.isSubstantive,
-          })
-          .returning({
-            id: schema.documents.id,
-            isSubstantive: schema.documents.isSubstantive,
-          });
-
-        if (!row) continue;
-        results.push(row);
-
-        // Insert associated images
-        if (doc.scrapedImages.length > 0) {
-          await db.insert(schema.documentImages).values(
-            doc.scrapedImages.map((img) => ({
-              documentId: row.id,
-              blobUrl: img.blobUrl,
-              altText: img.altText,
-              position: img.position,
-              widthPx: img.widthPx,
-              heightPx: img.heightPx,
-              sizeBytes: img.sizeBytes,
-            })),
-          );
-        }
-      }
-
-      return results;
-    });
-
-    // Only fan out takeaway generation for substantive articles
-    const substantive = inserted.filter((doc) => doc.isSubstantive);
+    // Map to IngestCandidate shape
+    const ingestCandidates: IngestCandidate[] = withText.map((c) => ({
+      link: c.link,
+      title: c.title,
+      publicationDate: c.publicationDate,
+      articleText: c.articleText,
+      images: c.scrapedImages,
+    }));
 
     const takeawayPrompt = `
 - If relevant, include one concrete implication for builders/investors/operators
 - If relevant, include one concrete implication for technology, business, market, etc.`;
 
-    await Promise.all(
-      substantive.map(async (doc) => {
-        await step.sendEvent(`generate-takeaways-${doc.id}`, {
-          name: "app/generate-takeaways",
-          data: {
-            documentId: doc.id,
-            takeawayPrompt,
-            user: { id: "", email: "" },
-          },
-        });
-      }),
-    );
+    const { inserted } = await ingestDocuments(step, ingestCandidates, {
+      source: blog.title,
+      takeawayPrompt,
+      substantiveOnly: true,
+    });
 
     // Update lastScrapedAt
     await step.run("update-last-scraped-done", async () => {

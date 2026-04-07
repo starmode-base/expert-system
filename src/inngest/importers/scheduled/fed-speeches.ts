@@ -1,20 +1,18 @@
 import fetch from "node-fetch";
 import { parseStringPromise } from "xml2js";
 import { invariant } from "@tanstack/react-router";
-import { inArray } from "drizzle-orm";
-import { db, schema } from "~/postgres/db";
 import { inngest } from "../../client";
 import { scrapePageFromHtml } from "~/inngest/importers/scrapers/scrape-page";
-import {
-  coerceToArray,
-  extractXmlText,
-  normalizeLink,
-} from "./blogs/blog-helpers";
+import { coerceToArray, extractXmlText, normalizeLink } from "./blogs/blog-helpers";
 import {
   processAndUploadImages,
   type ProcessedImage,
 } from "~/inngest/importers/scrapers/process-images";
-import { getDocumentSummary } from "../helpers/get-document-summary";
+import {
+  getExistingLinks,
+  ingestDocuments,
+  type IngestCandidate,
+} from "../helpers/ingest-pipeline";
 
 interface FedRssItem {
   title?: (string | { _: string })[];
@@ -155,20 +153,11 @@ export const fedSpeechesScraper = inngest.createFunction(
       return { inserted: 0, skipped: candidates.length };
     }
 
-    const uniqueLinks = Array.from(
-      new Set(recentCandidates.map((candidate) => candidate.link)),
+    const existingLinkSet = await getExistingLinks(
+      step,
+      recentCandidates.map((c) => c.link),
     );
 
-    const existingLinks = await step.run("get-existing-links", async () => {
-      const rows = await db
-        .select({ link: schema.documents.link })
-        .from(schema.documents)
-        .where(inArray(schema.documents.link, uniqueLinks));
-
-      return rows.map((r) => r.link);
-    });
-
-    const existingLinkSet = new Set(existingLinks);
     const toScrape = recentCandidates.filter(
       (candidate) => !existingLinkSet.has(candidate.link),
     );
@@ -187,87 +176,29 @@ export const fedSpeechesScraper = inngest.createFunction(
       }),
     );
 
-    const fulfilledScraped = scraped.filter(
-      (
-        result,
-      ): result is PromiseFulfilledResult<{
-        candidate: FedCandidate;
-        articleText: string;
-        images: ProcessedImage[];
-      }> => result.status === "fulfilled",
-    );
+    const ingestCandidates: IngestCandidate[] = scraped
+      .filter(
+        (
+          result,
+        ): result is PromiseFulfilledResult<{
+          candidate: FedCandidate;
+          articleText: string;
+          images: ProcessedImage[];
+        }> => result.status === "fulfilled",
+      )
+      .map((r) => ({
+        link: r.value.candidate.link,
+        title: r.value.candidate.title,
+        publicationDate: r.value.candidate.publicationDate,
+        articleText: r.value.articleText,
+        images: r.value.images,
+      }));
 
-    if (fulfilledScraped.length === 0) {
-      return { inserted: 0, skipped: toScrape.length };
-    }
-
-    // Generate summaries for each document
-    const withSummaries = await Promise.all(
-      fulfilledScraped.map(async (doc, index) => {
-        const summaryResult = await step.run(
-          `generate-summary-${index}`,
-          async () => {
-            return await getDocumentSummary(
-              doc.value.articleText,
-              doc.value.candidate.title,
-            );
-          },
-        );
-        return { ...doc.value, summaryResult };
-      }),
-    );
-
-    const inserted = await step.run("insert-documents", async () => {
-      const results: { id: string }[] = [];
-
-      for (const doc of withSummaries) {
-        const [row] = await db
-          .insert(schema.documents)
-          .values({
-            source: FED_SOURCE,
-            title: doc.candidate.title,
-            description: doc.summaryResult.summary,
-            isSubstantive: doc.summaryResult.isSubstantive,
-            publicationDate: new Date(doc.candidate.publicationDate),
-            link: doc.candidate.link,
-            articleText: doc.articleText,
-          })
-          .returning({ id: schema.documents.id });
-
-        if (!row) continue;
-        results.push(row);
-
-        if (doc.images.length > 0) {
-          await db.insert(schema.documentImages).values(
-            doc.images.map((img) => ({
-              documentId: row.id,
-              blobUrl: img.blobUrl,
-              altText: img.altText,
-              position: img.position,
-              widthPx: img.widthPx,
-              heightPx: img.heightPx,
-              sizeBytes: img.sizeBytes,
-            })),
-          );
-        }
-      }
-
-      return results;
+    const { inserted } = await ingestDocuments(step, ingestCandidates, {
+      source: FED_SOURCE,
+      takeawayPrompt: fedSpeechesTakeawayPrompt,
+      takeawayModel: "gpt-5.4",
     });
-
-    await Promise.all(
-      inserted.map(async (doc) => {
-        await step.sendEvent(`generate-takeaways-${doc.id}`, {
-          name: "app/generate-takeaways",
-          data: {
-            documentId: doc.id,
-            takeawayPrompt: fedSpeechesTakeawayPrompt,
-            model: "gpt-5.1",
-            user: { id: "", email: "" },
-          },
-        });
-      }),
-    );
 
     return {
       inserted: inserted.length,

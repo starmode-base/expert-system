@@ -3,6 +3,12 @@ import { parseStringPromise } from "xml2js";
 import * as cheerio from "cheerio";
 import type { AnyNode, Element } from "domhandler";
 import { invariant } from "@tanstack/react-router";
+import {
+  coerceToArray,
+  extractXmlText,
+  htmlToPlainText,
+  normalizeLink,
+} from "../blogs/blog-helpers";
 
 export interface DwarkeshPodcastCandidate {
   link: string;
@@ -232,66 +238,6 @@ export async function fetchDwarkeshPodcastTranscript(url: string) {
   const entries = parseTranscriptEntries(blocks);
 
   return renderTranscript(entries, blocks);
-}
-
-function normalizeLink(rawLink: string) {
-  const trimmed = rawLink.trim();
-  if (!trimmed) {
-    return "";
-  }
-
-  try {
-    const url = new URL(trimmed);
-    url.hash = "";
-    return url.toString();
-  } catch {
-    return trimmed;
-  }
-}
-
-function coerceToArray<T>(value: T | T[] | undefined): T[] {
-  if (!value) {
-    return [];
-  }
-
-  return Array.isArray(value) ? value : [value];
-}
-
-function extractXmlText(value: unknown): string | null {
-  if (!value) {
-    return null;
-  }
-
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return extractXmlText(value[0]);
-  }
-
-  if (typeof value === "object") {
-    const maybeText = (value as { _: unknown })._;
-    if (typeof maybeText === "string") {
-      return maybeText;
-    }
-  }
-
-  return null;
-}
-
-function htmlToPlainText(html: string) {
-  const $ = cheerio.load(html);
-  const text = $.text();
-
-  return text
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
 }
 
 export const dwarkeshPodcastTakeawayPrompt = `

@@ -1,18 +1,15 @@
 import { inngest } from "~/inngest/client";
 import fetch from "node-fetch";
-import { db, schema } from "~/postgres/db";
-import { inArray } from "drizzle-orm";
 import {
-  DwarkeshPodcastCandidate,
+  type DwarkeshPodcastCandidate,
   dwarkeshPodcastTakeawayPrompt,
   fetchDwarkeshCandidatesWithTranscripts,
   parseDwarkeshPodcastCandidates,
 } from "./dwarkesh-helpers";
-import { getDocumentSummary } from "../../helpers/get-document-summary";
-
-type DwarkeshPodcastCandidateWithTranscript = DwarkeshPodcastCandidate & {
-  articleText: string;
-};
+import {
+  getExistingLinks,
+  ingestDocuments,
+} from "../../helpers/ingest-pipeline";
 
 /**
  * Scrape Dwarkesh Podcast RSS and ingest new episodes with transcripts.
@@ -43,20 +40,11 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
       return { inserted: 0, skipped: 0 };
     }
 
-    const uniqueLinks = Array.from(
-      new Set(candidates.map((candidate) => candidate.link)),
+    const existingLinkSet = await getExistingLinks(
+      step,
+      candidates.map((c) => c.link),
     );
 
-    const existingLinks = await step.run("get-existing-links", async () => {
-      const rows = await db
-        .select({ link: schema.documents.link })
-        .from(schema.documents)
-        .where(inArray(schema.documents.link, uniqueLinks));
-
-      return rows.map((r) => r.link);
-    });
-
-    const existingLinkSet = new Set(existingLinks);
     const cutoffDate = new Date("2025-09-01T00:00:00Z");
 
     const newCandidates = candidates.filter(
@@ -69,56 +57,27 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
       return { inserted: 0, skipped: candidates.length };
     }
 
-    const candidatesWithTranscripts: DwarkeshPodcastCandidateWithTranscript[] =
-      await step.run("fetch-transcripts", () =>
-        fetchDwarkeshCandidatesWithTranscripts(newCandidates),
-      );
+    const candidatesWithTranscripts = await step.run("fetch-transcripts", () =>
+      fetchDwarkeshCandidatesWithTranscripts(newCandidates),
+    );
 
     if (candidatesWithTranscripts.length === 0) {
       return { inserted: 0, skipped: newCandidates.length };
     }
 
-    // Generate summaries for each document
-    const withSummaries = await Promise.all(
-      candidatesWithTranscripts.map(async (doc, index) => {
-        const summaryResult = await step.run(
-          `generate-summary-${index}`,
-          async () => {
-            return await getDocumentSummary(doc.articleText, doc.title);
-          },
-        );
-        return { ...doc, summaryResult };
-      }),
-    );
-
-    const inserted = await step.run("insert-documents", async () => {
-      const values = withSummaries.map((doc) => ({
+    const { inserted } = await ingestDocuments(
+      step,
+      candidatesWithTranscripts.map((c) => ({
+        link: c.link,
+        title: c.title,
+        publicationDate: c.publicationDate,
+        articleText: c.articleText,
+      })),
+      {
         source: "Dwarkesh Podcast",
-        title: doc.title,
-        description: doc.summaryResult.summary,
-        isSubstantive: doc.summaryResult.isSubstantive,
-        publicationDate: new Date(doc.publicationDate),
-        link: doc.link,
-        articleText: doc.articleText,
-      }));
-
-      return await db.insert(schema.documents).values(values).returning({
-        id: schema.documents.id,
-      });
-    });
-
-    await Promise.all(
-      inserted.map(async (doc) => {
-        await step.sendEvent(`generate-takeaways-${doc.id}`, {
-          name: "app/generate-takeaways",
-          data: {
-            documentId: doc.id,
-            takeawayPrompt: dwarkeshPodcastTakeawayPrompt,
-            model: "gpt-5.4",
-            user: { id: "", email: "" },
-          },
-        });
-      }),
+        takeawayPrompt: dwarkeshPodcastTakeawayPrompt,
+        takeawayModel: "gpt-5.4",
+      },
     );
 
     return {
