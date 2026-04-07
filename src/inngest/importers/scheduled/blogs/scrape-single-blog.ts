@@ -3,8 +3,15 @@ import { eq, inArray } from "drizzle-orm";
 import { inngest } from "~/inngest/client";
 import { db, schema } from "~/postgres/db";
 import { parseFeedItems, type BlogArticleCandidate } from "./blog-helpers";
-import { extractBodyTextFromUrl } from "~/inngest/importers/scrapers/extract-body-text";
-import { getDocumentSummary } from "../../helpers/get-document-summary";
+import { scrapePage } from "~/inngest/importers/scrapers/scrape-page";
+import {
+  processAndUploadImages,
+  type ProcessedImage,
+} from "~/inngest/importers/scrapers/process-images";
+import {
+  ingestDocuments,
+  type IngestCandidate,
+} from "../../helpers/ingest-pipeline";
 
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 const MAX_ARTICLES_PER_RUN = 5;
@@ -72,13 +79,19 @@ export const scrapeSingleBlog = inngest.createFunction(
       .filter(
         (c) =>
           !existingLinkSet.has(c.link) &&
-          new Date(c.publicationDate) >= cutoffDate,
+          (c.publicationDate === null ||
+            new Date(c.publicationDate) >= cutoffDate),
       )
-      .sort(
-        (a, b) =>
-          new Date(b.publicationDate).getTime() -
-          new Date(a.publicationDate).getTime(),
-      )
+      .sort((a, b) => {
+        // Items with dates sort first (newest first); dateless items sort last
+        const aTime = a.publicationDate
+          ? new Date(a.publicationDate).getTime()
+          : 0;
+        const bTime = b.publicationDate
+          ? new Date(b.publicationDate).getTime()
+          : 0;
+        return bTime - aTime;
+      })
       .slice(0, MAX_ARTICLES_PER_RUN);
 
     if (newCandidates.length === 0) {
@@ -92,23 +105,55 @@ export const scrapeSingleBlog = inngest.createFunction(
     }
 
     // Extract article text for candidates that don't have it from the feed
-    type CandidateWithText = BlogArticleCandidate & { articleText: string };
+    type CandidateWithText = BlogArticleCandidate & {
+      publicationDate: string;
+      articleText: string;
+      scrapedImages: ProcessedImage[];
+    };
 
     const withText: CandidateWithText[] = await step.run(
       "extract-article-text",
       async () => {
         if (blog.contentInFeed) {
-          // Filter out any that failed to extract from feed
-          return newCandidates.filter(
-            (c): c is CandidateWithText => c.articleText !== null,
-          );
+          // Filter out any that failed to extract from feed (no images from RSS)
+          return newCandidates
+            .filter(
+              (
+                c,
+              ): c is BlogArticleCandidate & {
+                publicationDate: string;
+                articleText: string;
+              } => c.articleText !== null && c.publicationDate !== null,
+            )
+            .map((c) => ({ ...c, scrapedImages: [] as ProcessedImage[] }));
         }
 
-        // Fetch article text from URLs via GPT-5-nano
+        // Fetch article text from URLs via Readability + Playwright
         const results = await Promise.allSettled(
           newCandidates.map(async (c) => {
-            const text = await extractBodyTextFromUrl(c.link);
-            return { ...c, articleText: text };
+            const scraped = await scrapePage(c.link);
+            if (!scraped.isArticle || scraped.articleText.length === 0) {
+              throw new Error(`Not an article: ${c.link}`);
+            }
+
+            // Backfill publication date from page metadata if feed didn't have one
+            const publicationDate = c.publicationDate ?? scraped.publishedDate;
+            if (!publicationDate) {
+              throw new Error(`No publication date found: ${c.link}`);
+            }
+
+            // Process and upload images
+            const scrapedImages =
+              scraped.images.length > 0
+                ? await processAndUploadImages(scraped.images, c.link)
+                : [];
+
+            return {
+              ...c,
+              publicationDate,
+              articleText: scraped.articleText,
+              scrapedImages,
+            };
           }),
         );
 
@@ -135,56 +180,24 @@ export const scrapeSingleBlog = inngest.createFunction(
       };
     }
 
-    // Generate summaries and assess substantiveness
-    const withSummaries = await Promise.all(
-      withText.map(async (doc, index) => {
-        const summaryResult = await step.run(
-          `generate-summary-${index}`,
-          async () => {
-            return await getDocumentSummary(doc.articleText, doc.title);
-          },
-        );
-        return { ...doc, summaryResult };
-      }),
-    );
-
-    // Insert all documents
-    const inserted = await step.run("insert-documents", async () => {
-      const values = withSummaries.map((doc) => ({
-        source: blog.title,
-        title: doc.title,
-        description: doc.summaryResult.summary,
-        publicationDate: new Date(doc.publicationDate),
-        link: doc.link,
-        articleText: doc.articleText,
-        isSubstantive: doc.summaryResult.isSubstantive,
-      }));
-
-      return await db.insert(schema.documents).values(values).returning({
-        id: schema.documents.id,
-        isSubstantive: schema.documents.isSubstantive,
-      });
-    });
-
-    // Only fan out takeaway generation for substantive articles
-    const substantive = inserted.filter((doc) => doc.isSubstantive);
+    // Map to IngestCandidate shape
+    const ingestCandidates: IngestCandidate[] = withText.map((c) => ({
+      link: c.link,
+      title: c.title,
+      publicationDate: c.publicationDate,
+      articleText: c.articleText,
+      images: c.scrapedImages,
+    }));
 
     const takeawayPrompt = `
 - If relevant, include one concrete implication for builders/investors/operators
 - If relevant, include one concrete implication for technology, business, market, etc.`;
 
-    await Promise.all(
-      substantive.map(async (doc) => {
-        await step.sendEvent(`generate-takeaways-${doc.id}`, {
-          name: "app/generate-takeaways",
-          data: {
-            documentId: doc.id,
-            takeawayPrompt,
-            user: { id: "", email: "" },
-          },
-        });
-      }),
-    );
+    const { inserted } = await ingestDocuments(step, ingestCandidates, {
+      source: blog.title,
+      takeawayPrompt,
+      substantiveOnly: true,
+    });
 
     // Update lastScrapedAt
     await step.run("update-last-scraped-done", async () => {

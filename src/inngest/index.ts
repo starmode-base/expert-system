@@ -2,7 +2,6 @@ import { dailyInsight } from "./insights/daily-insight";
 import { generateInsight } from "./insights/generate-insight";
 import { generateTakeaways } from "./takeaways/generate-takeaways";
 import { fedSpeechesScraper } from "./importers/scheduled/fed-speeches";
-import { scienceDailyScraper } from "./importers/unused/science-daily-scraper";
 import { dwarkeshPodcastScraper } from "./importers/scheduled/dwarkesh/dwarkesh-job";
 import { macroVoicesScraper } from "./importers/scheduled/macrovoices/macrovoices-job";
 import { a16zNewsScraper } from "./importers/scheduled/a16z/a16z-job";
@@ -21,7 +20,6 @@ import { fetchCompanyOverviewWorker } from "./stock-data/fetch-company-overview"
 import { syncStockSymbols } from "./stock-data/sync-stock-symbols";
 
 export const inngestFunctions = [
-  scienceDailyScraper,
   fetchTranscripts,
   generateTakeaways,
   generateInsight,

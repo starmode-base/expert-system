@@ -3,21 +3,20 @@ import { useAuth } from "@clerk/tanstack-start";
 
 const ALLOWED_USER_ID = "user_2ujqJX9ueMg9wBJVUVATq8veKI3";
 
-export const Route = createFileRoute("/settings")({
-  component: SettingsLayout,
+export const Route = createFileRoute("/dev")({
+  component: DevLayout,
 });
 
-function SettingsLayout() {
+function DevLayout() {
   const auth = useAuth();
 
-  // Redirect unauthorized users
   if (auth.userId !== ALLOWED_USER_ID) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
           <h1 className="text-lg font-semibold text-red-800">Access Denied</h1>
           <p className="mt-2 text-sm text-red-600">
-            You don't have permission to access this page.
+            You don&apos;t have permission to access this page.
           </p>
         </div>
       </div>
@@ -25,18 +24,15 @@ function SettingsLayout() {
   }
 
   const subNavItems = [
+    { key: "scrape", to: "/dev/scrape", label: "Scrape URL" },
     {
       key: "insight-studio",
-      to: "/insight-studio",
+      to: "/dev/insight-studio",
       label: "Insight Studio",
     },
-    {
-      key: "public-stocks",
-      to: "/settings/public-stocks",
-      label: "Public Stocks",
-    },
-    { key: "x", to: "/settings/x", label: "X Settings" },
-    { key: "blog-feeds", to: "/settings/blog-feeds", label: "Blog Feeds" },
+    { key: "public-stocks", to: "/dev/public-stocks", label: "Public Stocks" },
+    { key: "x", to: "/dev/x", label: "X Settings" },
+    { key: "blog-feeds", to: "/dev/blog-feeds", label: "Blog Feeds" },
   ];
 
   return (

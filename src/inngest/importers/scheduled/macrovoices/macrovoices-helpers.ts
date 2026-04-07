@@ -1,26 +1,13 @@
 import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 import { AnyNode } from "domhandler";
+import { htmlToPlainText } from "../parse-helpers";
 
 export interface MacroVoicesCandidate {
   link: string;
   title: string;
   description: string;
   publicationDate: string;
-}
-
-function htmlToPlainText(html: string) {
-  const $ = cheerio.load(html);
-  const text = $.text();
-
-  return text
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
 }
 
 function extractDate(text: string): string | null {

@@ -102,7 +102,7 @@ function NavBar() {
   const auth = useAuth();
 
   // TODO: add user role for dev permissions.
-  const devNavItems = [{ key: "settings", to: "/settings", label: "Dev" }];
+  const devNavItems = [{ key: "dev", to: "/dev/scrape", label: "Dev" }];
 
   const isDev = auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3";
 

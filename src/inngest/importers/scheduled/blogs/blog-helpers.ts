@@ -1,72 +1,26 @@
 import * as cheerio from "cheerio";
 import fetch from "node-fetch";
 import { parseStringPromise } from "xml2js";
+import {
+  coerceToArray,
+  extractXmlText,
+  htmlToPlainText,
+  normalizeLink,
+} from "../parse-helpers";
+
+export {
+  coerceToArray,
+  extractXmlText,
+  htmlToPlainText,
+  normalizeLink,
+} from "../parse-helpers";
 
 export interface BlogArticleCandidate {
   link: string;
   title: string;
   description: string;
-  publicationDate: string;
+  publicationDate: string | null;
   articleText: string | null;
-}
-
-export function htmlToPlainText(html: string): string {
-  const $ = cheerio.load(html);
-  const text = $.text();
-
-  return text
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-export function coerceToArray<T>(value: T | T[] | undefined): T[] {
-  if (!value) {
-    return [];
-  }
-  return Array.isArray(value) ? value : [value];
-}
-
-export function extractXmlText(value: unknown): string | null {
-  if (!value) {
-    return null;
-  }
-
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return extractXmlText(value[0]);
-  }
-
-  if (typeof value === "object") {
-    const maybeText = (value as { _: unknown })._;
-    if (typeof maybeText === "string") {
-      return maybeText;
-    }
-  }
-
-  return null;
-}
-
-export function normalizeLink(rawLink: string): string {
-  const trimmed = rawLink.trim();
-  if (!trimmed) {
-    return "";
-  }
-
-  try {
-    const url = new URL(trimmed);
-    url.hash = "";
-    return url.toString();
-  } catch {
-    return trimmed;
-  }
 }
 
 interface RssItem {
@@ -274,7 +228,7 @@ function parseRssItem(
     extractXmlText(item.pubDate) ?? extractXmlText(item["dc:date"]);
 
   const linkSource = (rawGuid ?? rawLink)?.trim();
-  if (!linkSource || !rawTitle || !rawPubDate) {
+  if (!linkSource || !rawTitle) {
     return null;
   }
 
@@ -283,9 +237,12 @@ function parseRssItem(
     return null;
   }
 
-  const publicationDate = new Date(rawPubDate);
-  if (Number.isNaN(publicationDate.getTime())) {
-    return null;
+  let publicationDate: string | null = null;
+  if (rawPubDate) {
+    const parsed = new Date(rawPubDate);
+    if (!Number.isNaN(parsed.getTime())) {
+      publicationDate = parsed.toISOString();
+    }
   }
 
   let articleText: string | null = null;
@@ -300,7 +257,7 @@ function parseRssItem(
     link,
     title: rawTitle.trim(),
     description: (rawDescription ?? rawTitle).trim(),
-    publicationDate: publicationDate.toISOString(),
+    publicationDate,
     articleText,
   };
 }
@@ -313,7 +270,7 @@ function parseAtomEntry(
   const rawPubDate = entry.published?.[0] ?? entry.updated?.[0] ?? null;
   const rawSummary = extractXmlText(entry.summary?.[0]);
 
-  if (!rawTitle || !rawPubDate) {
+  if (!rawTitle) {
     return null;
   }
 
@@ -331,9 +288,12 @@ function parseAtomEntry(
     return null;
   }
 
-  const publicationDate = new Date(rawPubDate);
-  if (Number.isNaN(publicationDate.getTime())) {
-    return null;
+  let publicationDate: string | null = null;
+  if (rawPubDate) {
+    const parsed = new Date(rawPubDate);
+    if (!Number.isNaN(parsed.getTime())) {
+      publicationDate = parsed.toISOString();
+    }
   }
 
   let articleText: string | null = null;
@@ -348,7 +308,7 @@ function parseAtomEntry(
     link,
     title: rawTitle.trim(),
     description: (rawSummary ?? rawTitle).trim(),
-    publicationDate: publicationDate.toISOString(),
+    publicationDate,
     articleText,
   };
 }

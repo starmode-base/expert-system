@@ -1,6 +1,7 @@
 import { invariant } from "@tanstack/react-router";
 import { and } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
+import type { ProcessedImage } from "./process-images";
 
 export interface Document {
   publicationDate: Date;
@@ -10,6 +11,7 @@ export interface Document {
   link: string;
   articleText: string;
   isSubstantive?: boolean;
+  images?: ProcessedImage[];
 }
 
 /**
@@ -54,5 +56,21 @@ export async function saveContent(document: Document): Promise<string> {
 
   invariant(result[0], "Failed to create document");
 
-  return result[0].id;
+  const documentId = result[0].id;
+
+  if (document.images && document.images.length > 0) {
+    await db.insert(schema.documentImages).values(
+      document.images.map((img) => ({
+        documentId,
+        blobUrl: img.blobUrl,
+        altText: img.altText,
+        position: img.position,
+        widthPx: img.widthPx,
+        heightPx: img.heightPx,
+        sizeBytes: img.sizeBytes,
+      })),
+    );
+  }
+
+  return documentId;
 }

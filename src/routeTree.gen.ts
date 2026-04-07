@@ -11,35 +11,30 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as SettingsImport } from './routes/settings'
 import { Route as PricingImport } from './routes/pricing'
 import { Route as FeedsImport } from './routes/feeds'
+import { Route as DevImport } from './routes/dev'
 import { Route as AccountImport } from './routes/account'
 import { Route as IndexImport } from './routes/index'
-import { Route as SettingsIndexImport } from './routes/settings/index'
-import { Route as InsightStudioIndexImport } from './routes/insight-studio.index'
+import { Route as DevIndexImport } from './routes/dev/index'
 import { Route as TakeawayTakeawayIdImport } from './routes/takeaway.$takeawayId'
 import { Route as StocksSymbolImport } from './routes/stocks.$symbol'
-import { Route as SettingsXImport } from './routes/settings/x'
-import { Route as SettingsPublicStocksImport } from './routes/settings/public-stocks'
-import { Route as SettingsBlogFeedsImport } from './routes/settings/blog-feeds'
 import { Route as InsightInsightIdImport } from './routes/insight.$insightId'
-import { Route as InsightStudioInsightIdImport } from './routes/insight-studio.$insightId'
 import { Route as FeedsResearchImport } from './routes/feeds/research'
 import { Route as FeedsInsightsImport } from './routes/feeds/insights'
+import { Route as DevXImport } from './routes/dev/x'
+import { Route as DevScrapeImport } from './routes/dev/scrape'
+import { Route as DevPublicStocksImport } from './routes/dev/public-stocks'
+import { Route as DevBlogFeedsImport } from './routes/dev/blog-feeds'
 import { Route as AccountUsageImport } from './routes/account/usage'
 import { Route as AccountApiKeysImport } from './routes/account/api-keys'
 import { Route as AccountApiDocsImport } from './routes/account/api-docs'
 import { Route as FeedsNewsIndexImport } from './routes/feeds/news.index'
+import { Route as DevInsightStudioIndexImport } from './routes/dev/insight-studio/index'
 import { Route as FeedsNewsDocumentidImport } from './routes/feeds/news.$documentid'
+import { Route as DevInsightStudioInsightIdImport } from './routes/dev/insight-studio/$insightId'
 
 // Create/Update Routes
-
-const SettingsRoute = SettingsImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const PricingRoute = PricingImport.update({
   id: '/pricing',
@@ -50,6 +45,12 @@ const PricingRoute = PricingImport.update({
 const FeedsRoute = FeedsImport.update({
   id: '/feeds',
   path: '/feeds',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const DevRoute = DevImport.update({
+  id: '/dev',
+  path: '/dev',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -65,16 +66,10 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const SettingsIndexRoute = SettingsIndexImport.update({
+const DevIndexRoute = DevIndexImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => SettingsRoute,
-} as any)
-
-const InsightStudioIndexRoute = InsightStudioIndexImport.update({
-  id: '/insight-studio/',
-  path: '/insight-studio/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => DevRoute,
 } as any)
 
 const TakeawayTakeawayIdRoute = TakeawayTakeawayIdImport.update({
@@ -89,33 +84,9 @@ const StocksSymbolRoute = StocksSymbolImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const SettingsXRoute = SettingsXImport.update({
-  id: '/x',
-  path: '/x',
-  getParentRoute: () => SettingsRoute,
-} as any)
-
-const SettingsPublicStocksRoute = SettingsPublicStocksImport.update({
-  id: '/public-stocks',
-  path: '/public-stocks',
-  getParentRoute: () => SettingsRoute,
-} as any)
-
-const SettingsBlogFeedsRoute = SettingsBlogFeedsImport.update({
-  id: '/blog-feeds',
-  path: '/blog-feeds',
-  getParentRoute: () => SettingsRoute,
-} as any)
-
 const InsightInsightIdRoute = InsightInsightIdImport.update({
   id: '/insight/$insightId',
   path: '/insight/$insightId',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const InsightStudioInsightIdRoute = InsightStudioInsightIdImport.update({
-  id: '/insight-studio/$insightId',
-  path: '/insight-studio/$insightId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -129,6 +100,30 @@ const FeedsInsightsRoute = FeedsInsightsImport.update({
   id: '/insights',
   path: '/insights',
   getParentRoute: () => FeedsRoute,
+} as any)
+
+const DevXRoute = DevXImport.update({
+  id: '/x',
+  path: '/x',
+  getParentRoute: () => DevRoute,
+} as any)
+
+const DevScrapeRoute = DevScrapeImport.update({
+  id: '/scrape',
+  path: '/scrape',
+  getParentRoute: () => DevRoute,
+} as any)
+
+const DevPublicStocksRoute = DevPublicStocksImport.update({
+  id: '/public-stocks',
+  path: '/public-stocks',
+  getParentRoute: () => DevRoute,
+} as any)
+
+const DevBlogFeedsRoute = DevBlogFeedsImport.update({
+  id: '/blog-feeds',
+  path: '/blog-feeds',
+  getParentRoute: () => DevRoute,
 } as any)
 
 const AccountUsageRoute = AccountUsageImport.update({
@@ -155,10 +150,22 @@ const FeedsNewsIndexRoute = FeedsNewsIndexImport.update({
   getParentRoute: () => FeedsRoute,
 } as any)
 
+const DevInsightStudioIndexRoute = DevInsightStudioIndexImport.update({
+  id: '/insight-studio/',
+  path: '/insight-studio/',
+  getParentRoute: () => DevRoute,
+} as any)
+
 const FeedsNewsDocumentidRoute = FeedsNewsDocumentidImport.update({
   id: '/news/$documentid',
   path: '/news/$documentid',
   getParentRoute: () => FeedsRoute,
+} as any)
+
+const DevInsightStudioInsightIdRoute = DevInsightStudioInsightIdImport.update({
+  id: '/insight-studio/$insightId',
+  path: '/insight-studio/$insightId',
+  getParentRoute: () => DevRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -179,6 +186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountImport
       parentRoute: typeof rootRoute
     }
+    '/dev': {
+      id: '/dev'
+      path: '/dev'
+      fullPath: '/dev'
+      preLoaderRoute: typeof DevImport
+      parentRoute: typeof rootRoute
+    }
     '/feeds': {
       id: '/feeds'
       path: '/feeds'
@@ -191,13 +205,6 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingImport
-      parentRoute: typeof rootRoute
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsImport
       parentRoute: typeof rootRoute
     }
     '/account/api-docs': {
@@ -221,6 +228,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountUsageImport
       parentRoute: typeof AccountImport
     }
+    '/dev/blog-feeds': {
+      id: '/dev/blog-feeds'
+      path: '/blog-feeds'
+      fullPath: '/dev/blog-feeds'
+      preLoaderRoute: typeof DevBlogFeedsImport
+      parentRoute: typeof DevImport
+    }
+    '/dev/public-stocks': {
+      id: '/dev/public-stocks'
+      path: '/public-stocks'
+      fullPath: '/dev/public-stocks'
+      preLoaderRoute: typeof DevPublicStocksImport
+      parentRoute: typeof DevImport
+    }
+    '/dev/scrape': {
+      id: '/dev/scrape'
+      path: '/scrape'
+      fullPath: '/dev/scrape'
+      preLoaderRoute: typeof DevScrapeImport
+      parentRoute: typeof DevImport
+    }
+    '/dev/x': {
+      id: '/dev/x'
+      path: '/x'
+      fullPath: '/dev/x'
+      preLoaderRoute: typeof DevXImport
+      parentRoute: typeof DevImport
+    }
     '/feeds/insights': {
       id: '/feeds/insights'
       path: '/insights'
@@ -235,40 +270,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedsResearchImport
       parentRoute: typeof FeedsImport
     }
-    '/insight-studio/$insightId': {
-      id: '/insight-studio/$insightId'
-      path: '/insight-studio/$insightId'
-      fullPath: '/insight-studio/$insightId'
-      preLoaderRoute: typeof InsightStudioInsightIdImport
-      parentRoute: typeof rootRoute
-    }
     '/insight/$insightId': {
       id: '/insight/$insightId'
       path: '/insight/$insightId'
       fullPath: '/insight/$insightId'
       preLoaderRoute: typeof InsightInsightIdImport
       parentRoute: typeof rootRoute
-    }
-    '/settings/blog-feeds': {
-      id: '/settings/blog-feeds'
-      path: '/blog-feeds'
-      fullPath: '/settings/blog-feeds'
-      preLoaderRoute: typeof SettingsBlogFeedsImport
-      parentRoute: typeof SettingsImport
-    }
-    '/settings/public-stocks': {
-      id: '/settings/public-stocks'
-      path: '/public-stocks'
-      fullPath: '/settings/public-stocks'
-      preLoaderRoute: typeof SettingsPublicStocksImport
-      parentRoute: typeof SettingsImport
-    }
-    '/settings/x': {
-      id: '/settings/x'
-      path: '/x'
-      fullPath: '/settings/x'
-      preLoaderRoute: typeof SettingsXImport
-      parentRoute: typeof SettingsImport
     }
     '/stocks/$symbol': {
       id: '/stocks/$symbol'
@@ -284,19 +291,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TakeawayTakeawayIdImport
       parentRoute: typeof rootRoute
     }
-    '/insight-studio/': {
-      id: '/insight-studio/'
-      path: '/insight-studio'
-      fullPath: '/insight-studio'
-      preLoaderRoute: typeof InsightStudioIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/settings/': {
-      id: '/settings/'
+    '/dev/': {
+      id: '/dev/'
       path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof SettingsIndexImport
-      parentRoute: typeof SettingsImport
+      fullPath: '/dev/'
+      preLoaderRoute: typeof DevIndexImport
+      parentRoute: typeof DevImport
+    }
+    '/dev/insight-studio/$insightId': {
+      id: '/dev/insight-studio/$insightId'
+      path: '/insight-studio/$insightId'
+      fullPath: '/dev/insight-studio/$insightId'
+      preLoaderRoute: typeof DevInsightStudioInsightIdImport
+      parentRoute: typeof DevImport
     }
     '/feeds/news/$documentid': {
       id: '/feeds/news/$documentid'
@@ -304,6 +311,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/feeds/news/$documentid'
       preLoaderRoute: typeof FeedsNewsDocumentidImport
       parentRoute: typeof FeedsImport
+    }
+    '/dev/insight-studio/': {
+      id: '/dev/insight-studio/'
+      path: '/insight-studio'
+      fullPath: '/dev/insight-studio'
+      preLoaderRoute: typeof DevInsightStudioIndexImport
+      parentRoute: typeof DevImport
     }
     '/feeds/news/': {
       id: '/feeds/news/'
@@ -332,6 +346,28 @@ const AccountRouteChildren: AccountRouteChildren = {
 const AccountRouteWithChildren =
   AccountRoute._addFileChildren(AccountRouteChildren)
 
+interface DevRouteChildren {
+  DevBlogFeedsRoute: typeof DevBlogFeedsRoute
+  DevPublicStocksRoute: typeof DevPublicStocksRoute
+  DevScrapeRoute: typeof DevScrapeRoute
+  DevXRoute: typeof DevXRoute
+  DevIndexRoute: typeof DevIndexRoute
+  DevInsightStudioInsightIdRoute: typeof DevInsightStudioInsightIdRoute
+  DevInsightStudioIndexRoute: typeof DevInsightStudioIndexRoute
+}
+
+const DevRouteChildren: DevRouteChildren = {
+  DevBlogFeedsRoute: DevBlogFeedsRoute,
+  DevPublicStocksRoute: DevPublicStocksRoute,
+  DevScrapeRoute: DevScrapeRoute,
+  DevXRoute: DevXRoute,
+  DevIndexRoute: DevIndexRoute,
+  DevInsightStudioInsightIdRoute: DevInsightStudioInsightIdRoute,
+  DevInsightStudioIndexRoute: DevInsightStudioIndexRoute,
+}
+
+const DevRouteWithChildren = DevRoute._addFileChildren(DevRouteChildren)
+
 interface FeedsRouteChildren {
   FeedsInsightsRoute: typeof FeedsInsightsRoute
   FeedsResearchRoute: typeof FeedsResearchRoute
@@ -348,45 +384,28 @@ const FeedsRouteChildren: FeedsRouteChildren = {
 
 const FeedsRouteWithChildren = FeedsRoute._addFileChildren(FeedsRouteChildren)
 
-interface SettingsRouteChildren {
-  SettingsBlogFeedsRoute: typeof SettingsBlogFeedsRoute
-  SettingsPublicStocksRoute: typeof SettingsPublicStocksRoute
-  SettingsXRoute: typeof SettingsXRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
-}
-
-const SettingsRouteChildren: SettingsRouteChildren = {
-  SettingsBlogFeedsRoute: SettingsBlogFeedsRoute,
-  SettingsPublicStocksRoute: SettingsPublicStocksRoute,
-  SettingsXRoute: SettingsXRoute,
-  SettingsIndexRoute: SettingsIndexRoute,
-}
-
-const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
-  SettingsRouteChildren,
-)
-
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
+  '/dev': typeof DevRouteWithChildren
   '/feeds': typeof FeedsRouteWithChildren
   '/pricing': typeof PricingRoute
-  '/settings': typeof SettingsRouteWithChildren
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
   '/account/usage': typeof AccountUsageRoute
+  '/dev/blog-feeds': typeof DevBlogFeedsRoute
+  '/dev/public-stocks': typeof DevPublicStocksRoute
+  '/dev/scrape': typeof DevScrapeRoute
+  '/dev/x': typeof DevXRoute
   '/feeds/insights': typeof FeedsInsightsRoute
   '/feeds/research': typeof FeedsResearchRoute
-  '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
-  '/settings/blog-feeds': typeof SettingsBlogFeedsRoute
-  '/settings/public-stocks': typeof SettingsPublicStocksRoute
-  '/settings/x': typeof SettingsXRoute
   '/stocks/$symbol': typeof StocksSymbolRoute
   '/takeaway/$takeawayId': typeof TakeawayTakeawayIdRoute
-  '/insight-studio': typeof InsightStudioIndexRoute
-  '/settings/': typeof SettingsIndexRoute
+  '/dev/': typeof DevIndexRoute
+  '/dev/insight-studio/$insightId': typeof DevInsightStudioInsightIdRoute
   '/feeds/news/$documentid': typeof FeedsNewsDocumentidRoute
+  '/dev/insight-studio': typeof DevInsightStudioIndexRoute
   '/feeds/news': typeof FeedsNewsIndexRoute
 }
 
@@ -398,18 +417,19 @@ export interface FileRoutesByTo {
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
   '/account/usage': typeof AccountUsageRoute
+  '/dev/blog-feeds': typeof DevBlogFeedsRoute
+  '/dev/public-stocks': typeof DevPublicStocksRoute
+  '/dev/scrape': typeof DevScrapeRoute
+  '/dev/x': typeof DevXRoute
   '/feeds/insights': typeof FeedsInsightsRoute
   '/feeds/research': typeof FeedsResearchRoute
-  '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
-  '/settings/blog-feeds': typeof SettingsBlogFeedsRoute
-  '/settings/public-stocks': typeof SettingsPublicStocksRoute
-  '/settings/x': typeof SettingsXRoute
   '/stocks/$symbol': typeof StocksSymbolRoute
   '/takeaway/$takeawayId': typeof TakeawayTakeawayIdRoute
-  '/insight-studio': typeof InsightStudioIndexRoute
-  '/settings': typeof SettingsIndexRoute
+  '/dev': typeof DevIndexRoute
+  '/dev/insight-studio/$insightId': typeof DevInsightStudioInsightIdRoute
   '/feeds/news/$documentid': typeof FeedsNewsDocumentidRoute
+  '/dev/insight-studio': typeof DevInsightStudioIndexRoute
   '/feeds/news': typeof FeedsNewsIndexRoute
 }
 
@@ -417,24 +437,25 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
+  '/dev': typeof DevRouteWithChildren
   '/feeds': typeof FeedsRouteWithChildren
   '/pricing': typeof PricingRoute
-  '/settings': typeof SettingsRouteWithChildren
   '/account/api-docs': typeof AccountApiDocsRoute
   '/account/api-keys': typeof AccountApiKeysRoute
   '/account/usage': typeof AccountUsageRoute
+  '/dev/blog-feeds': typeof DevBlogFeedsRoute
+  '/dev/public-stocks': typeof DevPublicStocksRoute
+  '/dev/scrape': typeof DevScrapeRoute
+  '/dev/x': typeof DevXRoute
   '/feeds/insights': typeof FeedsInsightsRoute
   '/feeds/research': typeof FeedsResearchRoute
-  '/insight-studio/$insightId': typeof InsightStudioInsightIdRoute
   '/insight/$insightId': typeof InsightInsightIdRoute
-  '/settings/blog-feeds': typeof SettingsBlogFeedsRoute
-  '/settings/public-stocks': typeof SettingsPublicStocksRoute
-  '/settings/x': typeof SettingsXRoute
   '/stocks/$symbol': typeof StocksSymbolRoute
   '/takeaway/$takeawayId': typeof TakeawayTakeawayIdRoute
-  '/insight-studio/': typeof InsightStudioIndexRoute
-  '/settings/': typeof SettingsIndexRoute
+  '/dev/': typeof DevIndexRoute
+  '/dev/insight-studio/$insightId': typeof DevInsightStudioInsightIdRoute
   '/feeds/news/$documentid': typeof FeedsNewsDocumentidRoute
+  '/dev/insight-studio/': typeof DevInsightStudioIndexRoute
   '/feeds/news/': typeof FeedsNewsIndexRoute
 }
 
@@ -443,24 +464,25 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/dev'
     | '/feeds'
     | '/pricing'
-    | '/settings'
     | '/account/api-docs'
     | '/account/api-keys'
     | '/account/usage'
+    | '/dev/blog-feeds'
+    | '/dev/public-stocks'
+    | '/dev/scrape'
+    | '/dev/x'
     | '/feeds/insights'
     | '/feeds/research'
-    | '/insight-studio/$insightId'
     | '/insight/$insightId'
-    | '/settings/blog-feeds'
-    | '/settings/public-stocks'
-    | '/settings/x'
     | '/stocks/$symbol'
     | '/takeaway/$takeawayId'
-    | '/insight-studio'
-    | '/settings/'
+    | '/dev/'
+    | '/dev/insight-studio/$insightId'
     | '/feeds/news/$documentid'
+    | '/dev/insight-studio'
     | '/feeds/news'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -471,41 +493,43 @@ export interface FileRouteTypes {
     | '/account/api-docs'
     | '/account/api-keys'
     | '/account/usage'
+    | '/dev/blog-feeds'
+    | '/dev/public-stocks'
+    | '/dev/scrape'
+    | '/dev/x'
     | '/feeds/insights'
     | '/feeds/research'
-    | '/insight-studio/$insightId'
     | '/insight/$insightId'
-    | '/settings/blog-feeds'
-    | '/settings/public-stocks'
-    | '/settings/x'
     | '/stocks/$symbol'
     | '/takeaway/$takeawayId'
-    | '/insight-studio'
-    | '/settings'
+    | '/dev'
+    | '/dev/insight-studio/$insightId'
     | '/feeds/news/$documentid'
+    | '/dev/insight-studio'
     | '/feeds/news'
   id:
     | '__root__'
     | '/'
     | '/account'
+    | '/dev'
     | '/feeds'
     | '/pricing'
-    | '/settings'
     | '/account/api-docs'
     | '/account/api-keys'
     | '/account/usage'
+    | '/dev/blog-feeds'
+    | '/dev/public-stocks'
+    | '/dev/scrape'
+    | '/dev/x'
     | '/feeds/insights'
     | '/feeds/research'
-    | '/insight-studio/$insightId'
     | '/insight/$insightId'
-    | '/settings/blog-feeds'
-    | '/settings/public-stocks'
-    | '/settings/x'
     | '/stocks/$symbol'
     | '/takeaway/$takeawayId'
-    | '/insight-studio/'
-    | '/settings/'
+    | '/dev/'
+    | '/dev/insight-studio/$insightId'
     | '/feeds/news/$documentid'
+    | '/dev/insight-studio/'
     | '/feeds/news/'
   fileRoutesById: FileRoutesById
 }
@@ -513,27 +537,23 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRouteWithChildren
+  DevRoute: typeof DevRouteWithChildren
   FeedsRoute: typeof FeedsRouteWithChildren
   PricingRoute: typeof PricingRoute
-  SettingsRoute: typeof SettingsRouteWithChildren
-  InsightStudioInsightIdRoute: typeof InsightStudioInsightIdRoute
   InsightInsightIdRoute: typeof InsightInsightIdRoute
   StocksSymbolRoute: typeof StocksSymbolRoute
   TakeawayTakeawayIdRoute: typeof TakeawayTakeawayIdRoute
-  InsightStudioIndexRoute: typeof InsightStudioIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRouteWithChildren,
+  DevRoute: DevRouteWithChildren,
   FeedsRoute: FeedsRouteWithChildren,
   PricingRoute: PricingRoute,
-  SettingsRoute: SettingsRouteWithChildren,
-  InsightStudioInsightIdRoute: InsightStudioInsightIdRoute,
   InsightInsightIdRoute: InsightInsightIdRoute,
   StocksSymbolRoute: StocksSymbolRoute,
   TakeawayTakeawayIdRoute: TakeawayTakeawayIdRoute,
-  InsightStudioIndexRoute: InsightStudioIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -548,14 +568,12 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/account",
+        "/dev",
         "/feeds",
         "/pricing",
-        "/settings",
-        "/insight-studio/$insightId",
         "/insight/$insightId",
         "/stocks/$symbol",
-        "/takeaway/$takeawayId",
-        "/insight-studio/"
+        "/takeaway/$takeawayId"
       ]
     },
     "/": {
@@ -567,6 +585,18 @@ export const routeTree = rootRoute
         "/account/api-docs",
         "/account/api-keys",
         "/account/usage"
+      ]
+    },
+    "/dev": {
+      "filePath": "dev.tsx",
+      "children": [
+        "/dev/blog-feeds",
+        "/dev/public-stocks",
+        "/dev/scrape",
+        "/dev/x",
+        "/dev/",
+        "/dev/insight-studio/$insightId",
+        "/dev/insight-studio/"
       ]
     },
     "/feeds": {
@@ -581,15 +611,6 @@ export const routeTree = rootRoute
     "/pricing": {
       "filePath": "pricing.tsx"
     },
-    "/settings": {
-      "filePath": "settings.tsx",
-      "children": [
-        "/settings/blog-feeds",
-        "/settings/public-stocks",
-        "/settings/x",
-        "/settings/"
-      ]
-    },
     "/account/api-docs": {
       "filePath": "account/api-docs.tsx",
       "parent": "/account"
@@ -602,6 +623,22 @@ export const routeTree = rootRoute
       "filePath": "account/usage.tsx",
       "parent": "/account"
     },
+    "/dev/blog-feeds": {
+      "filePath": "dev/blog-feeds.tsx",
+      "parent": "/dev"
+    },
+    "/dev/public-stocks": {
+      "filePath": "dev/public-stocks.tsx",
+      "parent": "/dev"
+    },
+    "/dev/scrape": {
+      "filePath": "dev/scrape.tsx",
+      "parent": "/dev"
+    },
+    "/dev/x": {
+      "filePath": "dev/x.tsx",
+      "parent": "/dev"
+    },
     "/feeds/insights": {
       "filePath": "feeds/insights.tsx",
       "parent": "/feeds"
@@ -610,23 +647,8 @@ export const routeTree = rootRoute
       "filePath": "feeds/research.tsx",
       "parent": "/feeds"
     },
-    "/insight-studio/$insightId": {
-      "filePath": "insight-studio.$insightId.tsx"
-    },
     "/insight/$insightId": {
       "filePath": "insight.$insightId.tsx"
-    },
-    "/settings/blog-feeds": {
-      "filePath": "settings/blog-feeds.tsx",
-      "parent": "/settings"
-    },
-    "/settings/public-stocks": {
-      "filePath": "settings/public-stocks.tsx",
-      "parent": "/settings"
-    },
-    "/settings/x": {
-      "filePath": "settings/x.tsx",
-      "parent": "/settings"
     },
     "/stocks/$symbol": {
       "filePath": "stocks.$symbol.tsx"
@@ -634,16 +656,21 @@ export const routeTree = rootRoute
     "/takeaway/$takeawayId": {
       "filePath": "takeaway.$takeawayId.tsx"
     },
-    "/insight-studio/": {
-      "filePath": "insight-studio.index.tsx"
+    "/dev/": {
+      "filePath": "dev/index.tsx",
+      "parent": "/dev"
     },
-    "/settings/": {
-      "filePath": "settings/index.tsx",
-      "parent": "/settings"
+    "/dev/insight-studio/$insightId": {
+      "filePath": "dev/insight-studio/$insightId.tsx",
+      "parent": "/dev"
     },
     "/feeds/news/$documentid": {
       "filePath": "feeds/news.$documentid.tsx",
       "parent": "/feeds"
+    },
+    "/dev/insight-studio/": {
+      "filePath": "dev/insight-studio/index.tsx",
+      "parent": "/dev"
     },
     "/feeds/news/": {
       "filePath": "feeds/news.index.tsx",

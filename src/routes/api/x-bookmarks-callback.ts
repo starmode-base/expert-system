@@ -140,7 +140,7 @@ export const APIRoute = createAPIFileRoute("/api/x-bookmarks-callback")({
       }
 
       // Success! Clear the session cookie and redirect to settings
-      const redirectUrl = `${origin()}/settings/x?x_connected=true`;
+      const redirectUrl = `${origin()}/dev/x?x_connected=true`;
       return new Response(null, {
         status: 302,
         headers: {

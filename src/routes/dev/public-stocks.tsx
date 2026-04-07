@@ -21,7 +21,7 @@ interface TrackedCompany {
   nextEarningsDate: Date | null;
 }
 
-export const Route = createFileRoute("/settings/public-stocks")({
+export const Route = createFileRoute("/dev/public-stocks")({
   validateSearch: (search: Record<string, unknown> | undefined) => ({
     searchInput: search?.searchInput as string | undefined,
   }),

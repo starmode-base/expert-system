@@ -54,6 +54,11 @@ export const generateTakeaways = inngest.createFunction(
         const document = await db.query.documents.findFirst({
           where: (documents, { eq }) => eq(documents.id, event.data.documentId),
           columns: { articleText: true, source: true, title: true },
+          with: {
+            images: {
+              orderBy: (images, { asc }) => [asc(images.position)],
+            },
+          },
         });
 
         invariant(document?.articleText, "No article text");
@@ -72,6 +77,7 @@ export const generateTakeaways = inngest.createFunction(
           event.data.takeawayPrompt,
           event.data.model,
           sourceAttribution || undefined,
+          document.images,
         );
 
         return takeaways;

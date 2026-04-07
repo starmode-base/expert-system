@@ -1,14 +1,15 @@
 import { inngest } from "~/inngest/client";
 import fetch from "node-fetch";
-import { db, schema } from "~/postgres/db";
-import { inArray } from "drizzle-orm";
 import {
-  A16zCandidate,
+  type A16zCandidate,
   a16zTakeawayPrompt,
   fetchA16zArticleText,
   parseA16zArchiveList,
 } from "./a16z-helpers";
-import { getDocumentSummary } from "../../helpers/get-document-summary";
+import {
+  getExistingLinks,
+  ingestDocuments,
+} from "../../helpers/ingest-pipeline";
 
 type A16zCandidateWithArticle = A16zCandidate & {
   articleText: string;
@@ -42,20 +43,11 @@ export const a16zNewsScraper = inngest.createFunction(
       return { inserted: 0, skipped: 0 };
     }
 
-    const uniqueLinks = Array.from(
-      new Set(candidates.map((candidate) => candidate.link)),
+    const existingLinkSet = await getExistingLinks(
+      step,
+      candidates.map((c) => c.link),
     );
 
-    const existingLinks = await step.run("get-existing-links", async () => {
-      const rows = await db
-        .select({ link: schema.documents.link })
-        .from(schema.documents)
-        .where(inArray(schema.documents.link, uniqueLinks));
-
-      return rows.map((row) => row.link);
-    });
-
-    const existingLinkSet = new Set(existingLinks);
     const newCandidates = candidates.filter(
       (candidate) => !existingLinkSet.has(candidate.link),
     );
@@ -86,47 +78,19 @@ export const a16zNewsScraper = inngest.createFunction(
       return { inserted: 0, skipped: newCandidates.length };
     }
 
-    // Generate summaries for each document
-    const withSummaries = await Promise.all(
-      candidatesWithArticles.map(async (doc, index) => {
-        const summaryResult = await step.run(
-          `generate-summary-${index}`,
-          async () => {
-            return await getDocumentSummary(doc.articleText, doc.title);
-          },
-        );
-        return { ...doc, summaryResult };
-      }),
-    );
-
-    const inserted = await step.run("insert-documents", async () => {
-      const values = withSummaries.map((doc) => ({
+    const { inserted } = await ingestDocuments(
+      step,
+      candidatesWithArticles.map((c) => ({
+        link: c.link,
+        title: c.title,
+        publicationDate: c.publicationDate,
+        articleText: c.articleText,
+      })),
+      {
         source: "a16z News",
-        title: doc.title,
-        description: doc.summaryResult.summary,
-        isSubstantive: doc.summaryResult.isSubstantive,
-        publicationDate: new Date(doc.publicationDate),
-        link: doc.link,
-        articleText: doc.articleText,
-      }));
-
-      return await db.insert(schema.documents).values(values).returning({
-        id: schema.documents.id,
-      });
-    });
-
-    await Promise.all(
-      inserted.map(async (doc) => {
-        await step.sendEvent(`generate-takeaways-${doc.id}`, {
-          name: "app/generate-takeaways",
-          data: {
-            documentId: doc.id,
-            takeawayPrompt: a16zTakeawayPrompt,
-            model: "gpt-5.4",
-            user: { id: "", email: "" },
-          },
-        });
-      }),
+        takeawayPrompt: a16zTakeawayPrompt,
+        takeawayModel: "gpt-5.4",
+      },
     );
 
     return {

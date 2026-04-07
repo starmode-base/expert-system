@@ -20,7 +20,7 @@ export function InsightList(props: InsightListProps) {
 
   const handleSelectInsight = async (insightId: string) => {
     await navigate({
-      to: "/insight-studio/$insightId",
+      to: "/dev/insight-studio/$insightId",
       params: { insightId },
     });
   };
@@ -31,7 +31,7 @@ export function InsightList(props: InsightListProps) {
         <button
           type="button"
           onClick={async () => {
-            await navigate({ to: "/insight-studio" });
+            await navigate({ to: "/dev/insight-studio" });
           }}
           className="inline-flex items-center justify-center rounded-md bg-gray-900 px-2.5 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
           title="Create new insight"
