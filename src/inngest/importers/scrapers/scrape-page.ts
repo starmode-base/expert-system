@@ -26,6 +26,8 @@ export interface ScrapedPage {
   title: string | null;
   images: ExtractedImage[];
   isArticle: boolean;
+  /** ISO 8601 publication date extracted from page metadata, or null if not found. */
+  publishedDate: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -145,7 +147,60 @@ function extractImages(articleHtml: string, baseUrl: string): ExtractedImage[] {
 }
 
 // ---------------------------------------------------------------------------
-// 4. LLM QA pass
+// 4. Publication date extraction from HTML metadata
+// ---------------------------------------------------------------------------
+
+function extractPublicationDate(html: string): string | null {
+  const { document } = parseHTML(html);
+
+  // JSON-LD datePublished / dateCreated
+  for (const script of document.querySelectorAll(
+    'script[type="application/ld+json"]',
+  )) {
+    try {
+      const data = JSON.parse(script.textContent ?? "") as Record<
+        string,
+        unknown
+      >;
+      const raw = data.datePublished ?? data.dateCreated;
+      if (typeof raw === "string") {
+        const d = new Date(raw);
+        if (!Number.isNaN(d.getTime())) return d.toISOString();
+      }
+    } catch {
+      // skip malformed JSON-LD
+    }
+  }
+
+  // Common <meta> tags
+  const metaSelectors = [
+    'meta[property="article:published_time"]',
+    'meta[name="date"]',
+    'meta[name="DC.date.issued"]',
+    'meta[name="publication_date"]',
+  ];
+  for (const sel of metaSelectors) {
+    const content = document.querySelector(sel)?.getAttribute("content");
+    if (content) {
+      const d = new Date(content);
+      if (!Number.isNaN(d.getTime())) return d.toISOString();
+    }
+  }
+
+  // First <time datetime="..."> element
+  const datetime = document
+    .querySelector("time[datetime]")
+    ?.getAttribute("datetime");
+  if (datetime) {
+    const d = new Date(datetime);
+    if (!Number.isNaN(d.getTime())) return d.toISOString();
+  }
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// 5. LLM QA pass
 // ---------------------------------------------------------------------------
 
 const qaSchema = z.object({
@@ -204,6 +259,9 @@ export async function scrapePageFromHtml(
 ): Promise<ScrapedPage> {
   const parsed = extractWithReadability(html, url);
 
+  // Extract date from raw HTML before Readability strips metadata
+  const publishedDate = extractPublicationDate(html);
+
   if (!parsed?.textContent || !parsed.content) {
     return {
       articleText: "",
@@ -211,6 +269,7 @@ export async function scrapePageFromHtml(
       title: null,
       images: [],
       isArticle: false,
+      publishedDate,
     };
   }
 
@@ -227,5 +286,6 @@ export async function scrapePageFromHtml(
     title,
     images,
     isArticle,
+    publishedDate,
   };
 }

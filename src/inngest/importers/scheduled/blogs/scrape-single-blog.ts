@@ -76,13 +76,19 @@ export const scrapeSingleBlog = inngest.createFunction(
       .filter(
         (c) =>
           !existingLinkSet.has(c.link) &&
-          new Date(c.publicationDate) >= cutoffDate,
+          (c.publicationDate === null ||
+            new Date(c.publicationDate) >= cutoffDate),
       )
-      .sort(
-        (a, b) =>
-          new Date(b.publicationDate).getTime() -
-          new Date(a.publicationDate).getTime(),
-      )
+      .sort((a, b) => {
+        // Items with dates sort first (newest first); dateless items sort last
+        const aTime = a.publicationDate
+          ? new Date(a.publicationDate).getTime()
+          : 0;
+        const bTime = b.publicationDate
+          ? new Date(b.publicationDate).getTime()
+          : 0;
+        return bTime - aTime;
+      })
       .slice(0, MAX_ARTICLES_PER_RUN);
 
     if (newCandidates.length === 0) {
@@ -97,6 +103,7 @@ export const scrapeSingleBlog = inngest.createFunction(
 
     // Extract article text for candidates that don't have it from the feed
     type CandidateWithText = BlogArticleCandidate & {
+      publicationDate: string;
       articleText: string;
       scrapedImages: ProcessedImage[];
     };
@@ -108,8 +115,12 @@ export const scrapeSingleBlog = inngest.createFunction(
           // Filter out any that failed to extract from feed (no images from RSS)
           return newCandidates
             .filter(
-              (c): c is BlogArticleCandidate & { articleText: string } =>
-                c.articleText !== null,
+              (
+                c,
+              ): c is BlogArticleCandidate & {
+                publicationDate: string;
+                articleText: string;
+              } => c.articleText !== null && c.publicationDate !== null,
             )
             .map((c) => ({ ...c, scrapedImages: [] as ProcessedImage[] }));
         }
@@ -122,13 +133,25 @@ export const scrapeSingleBlog = inngest.createFunction(
               throw new Error(`Not an article: ${c.link}`);
             }
 
+            // Backfill publication date from page metadata if feed didn't have one
+            const publicationDate =
+              c.publicationDate ?? scraped.publishedDate;
+            if (!publicationDate) {
+              throw new Error(`No publication date found: ${c.link}`);
+            }
+
             // Process and upload images
             const scrapedImages =
               scraped.images.length > 0
                 ? await processAndUploadImages(scraped.images, c.link)
                 : [];
 
-            return { ...c, articleText: scraped.articleText, scrapedImages };
+            return {
+              ...c,
+              publicationDate,
+              articleText: scraped.articleText,
+              scrapedImages,
+            };
           }),
         );
 

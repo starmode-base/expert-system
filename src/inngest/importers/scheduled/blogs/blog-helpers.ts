@@ -6,7 +6,7 @@ export interface BlogArticleCandidate {
   link: string;
   title: string;
   description: string;
-  publicationDate: string;
+  publicationDate: string | null;
   articleText: string | null;
 }
 
@@ -274,7 +274,7 @@ function parseRssItem(
     extractXmlText(item.pubDate) ?? extractXmlText(item["dc:date"]);
 
   const linkSource = (rawGuid ?? rawLink)?.trim();
-  if (!linkSource || !rawTitle || !rawPubDate) {
+  if (!linkSource || !rawTitle) {
     return null;
   }
 
@@ -283,9 +283,12 @@ function parseRssItem(
     return null;
   }
 
-  const publicationDate = new Date(rawPubDate);
-  if (Number.isNaN(publicationDate.getTime())) {
-    return null;
+  let publicationDate: string | null = null;
+  if (rawPubDate) {
+    const parsed = new Date(rawPubDate);
+    if (!Number.isNaN(parsed.getTime())) {
+      publicationDate = parsed.toISOString();
+    }
   }
 
   let articleText: string | null = null;
@@ -300,7 +303,7 @@ function parseRssItem(
     link,
     title: rawTitle.trim(),
     description: (rawDescription ?? rawTitle).trim(),
-    publicationDate: publicationDate.toISOString(),
+    publicationDate,
     articleText,
   };
 }
@@ -313,7 +316,7 @@ function parseAtomEntry(
   const rawPubDate = entry.published?.[0] ?? entry.updated?.[0] ?? null;
   const rawSummary = extractXmlText(entry.summary?.[0]);
 
-  if (!rawTitle || !rawPubDate) {
+  if (!rawTitle) {
     return null;
   }
 
@@ -331,9 +334,12 @@ function parseAtomEntry(
     return null;
   }
 
-  const publicationDate = new Date(rawPubDate);
-  if (Number.isNaN(publicationDate.getTime())) {
-    return null;
+  let publicationDate: string | null = null;
+  if (rawPubDate) {
+    const parsed = new Date(rawPubDate);
+    if (!Number.isNaN(parsed.getTime())) {
+      publicationDate = parsed.toISOString();
+    }
   }
 
   let articleText: string | null = null;
@@ -348,7 +354,7 @@ function parseAtomEntry(
     link,
     title: rawTitle.trim(),
     description: (rawSummary ?? rawTitle).trim(),
-    publicationDate: publicationDate.toISOString(),
+    publicationDate,
     articleText,
   };
 }
