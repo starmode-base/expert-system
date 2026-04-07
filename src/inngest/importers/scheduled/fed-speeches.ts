@@ -6,6 +6,11 @@ import { db, schema } from "~/postgres/db";
 import { inngest } from "../../client";
 import { scrapePageFromHtml } from "~/inngest/importers/scrapers/scrape-page";
 import {
+  coerceToArray,
+  extractXmlText,
+  normalizeLink,
+} from "./blogs/blog-helpers";
+import {
   processAndUploadImages,
   type ProcessedImage,
 } from "~/inngest/importers/scrapers/process-images";
@@ -51,52 +56,6 @@ Guidelines:
 - Prefer second-order implications and decision-relevant signals
 - If the speaker provides a conditional outlook, capture the conditions and the implied policy reaction function
 `.trim();
-
-function coerceToArray<T>(value: T | T[] | undefined): T[] {
-  if (!value) {
-    return [];
-  }
-
-  return Array.isArray(value) ? value : [value];
-}
-
-function extractXmlText(value: unknown): string | null {
-  if (!value) {
-    return null;
-  }
-
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return extractXmlText(value[0]);
-  }
-
-  if (typeof value === "object") {
-    const maybeText = (value as { _: unknown })._;
-    if (typeof maybeText === "string") {
-      return maybeText;
-    }
-  }
-
-  return null;
-}
-
-function normalizeLink(rawLink: string) {
-  const trimmed = rawLink.trim();
-  if (!trimmed) {
-    return "";
-  }
-
-  try {
-    const url = new URL(trimmed);
-    url.hash = "";
-    return url.toString();
-  } catch {
-    return trimmed;
-  }
-}
 
 async function scrapePageContent(url: string) {
   const res = await fetch(url);

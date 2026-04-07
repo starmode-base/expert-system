@@ -134,8 +134,7 @@ export const scrapeSingleBlog = inngest.createFunction(
             }
 
             // Backfill publication date from page metadata if feed didn't have one
-            const publicationDate =
-              c.publicationDate ?? scraped.publishedDate;
+            const publicationDate = c.publicationDate ?? scraped.publishedDate;
             if (!publicationDate) {
               throw new Error(`No publication date found: ${c.link}`);
             }
