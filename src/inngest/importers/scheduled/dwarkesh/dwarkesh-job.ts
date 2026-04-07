@@ -45,7 +45,7 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
       candidates.map((c) => c.link),
     );
 
-    const cutoffDate = new Date("2025-09-01T00:00:00Z");
+    const cutoffDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
 
     const newCandidates = candidates.filter(
       (candidate) =>

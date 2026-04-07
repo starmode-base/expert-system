@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 import { AnyNode } from "domhandler";
-import { htmlToPlainText } from "../blogs/blog-helpers";
+import { htmlToPlainText } from "../parse-helpers";
 
 export interface MacroVoicesCandidate {
   link: string;

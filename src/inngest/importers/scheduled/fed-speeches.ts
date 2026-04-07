@@ -3,7 +3,7 @@ import { parseStringPromise } from "xml2js";
 import { invariant } from "@tanstack/react-router";
 import { inngest } from "../../client";
 import { scrapePageFromHtml } from "~/inngest/importers/scrapers/scrape-page";
-import { coerceToArray, extractXmlText, normalizeLink } from "./blogs/blog-helpers";
+import { coerceToArray, extractXmlText, normalizeLink } from "./parse-helpers";
 import {
   processAndUploadImages,
   type ProcessedImage,

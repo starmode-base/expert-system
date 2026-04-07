@@ -8,7 +8,7 @@ import {
   extractXmlText,
   htmlToPlainText,
   normalizeLink,
-} from "../blogs/blog-helpers";
+} from "../parse-helpers";
 
 export interface DwarkeshPodcastCandidate {
   link: string;
