@@ -87,7 +87,7 @@ const eventSchemas = {
   "scheduler/daily-x-post": z.object({
     data: z.object({}),
   }),
-  "dev/scheduler.daily-insight.manual": z.object({}),
+  "scheduler.daily-insight.manual": z.object({}),
   "dev/earnings.sync-calendar.manual": z.object({}),
   "dev/earnings.process-jobs.manual": z.object({}),
   "dev/scheduler.macrovoices-scraper.manual": z.object({}),
