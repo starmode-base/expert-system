@@ -20,6 +20,7 @@ const company = (
   exchange: "NASDAQ",
   country: "US",
   mic: "XNAS",
+  marketCap: 4_200_000_000_000,
   callCount: 10,
   latestCallAt: new Date("2026-05-20T21:00:00.000Z"),
   earliestCallAt: new Date("2023-05-24T21:00:00.000Z"),

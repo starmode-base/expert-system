@@ -6,6 +6,7 @@ import {
   activateEarningsCatalogStocksSF,
   deactivateTrackedStockSF,
   getEarningsCatalogStatusSF,
+  listEarningsCatalogSectorsSF,
   listTrackedStocksSF,
   queryEarningsCatalogSF,
   requestEarningsCatalogSyncSF,
@@ -19,17 +20,37 @@ export const Route = createFileRoute("/dev/public-stocks")({
       typeof search?.catalogSearch === "string"
         ? search.catalogSearch
         : undefined,
+    catalogSector:
+      typeof search?.catalogSector === "string"
+        ? search.catalogSector
+        : undefined,
   }),
-  loaderDeps: ({ search: { catalogSearch } }) => ({ catalogSearch }),
-  loader: async ({ deps: { catalogSearch } }) => {
-    const [stocks, catalog, catalogStatus] = await Promise.all([
+  loaderDeps: ({ search: { catalogSearch, catalogSector } }) => ({
+    catalogSearch,
+    catalogSector,
+  }),
+  loader: async ({ deps: { catalogSearch, catalogSector } }) => {
+    const catalogFilters = {
+      search: catalogSearch,
+      sector: catalogSector,
+    };
+    const [stocks, catalog, catalogStatus, sectors] = await Promise.all([
       listTrackedStocksSF(),
       queryEarningsCatalogSF({
-        data: { search: catalogSearch, cursor: null, limit: 50 },
+        data: { ...catalogFilters, cursor: null, limit: 50 },
       }),
       getEarningsCatalogStatusSF(),
+      listEarningsCatalogSectorsSF(),
     ]);
-    return { stocks, catalog, catalogStatus, catalogSearch };
+    return {
+      stocks,
+      catalog,
+      catalogStatus,
+      sectors,
+      catalogSearch,
+      catalogSector,
+      catalogFilters,
+    };
   },
   component: EarningsManagementPage,
 });
@@ -115,7 +136,10 @@ function EarningsManagementPage() {
     stocks,
     catalog: initialCatalog,
     catalogStatus,
+    sectors,
     catalogSearch,
+    catalogSector,
+    catalogFilters,
   } = Route.useLoaderData();
   const router = useRouter();
   const activateStocks = useServerFn(activateEarningsCatalogStocksSF);
@@ -130,6 +154,7 @@ function EarningsManagementPage() {
     .join(",");
   const catalogResetKey = JSON.stringify({
     catalogSearch,
+    catalogSector,
     activeListingKey,
   });
   const {
@@ -141,13 +166,16 @@ function EarningsManagementPage() {
     initialData: initialCatalog,
     fetchPage: (cursor) =>
       queryEarningsCatalogSF({
-        data: { search: catalogSearch, cursor, limit: 50 },
+        data: { ...catalogFilters, cursor, limit: 50 },
       }),
     resetKey: catalogResetKey,
   });
 
   const [catalogSearchInput, setCatalogSearchInput] = useState(
     catalogSearch ?? "",
+  );
+  const [catalogSectorInput, setCatalogSectorInput] = useState(
+    catalogSector ?? "",
   );
   const [trackedSearch, setTrackedSearch] = useState("");
   const [selectedCatalogIds, setSelectedCatalogIds] = useState<Set<string>>(
@@ -184,10 +212,12 @@ function EarningsManagementPage() {
   };
 
   const handleCatalogSearch = () => {
+    setError(null);
     void router.navigate({
       to: "/dev/public-stocks",
       search: {
         catalogSearch: catalogSearchInput.trim() || undefined,
+        catalogSector: catalogSectorInput.trim() || undefined,
       },
     });
   };
@@ -309,7 +339,7 @@ function EarningsManagementPage() {
             </div>
 
             <form
-              className="mt-4 flex gap-2"
+              className="mt-4 grid gap-2 sm:grid-cols-[minmax(0,1fr)_11rem_auto]"
               onSubmit={(event) => {
                 event.preventDefault();
                 handleCatalogSearch();
@@ -323,11 +353,25 @@ function EarningsManagementPage() {
                 placeholder="Search ticker, company, sector, industry, or exchange…"
                 className="min-w-0 flex-1 rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
               />
+              <select
+                value={catalogSectorInput}
+                onChange={(event) => {
+                  setCatalogSectorInput(event.target.value);
+                }}
+                className="rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
+              >
+                <option value="">All sectors</option>
+                {sectors.map((sector) => (
+                  <option key={sector} value={sector}>
+                    {sector}
+                  </option>
+                ))}
+              </select>
               <button
                 type="submit"
                 className="cursor-pointer rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white"
               >
-                Search
+                Apply
               </button>
             </form>
 

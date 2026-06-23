@@ -1,5 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
-import { and, asc, desc, eq, gt, ilike, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+} from "drizzle-orm";
 import { z } from "zod";
 import { activateCatalogStocks } from "~/inngest/earnings/services/catalog-repository";
 import { inngest } from "~/inngest/client";
@@ -34,6 +46,7 @@ export interface EarningsCatalogCompanyView {
   industry: string | null;
   exchange: string;
   mic: string;
+  marketCap: number | null;
   callCount: number;
   latestCallAt: string | null;
   trackedStockId: string | null;
@@ -45,6 +58,48 @@ const catalogCursorSchema = z.object({
   symbol: z.string(),
   mic: z.string(),
 });
+
+const catalogFiltersSchema = z.object({
+  search: z.string().optional(),
+  sector: z.string().optional(),
+  minMarketCap: z.number().int().nonnegative().optional(),
+  maxMarketCap: z.number().int().nonnegative().optional(),
+});
+
+function buildCatalogConditions(filters: z.infer<typeof catalogFiltersSchema>) {
+  const conditions = [eq(schema.earningsCompanyCatalog.country, "US")];
+  const search = filters.search?.trim();
+  if (search) {
+    const pattern = `%${search}%`;
+    const searchCondition = or(
+      ilike(schema.earningsCompanyCatalog.symbol, pattern),
+      ilike(schema.earningsCompanyCatalog.companyName, pattern),
+      ilike(schema.earningsCompanyCatalog.sector, pattern),
+      ilike(schema.earningsCompanyCatalog.industry, pattern),
+      ilike(schema.earningsCompanyCatalog.exchange, pattern),
+    );
+    if (searchCondition) conditions.push(searchCondition);
+  }
+
+  const sector = filters.sector?.trim();
+  if (sector) {
+    conditions.push(eq(schema.earningsCompanyCatalog.sector, sector));
+  }
+
+  if (filters.minMarketCap !== undefined) {
+    conditions.push(
+      gte(schema.earningsCompanyCatalog.marketCap, filters.minMarketCap),
+    );
+  }
+
+  if (filters.maxMarketCap !== undefined) {
+    conditions.push(
+      lte(schema.earningsCompanyCatalog.marketCap, filters.maxMarketCap),
+    );
+  }
+
+  return conditions;
+}
 
 function ensureDev(clerkUserId: string): void {
   assertDevUser(clerkUserId);
@@ -104,8 +159,7 @@ export const listTrackedStocksSF = createServerFn({ method: "GET" })
 export const queryEarningsCatalogSF = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator(
-    z.object({
-      search: z.string().optional(),
+    catalogFiltersSchema.extend({
       cursor: z.string().nullable(),
       limit: z.number().int().min(1).max(100).default(50),
     }),
@@ -117,19 +171,7 @@ export const queryEarningsCatalogSF = createServerFn({ method: "GET" })
     }): Promise<PaginatedResult<EarningsCatalogCompanyView>> => {
       ensureDev(context.viewer.clerkUserId);
 
-      const conditions = [eq(schema.earningsCompanyCatalog.country, "US")];
-      const search = data.search?.trim();
-      if (search) {
-        const pattern = `%${search}%`;
-        const searchCondition = or(
-          ilike(schema.earningsCompanyCatalog.symbol, pattern),
-          ilike(schema.earningsCompanyCatalog.companyName, pattern),
-          ilike(schema.earningsCompanyCatalog.sector, pattern),
-          ilike(schema.earningsCompanyCatalog.industry, pattern),
-          ilike(schema.earningsCompanyCatalog.exchange, pattern),
-        );
-        if (searchCondition) conditions.push(searchCondition);
-      }
+      const conditions = buildCatalogConditions(data);
 
       if (data.cursor) {
         const cursor = catalogCursorSchema.parse(JSON.parse(data.cursor));
@@ -157,6 +199,7 @@ export const queryEarningsCatalogSF = createServerFn({ method: "GET" })
           industry: schema.earningsCompanyCatalog.industry,
           exchange: schema.earningsCompanyCatalog.exchange,
           mic: schema.earningsCompanyCatalog.mic,
+          marketCap: schema.earningsCompanyCatalog.marketCap,
           callCount: schema.earningsCompanyCatalog.callCount,
           latestCallAt: schema.earningsCompanyCatalog.latestCallAt,
           trackedStockId: schema.trackedStocks.id,
@@ -208,8 +251,12 @@ export const getEarningsCatalogStatusSF = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     ensureDev(context.viewer.clerkUserId);
 
-    const [count, latest] = await Promise.all([
+    const [count, marketCapCount, latest] = await Promise.all([
       db.$count(schema.earningsCompanyCatalog),
+      db.$count(
+        schema.earningsCompanyCatalog,
+        isNotNull(schema.earningsCompanyCatalog.marketCap),
+      ),
       db.query.earningsCompanyCatalog.findFirst({
         columns: { catalogSyncedAt: true },
         orderBy: (catalog, { desc }) => [desc(catalog.catalogSyncedAt)],
@@ -218,8 +265,88 @@ export const getEarningsCatalogStatusSF = createServerFn({ method: "GET" })
 
     return {
       count,
+      marketCapCount,
       lastSyncedAt: latest?.catalogSyncedAt.toISOString() ?? null,
     };
+  });
+
+export const listEarningsCatalogSectorsSF = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }): Promise<string[]> => {
+    ensureDev(context.viewer.clerkUserId);
+
+    const rows = await db
+      .selectDistinct({ sector: schema.earningsCompanyCatalog.sector })
+      .from(schema.earningsCompanyCatalog)
+      .where(
+        and(
+          eq(schema.earningsCompanyCatalog.country, "US"),
+          isNotNull(schema.earningsCompanyCatalog.sector),
+        ),
+      )
+      .orderBy(asc(schema.earningsCompanyCatalog.sector));
+
+    return rows.flatMap((row) => (row.sector ? [row.sector] : []));
+  });
+
+export const selectTopMarketCapCatalogStocksSF = createServerFn({
+  method: "GET",
+})
+  .middleware([authMiddleware])
+  .validator(
+    catalogFiltersSchema.extend({
+      limit: z.number().int().min(1).max(100).default(25),
+    }),
+  )
+  .handler(async ({ context, data }): Promise<EarningsCatalogCompanyView[]> => {
+    ensureDev(context.viewer.clerkUserId);
+
+    const rows = await db
+      .select({
+        id: schema.earningsCompanyCatalog.id,
+        symbol: schema.earningsCompanyCatalog.symbol,
+        companyName: schema.earningsCompanyCatalog.companyName,
+        sector: schema.earningsCompanyCatalog.sector,
+        industry: schema.earningsCompanyCatalog.industry,
+        exchange: schema.earningsCompanyCatalog.exchange,
+        mic: schema.earningsCompanyCatalog.mic,
+        marketCap: schema.earningsCompanyCatalog.marketCap,
+        callCount: schema.earningsCompanyCatalog.callCount,
+        latestCallAt: schema.earningsCompanyCatalog.latestCallAt,
+        trackedStockId: schema.trackedStocks.id,
+        trackedActive: schema.trackedStocks.active,
+      })
+      .from(schema.earningsCompanyCatalog)
+      .leftJoin(
+        schema.trackedStocks,
+        and(
+          eq(schema.earningsCompanyCatalog.symbol, schema.trackedStocks.symbol),
+          eq(schema.earningsCompanyCatalog.mic, schema.trackedStocks.mic),
+        ),
+      )
+      .where(
+        and(
+          ...buildCatalogConditions(data),
+          or(
+            isNull(schema.trackedStocks.id),
+            eq(schema.trackedStocks.active, false),
+          ),
+          isNotNull(schema.earningsCompanyCatalog.marketCap),
+        ),
+      )
+      .orderBy(
+        desc(schema.earningsCompanyCatalog.marketCap),
+        asc(schema.earningsCompanyCatalog.companyName),
+        asc(schema.earningsCompanyCatalog.symbol),
+        asc(schema.earningsCompanyCatalog.mic),
+      )
+      .limit(data.limit);
+
+    return rows.map((row) => ({
+      ...row,
+      latestCallAt: row.latestCallAt?.toISOString() ?? null,
+      trackedActive: row.trackedActive ?? false,
+    }));
   });
 
 export const activateEarningsCatalogStocksSF = createServerFn({

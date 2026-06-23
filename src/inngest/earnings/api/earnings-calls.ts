@@ -31,6 +31,7 @@ const companyCatalogEntrySchema = z.object({
   industry: z.string().nullable().optional(),
   exchange: z.string().nullable(),
   country: z.string(),
+  market_cap: z.number().nullable(),
   call_count: z.number().int(),
   latest_call: z.string().nullable().optional(),
   earliest_call: z.string().nullable().optional(),
@@ -123,6 +124,7 @@ export interface EarningsCompanyCatalogEntry {
   exchange: string;
   country: string;
   mic: string;
+  marketCap: number | null;
   callCount: number;
   latestCallAt: Date | null;
   earliestCallAt: Date | null;
@@ -265,6 +267,7 @@ export async function fetchCompanyCatalogPage(params: {
           exchange: company.exchange,
           country: company.country.trim().toUpperCase(),
           mic: company.mic.trim().toUpperCase(),
+          marketCap: company.market_cap,
           callCount: company.call_count,
           latestCallAt: parseOptionalDate(company.latest_call, "latest_call"),
           earliestCallAt: parseOptionalDate(

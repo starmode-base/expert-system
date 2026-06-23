@@ -1,5 +1,6 @@
 import { randomId } from "~/lib/random-id";
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -287,6 +288,7 @@ export const earningsCompanyCatalog = pgTable(
     exchange: text().notNull(),
     country: text().notNull(),
     mic: text().notNull(),
+    marketCap: bigint({ mode: "number" }),
     callCount: integer().notNull(),
     latestCallAt: timestamp(),
     earliestCallAt: timestamp(),
@@ -297,6 +299,7 @@ export const earningsCompanyCatalog = pgTable(
     unique().on(table.symbol, table.mic),
     index("earnings_company_catalog_name_idx").on(table.companyName),
     index("earnings_company_catalog_symbol_idx").on(table.symbol),
+    index("earnings_company_catalog_market_cap_idx").on(table.marketCap),
   ],
 );
 
