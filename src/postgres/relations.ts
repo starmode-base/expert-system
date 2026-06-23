@@ -10,13 +10,10 @@ import {
   tags,
   documents,
   earningsCalls,
-  earningsCompanyCatalog,
   trackedStocks,
-  stockSymbols,
   insights,
   takeawayReferences,
   xBookmarksAuth,
-  stockSymbolEmbeddings,
   apiKeys,
   insightTakeaways,
   organizationMembers,
@@ -114,11 +111,6 @@ export const trackedStocksRelations = relations(trackedStocks, ({ many }) => ({
   earningsCalls: many(earningsCalls),
 }));
 
-export const earningsCompanyCatalogRelations = relations(
-  earningsCompanyCatalog,
-  () => ({}),
-);
-
 export const earningsCallsRelations = relations(earningsCalls, ({ one }) => ({
   trackedStock: one(trackedStocks, {
     fields: [earningsCalls.trackedStockId],
@@ -128,10 +120,6 @@ export const earningsCallsRelations = relations(earningsCalls, ({ one }) => ({
     fields: [earningsCalls.documentId],
     references: [documents.id],
   }),
-}));
-
-export const stockSymbolsRelations = relations(stockSymbols, ({ many }) => ({
-  stockSymbolEmbeddings: many(stockSymbolEmbeddings),
 }));
 
 export const insightsRelations = relations(insights, ({ one, many }) => ({
@@ -160,16 +148,6 @@ export const xBookmarksAuthRelations = relations(xBookmarksAuth, ({ one }) => ({
     references: [users.id],
   }),
 }));
-
-export const stockSymbolEmbeddingsRelations = relations(
-  stockSymbolEmbeddings,
-  ({ one }) => ({
-    stockSymbol: one(stockSymbols, {
-      fields: [stockSymbolEmbeddings.stockSymbolId],
-      references: [stockSymbols.id],
-    }),
-  }),
-);
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
   user: one(users, {

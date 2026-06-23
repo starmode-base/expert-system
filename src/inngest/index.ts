@@ -15,8 +15,6 @@ import {
   syncEarningsCalls,
   syncEarningsCompanyCatalog,
 } from "./earnings";
-import { backfillCompanyOverviews } from "./stock-data/backfill-company-overviews";
-import { fetchCompanyOverviewWorker } from "./stock-data/fetch-company-overview";
 
 export const inngestFunctions = [
   generateTakeaways,
@@ -32,6 +30,4 @@ export const inngestFunctions = [
   a16zNewsScraper,
   scrapeAllBlogs,
   scrapeSingleBlog,
-  backfillCompanyOverviews,
-  fetchCompanyOverviewWorker,
 ];

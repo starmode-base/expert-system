@@ -43,11 +43,6 @@ const eventSchemas = {
     blogId: z.string(),
   }),
   "dev/blog.scrape-all-blogs.manual": z.object({}),
-  "stock/backfill-company-overviews": z.object({}),
-  "stock/fetch-company-overview": z.object({
-    stockSymbolId: z.string(),
-    symbol: z.string(),
-  }),
 };
 
 // Create a client to send and receive events
