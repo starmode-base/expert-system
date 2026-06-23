@@ -1,15 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, or } from "drizzle-orm";
 import { z } from "zod";
-import {
-  EarningsCallsApiError,
-  fetchLatestCall,
-} from "~/inngest/earnings/api/earnings-calls";
-import { upsertTrackedStockAndCall } from "~/inngest/earnings/services/earnings-repository";
+import { activateCatalogStocks } from "~/inngest/earnings/services/catalog-repository";
 import { inngest } from "~/inngest/client";
 import { assertDevUser } from "~/lib/dev-user";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
+import type { PaginatedResult } from "./pagination";
 
 export interface TrackedStockView {
   id: string;
@@ -29,12 +26,25 @@ export interface TrackedStockView {
   } | null;
 }
 
-const symbolSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(16)
-  .regex(/^[a-z0-9.-]+$/i, "Enter a valid stock symbol");
+export interface EarningsCatalogCompanyView {
+  id: string;
+  symbol: string;
+  companyName: string;
+  sector: string | null;
+  industry: string | null;
+  exchange: string;
+  mic: string;
+  callCount: number;
+  latestCallAt: string | null;
+  trackedStockId: string | null;
+  trackedActive: boolean;
+}
+
+const catalogCursorSchema = z.object({
+  companyName: z.string(),
+  symbol: z.string(),
+  mic: z.string(),
+});
 
 function ensureDev(clerkUserId: string): void {
   assertDevUser(clerkUserId);
@@ -91,34 +101,155 @@ export const listTrackedStocksSF = createServerFn({ method: "GET" })
     });
   });
 
-export const trackStockSF = createServerFn({ method: "POST" })
+export const queryEarningsCatalogSF = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .validator(z.object({ symbol: symbolSchema }))
+  .validator(
+    z.object({
+      search: z.string().optional(),
+      cursor: z.string().nullable(),
+      limit: z.number().int().min(1).max(100).default(50),
+    }),
+  )
+  .handler(
+    async ({
+      context,
+      data,
+    }): Promise<PaginatedResult<EarningsCatalogCompanyView>> => {
+      ensureDev(context.viewer.clerkUserId);
+
+      const conditions = [eq(schema.earningsCompanyCatalog.country, "US")];
+      const search = data.search?.trim();
+      if (search) {
+        const pattern = `%${search}%`;
+        const searchCondition = or(
+          ilike(schema.earningsCompanyCatalog.symbol, pattern),
+          ilike(schema.earningsCompanyCatalog.companyName, pattern),
+          ilike(schema.earningsCompanyCatalog.sector, pattern),
+          ilike(schema.earningsCompanyCatalog.industry, pattern),
+          ilike(schema.earningsCompanyCatalog.exchange, pattern),
+        );
+        if (searchCondition) conditions.push(searchCondition);
+      }
+
+      if (data.cursor) {
+        const cursor = catalogCursorSchema.parse(JSON.parse(data.cursor));
+        const cursorCondition = or(
+          gt(schema.earningsCompanyCatalog.companyName, cursor.companyName),
+          and(
+            eq(schema.earningsCompanyCatalog.companyName, cursor.companyName),
+            gt(schema.earningsCompanyCatalog.symbol, cursor.symbol),
+          ),
+          and(
+            eq(schema.earningsCompanyCatalog.companyName, cursor.companyName),
+            eq(schema.earningsCompanyCatalog.symbol, cursor.symbol),
+            gt(schema.earningsCompanyCatalog.mic, cursor.mic),
+          ),
+        );
+        if (cursorCondition) conditions.push(cursorCondition);
+      }
+
+      const rows = await db
+        .select({
+          id: schema.earningsCompanyCatalog.id,
+          symbol: schema.earningsCompanyCatalog.symbol,
+          companyName: schema.earningsCompanyCatalog.companyName,
+          sector: schema.earningsCompanyCatalog.sector,
+          industry: schema.earningsCompanyCatalog.industry,
+          exchange: schema.earningsCompanyCatalog.exchange,
+          mic: schema.earningsCompanyCatalog.mic,
+          callCount: schema.earningsCompanyCatalog.callCount,
+          latestCallAt: schema.earningsCompanyCatalog.latestCallAt,
+          trackedStockId: schema.trackedStocks.id,
+          trackedActive: schema.trackedStocks.active,
+        })
+        .from(schema.earningsCompanyCatalog)
+        .leftJoin(
+          schema.trackedStocks,
+          and(
+            eq(
+              schema.earningsCompanyCatalog.symbol,
+              schema.trackedStocks.symbol,
+            ),
+            eq(schema.earningsCompanyCatalog.mic, schema.trackedStocks.mic),
+          ),
+        )
+        .where(and(...conditions))
+        .orderBy(
+          asc(schema.earningsCompanyCatalog.companyName),
+          asc(schema.earningsCompanyCatalog.symbol),
+          asc(schema.earningsCompanyCatalog.mic),
+        )
+        .limit(data.limit + 1);
+
+      const hasMore = rows.length > data.limit;
+      const items = (hasMore ? rows.slice(0, data.limit) : rows).map((row) => ({
+        ...row,
+        latestCallAt: row.latestCallAt?.toISOString() ?? null,
+        trackedActive: row.trackedActive ?? false,
+      }));
+      const last = items[items.length - 1];
+
+      return {
+        items,
+        nextCursor:
+          hasMore && last
+            ? JSON.stringify({
+                companyName: last.companyName,
+                symbol: last.symbol,
+                mic: last.mic,
+              })
+            : null,
+      };
+    },
+  );
+
+export const getEarningsCatalogStatusSF = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    ensureDev(context.viewer.clerkUserId);
+
+    const [count, latest] = await Promise.all([
+      db.$count(schema.earningsCompanyCatalog),
+      db.query.earningsCompanyCatalog.findFirst({
+        columns: { catalogSyncedAt: true },
+        orderBy: (catalog, { desc }) => [desc(catalog.catalogSyncedAt)],
+      }),
+    ]);
+
+    return {
+      count,
+      lastSyncedAt: latest?.catalogSyncedAt.toISOString() ?? null,
+    };
+  });
+
+export const activateEarningsCatalogStocksSF = createServerFn({
+  method: "POST",
+})
+  .middleware([authMiddleware])
+  .validator(
+    z.object({
+      catalogIds: z.array(z.string()).min(1).max(100),
+    }),
+  )
   .handler(async ({ context, data }) => {
     ensureDev(context.viewer.clerkUserId);
 
-    try {
-      const latestCall = await fetchLatestCall(data.symbol);
-      const result = await upsertTrackedStockAndCall(latestCall);
+    const uniqueIds = [...new Set(data.catalogIds)];
+    const toHydrate = await activateCatalogStocks(uniqueIds);
 
-      await inngest.send({
-        name: "earnings/call.discovered",
-        data: { callId: result.callId },
-      });
-
-      return {
-        stockId: result.stock.id,
-        callId: result.callId,
-        symbol: result.stock.symbol,
-      };
-    } catch (error) {
-      if (error instanceof EarningsCallsApiError && error.status === 404) {
-        throw new Error(
-          `No US earnings calls found for ${data.symbol.toUpperCase()}`,
-        );
-      }
-      throw error;
+    if (toHydrate.length > 0) {
+      await inngest.send(
+        toHydrate.map((company) => ({
+          name: "earnings/stock.hydrate" as const,
+          data: { catalogId: company.catalogId },
+        })),
+      );
     }
+
+    return {
+      selected: uniqueIds.length,
+      hydrationQueued: toHydrate.length,
+    };
   });
 
 export const deactivateTrackedStockSF = createServerFn({ method: "POST" })
@@ -145,5 +276,16 @@ export const requestEarningsSyncSF = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     ensureDev(context.viewer.clerkUserId);
     await inngest.send({ name: "earnings/sync.requested", data: {} });
+    return { success: true };
+  });
+
+export const requestEarningsCatalogSyncSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    ensureDev(context.viewer.clerkUserId);
+    await inngest.send({
+      name: "earnings/catalog.sync.requested",
+      data: {},
+    });
     return { success: true };
   });

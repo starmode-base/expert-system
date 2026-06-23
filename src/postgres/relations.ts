@@ -10,6 +10,7 @@ import {
   tags,
   documents,
   earningsCalls,
+  earningsCompanyCatalog,
   trackedStocks,
   stockSymbols,
   insights,
@@ -112,6 +113,11 @@ export const documentImagesRelations = relations(documentImages, ({ one }) => ({
 export const trackedStocksRelations = relations(trackedStocks, ({ many }) => ({
   earningsCalls: many(earningsCalls),
 }));
+
+export const earningsCompanyCatalogRelations = relations(
+  earningsCompanyCatalog,
+  () => ({}),
+);
 
 export const earningsCallsRelations = relations(earningsCalls, ({ one }) => ({
   trackedStock: one(trackedStocks, {

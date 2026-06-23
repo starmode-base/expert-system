@@ -12,6 +12,10 @@ const eventSchemas = {
    */
   "scraper/daily-science": z.object({}),
   "earnings/sync.requested": z.object({}),
+  "earnings/catalog.sync.requested": z.object({}),
+  "earnings/stock.hydrate": z.object({
+    catalogId: z.string(),
+  }),
   "earnings/call.discovered": z.object({
     callId: z.string(),
   }),

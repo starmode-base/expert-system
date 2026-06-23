@@ -276,6 +276,35 @@ export const trackedStocks = pgTable(
 export type TrackedStockSelect = typeof trackedStocks.$inferSelect;
 export type TrackedStockInsert = typeof trackedStocks.$inferInsert;
 
+export const earningsCompanyCatalog = pgTable(
+  "earnings_company_catalog",
+  {
+    ...baseSchema,
+    symbol: text().notNull(),
+    companyName: text().notNull(),
+    sector: text(),
+    industry: text(),
+    exchange: text().notNull(),
+    country: text().notNull(),
+    mic: text().notNull(),
+    callCount: integer().notNull(),
+    latestCallAt: timestamp(),
+    earliestCallAt: timestamp(),
+    catalogSyncedAt: timestamp().notNull(),
+    syncRunId: text().notNull(),
+  },
+  (table) => [
+    unique().on(table.symbol, table.mic),
+    index("earnings_company_catalog_name_idx").on(table.companyName),
+    index("earnings_company_catalog_symbol_idx").on(table.symbol),
+  ],
+);
+
+export type EarningsCompanyCatalogSelect =
+  typeof earningsCompanyCatalog.$inferSelect;
+export type EarningsCompanyCatalogInsert =
+  typeof earningsCompanyCatalog.$inferInsert;
+
 export const earningsCalls = pgTable(
   "earnings_calls",
   {

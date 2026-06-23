@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ensureEnv } from "~/lib/env";
 
 const BASE_URL = "https://earningscalls.dev/api/v1";
-const REQUEST_TIMEOUT_MS = 15_000;
+const REQUEST_TIMEOUT_MS = 60_000;
 
 const companyCallSchema = z.object({
   id: z.number().int(),
@@ -21,6 +21,30 @@ const companyHistorySchema = z.object({
   country: z.string(),
   mic: z.string(),
   earnings_calls: z.array(companyCallSchema),
+});
+
+const companyCatalogEntrySchema = z.object({
+  company_name: z.string(),
+  company_ticker: z.string(),
+  stock_symbol: z.string(),
+  sector: z.string().nullable().optional(),
+  industry: z.string().nullable().optional(),
+  exchange: z.string().nullable(),
+  country: z.string(),
+  call_count: z.number().int(),
+  latest_call: z.string().nullable().optional(),
+  earliest_call: z.string().nullable().optional(),
+  mic: z.string().nullable(),
+});
+
+const companyCatalogResponseSchema = z.object({
+  data: z.array(companyCatalogEntrySchema),
+  pagination: z.object({
+    page: z.number().int(),
+    limit: z.number().int(),
+    total: z.number().int(),
+    total_pages: z.number().int(),
+  }),
 });
 
 const recentCallSchema = z.object({
@@ -91,6 +115,19 @@ export interface EarningsTranscript {
   text: string;
 }
 
+export interface EarningsCompanyCatalogEntry {
+  companyName: string;
+  symbol: string;
+  sector: string | null;
+  industry: string | null;
+  exchange: string;
+  country: string;
+  mic: string;
+  callCount: number;
+  latestCallAt: Date | null;
+  earliestCallAt: Date | null;
+}
+
 export class EarningsCallsApiError extends Error {
   constructor(
     message: string,
@@ -111,6 +148,13 @@ function parseDate(value: string, field: string): Date {
     throw new Error(`Invalid ${field} returned by earningscalls.dev`);
   }
   return date;
+}
+
+function parseOptionalDate(
+  value: string | null | undefined,
+  field: string,
+): Date | null {
+  return value ? parseDate(value, field) : null;
 }
 
 async function request<T>(
@@ -144,12 +188,19 @@ async function request<T>(
 
 export async function fetchLatestCall(
   symbol: string,
+  mic?: string,
 ): Promise<EarningsCallMetadata> {
   const normalizedSymbol = symbol.trim().toUpperCase();
+  const searchParams = new URLSearchParams();
+  if (mic) {
+    searchParams.set("mic", mic.trim().toUpperCase());
+  } else {
+    searchParams.set("country", "US");
+  }
   const data = await request(
     `/companies/ticker/${encodeURIComponent(normalizedSymbol)}`,
     z.object({ data: companyHistorySchema }),
-    new URLSearchParams({ country: "US" }),
+    searchParams,
   );
   const latestEarningsCall = data.data.earnings_calls.find(
     (call) => call.event_type.toLowerCase() === "earnings",
@@ -179,6 +230,53 @@ export async function fetchLatestCall(
     sector: data.data.sector ?? null,
     industry: data.data.industry ?? null,
     durationSeconds: null,
+  };
+}
+
+export async function fetchCompanyCatalogPage(params: {
+  page: number;
+  limit?: number;
+}): Promise<{
+  companies: EarningsCompanyCatalogEntry[];
+  page: number;
+  totalPages: number;
+  total: number;
+}> {
+  const data = await request(
+    "/companies",
+    companyCatalogResponseSchema,
+    new URLSearchParams({
+      page: String(params.page),
+      limit: String(params.limit ?? 100),
+    }),
+  );
+
+  return {
+    companies: data.data.flatMap((company) => {
+      if (!company.exchange || !company.mic) {
+        return [];
+      }
+      return [
+        {
+          companyName: company.company_name,
+          symbol: company.company_ticker.trim().toUpperCase(),
+          sector: company.sector ?? null,
+          industry: company.industry ?? null,
+          exchange: company.exchange,
+          country: company.country.trim().toUpperCase(),
+          mic: company.mic.trim().toUpperCase(),
+          callCount: company.call_count,
+          latestCallAt: parseOptionalDate(company.latest_call, "latest_call"),
+          earliestCallAt: parseOptionalDate(
+            company.earliest_call,
+            "earliest_call",
+          ),
+        },
+      ];
+    }),
+    page: data.pagination.page,
+    totalPages: data.pagination.total_pages,
+    total: data.pagination.total,
   };
 }
 

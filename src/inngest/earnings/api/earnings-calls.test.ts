@@ -9,6 +9,7 @@ vi.stubGlobal("fetch", fetchMock);
 
 const {
   EarningsCallsApiError,
+  fetchCompanyCatalogPage,
   fetchLatestCall,
   fetchRecentCalls,
   fetchTranscript,
@@ -66,6 +67,84 @@ describe("earningscalls.dev client", () => {
         headers: { "X-API-Key": "test-api-key" },
       }),
     );
+  });
+
+  test("pins latest-call lookup to the selected MIC", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json({
+        data: {
+          company_name: "Example",
+          sector: "Technology",
+          industry: "Software",
+          stock_symbol: "ONE",
+          company_ticker: "ONE",
+          exchange: "NASDAQ",
+          country: "US",
+          mic: "XNAS",
+          earnings_calls: [
+            {
+              id: 51,
+              transcript_title: "Example Earnings",
+              event_type: "earnings",
+              event_date_time: "2026-05-20T21:00:00.000Z",
+            },
+          ],
+        },
+      }),
+    );
+
+    await fetchLatestCall("ONE", "xnas");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: "?mic=XNAS",
+      }),
+      expect.anything(),
+    );
+  });
+
+  test("parses a page of provider companies", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json({
+        data: [
+          {
+            company_name: "NVIDIA Corporation",
+            company_ticker: "nvda",
+            stock_symbol: "NVDA",
+            sector: "Information Technology",
+            industry: "Semiconductors",
+            exchange: "NASDAQ",
+            country: "US",
+            call_count: 12,
+            latest_call: "2026-05-20T21:00:00.000Z",
+            earliest_call: "2023-05-24T21:00:00.000Z",
+            mic: "xnas",
+          },
+        ],
+        pagination: {
+          page: 2,
+          limit: 100,
+          total: 12663,
+          total_pages: 127,
+        },
+      }),
+    );
+
+    const page = await fetchCompanyCatalogPage({ page: 2 });
+
+    expect(page).toMatchObject({
+      page: 2,
+      totalPages: 127,
+      total: 12663,
+      companies: [
+        {
+          symbol: "NVDA",
+          mic: "XNAS",
+          country: "US",
+          callCount: 12,
+        },
+      ],
+    });
   });
 
   test("returns a resumable cursor from the recent feed", async () => {
