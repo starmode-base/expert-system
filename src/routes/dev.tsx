@@ -1,7 +1,6 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { useAuth } from "@clerk/tanstack-start";
-
-const ALLOWED_USER_ID = "user_2ujqJX9ueMg9wBJVUVATq8veKI3";
+import { isDevUser } from "~/lib/dev-user";
 
 export const Route = createFileRoute("/dev")({
   component: DevLayout,
@@ -10,7 +9,7 @@ export const Route = createFileRoute("/dev")({
 function DevLayout() {
   const auth = useAuth();
 
-  if (auth.userId !== ALLOWED_USER_ID) {
+  if (!isDevUser(auth.userId)) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
@@ -30,7 +29,7 @@ function DevLayout() {
       to: "/dev/insight-studio",
       label: "Insight Studio",
     },
-    { key: "public-stocks", to: "/dev/public-stocks", label: "Public Stocks" },
+    { key: "public-stocks", to: "/dev/public-stocks", label: "Earnings" },
     { key: "x", to: "/dev/x", label: "X Settings" },
     { key: "blog-feeds", to: "/dev/blog-feeds", label: "Blog Feeds" },
   ];

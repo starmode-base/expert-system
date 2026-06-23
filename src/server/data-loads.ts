@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { inngest } from "~/inngest/client";
 import { db, schema } from "~/postgres/db";
 
 import { invariant } from "@tanstack/react-router";
@@ -173,17 +172,5 @@ export const uploadCategoriesSF = createServerFn({ method: "POST" }).handler(
     }
 
     console.log("Seeded categories and tags successfully.");
-  },
-);
-
-//  ####################
-// ####################
-
-export const updateStockDataSF = createServerFn({ method: "POST" }).handler(
-  async () => {
-    await inngest.send({
-      name: "stock/sync-stock-symbols",
-      data: {},
-    });
   },
 );

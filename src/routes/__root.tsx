@@ -19,6 +19,7 @@ import {
   UserButton,
 } from "@clerk/tanstack-start";
 import { getSiteOrigin } from "~/lib/env";
+import { isDevUser } from "~/lib/dev-user";
 
 const head = {
   meta: [
@@ -104,7 +105,7 @@ function NavBar() {
   // TODO: add user role for dev permissions.
   const devNavItems = [{ key: "dev", to: "/dev/scrape", label: "Dev" }];
 
-  const isDev = auth.userId === "user_2ujqJX9ueMg9wBJVUVATq8veKI3";
+  const isDev = isDevUser(auth.userId);
 
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">

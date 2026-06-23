@@ -1,8 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
 import { getStockProfileSF } from "~/server/stock-profile";
-import { toggleTrackedCompanySF } from "~/server/tracked-companies";
 import type {
   CompanyOverview,
   GlobalQuote,
@@ -144,17 +141,7 @@ function QuoteHeader({ quote }: { quote: GlobalQuote }) {
 
 function StockProfilePage() {
   const data = Route.useLoaderData();
-  const {
-    dbStock,
-    overview,
-    quote,
-    nextEarningsDate,
-    trackedCompanyStockSymbolId,
-  } = data;
-
-  const [isTracked, setIsTracked] = useState(data.isTracked);
-  const [trackingLoading, setTrackingLoading] = useState(false);
-  const toggleTracked = useServerFn(toggleTrackedCompanySF);
+  const { dbStock, overview, quote } = data;
 
   const symbol = overview?.Symbol ?? dbStock?.symbol ?? "";
   const name = overview?.Name ?? dbStock?.name ?? symbol;
@@ -166,19 +153,6 @@ function StockProfilePage() {
   const officialSite = overview?.OfficialSite ?? dbStock?.officialSite ?? "";
   const fiscalYearEnd = overview?.FiscalYearEnd ?? dbStock?.fiscalYearEnd ?? "";
   const cik = overview?.CIK ?? dbStock?.cik ?? "";
-
-  const handleToggleTracking = async () => {
-    if (!trackedCompanyStockSymbolId) return;
-    setTrackingLoading(true);
-    try {
-      const result = await toggleTracked({
-        data: { stockSymbolId: trackedCompanyStockSymbolId },
-      });
-      setIsTracked(result.isTracked);
-    } finally {
-      setTrackingLoading(false);
-    }
-  };
 
   return (
     <div className="h-[calc(100dvh-64px-49px)] overflow-y-auto">
@@ -213,19 +187,6 @@ function StockProfilePage() {
                 ) : null}
                 {quote ? <QuoteHeader quote={quote} /> : null}
               </div>
-              {trackedCompanyStockSymbolId ? (
-                <button
-                  onClick={() => void handleToggleTracking()}
-                  disabled={trackingLoading}
-                  className={`shrink-0 cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
-                    isTracked
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-gray-200 text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  {trackingLoading ? "..." : isTracked ? "Tracking" : "Track"}
-                </button>
-              ) : null}
             </div>
           </section>
 
@@ -372,29 +333,6 @@ function StockProfilePage() {
               <AnalystBar overview={overview} />
             </section>
           ) : null}
-
-          {/* Earnings */}
-          <section className="border border-gray-200 bg-white p-4 sm:p-6">
-            <h2 className="mb-2 text-base font-semibold text-gray-900">
-              Earnings
-            </h2>
-            {nextEarningsDate ? (
-              <p className="text-sm text-gray-700">
-                Next earnings date:{" "}
-                <span className="font-medium">
-                  {new Date(nextEarningsDate).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-              </p>
-            ) : (
-              <p className="text-sm text-gray-500">
-                No upcoming earnings date scheduled.
-              </p>
-            )}
-          </section>
         </div>
       </div>
     </div>

@@ -14,7 +14,6 @@ export const APIRoute = createAPIFileRoute("/api/v1/research")({
   GET: async ({ request }) => {
     const auth = await authorizeApiRequest(request, "research");
     if (auth.type === "error") return auth.response;
-    const { userId } = auth;
 
     const url = new URL(request.url);
     const cursor = url.searchParams.get("cursor") ?? null;
@@ -91,7 +90,6 @@ export const APIRoute = createAPIFileRoute("/api/v1/research")({
         },
       },
       where: and(
-        eq(schema.insights.userId, userId),
         isNotNull(schema.insights.insight),
         dateStart ? gte(schema.insights.createdAt, dateStart) : undefined,
         dateEnd ? lt(schema.insights.createdAt, dateEnd) : undefined,

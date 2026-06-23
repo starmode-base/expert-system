@@ -23,15 +23,14 @@ This doc describes the backend pipelines that turn raw documents into shared tak
   - `scheduler.dwarkesh-podcast-scraper` → Dwarkesh Podcast RSS + transcript fetch (daily 5 AM Phoenix)
   - `scheduler.macrovoices-scraper` → MacroVoices transcript landing page scrape (daily 5 AM Phoenix)
   - `scheduler.fed-speeches-scraper` → Federal Reserve speeches + testimony RSS scrape (daily 6:15 AM Phoenix)
-  - `scheduler.sync-earnings-calendar` → Weekly Alpha Vantage earnings calendar sync that seeds fetch jobs for tracked symbols
-  - `scheduler.process-earnings-jobs` → Daily runner that turns pending earnings fetch jobs into transcripts
-  - `scraper/earnings-calls` → Ad-hoc Alpha Vantage transcript fetch (manual/triggered with symbol + quarter)
+  - `earnings.sync` → Polls earningscalls.dev every 15 minutes using a persisted cursor and creates one canonical job per new call for a globally curated stock list
+  - `earnings.process-call` → Fetches and saves one earnings transcript, then emits `app/generate-takeaways`
 
 **Processing**
 
 - Scrapers normalize scraped content into a `Document` shape and persist via:
   - `saveContent(document)` → inserts into `documents`
-  - `fetchAndSaveTranscript(...)` → fetches transcript → dedupes by `(source, title)` → calls `saveContent`
+  - earningscalls.dev transcripts use `externalId = earningscalls:{providerCallId}` for idempotent storage
 
 **Output (storage)**
 
@@ -106,7 +105,8 @@ This doc describes the backend pipelines that turn raw documents into shared tak
 ```mermaid
 flowchart TD
   A["Stratechery RSS<br/>scheduler.stratechery-scraper"] --> B["Normalize + saveContent"]
-  A2["Earnings call import<br/>scraper/earnings-calls"] --> B
+  A2["earningscalls.dev cursor sync<br/>earnings.sync"] --> A3["Per-call ingestion<br/>earnings.process-call"]
+  A3 --> B
   B --> C[("Postgres: documents")]
   C --> D["Inngest: app/generate-takeaways<br/>documentId + prompt + model"]
   D --> E[("Postgres: takeaways<br/>(title, takeaway, summary, concept, categoryId, documentId)")]

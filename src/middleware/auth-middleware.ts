@@ -61,6 +61,7 @@ async function getViewer(clerkUserId: string) {
 
   const viewer = {
     id: userRecord.id,
+    clerkUserId: userRecord.clerkUserId,
     email: userRecord.email,
     memberOf: userRecord.organizationMembers.map(
       (member) => member.organizationId,

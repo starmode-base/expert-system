@@ -1,7 +1,6 @@
 import { randomId } from "~/lib/random-id";
 import {
   boolean,
-  doublePrecision,
   index,
   integer,
   pgTable,
@@ -112,6 +111,7 @@ export const documents = pgTable("documents", {
   description: text().notNull(),
   publicationDate: timestamp().notNull(),
   link: text().notNull(),
+  externalId: text().unique(),
   articleText: text().notNull(),
   isSubstantive: boolean().notNull().default(true),
 });
@@ -257,63 +257,74 @@ export const stockSymbolEmbeddings = pgTable(
 );
 
 /**
- * Tracked Companies - User-specific company watchlist
+ * Global earnings-call ingestion configuration.
  */
-export const trackedCompanies = pgTable(
-  "tracked_companies",
-  {
-    ...baseSchema,
-    userId: text()
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    stockSymbolId: text()
-      .notNull()
-      .references(() => stockSymbols.id, { onDelete: "cascade" }),
-  },
-  (table) => [unique().on(table.userId, table.stockSymbolId)],
-);
-
-export type TrackedCompanySelect = typeof trackedCompanies.$inferSelect;
-export type TrackedCompanyInsert = typeof trackedCompanies.$inferInsert;
-
-/**
- * Earnings Schedule - Cached earnings calendar from Alpha Vantage
- */
-export const earningsSchedule = pgTable(
-  "earnings_schedule",
+export const trackedStocks = pgTable(
+  "tracked_stocks",
   {
     ...baseSchema,
     symbol: text().notNull(),
-    name: text().notNull(),
-    reportDate: timestamp().notNull(),
-    fiscalDateEnding: text().notNull(),
-    estimate: doublePrecision(),
-    currency: text(),
+    companyName: text().notNull(),
+    exchange: text().notNull(),
+    mic: text().notNull(),
+    country: text().notNull(),
+    active: boolean().notNull().default(true),
   },
-  (table) => [unique().on(table.symbol, table.fiscalDateEnding)],
+  (table) => [unique().on(table.symbol, table.mic)],
 );
 
-export type EarningsScheduleSelect = typeof earningsSchedule.$inferSelect;
-export type EarningsScheduleInsert = typeof earningsSchedule.$inferInsert;
+export type TrackedStockSelect = typeof trackedStocks.$inferSelect;
+export type TrackedStockInsert = typeof trackedStocks.$inferInsert;
 
-/**
- * Earnings Fetch Jobs - Track status of automated transcript fetches
- */
-export const earningsFetchJobs = pgTable("earnings_fetch_jobs", {
-  ...baseSchema,
-  earningsScheduleId: text()
-    .notNull()
-    .references(() => earningsSchedule.id, { onDelete: "cascade" }),
-  status: text()
-    .$type<"pending" | "processing" | "completed" | "failed" | "skipped">()
-    .notNull()
-    .default("pending"),
-  processedAt: timestamp(),
-  errorMessage: text(),
+export const earningsCalls = pgTable(
+  "earnings_calls",
+  {
+    ...baseSchema,
+    providerCallId: integer().notNull().unique(),
+    trackedStockId: text()
+      .notNull()
+      .references(() => trackedStocks.id, { onDelete: "cascade" }),
+    transcriptTitle: text().notNull(),
+    eventType: text().notNull(),
+    eventDateTime: timestamp().notNull(),
+    providerAddedAt: timestamp().notNull(),
+    sector: text(),
+    industry: text(),
+    durationSeconds: integer(),
+    status: text()
+      .$type<"pending" | "processing" | "takeaways_queued" | "failed">()
+      .notNull()
+      .default("pending"),
+    documentId: text()
+      .unique()
+      .references(() => documents.id, { onDelete: "set null" }),
+    attempts: integer().notNull().default(0),
+    lastError: text(),
+    takeawaysQueuedAt: timestamp(),
+  },
+  (table) => [
+    index("earnings_calls_status_idx").on(table.status),
+    index("earnings_calls_stock_date_idx").on(
+      table.trackedStockId,
+      table.eventDateTime,
+    ),
+  ],
+);
+
+export type EarningsCallSelect = typeof earningsCalls.$inferSelect;
+export type EarningsCallInsert = typeof earningsCalls.$inferInsert;
+
+export const earningsSyncState = pgTable("earnings_sync_state", {
+  provider: text().primaryKey(),
+  afterId: integer().notNull(),
+  lastPolledAt: timestamp(),
+  lastSuccessfulSyncAt: timestamp(),
+  createdAt: createdAtField,
+  updatedAt: updatedAtField,
 });
 
-export type EarningsFetchJobSelect = typeof earningsFetchJobs.$inferSelect;
-export type EarningsFetchJobInsert = typeof earningsFetchJobs.$inferInsert;
+export type EarningsSyncStateSelect = typeof earningsSyncState.$inferSelect;
+export type EarningsSyncStateInsert = typeof earningsSyncState.$inferInsert;
 
 /**
  * Takeaway Categories
