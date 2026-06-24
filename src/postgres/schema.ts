@@ -146,7 +146,6 @@ export const takeaways = pgTable("takeaways", {
     .references(() => documents.id, { onDelete: "cascade" }),
   title: text().notNull(),
   takeaway: text().notNull(),
-  concept: text().notNull(),
   // remove value on delete
   categoryId: text().references(() => categories.id, { onDelete: "set null" }),
   summary: text().notNull(),
@@ -194,24 +193,6 @@ export const takeawayEmbeddings = pgTable(
   },
   (table) => [
     index("takeawayEmbeddingIndex").using(
-      "hnsw",
-      table.embedding.op("vector_cosine_ops"),
-    ),
-  ],
-);
-
-export const conceptEmbeddings = pgTable(
-  "concept_embeddings",
-  {
-    ...baseSchema,
-    takeawayId: text()
-      .notNull()
-      .unique()
-      .references(() => takeaways.id, { onDelete: "cascade" }),
-    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
-  },
-  (table) => [
-    index("conceptEmbeddingIndex").using(
       "hnsw",
       table.embedding.op("vector_cosine_ops"),
     ),
@@ -438,7 +419,6 @@ export const insightTakeaways = pgTable(
     takeawayId: text()
       .notNull()
       .references(() => takeaways.id, { onDelete: "cascade" }),
-    type: text().$type<"concept" | "takeaway">().notNull(),
   },
   (table) => [primaryKey({ columns: [table.insightId, table.takeawayId] })],
 );

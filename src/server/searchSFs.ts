@@ -13,7 +13,6 @@ export interface TakeawaySearchResult {
   createdAt: Date;
   takeaway: string;
   summary: string;
-  concept: string;
   source: string;
   documentTitle: string;
   documentSource: string;

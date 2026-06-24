@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
 import { InsightList } from "~/components/insight-studio/insights-list";
 import { PubSubProvider } from "~/lib/ably";
 import { getInsightsSF, listInsightsSF } from "~/server/insights-studio-SFs";
@@ -15,16 +14,13 @@ export const Route = createFileRoute("/dev/insight-studio/$insightId")({
     const insights = await listInsightsSF();
     const selectedInsightItem = await getInsightsSF({ data: insightId });
 
-    const { takeawaysSummary, takeawaysConcepts } = await getinsightTakeawaysSF(
-      { data: insightId },
-    );
+    const { takeaways } = await getinsightTakeawaysSF({ data: insightId });
 
     return {
       viewerId,
       selectedInsightItem,
       insights,
-      takeawaysSummary,
-      takeawaysConcepts,
+      takeaways,
     };
   },
   component: RouteComponentProvider,
@@ -32,17 +28,12 @@ export const Route = createFileRoute("/dev/insight-studio/$insightId")({
 
 interface InsightProps {
   insight: InsightsItem;
-  takeawaysSummary: TakeawaySearchResult[];
-  takeawaysConcepts: TakeawaySearchResult[];
+  takeaways: TakeawaySearchResult[];
   loading: boolean;
 }
 
-type SimilarItemsTab = "takeaways" | "concepts";
-
 function InsightDetails(props: InsightProps) {
-  const { insight, takeawaysSummary, takeawaysConcepts, loading } = props;
-  const [similarItemsTab, setSimilarItemsTab] =
-    useState<SimilarItemsTab>("takeaways");
+  const { insight, takeaways, loading } = props;
 
   return (
     <div className="mx-auto bg-white">
@@ -85,91 +76,19 @@ function InsightDetails(props: InsightProps) {
         </div>
 
         <div className="w-2/3">
-          <div
-            className="border-b border-gray-200"
-            role="tablist"
-            aria-label="Similar items"
-          >
-            <nav className="flex space-x-4">
-              <button
-                type="button"
-                role="tab"
-                id="similar-items-tab-takeaways"
-                aria-selected={similarItemsTab === "takeaways"}
-                aria-controls="similar-items-panel-takeaways"
-                onClick={() => {
-                  setSimilarItemsTab("takeaways");
-                }}
-                className={`border-b-2 px-3 py-2 text-sm font-medium ${
-                  similarItemsTab === "takeaways"
-                    ? "border-gray-900 text-gray-900"
-                    : "border-transparent text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                Takeaways
-              </button>
-              <button
-                type="button"
-                role="tab"
-                id="similar-items-tab-concepts"
-                aria-selected={similarItemsTab === "concepts"}
-                aria-controls="similar-items-panel-concepts"
-                onClick={() => {
-                  setSimilarItemsTab("concepts");
-                }}
-                className={`border-b-2 px-3 py-2 text-sm font-medium ${
-                  similarItemsTab === "concepts"
-                    ? "border-gray-900 text-gray-900"
-                    : "border-transparent text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                Concepts
-              </button>
-            </nav>
+          <div className="border-b border-gray-200 px-3 py-2">
+            <h2 className="text-sm font-medium text-gray-900">Takeaways</h2>
           </div>
 
-          <div
-            role="tabpanel"
-            id="similar-items-panel-takeaways"
-            aria-labelledby="similar-items-tab-takeaways"
-            hidden={similarItemsTab !== "takeaways"}
-          >
+          <div>
             <div className="flex max-h-[50vh] flex-col overflow-y-auto p-4">
-              {takeawaysSummary.length === 0 ? (
+              {takeaways.length === 0 ? (
                 <p className="text-sm text-gray-500">
                   No similar takeaways found.
                 </p>
               ) : (
                 <div className="border-t border-gray-200">
-                  {takeawaysSummary.map((takeaway) => {
-                    return (
-                      <div
-                        key={takeaway.id}
-                        className="border-b border-gray-200"
-                      >
-                        <TakeawayTile takeaway={takeaway} />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div
-            role="tabpanel"
-            id="similar-items-panel-concepts"
-            aria-labelledby="similar-items-tab-concepts"
-            hidden={similarItemsTab !== "concepts"}
-          >
-            <div className="flex max-h-[50vh] flex-col overflow-y-auto p-4">
-              {takeawaysConcepts.length === 0 ? (
-                <p className="text-sm text-gray-500">
-                  No similar concepts found.
-                </p>
-              ) : (
-                <div className="border-t border-gray-200">
-                  {takeawaysConcepts.map((takeaway) => {
+                  {takeaways.map((takeaway) => {
                     return (
                       <div
                         key={takeaway.id}
@@ -203,8 +122,7 @@ function RouteComponentProvider() {
 }
 
 export function RouteComponent() {
-  const { insights, selectedInsightItem, takeawaysSummary, takeawaysConcepts } =
-    Route.useLoaderData();
+  const { insights, selectedInsightItem, takeaways } = Route.useLoaderData();
 
   return (
     <div className="flex h-[calc(100dvh-64px-49px)] overflow-hidden bg-white">
@@ -222,8 +140,7 @@ export function RouteComponent() {
           <div className="flex-1 overflow-y-auto px-4">
             <InsightDetails
               insight={selectedInsightItem}
-              takeawaysSummary={takeawaysSummary}
-              takeawaysConcepts={takeawaysConcepts}
+              takeaways={takeaways}
               loading={false}
             />
             {/* Display Generated Insight */}

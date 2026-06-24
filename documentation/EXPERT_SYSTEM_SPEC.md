@@ -1,4 +1,4 @@
-# Expert System: Concept Spec
+# Expert System Spec
 
 ## Purpose
 
@@ -14,7 +14,7 @@ Expert System continuously ingests broad, high-signal information sources and sy
 1. Collect new source materials from multiple domains (macro policy, tech strategy, venture, and corporate fundamentals).
 2. Convert each source into a clean, readable document with a short summary.
 3. Extract multiple takeaways from each document that generalize beyond the raw content.
-4. Enrich each takeaway with a concept, a summary, and a category for retrieval and reasoning.
+4. Enrich each takeaway with a summary, retrieval summary, and category for retrieval and reasoning.
 5. Aggregate recent takeaways into daily research objectives.
 6. Produce daily insights aligned to those objectives.
 
@@ -46,13 +46,6 @@ Supporting evidence linked to each takeaway.
 
 - **Generated from:** The document text sections that justify the takeaway.
 - **How it is formed:** For every takeaway, the system records references that point back to specific supporting passages or claims.
-
-### Concept
-
-A short, abstract label that captures the core idea of a takeaway.
-
-- **Generated from:** Each takeaway.
-- **How it is formed:** The system creates a concise concept phrase that generalizes the takeaway for clustering and retrieval.
 
 ### Takeaway Summary
 
@@ -89,6 +82,6 @@ A synthesized, novel conclusion that can inform trading decisions.
 - **Generated from:** Research objectives.
 - **How it is formed:** The system follows a multi-stage reasoning flow to ensure novelty and grounding:
   - It compiles a short list of the most recent insights to avoid repetition.
-  - It gathers a focused set of relevant takeaways and related concepts to ground the analysis.
+  - It gathers a focused set of relevant takeaways to ground the analysis.
   - This context is run through an agentic reasoning loop with access to a financial analyst data that has access to macro and public markets data.
   - It produces a draft insight that integrates those signals into a coherent market narrative.
