@@ -88,18 +88,16 @@ export const getInsightsSF = createServerFn({ method: "GET" })
           documentPublicationDate:
             refRow.takeawayReference.takeaway.document.publicationDate,
         })),
-        insightTakeaways: insightTakeaways
-          .filter((row) => row.type === "takeaway")
-          .map((row) => ({
-            takeawayId: row.takeawayId,
-            title: row.takeaway.title,
-            summary: row.takeaway.summary,
-            documentId: row.takeaway.document.id,
-            documentTitle: row.takeaway.document.title,
-            documentSource: row.takeaway.document.source,
-            documentLink: row.takeaway.document.link,
-            documentPublicationDate: row.takeaway.document.publicationDate,
-          })),
+        insightTakeaways: insightTakeaways.map((row) => ({
+          takeawayId: row.takeawayId,
+          title: row.takeaway.title,
+          summary: row.takeaway.summary,
+          documentId: row.takeaway.document.id,
+          documentTitle: row.takeaway.document.title,
+          documentSource: row.takeaway.document.source,
+          documentLink: row.takeaway.document.link,
+          documentPublicationDate: row.takeaway.document.publicationDate,
+        })),
       };
     },
   );

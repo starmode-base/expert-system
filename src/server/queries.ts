@@ -16,10 +16,7 @@ import {
 import { z } from "zod";
 import type { PaginatedResult } from "./pagination";
 import { TakeawaySearchResult } from "./searchSFs";
-import {
-  vectorConceptSearchTimeWeighted,
-  vectorTakeawaySearchTimeWeighted,
-} from "./vector-queries";
+import { vectorTakeawaySearchTimeWeighted } from "./vector-queries";
 import {
   DocumentSelect,
   InsightSelect,
@@ -115,7 +112,6 @@ export interface Takeaway {
   publicationDate: Date;
   takeaway: string;
   summary: string;
-  concept: string;
   category: string | undefined;
   references: TakeawayReferenceSelect[];
   documentTitle?: string;
@@ -199,18 +195,16 @@ export const queryPublicInsightById = createServerFn({ method: "GET" })
         documentPublicationDate:
           row.takeawayReference.takeaway.document.publicationDate,
       })),
-      insightTakeaways: insight.insightTakeaways
-        .filter((row) => row.type === "takeaway")
-        .map((row) => ({
-          takeawayId: row.takeawayId,
-          title: row.takeaway.title,
-          summary: row.takeaway.summary,
-          documentId: row.takeaway.document.id,
-          documentTitle: row.takeaway.document.title,
-          documentSource: row.takeaway.document.source,
-          documentLink: row.takeaway.document.link,
-          documentPublicationDate: row.takeaway.document.publicationDate,
-        })),
+      insightTakeaways: insight.insightTakeaways.map((row) => ({
+        takeawayId: row.takeawayId,
+        title: row.takeaway.title,
+        summary: row.takeaway.summary,
+        documentId: row.takeaway.document.id,
+        documentTitle: row.takeaway.document.title,
+        documentSource: row.takeaway.document.source,
+        documentLink: row.takeaway.document.link,
+        documentPublicationDate: row.takeaway.document.publicationDate,
+      })),
     };
   });
 
@@ -235,7 +229,6 @@ export const queryPublicTakeawayById = createServerFn({ method: "GET" })
       publicationDate: takeaway.document.publicationDate,
       takeaway: takeaway.takeaway,
       summary: takeaway.summary,
-      concept: takeaway.concept,
       category: takeaway.category?.name,
       references: takeaway.takeawayReferences,
       documentTitle: takeaway.document.title,
@@ -263,7 +256,6 @@ interface InsightQueryRow extends InsightSelect {
     };
   }[];
   insightTakeaways: {
-    type: "concept" | "takeaway";
     takeawayId: string;
     takeaway: {
       title: string;
@@ -287,18 +279,16 @@ function mapInsightToItem(insight: InsightQueryRow): InsightsItem {
       documentPublicationDate:
         row.takeawayReference.takeaway.document.publicationDate,
     })),
-    insightTakeaways: insight.insightTakeaways
-      .filter((row) => row.type === "takeaway")
-      .map((row) => ({
-        takeawayId: row.takeawayId,
-        title: row.takeaway.title,
-        summary: row.takeaway.summary,
-        documentId: row.takeaway.document.id,
-        documentTitle: row.takeaway.document.title,
-        documentSource: row.takeaway.document.source,
-        documentLink: row.takeaway.document.link,
-        documentPublicationDate: row.takeaway.document.publicationDate,
-      })),
+    insightTakeaways: insight.insightTakeaways.map((row) => ({
+      takeawayId: row.takeawayId,
+      title: row.takeaway.title,
+      summary: row.takeaway.summary,
+      documentId: row.takeaway.document.id,
+      documentTitle: row.takeaway.document.title,
+      documentSource: row.takeaway.document.source,
+      documentLink: row.takeaway.document.link,
+      documentPublicationDate: row.takeaway.document.publicationDate,
+    })),
   };
 }
 
@@ -425,7 +415,6 @@ export const queryDocument = createServerFn({
         takeaway: takeaway.takeaway,
         summary: takeaway.summary,
         publicationDate: document.publicationDate,
-        concept: takeaway.concept,
         category: takeaway.category?.name,
         references: takeaway.takeawayReferences,
         documentTitle: document.title,
@@ -586,7 +575,6 @@ export const queryTakeawaysPaginated = createServerFn({
         createdAt: takeaway.createdAt,
         takeaway: takeaway.takeaway,
         summary: takeaway.summary,
-        concept: takeaway.concept,
         source: takeaway.document.source,
         documentTitle: takeaway.document.title,
         documentSource: takeaway.document.source,
@@ -617,23 +605,6 @@ export const vectorTakeawaySearchTimeWeightedSF = createServerFn({
     });
   });
 
-export const vectorConceptSearchTimeWeightedSF = createServerFn({
-  method: "GET",
-})
-  .validator(
-    z.object({
-      query: z.string(),
-      limit: z.number().optional(),
-      halfLifeDays: z.number().optional(),
-    }),
-  )
-  .handler(async ({ data }): Promise<TakeawaySearchResult[]> => {
-    return await vectorConceptSearchTimeWeighted(data.query, {
-      limit: data.limit,
-      halfLifeDays: data.halfLifeDays,
-    });
-  });
-
 export const getinsightTakeawaysSF = createServerFn({
   method: "GET",
 })
@@ -642,8 +613,7 @@ export const getinsightTakeawaysSF = createServerFn({
     async ({
       data: insightId,
     }): Promise<{
-      takeawaysSummary: TakeawaySearchResult[];
-      takeawaysConcepts: TakeawaySearchResult[];
+      takeaways: TakeawaySearchResult[];
     }> => {
       const takeaways = await db.query.insightTakeaways.findMany({
         where: eq(schema.insightTakeaways.insightId, insightId),
@@ -658,35 +628,25 @@ export const getinsightTakeawaysSF = createServerFn({
         },
       });
 
-      const takeawaysWithType = takeaways.map((takeaway) => ({
-        id: takeaway.takeaway.id,
-        documentId: takeaway.takeaway.documentId,
-        title: takeaway.takeaway.title,
-        publicationDate: takeaway.takeaway.document.publicationDate,
-        createdAt: takeaway.takeaway.createdAt,
-        takeaway: takeaway.takeaway.takeaway,
-        summary: takeaway.takeaway.summary,
-        concept: takeaway.takeaway.concept,
-        source: takeaway.takeaway.document.source,
-        documentTitle: takeaway.takeaway.document.title,
-        documentSource: takeaway.takeaway.document.source,
-        category: takeaway.takeaway.category?.name,
-        similarity: 0,
-        references: takeaway.takeaway.takeawayReferences.map(
-          (reference) => reference,
-        ),
-        type: takeaway.type,
-        documentLink: takeaway.takeaway.document.link,
-      }));
-      const takeawaysSummary = takeawaysWithType.filter(
-        (takeaway) => takeaway.type === "takeaway",
-      );
-      const takeawaysConcepts = takeawaysWithType.filter(
-        (takeaway) => takeaway.type === "concept",
-      );
       return {
-        takeawaysSummary,
-        takeawaysConcepts,
+        takeaways: takeaways.map((takeaway) => ({
+          id: takeaway.takeaway.id,
+          documentId: takeaway.takeaway.documentId,
+          title: takeaway.takeaway.title,
+          publicationDate: takeaway.takeaway.document.publicationDate,
+          createdAt: takeaway.takeaway.createdAt,
+          takeaway: takeaway.takeaway.takeaway,
+          summary: takeaway.takeaway.summary,
+          source: takeaway.takeaway.document.source,
+          documentTitle: takeaway.takeaway.document.title,
+          documentSource: takeaway.takeaway.document.source,
+          category: takeaway.takeaway.category?.name,
+          similarity: 0,
+          references: takeaway.takeaway.takeawayReferences.map(
+            (reference) => reference,
+          ),
+          documentLink: takeaway.takeaway.document.link,
+        })),
       };
     },
   );

@@ -17,7 +17,7 @@ async function main() {
     columns: {
       id: true,
       summary: true,
-      concept: true,
+      retrievalSummary: true,
       documentId: true,
     },
   });
@@ -33,17 +33,15 @@ async function main() {
     await tx
       .delete(schema.takeawayEmbeddings)
       .where(inArray(schema.takeawayEmbeddings.takeawayId, takeawayIds));
-    await tx
-      .delete(schema.conceptEmbeddings)
-      .where(inArray(schema.conceptEmbeddings.takeawayId, takeawayIds));
   });
 
   for (const takeaway of takeaways) {
     invariant(takeaway.summary, `Missing summary for ${takeaway.id}`);
-    invariant(takeaway.concept, `Missing concept for ${takeaway.id}`);
 
     console.log(`Generating takeaway embedding for ${takeaway.id}`);
-    const takeawayEmbedding = await generateEmbedding(takeaway.summary);
+    const takeawayEmbedding = await generateEmbedding(
+      takeaway.retrievalSummary ?? takeaway.summary,
+    );
 
     await db
       .insert(schema.takeawayEmbeddings)
@@ -54,20 +52,6 @@ async function main() {
       .onConflictDoUpdate({
         target: schema.takeawayEmbeddings.takeawayId,
         set: { embedding: takeawayEmbedding },
-      });
-
-    console.log(`Generating concept embedding for ${takeaway.id}`);
-    const conceptEmbedding = await generateEmbedding(takeaway.concept);
-
-    await db
-      .insert(schema.conceptEmbeddings)
-      .values({
-        takeawayId: takeaway.id,
-        embedding: conceptEmbedding,
-      })
-      .onConflictDoUpdate({
-        target: schema.conceptEmbeddings.takeawayId,
-        set: { embedding: conceptEmbedding },
       });
   }
 

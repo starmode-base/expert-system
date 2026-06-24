@@ -43,9 +43,9 @@ export const generateInsight = inngest.createFunction(
         .join("\n");
     });
 
-    // Step 2: Gather context (similar takeaways and concept-neighbors) to ground the agent’s first pass
+    // Step 2: Gather similar takeaways to ground the agent's first pass
     const { takeawayPreviewFormatted } = await step.run(
-      `get-similar-takeaways-and-concepts`,
+      `get-similar-takeaways`,
       async () => {
         const researcher = createResearcherAgent();
 
@@ -117,7 +117,6 @@ export const generateInsight = inngest.createFunction(
           finalInsight.takeaways_used.map((takeawayId) => ({
             insightId: result.id,
             takeawayId,
-            type: "takeaway" as const,
           })),
         );
 

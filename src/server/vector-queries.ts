@@ -96,7 +96,6 @@ export async function vectorTakeawaySearch(
       createdAt: takeaway.takeaway.createdAt,
       takeaway: takeaway.takeaway.takeaway,
       summary: takeaway.takeaway.summary,
-      concept: takeaway.takeaway.concept,
       source: takeaway.takeaway.document.source,
       documentTitle: takeaway.takeaway.document.title,
       documentSource: takeaway.takeaway.document.source,
@@ -119,65 +118,6 @@ export async function vectorTakeawaySearchTimeWeighted(
   const candidateLimit = Math.min(500, Math.max(defaultLimit, 50));
 
   const candidates = await vectorTakeawaySearch(searchInput, candidateLimit);
-  const reranked = rerankByTimeWeightedSimilarity(candidates, options);
-
-  return reranked.slice(0, defaultLimit);
-}
-
-export async function vectorConceptSearch(
-  searchInput: string,
-  limit = 10,
-): Promise<TakeawaySearchResult[]> {
-  const searchEmbedding = await generateEmbedding(searchInput);
-  const distance = sql<number>`${cosineDistance(schema.conceptEmbeddings.embedding, searchEmbedding)}`;
-
-  const similarConcepts = await db.query.conceptEmbeddings.findMany({
-    with: {
-      takeaway: {
-        with: {
-          category: true,
-          document: true,
-          takeawayReferences: true,
-        },
-      },
-    },
-    // Order by vector distance to allow index usage
-    orderBy: [asc(distance)],
-    limit,
-  });
-
-  return similarConcepts.map((concept) => {
-    return {
-      id: concept.takeaway.id,
-      documentId: concept.takeaway.document.id,
-      title: concept.takeaway.title,
-      publicationDate: concept.takeaway.document.publicationDate,
-      createdAt: concept.takeaway.createdAt,
-      takeaway: concept.takeaway.takeaway,
-      summary: concept.takeaway.summary,
-      concept: concept.takeaway.concept,
-      category: concept.takeaway.category?.name,
-      source: concept.takeaway.document.source,
-      documentTitle: concept.takeaway.document.title,
-      documentSource: concept.takeaway.document.source,
-      similarity: cosineSimilarity(searchEmbedding, concept.embedding),
-      references: concept.takeaway.takeawayReferences,
-      documentLink: concept.takeaway.document.link,
-    };
-  });
-}
-
-export async function vectorConceptSearchTimeWeighted(
-  searchInput: string,
-  options?: {
-    limit?: number;
-    halfLifeDays?: number;
-  },
-): Promise<TakeawaySearchResult[]> {
-  const defaultLimit = options?.limit ?? 10;
-  const candidateLimit = Math.min(500, Math.max(defaultLimit, 50));
-
-  const candidates = await vectorConceptSearch(searchInput, candidateLimit);
   const reranked = rerankByTimeWeightedSimilarity(candidates, options);
 
   return reranked.slice(0, defaultLimit);

@@ -4,7 +4,7 @@ This doc describes the backend pipelines that turn raw documents into shared tak
 
 ## Flows at a glance
 
-- System-wide takeaways: ingest documents → generate takeaways with concepts/categories → embed into pgvector for semantic search.
+- System-wide takeaways: ingest documents → generate takeaways with summaries/categories → embed into pgvector for semantic search.
 - User-specific insights: scheduled or ad-hoc insight generation per user, seeded from recent takeaways and vector search.
 - Takeaways are shared across all users; insights are always tied to a single user.
 
@@ -45,9 +45,9 @@ This doc describes the backend pipelines that turn raw documents into shared tak
 - After a `documentId` is created, scrapers trigger takeaway generation by emitting:
   - event `app/generate-takeaways` with `data.documentId` (and prompt/model settings)
 
-### Stage 2: Takeaway generation (including concepts)
+### Stage 2: Takeaway generation
 
-**Goal**: Turn one document into multiple structured takeaways, each with a concept and category, and persist them.
+**Goal**: Turn one document into multiple structured takeaways, each with a summary and category, and persist them.
 
 **Input**
 
@@ -59,14 +59,14 @@ This doc describes the backend pipelines that turn raw documents into shared tak
 - **LLM takeaway extraction**:
   - loads `documents.articleText`
   - calls `getTakeaways(articleText, takeawayPrompt, model)`
-- **LLM concept generation** (per takeaway):
-  - calls `getConcept(takeaway.takeaway)` and stores `concept.concept` on the takeaway
+- **LLM summary generation** (per takeaway):
+  - calls `getSummary(takeaway.takeaway)` and stores `summary` plus `retrievalSummary`
 - **LLM categorization** (per takeaway):
   - calls `getCategory(takeaway.takeaway)` and stores `categoryId`
 - **Persistence**:
   - deletes any existing takeaways for the document (defensive cleanup)
   - inserts new rows into `takeaways`
-  - generates embeddings for the takeaway text and concept and upserts into `takeaway_embeddings` and `concept_embeddings`
+  - generates embeddings for the retrieval summary and inserts into `takeaway_embeddings`
 
 **Output (storage)**
 
@@ -76,20 +76,19 @@ This doc describes the backend pipelines that turn raw documents into shared tak
     - `takeaways.title`
     - `takeaways.takeaway` (full text)
     - `takeaways.summary` (shorter preview text)
-    - `takeaways.concept` (short concept label)
+    - `takeaways.retrievalSummary` (text optimized for vector search)
     - `takeaways.categoryId`
     - `takeaways.documentId` (join back to raw document metadata/text)
 
 ### Stage 3: Embeddings + vector search
 
-**Goal**: Make takeaways (and their concepts) searchable by semantic similarity across the system.
+**Goal**: Make takeaways searchable by semantic similarity across the system.
 
 **“Vector DB” in this repo**
 
 - **Postgres + `pgvector`** columns managed via Drizzle
-- Two embedding tables (each has an HNSW index for approximate nearest neighbor search):
+- One embedding table with an HNSW index for approximate nearest neighbor search:
   - `takeaway_embeddings.embedding` (`vector(1536)`)
-  - `concept_embeddings.embedding` (`vector(1536)`)
 
 **Search/read path**
 
@@ -97,8 +96,7 @@ This doc describes the backend pipelines that turn raw documents into shared tak
   - `generateEmbedding(searchInput)`
 - Vector similarity queries:
   - `vectorTakeawaySearch(searchInput, limit)` and `vectorTakeawaySearchTimeWeighted(...)`
-  - `vectorConceptSearch(searchInput, limit)` and `vectorConceptSearchTimeWeighted(...)`
-  - Both return takeaways joined with `document` + `category`
+  - Returns takeaways joined with `document` + `category`
 
 ### System-wide flow diagram
 
@@ -109,13 +107,10 @@ flowchart TD
   A3 --> B
   B --> C[("Postgres: documents")]
   C --> D["Inngest: app/generate-takeaways<br/>documentId + prompt + model"]
-  D --> E[("Postgres: takeaways<br/>(title, takeaway, summary, concept, categoryId, documentId)")]
-  E --> F["generateEmbedding(takeaway)"]
-  E --> G["generateEmbedding(concept)"]
+  D --> E[("Postgres: takeaways<br/>(title, takeaway, summary, retrievalSummary, categoryId, documentId)")]
+  E --> F["generateEmbedding(retrieval summary)"]
   F --> H[("Postgres + pgvector: takeaway_embeddings")]
-  G --> I[("Postgres + pgvector: concept_embeddings")]
   H --> J["vectorTakeawaySearch / ...TimeWeighted"]
-  I --> K["vectorConceptSearch / ...TimeWeighted"]
 ```
 
 ---
@@ -183,10 +178,9 @@ flowchart TD
   - `src/inngest/importers/scheduled/stratechery.ts`
   - `src/inngest/earnings/` (earnings call system)
   - `src/inngest/importers/scrapers/save-content.ts`
-- **Takeaways + concepts + categorization**
+- **Takeaways + categorization**
   - `src/inngest/takeaways/generate-takeaways.ts`
   - `src/inngest/takeaways/helpers/get-takeaways.ts`
-  - `src/inngest/takeaways/helpers/generate-concept.ts`
   - `src/inngest/takeaways/helpers/get-category.ts`
 - **Vector DB + embedding + search**
   - `src/postgres/schema.ts` (pgvector tables + HNSW indexes)

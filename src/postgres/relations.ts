@@ -1,7 +1,6 @@
 import { relations } from "drizzle-orm/relations";
 import {
   takeaways,
-  conceptEmbeddings,
   takeawayEmbeddings,
   users,
   accounts,
@@ -22,18 +21,7 @@ import {
   documentImages,
 } from "./schema";
 
-export const conceptEmbeddingsRelations = relations(
-  conceptEmbeddings,
-  ({ one }) => ({
-    takeaway: one(takeaways, {
-      fields: [conceptEmbeddings.takeawayId],
-      references: [takeaways.id],
-    }),
-  }),
-);
-
 export const takeawaysRelations = relations(takeaways, ({ one, many }) => ({
-  conceptEmbeddings: many(conceptEmbeddings),
   takeawayEmbeddings: many(takeawayEmbeddings),
   document: one(documents, {
     fields: [takeaways.documentId],

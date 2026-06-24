@@ -4,7 +4,6 @@ import { getTakeaways } from "~/inngest/takeaways/helpers/get-takeaways";
 import { generateEmbedding } from "~/postgres/generate-embedding";
 import { getCategory } from "~/inngest/takeaways/helpers/get-category";
 import { eq } from "drizzle-orm";
-import { getConcept } from "~/inngest/takeaways/helpers/generate-concept";
 import { publishNotifyUI } from "~/lib/ably";
 import { NonRetriableError } from "inngest";
 import { getSummary } from "~/inngest/takeaways/helpers/get-summary";
@@ -98,35 +97,16 @@ export const generateTakeaways = inngest.createFunction(
     );
 
     /**
-     * Step 3: Generate Concepts
-     */
-    const takeawaysWithConcepts = await Promise.all(
-      takeaways.map(async (takeaway) => {
-        return await step.run(
-          `generate-concepts-${event.data.documentId}`,
-          async () => {
-            const concept = await getConcept(takeaway.takeaway);
-
-            return {
-              ...takeaway,
-              concept: concept.concept,
-            };
-          },
-        );
-      }),
-    );
-
-    /**
      * Step 2: Generate Summary
      */
     const takeawaysWithSummaries = await Promise.all(
-      takeawaysWithConcepts.map(async (takeawayWithConcept) => {
+      takeaways.map(async (takeaway) => {
         return await step.run(
           `generate-summary-${event.data.documentId}`,
           async () => {
-            const summary = await getSummary(takeawayWithConcept.takeaway);
+            const summary = await getSummary(takeaway.takeaway);
             return {
-              ...takeawayWithConcept,
+              ...takeaway,
               summary: summary.summary,
               retrievalSummary: summary.retrieval_summary,
             };
@@ -220,23 +200,6 @@ export const generateTakeaways = inngest.createFunction(
             );
 
             return await db.insert(schema.takeawayEmbeddings).values({
-              takeawayId: takeawaysWrite.id,
-              embedding,
-            });
-          },
-        );
-
-        await step.run(
-          `generate-save-concept-embedding-${takeawaysWrite.id}`,
-          async () => {
-            // ######
-            console.log(
-              `Generating concept embedding for ${takeawaysWrite.id}`,
-            );
-
-            const embedding = await generateEmbedding(takeawaysWrite.concept);
-
-            return await db.insert(schema.conceptEmbeddings).values({
               takeawayId: takeawaysWrite.id,
               embedding,
             });

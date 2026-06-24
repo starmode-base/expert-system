@@ -3,25 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import { TakeawayTile } from "~/components/takeaway-tile";
 import { sendEventGenerateInsightSF } from "~/server/inggest";
 import { type TakeawaySearchResult } from "~/server/searchSFs";
-import {
-  vectorConceptSearchTimeWeightedSF,
-  vectorTakeawaySearchTimeWeightedSF,
-} from "~/server/queries";
-
-type SimilarItemsTab = "takeaways" | "concepts";
+import { vectorTakeawaySearchTimeWeightedSF } from "~/server/queries";
 
 export function InsightCreator() {
   const [summaryTakeaways, setSummaryTakeaways] = useState<
     TakeawaySearchResult[]
   >([]);
-  const [conceptTakeaways, setConceptTakeaways] = useState<
-    TakeawaySearchResult[]
-  >([]);
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [similarItemsTab, setSimilarItemsTab] =
-    useState<SimilarItemsTab>("takeaways");
   const sendEventGenerateInsight = useServerFn(sendEventGenerateInsightSF);
 
   function useDebouncedSearch(searchText: string | null | undefined) {
@@ -32,7 +22,6 @@ export function InsightCreator() {
 
       if (q.length < 8) {
         setSummaryTakeaways([]);
-        setConceptTakeaways([]);
         return;
       }
 
@@ -40,20 +29,14 @@ export function InsightCreator() {
 
       const t = window.setTimeout(() => {
         void (async () => {
-          const [summary, concepts] = await Promise.all([
-            vectorTakeawaySearchTimeWeightedSF({
-              data: { query: q, limit: 10 },
-            }),
-            vectorConceptSearchTimeWeightedSF({
-              data: { query: q, limit: 10 },
-            }),
-          ]);
+          const summary = await vectorTakeawaySearchTimeWeightedSF({
+            data: { query: q, limit: 10 },
+          });
 
           // Ignore stale responses
           if (myRequestId !== requestIdRef.current) return;
 
           setSummaryTakeaways(summary);
-          setConceptTakeaways(concepts);
         })();
       }, 350);
 
@@ -132,57 +115,14 @@ export function InsightCreator() {
       </div>
 
       <div className="flex h-full min-h-[420px] flex-1 flex-col bg-white md:h-[calc(100dvh-64px)] md:rounded-l-xl md:border-l md:border-gray-200 md:shadow-inner">
-        <div
-          className="sticky top-0 z-10 border-b border-gray-200 bg-white/90 backdrop-blur"
-          role="tablist"
-          aria-label="Similar items"
-        >
-          <nav className="flex overflow-x-auto px-4">
-            <button
-              type="button"
-              role="tab"
-              id="similar-items-tab-takeaways"
-              aria-selected={similarItemsTab === "takeaways"}
-              aria-controls="similar-items-panel-takeaways"
-              onClick={() => {
-                setSimilarItemsTab("takeaways");
-              }}
-              className={`border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap ${
-                similarItemsTab === "takeaways"
-                  ? "border-gray-900 text-gray-900"
-                  : "border-transparent text-gray-500 hover:text-gray-900"
-              }`}
-            >
-              Takeaways
-            </button>
-            <button
-              type="button"
-              role="tab"
-              id="similar-items-tab-concepts"
-              aria-selected={similarItemsTab === "concepts"}
-              aria-controls="similar-items-panel-concepts"
-              onClick={() => {
-                setSimilarItemsTab("concepts");
-              }}
-              className={`border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap ${
-                similarItemsTab === "concepts"
-                  ? "border-gray-900 text-gray-900"
-                  : "border-transparent text-gray-500 hover:text-gray-900"
-              }`}
-            >
-              Concepts
-            </button>
-          </nav>
+        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/90 px-4 py-3 backdrop-blur">
+          <h2 className="text-sm font-medium text-gray-900">
+            Similar Takeaways
+          </h2>
         </div>
 
         <div className="min-h-0 flex-1">
-          <div
-            role="tabpanel"
-            id="similar-items-panel-takeaways"
-            aria-labelledby="similar-items-tab-takeaways"
-            hidden={similarItemsTab !== "takeaways"}
-            className="h-full"
-          >
+          <div className="h-full">
             <div className="h-full overflow-y-auto">
               {summaryTakeaways.length === 0 ? (
                 <p className="p-4 text-sm text-gray-500">
@@ -191,35 +131,6 @@ export function InsightCreator() {
               ) : (
                 <div className="border-t border-gray-200">
                   {summaryTakeaways.map((takeaway) => {
-                    return (
-                      <div
-                        key={takeaway.id}
-                        className="border-b border-gray-200"
-                      >
-                        <TakeawayTile takeaway={takeaway} />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div
-            role="tabpanel"
-            id="similar-items-panel-concepts"
-            aria-labelledby="similar-items-tab-concepts"
-            hidden={similarItemsTab !== "concepts"}
-            className="h-full"
-          >
-            <div className="h-full overflow-y-auto">
-              {conceptTakeaways.length === 0 ? (
-                <p className="p-4 text-sm text-gray-500">
-                  No similar concepts found.
-                </p>
-              ) : (
-                <div className="border-t border-gray-200">
-                  {conceptTakeaways.map((takeaway) => {
                     return (
                       <div
                         key={takeaway.id}
