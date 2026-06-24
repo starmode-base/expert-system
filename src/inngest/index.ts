@@ -9,22 +9,20 @@ import { a16zNewsScraper } from "./importers/scheduled/a16z/a16z-job";
 import { scrapeAllBlogs } from "./importers/scheduled/blogs/scrape-all-blogs";
 import { scrapeSingleBlog } from "./importers/scheduled/blogs/scrape-single-blog";
 
-// Earnings call functions (refactored)
 import {
-  syncEarningsCalendar,
-  processEarningsJobs,
-  fetchTranscripts,
+  hydrateEarningsStock,
+  processEarningsCall,
+  syncEarningsCalls,
+  syncEarningsCompanyCatalog,
 } from "./earnings";
-import { backfillCompanyOverviews } from "./stock-data/backfill-company-overviews";
-import { fetchCompanyOverviewWorker } from "./stock-data/fetch-company-overview";
-import { syncStockSymbols } from "./stock-data/sync-stock-symbols";
 
 export const inngestFunctions = [
-  fetchTranscripts,
   generateTakeaways,
   generateInsight,
-  syncEarningsCalendar,
-  processEarningsJobs,
+  syncEarningsCalls,
+  syncEarningsCompanyCatalog,
+  hydrateEarningsStock,
+  processEarningsCall,
   fedSpeechesScraper,
   dailyInsight,
   dwarkeshPodcastScraper,
@@ -32,7 +30,4 @@ export const inngestFunctions = [
   a16zNewsScraper,
   scrapeAllBlogs,
   scrapeSingleBlog,
-  backfillCompanyOverviews,
-  fetchCompanyOverviewWorker,
-  syncStockSymbols,
 ];

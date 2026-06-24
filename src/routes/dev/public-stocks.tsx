@@ -1,573 +1,551 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useConnectionStateListener } from "ably/react";
-import { useMemo, useState, useEffect } from "react";
-import { PubSubProvider, useNotifyUI } from "~/lib/ably";
+import { useMemo, useState } from "react";
 import { useInfiniteScroll } from "~/lib/use-infinite-scroll";
-import { updateStockDataSF } from "~/server/data-loads";
-import { sendEventEarningsCallscraperSF } from "~/server/inggest";
-import { listOrganizationsSF } from "~/server/organizations";
-import { queryStocksPaginatedSF } from "~/server/query-stocks";
 import {
-  listTrackedCompaniesSF,
-  toggleTrackedCompanySF,
-} from "~/server/tracked-companies";
-
-interface TrackedCompany {
-  id: string;
-  stockSymbolId: string;
-  symbol: string;
-  name: string;
-  nextEarningsDate: Date | null;
-}
+  activateEarningsCatalogStocksSF,
+  deactivateTrackedStockSF,
+  getEarningsCatalogStatusSF,
+  listEarningsCatalogSectorsSF,
+  listTrackedStocksSF,
+  queryEarningsCatalogSF,
+  requestEarningsCatalogSyncSF,
+  requestEarningsSyncSF,
+  type EarningsCatalogCompanyView,
+} from "~/server/earnings";
 
 export const Route = createFileRoute("/dev/public-stocks")({
   validateSearch: (search: Record<string, unknown> | undefined) => ({
-    searchInput: search?.searchInput as string | undefined,
+    catalogSearch:
+      typeof search?.catalogSearch === "string"
+        ? search.catalogSearch
+        : undefined,
+    catalogSector:
+      typeof search?.catalogSector === "string"
+        ? search.catalogSector
+        : undefined,
   }),
-  loaderDeps: ({ search: { searchInput } }) => ({ searchInput }),
-  loader: async ({ deps: { searchInput } }) => {
-    const { viewerId } = await listOrganizationsSF();
-    const initialStockPage = await queryStocksPaginatedSF({
-      data: { search: searchInput, cursor: null, limit: 50 },
-    });
-    const trackedCompanies =
-      (await listTrackedCompaniesSF()) as TrackedCompany[];
-
-    return { viewerId, initialStockPage, trackedCompanies, searchInput };
+  loaderDeps: ({ search: { catalogSearch, catalogSector } }) => ({
+    catalogSearch,
+    catalogSector,
+  }),
+  loader: async ({ deps: { catalogSearch, catalogSector } }) => {
+    const catalogFilters = {
+      search: catalogSearch,
+      sector: catalogSector,
+    };
+    const [stocks, catalog, catalogStatus, sectors] = await Promise.all([
+      listTrackedStocksSF(),
+      queryEarningsCatalogSF({
+        data: { ...catalogFilters, cursor: null, limit: 50 },
+      }),
+      getEarningsCatalogStatusSF(),
+      listEarningsCatalogSectorsSF(),
+    ]);
+    return {
+      stocks,
+      catalog,
+      catalogStatus,
+      sectors,
+      catalogSearch,
+      catalogSector,
+      catalogFilters,
+    };
   },
-  component: RouteComponentProvider,
+  component: EarningsManagementPage,
 });
 
-/**
- * Route component
- */
-function RouteComponentProvider() {
-  const { viewerId } = Route.useLoaderData();
+function formatDate(value: string | null): string {
+  if (!value) return "Unknown";
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
 
+function statusClasses(
+  status: "pending" | "processing" | "takeaways_queued" | "failed",
+): string {
+  switch (status) {
+    case "takeaways_queued":
+      return "bg-emerald-50 text-emerald-700";
+    case "failed":
+      return "bg-red-50 text-red-700";
+    case "processing":
+      return "bg-blue-50 text-blue-700";
+    case "pending":
+      return "bg-amber-50 text-amber-700";
+  }
+}
+
+function CatalogRow({
+  company,
+  selected,
+  onToggle,
+}: {
+  company: EarningsCatalogCompanyView;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const active = company.trackedActive;
   return (
-    <PubSubProvider viewerId={viewerId}>
-      <RouteComponent />
-    </PubSubProvider>
+    <label
+      className={`flex gap-3 px-4 py-3 ${
+        active ? "cursor-default bg-emerald-50/40" : "cursor-pointer"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={active || selected}
+        disabled={active}
+        onChange={onToggle}
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-slate-900"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="font-semibold text-gray-900">{company.symbol}</span>
+          <span className="text-sm text-gray-700">{company.companyName}</span>
+          {active ? (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
+              Active
+            </span>
+          ) : company.trackedStockId ? (
+            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+              Inactive
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 text-xs text-gray-500">
+          {[company.exchange, company.sector, company.industry]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+        <p className="mt-1 text-xs text-gray-400">
+          {company.callCount} calls · Latest {formatDate(company.latestCallAt)}{" "}
+          · {company.mic}
+        </p>
+      </div>
+    </label>
   );
 }
 
-function RouteComponent() {
+function EarningsManagementPage() {
   const {
-    viewerId,
-    initialStockPage,
-    trackedCompanies: initialTrackedCompanies,
-    searchInput: searchInputProp,
+    stocks,
+    catalog: initialCatalog,
+    catalogStatus,
+    sectors,
+    catalogSearch,
+    catalogSector,
+    catalogFilters,
   } = Route.useLoaderData();
   const router = useRouter();
+  const activateStocks = useServerFn(activateEarningsCatalogStocksSF);
+  const deactivateStock = useServerFn(deactivateTrackedStockSF);
+  const requestSync = useServerFn(requestEarningsSyncSF);
+  const requestCatalogSync = useServerFn(requestEarningsCatalogSyncSF);
 
-  const resetKey = JSON.stringify({ searchInput: searchInputProp });
-
+  const activeListingKey = stocks
+    .filter((stock) => stock.active)
+    .map((stock) => `${stock.symbol}:${stock.mic}`)
+    .sort()
+    .join(",");
+  const catalogResetKey = JSON.stringify({
+    catalogSearch,
+    catalogSector,
+    activeListingKey,
+  });
   const {
-    items: stockTickers,
+    items: catalogCompanies,
     sentinelRef,
     isLoadingMore,
+    isExhausted,
   } = useInfiniteScroll({
-    initialData: initialStockPage,
+    initialData: initialCatalog,
     fetchPage: (cursor) =>
-      queryStocksPaginatedSF({
-        data: { search: searchInputProp, cursor, limit: 50 },
+      queryEarningsCatalogSF({
+        data: { ...catalogFilters, cursor, limit: 50 },
       }),
-    resetKey,
+    resetKey: catalogResetKey,
   });
 
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear(),
+  const [catalogSearchInput, setCatalogSearchInput] = useState(
+    catalogSearch ?? "",
   );
-  const [selectedQuarter, setSelectedQuarter] = useState<number>(1);
-  const [selectedTickers, setSelectedTickers] = useState<
-    {
-      name: string;
-      symbol: string;
-    }[]
-  >([]);
-  const [searchInput, setSearchInput] = useState(searchInputProp ?? "");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [activeTab, setActiveTab] = useState<"tickers" | "tracked" | "update">(
-    "tickers",
+  const [catalogSectorInput, setCatalogSectorInput] = useState(
+    catalogSector ?? "",
   );
-  const [trackedCompanies, setTrackedCompanies] = useState<TrackedCompany[]>(
-    initialTrackedCompanies,
-  );
-  const [trackingInProgress, setTrackingInProgress] = useState<Set<string>>(
+  const [trackedSearch, setTrackedSearch] = useState("");
+  const [selectedCatalogIds, setSelectedCatalogIds] = useState<Set<string>>(
     new Set(),
   );
-  const [stockDataSent, setStockDataSent] = useState(false);
+  const [busyStockId, setBusyStockId] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [catalogSyncing, setCatalogSyncing] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Create a set of tracked stock symbol IDs for quick lookup
-  const trackedStockSymbolIds = useMemo(
-    () => new Set(trackedCompanies.map((tc) => tc.stockSymbolId)),
-    [trackedCompanies],
-  );
+  const filteredStocks = useMemo(() => {
+    const query = trackedSearch.trim().toLowerCase();
+    if (!query) return stocks;
+    return stocks.filter((stock) =>
+      `${stock.symbol} ${stock.companyName} ${stock.exchange} ${stock.mic}`
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [stocks, trackedSearch]);
 
-  const sortedTrackedCompanies = useMemo(() => {
-    return trackedCompanies.slice().sort((a, b) => {
-      const aTime = a.nextEarningsDate
-        ? new Date(a.nextEarningsDate).getTime()
-        : null;
-      const bTime = b.nextEarningsDate
-        ? new Date(b.nextEarningsDate).getTime()
-        : null;
+  const refresh = async () => {
+    await router.invalidate();
+  };
 
-      if (aTime === null && bTime === null) {
-        return a.symbol.localeCompare(b.symbol, undefined, {
-          sensitivity: "base",
-        });
-      }
-      if (aTime === null) return 1;
-      if (bTime === null) return -1;
-
-      if (aTime !== bTime) return aTime - bTime;
-      return a.symbol.localeCompare(b.symbol, undefined, {
-        sensitivity: "base",
-      });
-    });
-  }, [trackedCompanies]);
-
-  // Automatically clear the message after 5 seconds
-  useEffect(() => {
-    if (!message) return;
-    const timer = setTimeout(() => {
-      setMessage("");
-    }, 5000);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [message]);
-
-  const currentYear = new Date().getFullYear();
-  const availableYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
-
-  useConnectionStateListener("connected", ({ current }) => {
-    console.log("Ably connection state:", current);
-  });
-
-  useNotifyUI(viewerId, (msg) => {
-    console.log("message", msg);
-    if (msg.data === "Complete") {
-      setMessage("Scrape Complete");
-      setLoading(false);
-    } else if (
-      typeof msg.data === "string" &&
-      msg.data.toLowerCase().includes("error")
-    ) {
-      setMessage("An error occurred during scraping");
-      setLoading(false);
-    } else {
-      setMessage(msg.data as string);
-    }
-  });
-
-  const updateStockData = useServerFn(updateStockDataSF);
-  const sendEventEarningsCallscraper = useServerFn(
-    sendEventEarningsCallscraperSF,
-  );
-  const toggleTrackedCompany = useServerFn(toggleTrackedCompanySF);
-
-  const toggleTicker = (symbol: string) => {
-    setSelectedTickers((prev) => {
-      const isSelected = prev.some((t) => t.symbol === symbol);
-      if (isSelected) {
-        return prev.filter((t) => t.symbol !== symbol);
-      } else {
-        const ticker = stockTickers.find((t) => t.symbol === symbol);
-        return ticker
-          ? [...prev, { name: ticker.name, symbol: ticker.symbol }]
-          : prev;
-      }
+  const toggleCatalogSelection = (catalogId: string) => {
+    setSelectedCatalogIds((current) => {
+      const next = new Set(current);
+      if (next.has(catalogId)) next.delete(catalogId);
+      else next.add(catalogId);
+      return next;
     });
   };
 
-  const handleToggleTracking = async (stockSymbolId: string) => {
-    setTrackingInProgress((prev) => new Set(prev).add(stockSymbolId));
-    try {
-      const result = await toggleTrackedCompany({ data: { stockSymbolId } });
-      if (result.isTracked) {
-        const stock = stockTickers.find((s) => s.id === stockSymbolId);
-        if (stock) {
-          setTrackedCompanies((prev) => [
-            ...prev,
-            {
-              id: result.id,
-              stockSymbolId,
-              symbol: stock.symbol,
-              name: stock.name,
-              nextEarningsDate: null,
-            },
-          ]);
-        }
-      } else {
-        setTrackedCompanies((prev) =>
-          prev.filter((tc) => tc.stockSymbolId !== stockSymbolId),
-        );
-      }
-    } finally {
-      setTrackingInProgress((prev) => {
-        const next = new Set(prev);
-        next.delete(stockSymbolId);
-        return next;
-      });
-    }
-  };
-
-  const handleSearch = () => {
+  const handleCatalogSearch = () => {
+    setError(null);
     void router.navigate({
-      to: router.state.location.pathname,
-      search: { searchInput: searchInput || undefined },
+      to: "/dev/public-stocks",
+      search: {
+        catalogSearch: catalogSearchInput.trim() || undefined,
+        catalogSector: catalogSectorInput.trim() || undefined,
+      },
     });
   };
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  const handleActivateSelected = async () => {
+    setAdding(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await activateStocks({
+        data: { catalogIds: [...selectedCatalogIds] },
+      });
+      setSelectedCatalogIds(new Set());
+      setMessage(
+        `${String(result.selected)} stocks activated; ${String(result.hydrationQueued)} latest earnings calls queued.`,
+      );
+      await refresh();
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Failed to activate stocks",
+      );
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleDeactivate = async (stockId: string) => {
+    setBusyStockId(stockId);
+    setError(null);
+    setMessage(null);
+    try {
+      await deactivateStock({ data: { stockId } });
+      setMessage("Stock deactivated. Existing earnings data was retained.");
+      await refresh();
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Failed to deactivate stock",
+      );
+    } finally {
+      setBusyStockId(null);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await requestSync();
+      setMessage("Earnings transcript sync requested.");
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Failed to request sync",
+      );
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleCatalogSync = async () => {
+    setCatalogSyncing(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await requestCatalogSync();
+      setMessage(
+        "Company catalog refresh requested. It will update in the background.",
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Failed to request catalog refresh",
+      );
+    } finally {
+      setCatalogSyncing(false);
+    }
   };
 
   return (
-    <div className="h-[calc(100dvh-64px-49px)] overflow-hidden">
-      <div className="mx-auto flex h-full max-w-4xl flex-col gap-4 px-2 py-4 sm:px-4">
-        <div className="flex min-h-0 flex-1 flex-col gap-4">
-          <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white p-1 text-sm">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("tickers");
+    <div className="min-h-[calc(100dvh-64px-49px)]">
+      <main className="mx-auto flex max-w-4xl flex-col gap-4 px-3 py-5 sm:px-6">
+        <section className="border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">
+                  Select earnings stocks
+                </h1>
+                <p className="mt-1 max-w-xl text-sm text-gray-500">
+                  Search the earningscalls.dev company catalog and select the US
+                  listings the system should ingest.
+                </p>
+                <p className="mt-1 text-xs text-gray-400">
+                  {catalogStatus.count.toLocaleString()} companies
+                  {catalogStatus.lastSyncedAt
+                    ? ` · Updated ${formatDate(catalogStatus.lastSyncedAt)}`
+                    : " · Catalog not populated"}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleCatalogSync()}
+                  disabled={catalogSyncing}
+                  className="cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {catalogSyncing ? "Requesting…" : "Refresh catalog"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleSync()}
+                  disabled={syncing}
+                  className="cursor-pointer rounded border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {syncing ? "Requesting…" : "Sync calls"}
+                </button>
+              </div>
+            </div>
+
+            <form
+              className="mt-4 grid gap-2 sm:grid-cols-[minmax(0,1fr)_11rem_auto]"
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleCatalogSearch();
               }}
-              className={`flex-1 cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors sm:flex-none ${
-                activeTab === "tickers"
-                  ? "bg-slate-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
             >
-              Select Tickers
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("tracked");
-              }}
-              className={`flex-1 cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors sm:flex-none ${
-                activeTab === "tracked"
-                  ? "bg-slate-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              Tracked Companies
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("update");
-              }}
-              className={`flex-1 cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors sm:flex-none ${
-                activeTab === "update"
-                  ? "bg-slate-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              Update Data
-            </button>
+              <input
+                value={catalogSearchInput}
+                onChange={(event) => {
+                  setCatalogSearchInput(event.target.value);
+                }}
+                placeholder="Search ticker, company, sector, industry, or exchange…"
+                className="min-w-0 flex-1 rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
+              />
+              <select
+                value={catalogSectorInput}
+                onChange={(event) => {
+                  setCatalogSectorInput(event.target.value);
+                }}
+                className="rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
+              >
+                <option value="">All sectors</option>
+                {sectors.map((sector) => (
+                  <option key={sector} value={sector}>
+                    {sector}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="cursor-pointer rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+              >
+                Apply
+              </button>
+            </form>
+
+            {message ? (
+              <p className="mt-3 text-sm text-emerald-700">{message}</p>
+            ) : null}
+            {error ? (
+              <p className="mt-3 text-sm text-red-700">{error}</p>
+            ) : null}
           </div>
 
-          <section className="flex min-h-0 flex-1 flex-col border border-gray-200 bg-white">
-            {activeTab === "tickers" ? (
-              <div className="flex min-h-0 flex-1 flex-col">
-                <div className="shrink-0 border-b border-gray-200 p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h2 className="text-base font-semibold text-gray-900">
-                        Select Tickers
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Choose symbols to scrape by year and quarter.
-                      </p>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {selectedTickers.length} selected
-                    </div>
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Search tickers..."
-                      value={searchInput}
-                      onChange={(e) => {
-                        setSearchInput(e.target.value);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleSearch();
-                        }
-                      }}
-                      className="min-w-0 flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-400 focus:ring-2 focus:ring-slate-200 focus:outline-none"
-                    />
-                    <button
-                      onClick={handleSearch}
-                      className="cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-3 py-2 text-sm text-white"
-                    >
-                      Search
-                    </button>
-                  </div>
-                </div>
-
-                <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto">
-                  {stockTickers.map((ticker) => {
-                    const isSelected = selectedTickers.some(
-                      (t) => t.symbol === ticker.symbol,
-                    );
-                    const isTracked = trackedStockSymbolIds.has(ticker.id);
-                    const isToggling = trackingInProgress.has(ticker.id);
-
-                    return (
-                      <div
-                        key={ticker.id}
-                        className="flex items-start justify-between gap-3 px-4 py-3"
-                      >
-                        <label className="flex flex-1 cursor-pointer items-start gap-3">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => {
-                              toggleTicker(ticker.symbol);
-                            }}
-                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-slate-900"
-                          />
-                          <div className="flex flex-col">
-                            <Link
-                              to="/stocks/$symbol"
-                              params={{ symbol: ticker.symbol }}
-                              className="group/link text-sm text-gray-700 hover:text-gray-900"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                              }}
-                            >
-                              {ticker.name}{" "}
-                              <span className="text-gray-400 group-hover/link:text-gray-500">
-                                ({ticker.symbol})
-                              </span>
-                              <span className="ml-1 inline-block text-gray-300 group-hover/link:text-gray-500">
-                                &#8599;
-                              </span>
-                            </Link>
-                            {ticker.description ? (
-                              <span className="line-clamp-2 text-xs text-gray-400">
-                                {ticker.description}
-                              </span>
-                            ) : null}
-                          </div>
-                        </label>
-                        <button
-                          onClick={() => handleToggleTracking(ticker.id)}
-                          disabled={isToggling}
-                          className={`cursor-pointer rounded-full border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
-                            isTracked
-                              ? "border-slate-900 bg-slate-900 text-white"
-                              : "border-gray-200 text-gray-600 hover:bg-gray-100"
-                          }`}
-                          title={isTracked ? "Stop tracking" : "Start tracking"}
-                        >
-                          {isToggling
-                            ? "..."
-                            : isTracked
-                              ? "Tracking"
-                              : "Track"}
-                        </button>
-                      </div>
-                    );
-                  })}
-                  <div ref={sentinelRef} className="py-4 text-center">
-                    {isLoadingMore ? (
-                      <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="shrink-0 border-t border-gray-200 p-4">
-                  <div className="flex flex-col gap-3">
-                    {message ? (
-                      <div
-                        className={`rounded px-4 py-2 text-sm ${
-                          message === "Scrape Complete"
-                            ? "bg-green-100 text-green-800"
-                            : message.includes("Error")
-                              ? "bg-red-100 text-red-800"
-                              : "bg-gray-200 text-black"
-                        }`}
-                      >
-                        {message}
-                      </div>
-                    ) : null}
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                      <div className="flex flex-wrap gap-3">
-                        <div className="flex flex-col">
-                          <label
-                            htmlFor="year"
-                            className="mb-1 text-xs font-medium text-gray-600"
-                          >
-                            Year
-                          </label>
-                          <select
-                            id="year"
-                            value={selectedYear}
-                            onChange={(e) => {
-                              setSelectedYear(Number(e.target.value));
-                            }}
-                            className="rounded border border-gray-300 px-2 py-1 text-sm"
-                          >
-                            {availableYears.map((year) => (
-                              <option key={year} value={year}>
-                                {year}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex flex-col">
-                          <label
-                            htmlFor="quarter"
-                            className="mb-1 text-xs font-medium text-gray-600"
-                          >
-                            Quarter
-                          </label>
-                          <select
-                            id="quarter"
-                            value={selectedQuarter}
-                            onChange={(e) => {
-                              setSelectedQuarter(Number(e.target.value));
-                            }}
-                            className="rounded border border-gray-300 px-2 py-1 text-sm"
-                          >
-                            {[1, 2, 3, 4].map((q) => (
-                              <option key={q} value={q}>
-                                Q{q}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          setLoading(true);
-                          await sendEventEarningsCallscraper({
-                            data: {
-                              symbols: selectedTickers,
-                              year: selectedYear,
-                              quarter: selectedQuarter,
-                            },
-                          });
-                          setSelectedTickers([]);
-                        }}
-                        disabled={selectedTickers.length === 0 || loading}
-                        className="w-full cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-white disabled:opacity-50 sm:w-auto"
-                      >
-                        {loading ? "Scraping…" : "Scrape Earnings Calls"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : activeTab === "tracked" ? (
-              <div className="flex min-h-0 flex-1 flex-col">
-                <div className="shrink-0 border-b border-gray-200 p-4">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h2 className="text-base font-semibold text-gray-900">
-                        Tracked Companies
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Transcripts for tracked companies are automatically
-                        fetched the day after their earnings report.
-                      </p>
-                    </div>
-                    <span className="shrink-0 rounded-full border border-gray-200 px-2 py-1 text-xs text-gray-500">
-                      {trackedCompanies.length} tracked
-                    </span>
-                  </div>
-                </div>
-                <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto">
-                  {trackedCompanies.length === 0 ? (
-                    <div className="flex items-center justify-center p-6 text-sm text-gray-400">
-                      No companies tracked yet
-                    </div>
-                  ) : (
-                    sortedTrackedCompanies.map((company) => (
-                      <div
-                        key={company.id}
-                        className="flex items-center justify-between gap-3 px-4 py-3"
-                      >
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {company.symbol}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {company.name}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-right">
-                            <div className="text-xs text-gray-400">
-                              Next Earnings
-                            </div>
-                            <div className="text-sm font-medium text-gray-700">
-                              {formatDate(company.nextEarningsDate)}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() =>
-                              handleToggleTracking(company.stockSymbolId)
-                            }
-                            disabled={trackingInProgress.has(
-                              company.stockSymbolId,
-                            )}
-                            className="cursor-pointer rounded-md px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+          <div className="max-h-[30rem] divide-y divide-gray-100 overflow-y-auto">
+            {catalogCompanies.length === 0 ? (
+              <div className="p-8 text-center text-sm text-gray-500">
+                {catalogStatus.count === 0
+                  ? "Refresh the company catalog to populate available stocks."
+                  : "No companies match this search."}
               </div>
             ) : (
-              <div className="flex min-h-0 flex-1 flex-col">
-                <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center sm:p-10">
-                  <div>
-                    <h2 className="text-base font-semibold text-gray-900">
-                      Update Stock Data
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Refresh the internal stock universe used for searches and
-                      tracking.
-                    </p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      await updateStockData();
-                      setStockDataSent(true);
-                      setTimeout(() => {
-                        setStockDataSent(false);
-                      }, 2000);
-                    }}
-                    disabled={stockDataSent}
-                    className="w-full cursor-pointer rounded-md border border-zinc-900 bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-50 sm:w-auto"
-                  >
-                    {stockDataSent ? "Sent!" : "Update Stock Data"}
-                  </button>
-                </div>
-              </div>
+              catalogCompanies.map((company) => (
+                <CatalogRow
+                  key={company.id}
+                  company={company}
+                  selected={selectedCatalogIds.has(company.id)}
+                  onToggle={() => {
+                    toggleCatalogSelection(company.id);
+                  }}
+                />
+              ))
             )}
-          </section>
-        </div>
-      </div>
+            <div
+              ref={sentinelRef}
+              className="py-3 text-center text-xs text-gray-400"
+            >
+              {isLoadingMore
+                ? "Loading more…"
+                : !isExhausted
+                  ? "Scroll for more"
+                  : null}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 border-t border-gray-200 p-4">
+            <span className="text-sm text-gray-500">
+              {selectedCatalogIds.size} selected
+            </span>
+            <button
+              type="button"
+              onClick={() => void handleActivateSelected()}
+              disabled={adding || selectedCatalogIds.size === 0}
+              className="cursor-pointer rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {adding
+                ? "Adding…"
+                : `Add ${String(selectedCatalogIds.size)} stocks`}
+            </button>
+          </div>
+        </section>
+
+        <section className="border border-gray-200 bg-white">
+          <div className="flex flex-col gap-3 border-b border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">Tracked stocks</h2>
+              <p className="text-sm text-gray-500">
+                {stocks.filter((stock) => stock.active).length} active,{" "}
+                {stocks.length} total
+              </p>
+            </div>
+            <input
+              value={trackedSearch}
+              onChange={(event) => {
+                setTrackedSearch(event.target.value);
+              }}
+              placeholder="Filter tracked stocks…"
+              className="rounded border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-gray-400"
+            />
+          </div>
+
+          {filteredStocks.length === 0 ? (
+            <div className="p-8 text-center text-sm text-gray-500">
+              No tracked stocks found.
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {filteredStocks.map((stock) => (
+                <article
+                  key={stock.id}
+                  className={`p-4 ${stock.active ? "" : "bg-gray-50 opacity-70"}`}
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          to="/stocks/$symbol"
+                          params={{ symbol: stock.symbol }}
+                          className="font-semibold text-gray-900 hover:underline"
+                        >
+                          {stock.symbol}
+                        </Link>
+                        <span className="text-sm text-gray-600">
+                          {stock.companyName}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs ${
+                            stock.active
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-gray-200 text-gray-600"
+                          }`}
+                        >
+                          {stock.active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-400">
+                        {stock.exchange} · {stock.mic} · {stock.country}
+                      </p>
+
+                      {stock.latestCall ? (
+                        <div className="mt-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm text-gray-700">
+                              {stock.latestCall.transcriptTitle}
+                            </span>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs ${statusClasses(stock.latestCall.status)}`}
+                            >
+                              {stock.latestCall.status.replaceAll("_", " ")}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            {formatDate(stock.latestCall.eventDateTime)}
+                          </p>
+                          {stock.latestCall.lastError ? (
+                            <p className="mt-1 text-xs text-red-600">
+                              {stock.latestCall.lastError}
+                            </p>
+                          ) : null}
+                          {stock.latestCall.documentId ? (
+                            <Link
+                              to="/feeds/news/$documentid"
+                              params={{
+                                documentid: stock.latestCall.documentId,
+                              }}
+                              className="mt-1 inline-block text-xs font-medium text-blue-700 hover:underline"
+                            >
+                              View transcript
+                            </Link>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {stock.active ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleDeactivate(stock.id)}
+                        disabled={busyStockId === stock.id}
+                        className="cursor-pointer rounded px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        {busyStockId === stock.id
+                          ? "Deactivating…"
+                          : "Deactivate"}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-500">
+                        Select above to reactivate
+                      </span>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }

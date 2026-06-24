@@ -22,6 +22,7 @@ const rawEnv = {
   ABLY_API_KEY: process.env.ABLY_API_KEY,
   API_NINJA: process.env.API_NINJA,
   ALPHAVANTAGE_API_KEY: process.env.ALPHAVANTAGE_API_KEY,
+  EARNINGSCALLS_API_KEY: process.env.EARNINGSCALLS_API_KEY,
   FRED_API_KEY: process.env.FRED_API_KEY,
   X_BEARER_TOKEN: process.env.X_BEARER_TOKEN,
   X_CLIENT_ID: process.env.X_CLIENT_ID,

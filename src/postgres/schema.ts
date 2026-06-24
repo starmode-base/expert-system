@@ -1,7 +1,7 @@
 import { randomId } from "~/lib/random-id";
 import {
+  bigint,
   boolean,
-  doublePrecision,
   index,
   integer,
   pgTable,
@@ -112,6 +112,7 @@ export const documents = pgTable("documents", {
   description: text().notNull(),
   publicationDate: timestamp().notNull(),
   link: text().notNull(),
+  externalId: text().unique(),
   articleText: text().notNull(),
   isSubstantive: boolean().notNull().default(true),
 });
@@ -232,88 +233,111 @@ export const stockSymbols = pgTable("stock_symbols", {
   address: text(),
   officialSite: text(),
   fiscalYearEnd: text(),
-  overviewFetchedAt: timestamp(),
 });
 
 export type StockSymbolSelect = typeof stockSymbols.$inferSelect;
 export type StockSymbolInsert = typeof stockSymbols.$inferInsert;
 
-export const stockSymbolEmbeddings = pgTable(
-  "stock_symbol_embeddings",
+/**
+ * Global earnings-call ingestion configuration.
+ */
+export const trackedStocks = pgTable(
+  "tracked_stocks",
   {
     ...baseSchema,
-    stockSymbolId: text()
-      .notNull()
-      .unique()
-      .references(() => stockSymbols.id, { onDelete: "cascade" }),
-    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+    symbol: text().notNull(),
+    companyName: text().notNull(),
+    exchange: text().notNull(),
+    mic: text().notNull(),
+    country: text().notNull(),
+    active: boolean().notNull().default(true),
+  },
+  (table) => [unique().on(table.symbol, table.mic)],
+);
+
+export type TrackedStockSelect = typeof trackedStocks.$inferSelect;
+export type TrackedStockInsert = typeof trackedStocks.$inferInsert;
+
+export const earningsCompanyCatalog = pgTable(
+  "earnings_company_catalog",
+  {
+    ...baseSchema,
+    symbol: text().notNull(),
+    companyName: text().notNull(),
+    sector: text(),
+    industry: text(),
+    exchange: text().notNull(),
+    country: text().notNull(),
+    mic: text().notNull(),
+    marketCap: bigint({ mode: "number" }),
+    callCount: integer().notNull(),
+    latestCallAt: timestamp(),
+    earliestCallAt: timestamp(),
+    catalogSyncedAt: timestamp().notNull(),
+    syncRunId: text().notNull(),
   },
   (table) => [
-    index("stockSymbolEmbeddingIndex").using(
-      "hnsw",
-      table.embedding.op("vector_cosine_ops"),
+    unique().on(table.symbol, table.mic),
+    index("earnings_company_catalog_name_idx").on(table.companyName),
+    index("earnings_company_catalog_symbol_idx").on(table.symbol),
+    index("earnings_company_catalog_market_cap_idx").on(table.marketCap),
+  ],
+);
+
+export type EarningsCompanyCatalogSelect =
+  typeof earningsCompanyCatalog.$inferSelect;
+export type EarningsCompanyCatalogInsert =
+  typeof earningsCompanyCatalog.$inferInsert;
+
+export const earningsCalls = pgTable(
+  "earnings_calls",
+  {
+    ...baseSchema,
+    providerCallId: integer().notNull().unique(),
+    trackedStockId: text()
+      .notNull()
+      .references(() => trackedStocks.id, { onDelete: "cascade" }),
+    transcriptTitle: text().notNull(),
+    eventType: text().notNull(),
+    eventDateTime: timestamp().notNull(),
+    providerAddedAt: timestamp().notNull(),
+    sector: text(),
+    industry: text(),
+    durationSeconds: integer(),
+    status: text()
+      .$type<"pending" | "processing" | "takeaways_queued" | "failed">()
+      .notNull()
+      .default("pending"),
+    documentId: text()
+      .unique()
+      .references(() => documents.id, { onDelete: "set null" }),
+    attempts: integer().notNull().default(0),
+    lastError: text(),
+    takeawaysQueuedAt: timestamp(),
+  },
+  (table) => [
+    index("earnings_calls_status_idx").on(table.status),
+    index("earnings_calls_stock_date_idx").on(
+      table.trackedStockId,
+      table.eventDateTime,
     ),
   ],
 );
 
-/**
- * Tracked Companies - User-specific company watchlist
- */
-export const trackedCompanies = pgTable(
-  "tracked_companies",
-  {
-    ...baseSchema,
-    userId: text()
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    stockSymbolId: text()
-      .notNull()
-      .references(() => stockSymbols.id, { onDelete: "cascade" }),
-  },
-  (table) => [unique().on(table.userId, table.stockSymbolId)],
-);
+export type EarningsCallSelect = typeof earningsCalls.$inferSelect;
+export type EarningsCallInsert = typeof earningsCalls.$inferInsert;
 
-export type TrackedCompanySelect = typeof trackedCompanies.$inferSelect;
-export type TrackedCompanyInsert = typeof trackedCompanies.$inferInsert;
-
-/**
- * Earnings Schedule - Cached earnings calendar from Alpha Vantage
- */
-export const earningsSchedule = pgTable(
-  "earnings_schedule",
-  {
-    ...baseSchema,
-    symbol: text().notNull(),
-    name: text().notNull(),
-    reportDate: timestamp().notNull(),
-    fiscalDateEnding: text().notNull(),
-    estimate: doublePrecision(),
-    currency: text(),
-  },
-  (table) => [unique().on(table.symbol, table.fiscalDateEnding)],
-);
-
-export type EarningsScheduleSelect = typeof earningsSchedule.$inferSelect;
-export type EarningsScheduleInsert = typeof earningsSchedule.$inferInsert;
-
-/**
- * Earnings Fetch Jobs - Track status of automated transcript fetches
- */
-export const earningsFetchJobs = pgTable("earnings_fetch_jobs", {
-  ...baseSchema,
-  earningsScheduleId: text()
-    .notNull()
-    .references(() => earningsSchedule.id, { onDelete: "cascade" }),
-  status: text()
-    .$type<"pending" | "processing" | "completed" | "failed" | "skipped">()
-    .notNull()
-    .default("pending"),
-  processedAt: timestamp(),
-  errorMessage: text(),
+export const earningsSyncState = pgTable("earnings_sync_state", {
+  provider: text().primaryKey(),
+  afterId: integer().notNull(),
+  lastPolledAt: timestamp(),
+  lastSuccessfulSyncAt: timestamp(),
+  createdAt: createdAtField,
+  updatedAt: updatedAtField,
 });
 
-export type EarningsFetchJobSelect = typeof earningsFetchJobs.$inferSelect;
-export type EarningsFetchJobInsert = typeof earningsFetchJobs.$inferInsert;
+export type EarningsSyncStateSelect = typeof earningsSyncState.$inferSelect;
+export type EarningsSyncStateInsert = typeof earningsSyncState.$inferInsert;
 
 /**
  * Takeaway Categories

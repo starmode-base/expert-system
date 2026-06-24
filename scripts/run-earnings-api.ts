@@ -1,9 +1,9 @@
-import { fetchAlphaVantageEarningsTranscript } from "~/inngest/earnings";
+import { fetchLatestCall, fetchTranscript } from "~/inngest/earnings";
 
-const result = await fetchAlphaVantageEarningsTranscript({
-  symbol: "V",
-  year: 2026,
-  quarter: 1,
+const latest = await fetchLatestCall(process.argv[2] ?? "NVDA");
+const transcript = await fetchTranscript(latest.providerCallId);
+
+console.log({
+  latest,
+  transcriptLength: transcript.text.length,
 });
-
-console.log(result);
