@@ -3,17 +3,9 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
-import {
-  fetchCompanyOverview,
-  fetchGlobalQuote,
-  type CompanyOverview,
-  type GlobalQuote,
-} from "~/server/financial-data-api/alpha-vantage-api";
 
 interface StockProfileResult {
   dbStock: typeof schema.stockSymbols.$inferSelect | null;
-  overview: CompanyOverview | null;
-  quote: GlobalQuote | null;
 }
 
 export const getStockProfileSF = createServerFn({ method: "GET" })
@@ -24,18 +16,12 @@ export const getStockProfileSF = createServerFn({ method: "GET" })
       context.ensureViewer();
       const upperSymbol = symbol.trim().toUpperCase();
 
-      const [dbStock, overview, quote] = await Promise.all([
-        db.query.stockSymbols.findFirst({
-          where: eq(schema.stockSymbols.symbol, upperSymbol),
-        }),
-        fetchCompanyOverview(upperSymbol).catch(() => null),
-        fetchGlobalQuote(upperSymbol).catch(() => null),
-      ]);
+      const dbStock = await db.query.stockSymbols.findFirst({
+        where: eq(schema.stockSymbols.symbol, upperSymbol),
+      });
 
       return {
         dbStock: dbStock ?? null,
-        overview: overview ?? null,
-        quote: quote ?? null,
       };
     },
   );

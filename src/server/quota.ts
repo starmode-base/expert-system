@@ -11,7 +11,6 @@ export type ApiEndpoint =
   | "takeaways.recent"
   | "documents"
   | "query.macro"
-  | "query.financial"
   | "research";
 
 /**

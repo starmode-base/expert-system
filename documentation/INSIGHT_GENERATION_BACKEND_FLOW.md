@@ -137,7 +137,7 @@ flowchart TD
   - Context: formatted takeaway previews + recent insights + `insightPrompt`
   - Tools:
     - `researcher` (the same sub-agent for additional takeaway retrieval)
-    - `financialAnalyst` (Alpha Vantage-backed financial data tools)
+    - `macroResearcher` (FRED-backed macroeconomic data tools)
     - `fetchTakeawayById` (full takeaway text + references)
   - Structured output enforced by `insightSchema`
 - Summarize the research note into a user-facing post via `getInsightSummary` (OpenAI Responses structured output).
@@ -163,7 +163,7 @@ flowchart TD
   T --> E
   D --> F["Insight agent<br/>insightSchema structured output"]
   E --> F
-  F --> G["Tools: researcher + financialAnalyst + fetchTakeawayById"]
+  F --> G["Tools: researcher + macroResearcher + fetchTakeawayById"]
   G --> H["Summarize research note<br/>getInsightSummary"]
   H --> I[("Postgres: insights (user-specific)<br/>insight + research + summary + title + prompt")]
   I --> J[("Postgres: insight_references")]
@@ -192,6 +192,5 @@ flowchart TD
   - `src/inngest/insights/helpers/get-insight-summary.ts`
   - `src/inngest/insights/agents/insight-agent.ts`
   - `src/inngest/insights/agents/researcher.ts`
-  - `src/inngest/insights/agents/financial-analyst.ts`
   - `src/inngest/insights/insight-prompts.ts`
   - `src/inngest/insights/tool-functions/tools-takeaways.ts`
