@@ -14,7 +14,6 @@ const ENDPOINT_META: Record<string, { label: string; color: string }> = {
   documents: { label: "Docs", color: "#3b82f6" }, // blue
   research: { label: "Research", color: "#06b6d4" }, // cyan
   "query.macro": { label: "Macro", color: "#10b981" }, // emerald
-  "query.financial": { label: "Financial", color: "#f59e0b" }, // amber
 };
 
 const FREE_TIER_LIMIT = 100;
@@ -107,8 +106,13 @@ function buildMonthData(rows: UsageRow[]): MonthData[] {
     if (monthMap) monthMap.set(row.endpoint, row.requestCount);
   }
 
-  // Stable endpoint order
-  const endpointOrder = Object.keys(ENDPOINT_META);
+  // Stable endpoint order, with unknown historical rows retained at the end.
+  const endpointOrder = [
+    ...Object.keys(ENDPOINT_META),
+    ...[...new Set(rows.map((row) => row.endpoint))]
+      .filter((endpoint) => !(endpoint in ENDPOINT_META))
+      .sort(),
+  ];
 
   return months.map((month) => {
     const endpointMap = byMonth.get(month);

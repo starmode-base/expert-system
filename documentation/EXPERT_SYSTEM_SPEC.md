@@ -90,5 +90,5 @@ A synthesized, novel conclusion that can inform trading decisions.
 - **How it is formed:** The system follows a multi-stage reasoning flow to ensure novelty and grounding:
   - It compiles a short list of the most recent insights to avoid repetition.
   - It gathers a focused set of relevant takeaways and related concepts to ground the analysis.
-  - This context is run through an agentic reasoning loop with access to a financial analyst data that has access to macro and public markets data.
+  - This context is run through an agentic reasoning loop with access to macroeconomic data and the research corpus.
   - It produces a draft insight that integrates those signals into a coherent market narrative.

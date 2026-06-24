@@ -5,9 +5,9 @@
 // translate a question into the right FRED tool calls and pass the raw results
 // through. No analysis or prose — just structured data.
 //
-// Lives alongside the other insight agents (macro-researcher, financial-analyst)
-// because it reuses their tool definitions. The API route is the HTTP boundary;
-// the agent logic stays with the rest of the agent code.
+// Lives alongside the other insight agents because it reuses the macro
+// researcher's tool definitions. The API route is the HTTP boundary; the agent
+// logic stays with the rest of the agent code.
 // ---------------------------------------------------------------------------
 
 import { Agent } from "@openai/agents";

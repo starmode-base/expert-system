@@ -7,7 +7,6 @@ import {
 } from "../insight-prompts";
 import { fetchTakeawayById } from "../tool-functions/tools-takeaways";
 import { invariant } from "@tanstack/react-router";
-import { createFinancialAnalysisAgent } from "./financial-analyst";
 import { createMacroResearcherAgent } from "./macro-researcher";
 import { createResearcherAgent } from "./researcher";
 
@@ -33,35 +32,6 @@ const fetchTakeawayByIdTool: FunctionTool<
   execute: async (args: z.infer<typeof fetchTakeawayByIdParams>) => {
     return await fetchTakeawayById(args);
   },
-});
-
-const finacialAnalyst = createFinancialAnalysisAgent();
-
-const financialAnalystTool = finacialAnalyst.asTool({
-  toolName: "financialAnalyst",
-  toolDescription: `This tool provides autonomous financial analysis and data retrieval for public companies.
-
-Capabilities:
-- Query standardized company fundamentals, including overview data, valuation ratios, profitability, growth, and analyst sentiment.
-- Retrieve full financial statements (income statement, balance sheet, cash flow) across historical periods.
-- Analyze cash generation, capital structure, leverage, and shareholder returns.
-- Perform comparative analysis, trend analysis, and high-level financial reasoning based on retrieved data.
-- Do not iterate on the same financial analysis for the same objective. Only use this tool once unless you need a new and distinct analysis.
-
-Note: For macroeconomic data (GDP, inflation, rates, yield curves, credit spreads, etc.) use macroResearcher instead.
-
-Usage:
-Use this tool whenever company-specific financial data, fundamentals, or investment-oriented analysis will add value to the insight.
-
-Provide the following structured information to the financialAnalyst:
-
-  Today's date:
-  Objective:
-  Request:
-  Scope: (tickers)
-  Timeframe: (quarters/years; as-of date)
-  Constraints: (no speculation, cite numbers, handle missing data)`,
-  runOptions: { maxTurns: 40 },
 });
 
 const macroResearcher = createMacroResearcherAgent();
@@ -129,12 +99,7 @@ function createInsightAgent() {
     name: "Insight Generator",
     instructions: systemPrompt,
     model: "gpt-5.4",
-    tools: [
-      financialAnalystTool,
-      macroResearcherTool,
-      researcherTool,
-      fetchTakeawayByIdTool,
-    ],
+    tools: [macroResearcherTool, researcherTool, fetchTakeawayByIdTool],
     outputType: insightSchema,
     modelSettings: {
       parallelToolCalls: false,
