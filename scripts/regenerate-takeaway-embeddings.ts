@@ -17,6 +17,7 @@ async function main() {
     columns: {
       id: true,
       summary: true,
+      retrievalSummary: true,
       documentId: true,
     },
   });
@@ -38,7 +39,9 @@ async function main() {
     invariant(takeaway.summary, `Missing summary for ${takeaway.id}`);
 
     console.log(`Generating takeaway embedding for ${takeaway.id}`);
-    const takeawayEmbedding = await generateEmbedding(takeaway.summary);
+    const takeawayEmbedding = await generateEmbedding(
+      takeaway.retrievalSummary ?? takeaway.summary,
+    );
 
     await db
       .insert(schema.takeawayEmbeddings)
