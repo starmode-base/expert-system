@@ -53,6 +53,10 @@ export const processEarningsCall = inngest.createFunction(
 
     const systemUser = await step.run("load-system-user", getSystemUser);
 
+    // Mark queued before sending the event so the takeaways worker's
+    // "complete" write can never be overwritten by this one.
+    await step.run("mark-takeaways-queued", () => markTakeawaysQueued(call.id));
+
     await step.sendEvent("generate-takeaways", {
       name: "app/generate-takeaways",
       data: {
@@ -62,8 +66,6 @@ export const processEarningsCall = inngest.createFunction(
         user: systemUser,
       },
     });
-
-    await step.run("mark-takeaways-queued", () => markTakeawaysQueued(call.id));
 
     return { status: "takeaways_queued" as const, documentId };
   },

@@ -218,6 +218,13 @@
       "when": 1782311037362,
       "tag": "0030_damp_reptil",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1784037479710,
+      "tag": "0031_backfill_earnings_call_complete_status",
+      "breakpoints": true
     }
   ]
 }

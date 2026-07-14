@@ -327,7 +327,26 @@ export async function markTakeawaysQueued(callId: string): Promise<void> {
       takeawaysQueuedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(schema.earningsCalls.id, callId));
+    .where(
+      and(
+        eq(schema.earningsCalls.id, callId),
+        // Only transition in-flight calls so a retry can never overwrite "complete"
+        eq(schema.earningsCalls.status, "processing"),
+      ),
+    );
+}
+
+export async function markEarningsCallComplete(
+  documentId: string,
+): Promise<void> {
+  await db
+    .update(schema.earningsCalls)
+    .set({
+      status: "complete",
+      lastError: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.earningsCalls.documentId, documentId));
 }
 
 export async function getSystemUser(): Promise<{ id: string; email: string }> {

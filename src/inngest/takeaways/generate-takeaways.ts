@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { publishNotifyUI } from "~/lib/ably";
 import { NonRetriableError } from "inngest";
 import { getSummary } from "~/inngest/takeaways/helpers/get-summary";
+import { markEarningsCallComplete } from "~/inngest/earnings/services/earnings-repository";
 import { inngest } from "../client";
 
 export const generateTakeaways = inngest.createFunction(
@@ -38,6 +39,11 @@ export const generateTakeaways = inngest.createFunction(
 
     // If takeaways already exist, early return
     if (existingTakeaways.length > 0) {
+      // No-op for non-earnings documents; heals earnings calls stuck in
+      // "takeaways_queued" when re-queued.
+      await step.run("mark-earnings-call-complete", () =>
+        markEarningsCallComplete(event.data.documentId),
+      );
       await publishNotifyUI(
         event.data.user.id,
         `Takeaways already exist for document ${event.data.documentId}`,
@@ -206,6 +212,11 @@ export const generateTakeaways = inngest.createFunction(
           },
         );
       }),
+    );
+
+    // No-op for non-earnings documents.
+    await step.run("mark-earnings-call-complete", () =>
+      markEarningsCallComplete(event.data.documentId),
     );
   },
 );

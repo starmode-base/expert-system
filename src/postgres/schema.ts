@@ -270,6 +270,13 @@ export type EarningsCompanyCatalogSelect =
 export type EarningsCompanyCatalogInsert =
   typeof earningsCompanyCatalog.$inferInsert;
 
+export type EarningsCallStatus =
+  | "pending"
+  | "processing"
+  | "takeaways_queued"
+  | "failed"
+  | "complete";
+
 export const earningsCalls = pgTable(
   "earnings_calls",
   {
@@ -285,10 +292,7 @@ export const earningsCalls = pgTable(
     sector: text(),
     industry: text(),
     durationSeconds: integer(),
-    status: text()
-      .$type<"pending" | "processing" | "takeaways_queued" | "failed">()
-      .notNull()
-      .default("pending"),
+    status: text().$type<EarningsCallStatus>().notNull().default("pending"),
     documentId: text()
       .unique()
       .references(() => documents.id, { onDelete: "set null" }),
