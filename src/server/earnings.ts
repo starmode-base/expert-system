@@ -6,6 +6,7 @@ import { inngest } from "~/inngest/client";
 import { assertDevUser } from "~/lib/dev-user";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
+import type { EarningsCallStatus } from "~/postgres/schema";
 import type { PaginatedResult } from "./pagination";
 
 export interface TrackedStockView {
@@ -20,7 +21,7 @@ export interface TrackedStockView {
     id: string;
     transcriptTitle: string;
     eventDateTime: string;
-    status: "pending" | "processing" | "takeaways_queued" | "failed";
+    status: EarningsCallStatus;
     documentId: string | null;
     lastError: string | null;
   } | null;
@@ -303,6 +304,75 @@ export const deactivateTrackedStockSF = createServerFn({ method: "POST" })
     }
 
     return { success: true };
+  });
+
+export const pullLatestTranscriptSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ stockId: z.string() }))
+  .handler(async ({ context, data }) => {
+    ensureDev(context.viewer.clerkUserId);
+
+    const stock = await db.query.trackedStocks.findFirst({
+      where: eq(schema.trackedStocks.id, data.stockId),
+      columns: { symbol: true, mic: true, active: true },
+    });
+
+    if (!stock) {
+      throw new Error("Tracked stock not found");
+    }
+    if (!stock.active) {
+      throw new Error("Stock is inactive. Reactivate it first.");
+    }
+
+    const catalogEntry = await db.query.earningsCompanyCatalog.findFirst({
+      where: and(
+        eq(schema.earningsCompanyCatalog.symbol, stock.symbol),
+        eq(schema.earningsCompanyCatalog.mic, stock.mic),
+      ),
+      columns: { id: true },
+    });
+
+    if (!catalogEntry) {
+      throw new Error(
+        "Company not found in the catalog. Refresh the catalog first.",
+      );
+    }
+
+    await inngest.send({
+      name: "earnings/stock.hydrate",
+      data: { catalogId: catalogEntry.id },
+    });
+
+    return { success: true };
+  });
+
+export const pullAllLatestTranscriptsSF = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    ensureDev(context.viewer.clerkUserId);
+
+    const rows = await db
+      .select({ catalogId: schema.earningsCompanyCatalog.id })
+      .from(schema.trackedStocks)
+      .innerJoin(
+        schema.earningsCompanyCatalog,
+        and(
+          eq(schema.trackedStocks.symbol, schema.earningsCompanyCatalog.symbol),
+          eq(schema.trackedStocks.mic, schema.earningsCompanyCatalog.mic),
+        ),
+      )
+      .where(eq(schema.trackedStocks.active, true));
+
+    if (rows.length > 0) {
+      await inngest.send(
+        rows.map((row) => ({
+          name: "earnings/stock.hydrate" as const,
+          data: { catalogId: row.catalogId },
+        })),
+      );
+    }
+
+    return { queued: rows.length };
   });
 
 export const requestEarningsSyncSF = createServerFn({ method: "POST" })

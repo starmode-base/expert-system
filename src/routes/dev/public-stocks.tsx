@@ -8,11 +8,14 @@ import {
   getEarningsCatalogStatusSF,
   listEarningsCatalogSectorsSF,
   listTrackedStocksSF,
+  pullAllLatestTranscriptsSF,
+  pullLatestTranscriptSF,
   queryEarningsCatalogSF,
   requestEarningsCatalogSyncSF,
   requestEarningsSyncSF,
   type EarningsCatalogCompanyView,
 } from "~/server/earnings";
+import type { EarningsCallStatus } from "~/postgres/schema";
 
 export const Route = createFileRoute("/dev/public-stocks")({
   validateSearch: (search: Record<string, unknown> | undefined) => ({
@@ -66,11 +69,11 @@ function formatDate(value: string | null): string {
 }
 
 function statusClasses(
-  status: "pending" | "processing" | "takeaways_queued" | "failed",
+  status: Exclude<EarningsCallStatus, "complete">,
 ): string {
   switch (status) {
     case "takeaways_queued":
-      return "bg-emerald-50 text-emerald-700";
+      return "bg-sky-50 text-sky-700";
     case "failed":
       return "bg-red-50 text-red-700";
     case "processing":
@@ -146,6 +149,8 @@ function EarningsManagementPage() {
   const deactivateStock = useServerFn(deactivateTrackedStockSF);
   const requestSync = useServerFn(requestEarningsSyncSF);
   const requestCatalogSync = useServerFn(requestEarningsCatalogSyncSF);
+  const pullLatestTranscript = useServerFn(pullLatestTranscriptSF);
+  const pullAllLatestTranscripts = useServerFn(pullAllLatestTranscriptsSF);
 
   const activeListingKey = stocks
     .filter((stock) => stock.active)
@@ -182,8 +187,10 @@ function EarningsManagementPage() {
     new Set(),
   );
   const [busyStockId, setBusyStockId] = useState<string | null>(null);
+  const [pullingStockId, setPullingStockId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [pullingAll, setPullingAll] = useState(false);
   const [catalogSyncing, setCatalogSyncing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -258,6 +265,45 @@ function EarningsManagementPage() {
       );
     } finally {
       setBusyStockId(null);
+    }
+  };
+
+  const handlePullLatest = async (stockId: string) => {
+    setPullingStockId(stockId);
+    setError(null);
+    setMessage(null);
+    try {
+      await pullLatestTranscript({ data: { stockId } });
+      setMessage("Latest transcript pull queued.");
+      await refresh();
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Failed to pull latest transcript",
+      );
+    } finally {
+      setPullingStockId(null);
+    }
+  };
+
+  const handlePullAllLatest = async () => {
+    setPullingAll(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await pullAllLatestTranscripts();
+      setMessage(
+        `Queued latest-transcript pull for ${String(result.queued)} stocks.`,
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Failed to pull latest transcripts",
+      );
+    } finally {
+      setPullingAll(false);
     }
   };
 
@@ -440,14 +486,24 @@ function EarningsManagementPage() {
                 {stocks.length} total
               </p>
             </div>
-            <input
-              value={trackedSearch}
-              onChange={(event) => {
-                setTrackedSearch(event.target.value);
-              }}
-              placeholder="Filter tracked stocks…"
-              className="rounded border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-gray-400"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void handlePullAllLatest()}
+                disabled={pullingAll}
+                className="cursor-pointer rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {pullingAll ? "Requesting…" : "Pull latest transcripts"}
+              </button>
+              <input
+                value={trackedSearch}
+                onChange={(event) => {
+                  setTrackedSearch(event.target.value);
+                }}
+                placeholder="Filter tracked stocks…"
+                className="rounded border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-gray-400"
+              />
+            </div>
           </div>
 
           {filteredStocks.length === 0 ? (
@@ -494,11 +550,13 @@ function EarningsManagementPage() {
                             <span className="text-sm text-gray-700">
                               {stock.latestCall.transcriptTitle}
                             </span>
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-xs ${statusClasses(stock.latestCall.status)}`}
-                            >
-                              {stock.latestCall.status.replaceAll("_", " ")}
-                            </span>
+                            {stock.latestCall.status !== "complete" ? (
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs ${statusClasses(stock.latestCall.status)}`}
+                              >
+                                {stock.latestCall.status.replaceAll("_", " ")}
+                              </span>
+                            ) : null}
                           </div>
                           <p className="mt-0.5 text-xs text-gray-400">
                             {formatDate(stock.latestCall.eventDateTime)}
@@ -524,16 +582,34 @@ function EarningsManagementPage() {
                     </div>
 
                     {stock.active ? (
-                      <button
-                        type="button"
-                        onClick={() => void handleDeactivate(stock.id)}
-                        disabled={busyStockId === stock.id}
-                        className="cursor-pointer rounded px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
-                      >
-                        {busyStockId === stock.id
-                          ? "Deactivating…"
-                          : "Deactivate"}
-                      </button>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => void handlePullLatest(stock.id)}
+                          disabled={
+                            pullingStockId === stock.id ||
+                            busyStockId === stock.id
+                          }
+                          className="cursor-pointer rounded px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                        >
+                          {pullingStockId === stock.id
+                            ? "Pulling…"
+                            : "Pull latest"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleDeactivate(stock.id)}
+                          disabled={
+                            busyStockId === stock.id ||
+                            pullingStockId === stock.id
+                          }
+                          className="cursor-pointer rounded px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {busyStockId === stock.id
+                            ? "Deactivating…"
+                            : "Deactivate"}
+                        </button>
+                      </div>
                     ) : (
                       <span className="text-xs text-gray-500">
                         Select above to reactivate
