@@ -362,6 +362,7 @@ function EarningsManagementPage() {
                   {catalogStatus.lastSyncedAt
                     ? ` · Updated ${formatDate(catalogStatus.lastSyncedAt)}`
                     : " · Catalog not populated"}
+                  {` · ${catalogStatus.requestsUsed.toLocaleString()} / ${catalogStatus.requestLimit.toLocaleString()} API requests this month`}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -483,7 +484,12 @@ function EarningsManagementPage() {
               <h2 className="font-semibold text-gray-900">Tracked stocks</h2>
               <p className="text-sm text-gray-500">
                 {stocks.filter((stock) => stock.active).length} active,{" "}
-                {stocks.length} total
+                {stocks.length} total ·{" "}
+                {String(
+                  (catalogStatus.hydrationCounts.pending ?? 0) +
+                    (catalogStatus.hydrationCounts.failed ?? 0),
+                )}{" "}
+                awaiting hydration
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -578,7 +584,30 @@ function EarningsManagementPage() {
                             </Link>
                           ) : null}
                         </div>
-                      ) : null}
+                      ) : (
+                        <div className="mt-3">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs ${
+                              stock.hydrationStatus === "failed"
+                                ? "bg-red-50 text-red-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            Hydration {stock.hydrationStatus}
+                          </span>
+                          {stock.hydrationLastError ? (
+                            <p className="mt-1 text-xs text-red-600">
+                              {stock.hydrationLastError}
+                            </p>
+                          ) : null}
+                          {stock.hydrationNextAttemptAt ? (
+                            <p className="mt-1 text-xs text-gray-400">
+                              Next attempt{" "}
+                              {formatDate(stock.hydrationNextAttemptAt)}
+                            </p>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
 
                     {stock.active ? (

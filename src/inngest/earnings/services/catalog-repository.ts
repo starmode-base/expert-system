@@ -1,4 +1,4 @@
-import { ne, sql } from "drizzle-orm";
+import { and, eq, ne, or, sql } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import type { EarningsCompanyCatalogEntry } from "../api/earnings-calls";
 
@@ -146,6 +146,27 @@ export async function activateCatalogStocks(catalogIds: string[]): Promise<
         updatedAt: new Date(),
       },
     });
+
+  if (toHydrate.length > 0) {
+    await db
+      .update(schema.trackedStocks)
+      .set({
+        hydrationStatus: "pending",
+        hydrationLastError: null,
+        hydrationNextAttemptAt: null,
+        updatedAt: new Date(),
+      })
+      .where(
+        or(
+          ...toHydrate.map((company) =>
+            and(
+              eq(schema.trackedStocks.symbol, company.symbol),
+              eq(schema.trackedStocks.mic, company.mic),
+            ),
+          ),
+        ),
+      );
+  }
 
   return toHydrate.map((company) => ({
     catalogId: company.id,

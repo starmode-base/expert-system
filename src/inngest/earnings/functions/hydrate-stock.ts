@@ -2,8 +2,25 @@ import { NonRetriableError } from "inngest";
 import { inngest } from "~/inngest/client";
 import { EarningsCallsApiError, fetchLatestCall } from "../api/earnings-calls";
 import { upsertTrackedStockAndCall } from "../services/earnings-repository";
-import { db, schema } from "~/postgres/db";
-import { and, eq } from "drizzle-orm";
+import {
+  claimStockHydration,
+  completeStockHydration,
+  failStockHydration,
+} from "../services/hydration-repository";
+
+function nextHydrationAttemptAt(error: unknown): Date {
+  const now = new Date();
+  if (
+    error instanceof EarningsCallsApiError &&
+    error.status === 429 &&
+    !error.retryable
+  ) {
+    return new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 1),
+    );
+  }
+  return new Date(now.getTime() + 24 * 60 * 60 * 1000);
+}
 
 export const hydrateEarningsStock = inngest.createFunction(
   {
@@ -13,28 +30,12 @@ export const hydrateEarningsStock = inngest.createFunction(
   },
   { event: "earnings/stock.hydrate" },
   async ({ event, step }) => {
-    const company = await step.run("load-active-company", async () => {
-      const catalog = await db.query.earningsCompanyCatalog.findFirst({
-        where: eq(schema.earningsCompanyCatalog.id, event.data.catalogId),
-      });
-      if (!catalog) {
-        throw new NonRetriableError("Catalog company no longer exists");
-      }
-
-      const tracked = await db.query.trackedStocks.findFirst({
-        where: and(
-          eq(schema.trackedStocks.symbol, catalog.symbol),
-          eq(schema.trackedStocks.mic, catalog.mic),
-          eq(schema.trackedStocks.active, true),
-        ),
-        columns: { id: true },
-      });
-
-      return tracked ? catalog : null;
-    });
+    const company = await step.run("claim-stock-hydration", () =>
+      claimStockHydration(event.data.catalogId),
+    );
 
     if (!company) {
-      return { status: "inactive" as const };
+      return { status: "ignored" as const };
     }
 
     try {
@@ -47,6 +48,10 @@ export const hydrateEarningsStock = inngest.createFunction(
         },
       );
 
+      await step.run("complete-stock-hydration", () =>
+        completeStockHydration(company.trackedStockId),
+      );
+
       await step.sendEvent("process-latest-earnings-call", {
         name: "earnings/call.discovered",
         data: { callId },
@@ -54,6 +59,13 @@ export const hydrateEarningsStock = inngest.createFunction(
 
       return { status: "queued" as const, callId };
     } catch (error) {
+      await step.run("record-stock-hydration-failure", () =>
+        failStockHydration(
+          company.trackedStockId,
+          error,
+          nextHydrationAttemptAt(error),
+        ),
+      );
       if (error instanceof EarningsCallsApiError && !error.retryable) {
         throw new NonRetriableError(error.message);
       }

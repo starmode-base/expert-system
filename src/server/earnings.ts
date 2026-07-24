@@ -1,12 +1,30 @@
 import { createServerFn } from "@tanstack/react-start";
-import { and, asc, desc, eq, gt, ilike, isNotNull, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gt,
+  ilike,
+  isNotNull,
+  or,
+} from "drizzle-orm";
 import { z } from "zod";
 import { activateCatalogStocks } from "~/inngest/earnings/services/catalog-repository";
+import { getMonthlyEarningsApiRequestCount } from "~/inngest/earnings/services/api-usage-repository";
+import {
+  queueAllActiveStockHydrations,
+  queueStockHydration,
+} from "~/inngest/earnings/services/hydration-repository";
 import { inngest } from "~/inngest/client";
 import { assertDevUser } from "~/lib/dev-user";
 import { authMiddleware } from "~/middleware/auth-middleware";
 import { db, schema } from "~/postgres/db";
-import type { EarningsCallStatus } from "~/postgres/schema";
+import type {
+  EarningsCallStatus,
+  EarningsHydrationStatus,
+} from "~/postgres/schema";
 import type { PaginatedResult } from "./pagination";
 
 export interface TrackedStockView {
@@ -17,6 +35,10 @@ export interface TrackedStockView {
   mic: string;
   country: string;
   active: boolean;
+  hydrationStatus: EarningsHydrationStatus;
+  hydrationAttempts: number;
+  hydrationLastError: string | null;
+  hydrationNextAttemptAt: string | null;
   latestCall: {
     id: string;
     transcriptTitle: string;
@@ -116,6 +138,11 @@ export const listTrackedStocksSF = createServerFn({ method: "GET" })
         mic: stock.mic,
         country: stock.country,
         active: stock.active,
+        hydrationStatus: stock.hydrationStatus,
+        hydrationAttempts: stock.hydrationAttempts,
+        hydrationLastError: stock.hydrationLastError,
+        hydrationNextAttemptAt:
+          stock.hydrationNextAttemptAt?.toISOString() ?? null,
         latestCall: latest
           ? {
               id: latest.id,
@@ -224,17 +251,32 @@ export const getEarningsCatalogStatusSF = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     ensureDev(context.viewer.clerkUserId);
 
-    const [count, latest] = await Promise.all([
-      db.$count(schema.earningsCompanyCatalog),
-      db.query.earningsCompanyCatalog.findFirst({
-        columns: { catalogSyncedAt: true },
-        orderBy: (catalog, { desc }) => [desc(catalog.catalogSyncedAt)],
-      }),
-    ]);
+    const [catalogCount, latest, requestsUsed, hydrationCounts] =
+      await Promise.all([
+        db.$count(schema.earningsCompanyCatalog),
+        db.query.earningsCompanyCatalog.findFirst({
+          columns: { catalogSyncedAt: true },
+          orderBy: (catalog, { desc }) => [desc(catalog.catalogSyncedAt)],
+        }),
+        getMonthlyEarningsApiRequestCount(),
+        db
+          .select({
+            status: schema.trackedStocks.hydrationStatus,
+            count: count(),
+          })
+          .from(schema.trackedStocks)
+          .where(eq(schema.trackedStocks.active, true))
+          .groupBy(schema.trackedStocks.hydrationStatus),
+      ]);
 
     return {
-      count,
+      count: catalogCount,
       lastSyncedAt: latest?.catalogSyncedAt.toISOString() ?? null,
+      requestsUsed,
+      requestLimit: 5_000,
+      hydrationCounts: Object.fromEntries(
+        hydrationCounts.map((row) => [row.status, row.count]),
+      ),
     };
   });
 
@@ -271,15 +313,6 @@ export const activateEarningsCatalogStocksSF = createServerFn({
 
     const uniqueIds = [...new Set(data.catalogIds)];
     const toHydrate = await activateCatalogStocks(uniqueIds);
-
-    if (toHydrate.length > 0) {
-      await inngest.send(
-        toHydrate.map((company) => ({
-          name: "earnings/stock.hydrate" as const,
-          data: { catalogId: company.catalogId },
-        })),
-      );
-    }
 
     return {
       selected: uniqueIds.length,
@@ -324,15 +357,8 @@ export const pullLatestTranscriptSF = createServerFn({ method: "POST" })
       throw new Error("Stock is inactive. Reactivate it first.");
     }
 
-    const catalogEntry = await db.query.earningsCompanyCatalog.findFirst({
-      where: and(
-        eq(schema.earningsCompanyCatalog.symbol, stock.symbol),
-        eq(schema.earningsCompanyCatalog.mic, stock.mic),
-      ),
-      columns: { id: true },
-    });
-
-    if (!catalogEntry) {
+    const catalogId = await queueStockHydration(data.stockId);
+    if (!catalogId) {
       throw new Error(
         "Company not found in the catalog. Refresh the catalog first.",
       );
@@ -340,7 +366,7 @@ export const pullLatestTranscriptSF = createServerFn({ method: "POST" })
 
     await inngest.send({
       name: "earnings/stock.hydrate",
-      data: { catalogId: catalogEntry.id },
+      data: { catalogId },
     });
 
     return { success: true };
@@ -351,28 +377,8 @@ export const pullAllLatestTranscriptsSF = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     ensureDev(context.viewer.clerkUserId);
 
-    const rows = await db
-      .select({ catalogId: schema.earningsCompanyCatalog.id })
-      .from(schema.trackedStocks)
-      .innerJoin(
-        schema.earningsCompanyCatalog,
-        and(
-          eq(schema.trackedStocks.symbol, schema.earningsCompanyCatalog.symbol),
-          eq(schema.trackedStocks.mic, schema.earningsCompanyCatalog.mic),
-        ),
-      )
-      .where(eq(schema.trackedStocks.active, true));
-
-    if (rows.length > 0) {
-      await inngest.send(
-        rows.map((row) => ({
-          name: "earnings/stock.hydrate" as const,
-          data: { catalogId: row.catalogId },
-        })),
-      );
-    }
-
-    return { queued: rows.length };
+    const queued = await queueAllActiveStockHydrations();
+    return { queued };
   });
 
 export const requestEarningsSyncSF = createServerFn({ method: "POST" })
