@@ -140,7 +140,17 @@ export class EarningsCallsApiError extends Error {
   }
 
   get retryable(): boolean {
-    return this.status === 429 || this.status >= 500;
+    if (this.status >= 500) {
+      return true;
+    }
+
+    if (this.status !== 429) {
+      return false;
+    }
+
+    // A short-lived rate limit may clear on retry. A monthly quota cannot, and
+    // retrying it only spends Inngest attempts and creates more provider calls.
+    return !/requests\/month|monthly|upgrade/i.test(this.message);
   }
 }
 

@@ -22,7 +22,7 @@ export const syncEarningsCalls = inngest.createFunction(
     id: "earnings.sync",
     retries: 5,
   },
-  [{ cron: "*/15 * * * *" }, { event: "earnings/sync.requested" }],
+  [{ cron: "0 */4 * * *" }, { event: "earnings/sync.requested" }],
   async ({ step }) => {
     let cursor = await step.run("load-cursor", getSyncCursor);
     let bootstrapped = false;

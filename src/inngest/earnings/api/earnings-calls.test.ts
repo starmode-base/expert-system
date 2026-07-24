@@ -237,9 +237,9 @@ describe("earningscalls.dev client", () => {
     expect(transcript.text).toBe("Prepared remarks and questions.");
   });
 
-  test("classifies rate limits and server failures as retryable", async () => {
+  test("classifies transient rate limits as retryable", async () => {
     fetchMock.mockResolvedValue(
-      Response.json({ message: "Quota exceeded" }, { status: 429 }),
+      Response.json({ message: "Too many requests" }, { status: 429 }),
     );
 
     const error = await fetchLatestCall("NVDA").catch(
@@ -250,6 +250,27 @@ describe("earningscalls.dev client", () => {
     expect(
       (error as InstanceType<typeof EarningsCallsApiError>).retryable,
     ).toBe(true);
+  });
+
+  test("classifies exhausted monthly quota as non-retryable", async () => {
+    fetchMock.mockResolvedValue(
+      Response.json(
+        {
+          message:
+            "Your Pro plan allows 5,000 requests/month. Upgrade for more.",
+        },
+        { status: 429 },
+      ),
+    );
+
+    const error = await fetchLatestCall("NVDA").catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(EarningsCallsApiError);
+    expect(
+      (error as InstanceType<typeof EarningsCallsApiError>).retryable,
+    ).toBe(false);
   });
 
   test("classifies invalid credentials as non-retryable", async () => {
