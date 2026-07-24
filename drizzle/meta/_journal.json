@@ -225,6 +225,13 @@
       "when": 1784037479710,
       "tag": "0031_backfill_earnings_call_complete_status",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1784909089999,
+      "tag": "0032_low_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }
