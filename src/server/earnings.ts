@@ -36,7 +36,6 @@ export interface TrackedStockView {
   country: string;
   active: boolean;
   hydrationStatus: EarningsHydrationStatus;
-  hydrationAttempts: number;
   hydrationLastError: string | null;
   hydrationNextAttemptAt: string | null;
   latestCall: {
@@ -139,7 +138,6 @@ export const listTrackedStocksSF = createServerFn({ method: "GET" })
         country: stock.country,
         active: stock.active,
         hydrationStatus: stock.hydrationStatus,
-        hydrationAttempts: stock.hydrationAttempts,
         hydrationLastError: stock.hydrationLastError,
         hydrationNextAttemptAt:
           stock.hydrationNextAttemptAt?.toISOString() ?? null,
@@ -312,11 +310,11 @@ export const activateEarningsCatalogStocksSF = createServerFn({
     ensureDev(context.viewer.clerkUserId);
 
     const uniqueIds = [...new Set(data.catalogIds)];
-    const toHydrate = await activateCatalogStocks(uniqueIds);
+    const hydrationQueued = await activateCatalogStocks(uniqueIds);
 
     return {
       selected: uniqueIds.length,
-      hydrationQueued: toHydrate.length,
+      hydrationQueued,
     };
   });
 
@@ -347,7 +345,7 @@ export const pullLatestTranscriptSF = createServerFn({ method: "POST" })
 
     const stock = await db.query.trackedStocks.findFirst({
       where: eq(schema.trackedStocks.id, data.stockId),
-      columns: { symbol: true, mic: true, active: true },
+      columns: { active: true },
     });
 
     if (!stock) {

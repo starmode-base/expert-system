@@ -25,7 +25,7 @@ export function filterUsCatalogEntries(
 }
 
 export function selectCatalogStocksToHydrate<
-  T extends { id: string; symbol: string; mic: string },
+  T extends { symbol: string; mic: string },
 >(
   catalogRows: T[],
   trackedStocks: { symbol: string; mic: string; active: boolean }[],
@@ -103,15 +103,11 @@ export async function finalizeCatalogSync(syncRunId: string): Promise<number> {
   return deleted.length;
 }
 
-export async function activateCatalogStocks(catalogIds: string[]): Promise<
-  {
-    catalogId: string;
-    symbol: string;
-    mic: string;
-  }[]
-> {
+export async function activateCatalogStocks(
+  catalogIds: string[],
+): Promise<number> {
   if (catalogIds.length === 0) {
-    return [];
+    return 0;
   }
 
   const catalogRows = await db.query.earningsCompanyCatalog.findMany({
@@ -168,9 +164,5 @@ export async function activateCatalogStocks(catalogIds: string[]): Promise<
       );
   }
 
-  return toHydrate.map((company) => ({
-    catalogId: company.id,
-    symbol: company.symbol,
-    mic: company.mic,
-  }));
+  return toHydrate.length;
 }

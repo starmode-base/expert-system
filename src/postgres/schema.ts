@@ -355,9 +355,6 @@ export const earningsApiRequests = pgTable(
   (table) => [index("earnings_api_requests_created_idx").on(table.createdAt)],
 );
 
-export type EarningsApiRequestSelect = typeof earningsApiRequests.$inferSelect;
-export type EarningsApiRequestInsert = typeof earningsApiRequests.$inferInsert;
-
 /**
  * Takeaway Categories
  */
