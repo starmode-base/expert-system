@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ensureEnv } from "~/lib/env";
+import { recordEarningsApiRequest } from "../services/api-usage-repository";
 
 const BASE_URL = "https://earningscalls.dev/api/v1";
 const REQUEST_TIMEOUT_MS = 60_000;
@@ -179,10 +180,18 @@ async function request<T>(
     url.search = searchParams.toString();
   }
 
-  const response = await fetch(url, {
-    headers: { "X-API-Key": ensureEnv("EARNINGSCALLS_API_KEY") },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: { "X-API-Key": ensureEnv("EARNINGSCALLS_API_KEY") },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (error) {
+    await recordEarningsApiRequest(url.pathname, null);
+    throw error;
+  }
+
+  await recordEarningsApiRequest(url.pathname, response.status);
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {

@@ -4,6 +4,13 @@ vi.mock("~/lib/env", () => ({
   ensureEnv: vi.fn(() => "test-api-key"),
 }));
 
+const { recordEarningsApiRequestMock } = vi.hoisted(() => ({
+  recordEarningsApiRequestMock: vi.fn(),
+}));
+vi.mock("../services/api-usage-repository", () => ({
+  recordEarningsApiRequest: recordEarningsApiRequestMock,
+}));
+
 const fetchMock = vi.fn<typeof fetch>();
 vi.stubGlobal("fetch", fetchMock);
 
@@ -17,6 +24,7 @@ const {
 
 beforeEach(() => {
   fetchMock.mockReset();
+  recordEarningsApiRequestMock.mockReset();
 });
 
 describe("earningscalls.dev client", () => {
@@ -66,6 +74,10 @@ describe("earningscalls.dev client", () => {
       expect.objectContaining({
         headers: { "X-API-Key": "test-api-key" },
       }),
+    );
+    expect(recordEarningsApiRequestMock).toHaveBeenCalledWith(
+      "/api/v1/companies/ticker/NVDA",
+      200,
     );
   });
 
@@ -271,6 +283,10 @@ describe("earningscalls.dev client", () => {
     expect(
       (error as InstanceType<typeof EarningsCallsApiError>).retryable,
     ).toBe(false);
+    expect(recordEarningsApiRequestMock).toHaveBeenCalledWith(
+      "/api/v1/companies/ticker/NVDA",
+      429,
+    );
   });
 
   test("classifies invalid credentials as non-retryable", async () => {

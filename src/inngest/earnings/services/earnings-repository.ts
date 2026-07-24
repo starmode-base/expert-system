@@ -146,6 +146,21 @@ export async function ingestRecentCalls(
     })
     .returning({ id: schema.earningsCalls.id });
 
+  await db
+    .update(schema.trackedStocks)
+    .set({
+      hydrationStatus: "complete",
+      hydrationLastError: null,
+      hydrationNextAttemptAt: null,
+      hydratedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(
+      inArray(schema.trackedStocks.id, [
+        ...new Set(matched.map(({ stock }) => stock.id)),
+      ]),
+    );
+
   return rows.map((row) => row.id);
 }
 

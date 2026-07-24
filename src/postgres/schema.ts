@@ -222,6 +222,12 @@ export type StockSymbolInsert = typeof stockSymbols.$inferInsert;
 /**
  * Global earnings-call ingestion configuration.
  */
+export type EarningsHydrationStatus =
+  | "pending"
+  | "processing"
+  | "complete"
+  | "failed";
+
 export const trackedStocks = pgTable(
   "tracked_stocks",
   {
@@ -232,8 +238,23 @@ export const trackedStocks = pgTable(
     mic: text().notNull(),
     country: text().notNull(),
     active: boolean().notNull().default(true),
+    hydrationStatus: text()
+      .$type<EarningsHydrationStatus>()
+      .notNull()
+      .default("pending"),
+    hydrationAttempts: integer().notNull().default(0),
+    hydrationLastError: text(),
+    hydrationNextAttemptAt: timestamp(),
+    hydratedAt: timestamp(),
   },
-  (table) => [unique().on(table.symbol, table.mic)],
+  (table) => [
+    unique().on(table.symbol, table.mic),
+    index("tracked_stocks_hydration_idx").on(
+      table.active,
+      table.hydrationStatus,
+      table.hydrationNextAttemptAt,
+    ),
+  ],
 );
 
 export type TrackedStockSelect = typeof trackedStocks.$inferSelect;
@@ -323,6 +344,16 @@ export const earningsSyncState = pgTable("earnings_sync_state", {
 
 export type EarningsSyncStateSelect = typeof earningsSyncState.$inferSelect;
 export type EarningsSyncStateInsert = typeof earningsSyncState.$inferInsert;
+
+export const earningsApiRequests = pgTable(
+  "earnings_api_requests",
+  {
+    ...baseSchema,
+    endpoint: text().notNull(),
+    status: integer(),
+  },
+  (table) => [index("earnings_api_requests_created_idx").on(table.createdAt)],
+);
 
 /**
  * Takeaway Categories

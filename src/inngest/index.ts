@@ -10,6 +10,7 @@ import { scrapeAllBlogs } from "./importers/scheduled/blogs/scrape-all-blogs";
 import { scrapeSingleBlog } from "./importers/scheduled/blogs/scrape-single-blog";
 
 import {
+  backfillEarningsStocks,
   hydrateEarningsStock,
   processEarningsCall,
   syncEarningsCalls,
@@ -21,6 +22,7 @@ export const inngestFunctions = [
   generateInsight,
   syncEarningsCalls,
   syncEarningsCompanyCatalog,
+  backfillEarningsStocks,
   hydrateEarningsStock,
   processEarningsCall,
   fedSpeechesScraper,

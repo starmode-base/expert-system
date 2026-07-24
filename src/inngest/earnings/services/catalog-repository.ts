@@ -1,4 +1,4 @@
-import { ne, sql } from "drizzle-orm";
+import { and, eq, ne, or, sql } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import type { EarningsCompanyCatalogEntry } from "../api/earnings-calls";
 
@@ -25,7 +25,7 @@ export function filterUsCatalogEntries(
 }
 
 export function selectCatalogStocksToHydrate<
-  T extends { id: string; symbol: string; mic: string },
+  T extends { symbol: string; mic: string },
 >(
   catalogRows: T[],
   trackedStocks: { symbol: string; mic: string; active: boolean }[],
@@ -103,15 +103,11 @@ export async function finalizeCatalogSync(syncRunId: string): Promise<number> {
   return deleted.length;
 }
 
-export async function activateCatalogStocks(catalogIds: string[]): Promise<
-  {
-    catalogId: string;
-    symbol: string;
-    mic: string;
-  }[]
-> {
+export async function activateCatalogStocks(
+  catalogIds: string[],
+): Promise<number> {
   if (catalogIds.length === 0) {
-    return [];
+    return 0;
   }
 
   const catalogRows = await db.query.earningsCompanyCatalog.findMany({
@@ -147,9 +143,26 @@ export async function activateCatalogStocks(catalogIds: string[]): Promise<
       },
     });
 
-  return toHydrate.map((company) => ({
-    catalogId: company.id,
-    symbol: company.symbol,
-    mic: company.mic,
-  }));
+  if (toHydrate.length > 0) {
+    await db
+      .update(schema.trackedStocks)
+      .set({
+        hydrationStatus: "pending",
+        hydrationLastError: null,
+        hydrationNextAttemptAt: null,
+        updatedAt: new Date(),
+      })
+      .where(
+        or(
+          ...toHydrate.map((company) =>
+            and(
+              eq(schema.trackedStocks.symbol, company.symbol),
+              eq(schema.trackedStocks.mic, company.mic),
+            ),
+          ),
+        ),
+      );
+  }
+
+  return toHydrate.length;
 }
