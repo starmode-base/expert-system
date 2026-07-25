@@ -29,7 +29,7 @@ import type {
  * @param accessToken - OAuth2 access token
  * @returns Configured XDK Client instance
  */
-export function createXClient(accessToken: string): Client {
+function createXClient(accessToken: string): Client {
   return new Client({ accessToken });
 }
 

@@ -479,9 +479,6 @@ export const xBookmarkSyncRuns = pgTable(
   ],
 );
 
-export type XBookmarkSyncRunSelect = typeof xBookmarkSyncRuns.$inferSelect;
-export type XBookmarkSyncRunInsert = typeof xBookmarkSyncRuns.$inferInsert;
-
 export type XBookmarkItemStatus =
   | "discovered"
   | "imported"
@@ -509,9 +506,6 @@ export const xBookmarkItems = pgTable(
     index("x_bookmark_items_user_status_idx").on(table.userId, table.status),
   ],
 );
-
-export type XBookmarkItemSelect = typeof xBookmarkItems.$inferSelect;
-export type XBookmarkItemInsert = typeof xBookmarkItems.$inferInsert;
 
 // insights <> takeaways junction table
 export const insightTakeaways = pgTable(
