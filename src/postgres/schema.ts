@@ -423,7 +423,6 @@ export type InsightReferenceInsert = typeof insightReferences.$inferInsert;
  * - refreshToken: Used to get new access tokens without user interaction
  * - accessToken: Current token for API calls (expires after ~2 hours)
  * - expiresAt: When the access token expires (refresh before this time)
- * - lastSyncCursor: Pagination token for incremental bookmark fetching
  * - selectedFolderId: X bookmark folder ID to sync (null = all bookmarks)
  * - selectedFolderName: Display name of selected folder (for UI)
  */
@@ -437,6 +436,7 @@ export const xBookmarksAuth = pgTable("x_bookmarks_auth", {
   refreshToken: text().notNull(),
   accessToken: text().notNull(),
   expiresAt: timestamp().notNull(),
+  // Legacy column retained to avoid a destructive schema change.
   lastSyncCursor: text(),
   selectedFolderId: text(),
   selectedFolderName: text(),
@@ -464,6 +464,7 @@ export const xBookmarkSyncRuns = pgTable(
     status: text().$type<XBookmarkSyncStatus>().notNull().default("queued"),
     startedAt: timestamp(),
     completedAt: timestamp(),
+    // Legacy column retained to avoid a destructive schema change.
     checkpoint: text(),
     discoveredCount: integer().notNull().default(0),
     importedCount: integer().notNull().default(0),
@@ -478,9 +479,6 @@ export const xBookmarkSyncRuns = pgTable(
     ),
   ],
 );
-
-export type XBookmarkSyncRunSelect = typeof xBookmarkSyncRuns.$inferSelect;
-export type XBookmarkSyncRunInsert = typeof xBookmarkSyncRuns.$inferInsert;
 
 export type XBookmarkItemStatus =
   | "discovered"
@@ -509,9 +507,6 @@ export const xBookmarkItems = pgTable(
     index("x_bookmark_items_user_status_idx").on(table.userId, table.status),
   ],
 );
-
-export type XBookmarkItemSelect = typeof xBookmarkItems.$inferSelect;
-export type XBookmarkItemInsert = typeof xBookmarkItems.$inferInsert;
 
 // insights <> takeaways junction table
 export const insightTakeaways = pgTable(

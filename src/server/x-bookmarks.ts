@@ -36,8 +36,6 @@ export interface XBookmarksAuthStatus {
   xUserId: string | null;
   /** When the current access token expires */
   expiresAt: Date | null;
-  /** Pagination cursor from last sync (for incremental fetching) */
-  lastSyncCursor: string | null;
   /** Selected folder ID for syncing (null = all bookmarks) */
   selectedFolderId: string | null;
   /** Selected folder name for display */
@@ -47,12 +45,9 @@ export interface XBookmarksAuthStatus {
 }
 
 export interface XBookmarkSyncInfo {
-  id: string;
   status: "queued" | "running" | "completed" | "partial" | "failed";
-  trigger: "initial" | "daily" | "manual";
   createdAt: Date;
   completedAt: Date | null;
-  discoveredCount: number;
   importedCount: number;
   skippedCount: number;
   failedCount: number;
@@ -90,7 +85,6 @@ export const getXBookmarksAuthStatusSF = createServerFn({ method: "GET" })
         isConnected: false,
         xUserId: null,
         expiresAt: null,
-        lastSyncCursor: null,
         selectedFolderId: null,
         selectedFolderName: null,
         latestSync: null,
@@ -118,17 +112,13 @@ export const getXBookmarksAuthStatusSF = createServerFn({ method: "GET" })
       isConnected: true,
       xUserId: auth.xUserId,
       expiresAt: auth.expiresAt,
-      lastSyncCursor: auth.lastSyncCursor,
       selectedFolderId: auth.selectedFolderId,
       selectedFolderName: auth.selectedFolderName,
       latestSync: latestSync
         ? {
-            id: latestSync.id,
             status: latestSync.status,
-            trigger: latestSync.trigger,
             createdAt: latestSync.createdAt,
             completedAt: latestSync.completedAt,
-            discoveredCount: latestSync.discoveredCount,
             importedCount: latestSync.importedCount,
             skippedCount: latestSync.skippedCount,
             failedCount: latestSync.failedCount,

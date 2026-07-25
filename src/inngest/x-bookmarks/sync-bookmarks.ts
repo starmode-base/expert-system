@@ -423,11 +423,10 @@ export const syncXBookmarks = inngest.createFunction(
         }
 
         cursor = page.meta?.next_token;
-        await step.run(`checkpoint-${String(pageNumber)}`, async () => {
+        await step.run(`update-progress-${String(pageNumber)}`, async () => {
           await db
             .update(schema.xBookmarkSyncRuns)
             .set({
-              checkpoint: cursor ?? null,
               discoveredCount: discovered,
               importedCount: imported,
               skippedCount: skipped,
@@ -451,7 +450,6 @@ export const syncXBookmarks = inngest.createFunction(
           .set({
             status: failed > 0 ? "partial" : "completed",
             completedAt: new Date(),
-            checkpoint: null,
             discoveredCount: discovered,
             importedCount: imported,
             skippedCount: skipped,

@@ -29,7 +29,7 @@ import type {
  * @param accessToken - OAuth2 access token
  * @returns Configured XDK Client instance
  */
-export function createXClient(accessToken: string): Client {
+function createXClient(accessToken: string): Client {
   return new Client({ accessToken });
 }
 
@@ -100,16 +100,9 @@ const POST_FIELDS = [
   "created_at",
   "entities",
   "note_tweet",
-  "referenced_tweets",
   "text",
 ].join(",");
-const EXPANSIONS = [
-  "article.cover_media",
-  "article.media_entities",
-  "author_id",
-  "referenced_tweets.id",
-  "referenced_tweets.id.author_id",
-].join(",");
+const EXPANSIONS = "author_id";
 
 export class XApiRequestError extends Error {
   constructor(
@@ -145,10 +138,6 @@ function addPostFields(url: URL): void {
   url.searchParams.set("tweet.fields", POST_FIELDS);
   url.searchParams.set("expansions", EXPANSIONS);
   url.searchParams.set("user.fields", "id,name,username");
-  url.searchParams.set(
-    "media.fields",
-    "media_key,type,url,preview_image_url,alt_text",
-  );
 }
 
 export async function getBookmarksPage(
