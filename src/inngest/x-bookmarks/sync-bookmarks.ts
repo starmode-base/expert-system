@@ -18,13 +18,9 @@ import {
 } from "~/x-client/x-sdk";
 import type { XBookmarkSyncTrigger } from "~/postgres/schema";
 
-const BOOKMARK_LOOKBACK_MS = 1 * 24 * 60 * 60 * 1000;
+const INITIAL_LOOKBACK_MS = 90 * 24 * 60 * 60 * 1000;
 const MAX_PAGES = 50;
-
-interface FetchedBookmarkPage {
-  response: XPostsResponse;
-  reachedKnownItems: boolean;
-}
+const KNOWN_PAGE_STOP_COUNT = 2;
 
 function safeError(error: unknown): string {
   if (error instanceof IncompleteXArticleError) return error.message;
@@ -83,21 +79,10 @@ async function getFreshAccessToken(userId: string): Promise<{
 
 async function fetchPage(
   auth: Awaited<ReturnType<typeof getFreshAccessToken>>,
-  knownIds: ReadonlySet<string>,
   cursor?: string,
-): Promise<FetchedBookmarkPage> {
+): Promise<XPostsResponse> {
   if (!auth.selectedFolderId) {
-    const response = await getBookmarksPage(
-      auth.accessToken,
-      auth.xUserId,
-      cursor,
-    );
-    return {
-      response,
-      reachedKnownItems: (response.data ?? []).some((post) =>
-        knownIds.has(post.id),
-      ),
-    };
+    return getBookmarksPage(auth.accessToken, auth.xUserId, cursor);
   }
   const folderPage = await getBookmarksByFolder(
     auth.accessToken,
@@ -105,37 +90,22 @@ async function fetchPage(
     auth.selectedFolderId,
     cursor,
   );
-  const unseenIds = (folderPage.data ?? [])
-    .map((item) => item.id)
-    .filter((id) => !knownIds.has(id));
-  const reachedKnownItems = unseenIds.length < (folderPage.data ?? []).length;
-  if (unseenIds.length === 0) {
-    return {
-      response: {
-        data: [],
-        errors: folderPage.errors,
-        meta: { next_token: folderPage.meta?.next_token },
-      },
-      reachedKnownItems,
-    };
-  }
-  const hydrated = await getPostsByIds(auth.accessToken, unseenIds);
+  const hydrated = await getPostsByIds(
+    auth.accessToken,
+    (folderPage.data ?? []).map((item) => item.id),
+  );
   return {
-    response: {
-      ...hydrated,
-      errors: [...(folderPage.errors ?? []), ...(hydrated.errors ?? [])],
-      meta: { next_token: folderPage.meta?.next_token },
-    },
-    reachedKnownItems,
+    ...hydrated,
+    errors: [...(folderPage.errors ?? []), ...(hydrated.errors ?? [])],
+    meta: { next_token: folderPage.meta?.next_token },
   };
 }
 
 async function fetchPageResult(
   auth: Awaited<ReturnType<typeof getFreshAccessToken>>,
-  knownIds: ReadonlySet<string>,
   cursor?: string,
 ): Promise<
-  | { ok: true; page: FetchedBookmarkPage }
+  | { ok: true; page: XPostsResponse }
   | {
       ok: false;
       status: number;
@@ -144,7 +114,7 @@ async function fetchPageResult(
     }
 > {
   try {
-    return { ok: true, page: await fetchPage(auth, knownIds, cursor) };
+    return { ok: true, page: await fetchPage(auth, cursor) };
   } catch (error) {
     if (!(error instanceof XApiRequestError)) throw error;
     return {
@@ -315,8 +285,10 @@ export const syncXBookmarks = inngest.createFunction(
             .map((row) => row.xPostId);
         }),
       );
-      const cutoff = Date.now() - BOOKMARK_LOOKBACK_MS;
+      const cutoff = Date.now() - INITIAL_LOOKBACK_MS;
       let cursor: string | undefined;
+      let knownPages = 0;
+      let oldPages = 0;
       let discovered = 0;
       let imported = 0;
       let skipped = 0;
@@ -325,7 +297,7 @@ export const syncXBookmarks = inngest.createFunction(
       for (let pageNumber = 0; pageNumber < MAX_PAGES; pageNumber += 1) {
         let pageResult = await step.run(
           `fetch-page-${String(pageNumber)}`,
-          () => fetchPageResult(auth, knownIds, cursor),
+          () => fetchPageResult(auth, cursor),
         );
         if (!pageResult.ok && pageResult.status === 429 && pageResult.retryAt) {
           await step.sleepUntil(
@@ -334,16 +306,10 @@ export const syncXBookmarks = inngest.createFunction(
           );
           pageResult = await step.run(
             `fetch-page-after-rate-limit-${String(pageNumber)}`,
-            () => fetchPageResult(auth, knownIds, cursor),
+            () => fetchPageResult(auth, cursor),
           );
         }
         if (!pageResult.ok) {
-          if (pageResult.status === 402) {
-            throw new NonRetriableError("X API credits required");
-          }
-          if (pageResult.reconnectRequired) {
-            throw new NonRetriableError("X authorization must be renewed");
-          }
           throw new XApiRequestError(
             `X API request failed with status ${String(pageResult.status)}`,
             pageResult.status,
@@ -351,16 +317,26 @@ export const syncXBookmarks = inngest.createFunction(
             pageResult.reconnectRequired,
           );
         }
-        const { response: page, reachedKnownItems } = pageResult.page;
+        const page = pageResult.page;
         const posts = page.data ?? [];
-        const pageCrossedCutoff = posts.some(
-          (post) =>
-            post.created_at !== undefined &&
-            new Date(post.created_at).getTime() < cutoff,
-        );
+        const pageWasKnown =
+          posts.length > 0 && posts.every((post) => knownIds.has(post.id));
+        knownPages = pageWasKnown ? knownPages + 1 : 0;
+        const pageWasOld =
+          posts.length > 0 &&
+          posts.every(
+            (post) =>
+              post.created_at !== undefined &&
+              new Date(post.created_at).getTime() < cutoff,
+          );
+        oldPages = pageWasOld ? oldPages + 1 : 0;
 
         for (const post of posts) {
-          if (post.created_at && new Date(post.created_at).getTime() < cutoff) {
+          if (
+            trigger === "initial" &&
+            post.created_at &&
+            new Date(post.created_at).getTime() < cutoff
+          ) {
             skipped += 1;
             continue;
           }
@@ -438,8 +414,8 @@ export const syncXBookmarks = inngest.createFunction(
 
         if (
           !cursor ||
-          pageCrossedCutoff ||
-          (trigger !== "initial" && reachedKnownItems)
+          (trigger === "initial" && oldPages >= KNOWN_PAGE_STOP_COUNT) ||
+          (trigger !== "initial" && knownPages >= KNOWN_PAGE_STOP_COUNT)
         ) {
           break;
         }
