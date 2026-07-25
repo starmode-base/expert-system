@@ -16,6 +16,10 @@ import {
   syncEarningsCalls,
   syncEarningsCompanyCatalog,
 } from "./earnings";
+import {
+  scheduleDailyXBookmarkSync,
+  syncXBookmarks,
+} from "./x-bookmarks/sync-bookmarks";
 
 export const inngestFunctions = [
   generateTakeaways,
@@ -32,4 +36,6 @@ export const inngestFunctions = [
   a16zNewsScraper,
   scrapeAllBlogs,
   scrapeSingleBlog,
+  scheduleDailyXBookmarkSync,
+  syncXBookmarks,
 ];

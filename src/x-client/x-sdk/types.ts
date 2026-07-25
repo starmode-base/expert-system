@@ -117,3 +117,58 @@ export interface BookmarksFolderResponse {
     next_token?: string;
   };
 }
+
+export interface XApiError {
+  resource_id?: string;
+  title: string;
+  detail?: string;
+  status?: number;
+  type?: string;
+}
+
+export interface XPostUrl {
+  url: string;
+  expanded_url?: string;
+  display_url?: string;
+}
+
+export interface XPost {
+  id: string;
+  text: string;
+  author_id?: string;
+  created_at?: string;
+  note_tweet?: {
+    text?: string;
+    entities?: { urls?: XPostUrl[] };
+  };
+  article?: {
+    title?: string;
+    preview_text?: string;
+    text?: string;
+    plain_text?: string;
+    body?: unknown;
+    blocks?: unknown;
+    content?: unknown;
+  };
+  entities?: { urls?: XPostUrl[] };
+  referenced_tweets?: { id: string; type: string }[];
+}
+
+export interface XApiUser {
+  id: string;
+  name: string;
+  username: string;
+}
+
+export interface XPostsResponse {
+  data?: XPost[];
+  errors?: XApiError[];
+  includes?: {
+    users?: XApiUser[];
+    tweets?: XPost[];
+  };
+  meta?: {
+    next_token?: string;
+    result_count?: number;
+  };
+}
