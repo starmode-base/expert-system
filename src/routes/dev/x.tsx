@@ -246,8 +246,8 @@ function XSettingsPage() {
                     Bookmark sync
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Runs daily at 4:00 AM Pacific. The first run imports posts
-                    published within the last 90 days.
+                    Runs daily at 4:00 AM Pacific and imports bookmarks for
+                    posts published within the last 24 hours.
                   </p>
                 </div>
                 <button
