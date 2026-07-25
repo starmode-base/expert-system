@@ -431,6 +431,7 @@ export const xBookmarksAuth = pgTable("x_bookmarks_auth", {
   ...baseSchema,
   userId: text()
     .notNull()
+    .unique()
     .references(() => users.id, { onDelete: "cascade" }),
   xUserId: text().notNull(),
   refreshToken: text().notNull(),
@@ -443,6 +444,68 @@ export const xBookmarksAuth = pgTable("x_bookmarks_auth", {
 
 export type XBookmarksAuthSelect = typeof xBookmarksAuth.$inferSelect;
 export type XBookmarksAuthInsert = typeof xBookmarksAuth.$inferInsert;
+
+export type XBookmarkSyncTrigger = "initial" | "daily" | "manual";
+export type XBookmarkSyncStatus =
+  | "queued"
+  | "running"
+  | "completed"
+  | "partial"
+  | "failed";
+
+export const xBookmarkSyncRuns = pgTable(
+  "x_bookmark_sync_runs",
+  {
+    ...baseSchema,
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    trigger: text().$type<XBookmarkSyncTrigger>().notNull(),
+    status: text().$type<XBookmarkSyncStatus>().notNull().default("queued"),
+    startedAt: timestamp(),
+    completedAt: timestamp(),
+    checkpoint: text(),
+    discoveredCount: integer().notNull().default(0),
+    importedCount: integer().notNull().default(0),
+    skippedCount: integer().notNull().default(0),
+    failedCount: integer().notNull().default(0),
+    error: text(),
+  },
+  (table) => [
+    index("x_bookmark_sync_runs_user_created_idx").on(
+      table.userId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export type XBookmarkItemStatus =
+  | "discovered"
+  | "imported"
+  | "skipped"
+  | "failed";
+
+export const xBookmarkItems = pgTable(
+  "x_bookmark_items",
+  {
+    ...baseSchema,
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    xPostId: text().notNull(),
+    status: text().$type<XBookmarkItemStatus>().notNull().default("discovered"),
+    attempts: integer().notNull().default(0),
+    lastError: text(),
+    discoveredAt: timestamp().notNull().defaultNow(),
+    documentId: text().references(() => documents.id, {
+      onDelete: "set null",
+    }),
+  },
+  (table) => [
+    unique("x_bookmark_items_user_post_unique").on(table.userId, table.xPostId),
+    index("x_bookmark_items_user_status_idx").on(table.userId, table.status),
+  ],
+);
 
 // insights <> takeaways junction table
 export const insightTakeaways = pgTable(

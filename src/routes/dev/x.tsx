@@ -6,6 +6,7 @@ import {
   disconnectXBookmarksSF,
   getXBookmarkFoldersSF,
   setSelectedFolderSF,
+  syncXBookmarksNowSF,
   type XBookmarkFolderInfo,
 } from "~/server/x-bookmarks";
 
@@ -36,10 +37,13 @@ function XSettingsPage() {
     xBookmarksStatus.selectedFolderName,
   );
   const [savingFolder, setSavingFolder] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const disconnectXBookmarks = useServerFn(disconnectXBookmarksSF);
   const getXBookmarkFolders = useServerFn(getXBookmarkFoldersSF);
   const setSelectedFolder = useServerFn(setSelectedFolderSF);
+  const syncXBookmarksNow = useServerFn(syncXBookmarksNowSF);
 
   // Auto-hide success message after 5 seconds
   useEffect(() => {
@@ -99,6 +103,26 @@ function XSettingsPage() {
       setSelectedFolderName(folderName);
     } finally {
       setSavingFolder(false);
+    }
+  };
+
+  const handleSyncNow = async () => {
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      const result = await syncXBookmarksNow();
+      setSyncMessage(
+        result.accepted
+          ? "Sync queued. Status will update as it runs."
+          : "A sync is already running.",
+      );
+      void router.invalidate();
+    } catch (error) {
+      setSyncMessage(
+        error instanceof Error ? error.message : "Unable to start sync.",
+      );
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -212,6 +236,87 @@ function XSettingsPage() {
                 <div className="mt-4 text-sm text-gray-500">
                   Folders are not loaded yet.
                 </div>
+              )}
+            </div>
+
+            <div className="rounded-md border border-gray-200 p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">
+                    Bookmark sync
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Runs daily at 4:00 AM Pacific. The first run imports posts
+                    published within the last 90 days.
+                  </p>
+                </div>
+                <button
+                  onClick={handleSyncNow}
+                  disabled={
+                    syncing ||
+                    xBookmarksStatus.latestSync?.status === "running" ||
+                    xBookmarksStatus.latestSync?.status === "queued"
+                  }
+                  className="cursor-pointer rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {syncing ? "Queuing..." : "Sync now"}
+                </button>
+              </div>
+
+              {syncMessage ? (
+                <p className="mt-3 text-sm text-gray-600">{syncMessage}</p>
+              ) : null}
+
+              {xBookmarksStatus.latestSync ? (
+                <dl className="mt-4 grid grid-cols-2 gap-3 rounded-md bg-gray-50 p-4 text-sm">
+                  <div>
+                    <dt className="text-gray-500">Status</dt>
+                    <dd className="font-medium text-gray-900 capitalize">
+                      {xBookmarksStatus.latestSync.status}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-gray-500">Last update</dt>
+                    <dd className="text-gray-900">
+                      {formatDate(
+                        xBookmarksStatus.latestSync.completedAt ??
+                          xBookmarksStatus.latestSync.createdAt,
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-gray-500">Imported</dt>
+                    <dd className="text-gray-900">
+                      {xBookmarksStatus.latestSync.importedCount}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-gray-500">Skipped / failed</dt>
+                    <dd className="text-gray-900">
+                      {xBookmarksStatus.latestSync.skippedCount} /{" "}
+                      {xBookmarksStatus.latestSync.failedCount}
+                    </dd>
+                  </div>
+                  {xBookmarksStatus.latestSync.error ? (
+                    <div className="col-span-2">
+                      <dt className="text-red-600">Action needed</dt>
+                      <dd className="text-red-700">
+                        {xBookmarksStatus.latestSync.error}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {xBookmarksStatus.failedItemCount > 0 ? (
+                    <div className="col-span-2 text-amber-700">
+                      {xBookmarksStatus.failedItemCount} failed{" "}
+                      {xBookmarksStatus.failedItemCount === 1
+                        ? "item will"
+                        : "items will"}{" "}
+                      be retried on the next sync.
+                    </div>
+                  ) : null}
+                </dl>
+              ) : (
+                <p className="mt-4 text-sm text-gray-500">Never synced.</p>
               )}
             </div>
 

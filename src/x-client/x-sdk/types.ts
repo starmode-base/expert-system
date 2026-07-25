@@ -45,25 +45,6 @@ export interface XTokenResponse {
 }
 
 /**
- * Stored auth record for X bookmarks (mirrors the x_bookmarks_auth DB table)
- */
-export interface XAuthRecord {
-  id: string;
-  /** Our internal user ID (foreign key to users table) */
-  userId: string;
-  /** X's user ID (needed for bookmarks API - must match authenticated user) */
-  xUserId: string;
-  /** Refresh token for automated token refresh */
-  refreshToken: string;
-  /** Current access token */
-  accessToken: string;
-  /** When the access token expires */
-  expiresAt: Date;
-  /** Pagination cursor for incremental bookmark sync */
-  lastSyncCursor: string | null;
-}
-
-/**
  * X user object from the /2/users/me endpoint
  */
 export interface XUser {
@@ -91,17 +72,6 @@ export interface XBookmarkFolder {
 }
 
 /**
- * Response from getBookmarkFolders endpoint
- */
-export interface XBookmarkFoldersResponse {
-  data?: XBookmarkFolder[];
-  meta?: {
-    next_token?: string;
-    result_count?: number;
-  };
-}
-
-/**
  * Response from GET /2/users/:id/bookmarks/folders/:folder_id
  * Note: This endpoint only returns tweet IDs, not full tweet data
  */
@@ -115,5 +85,60 @@ export interface BookmarksFolderResponse {
   }[];
   meta?: {
     next_token?: string;
+  };
+}
+
+export interface XApiError {
+  resource_id?: string;
+  title: string;
+  detail?: string;
+  status?: number;
+  type?: string;
+}
+
+export interface XPostUrl {
+  url: string;
+  expanded_url?: string;
+  display_url?: string;
+}
+
+export interface XPost {
+  id: string;
+  text: string;
+  author_id?: string;
+  created_at?: string;
+  note_tweet?: {
+    text?: string;
+    entities?: { urls?: XPostUrl[] };
+  };
+  article?: {
+    title?: string;
+    preview_text?: string;
+    text?: string;
+    plain_text?: string;
+    body?: unknown;
+    blocks?: unknown;
+    content?: unknown;
+  };
+  entities?: { urls?: XPostUrl[] };
+  referenced_tweets?: { id: string; type: string }[];
+}
+
+export interface XApiUser {
+  id: string;
+  name: string;
+  username: string;
+}
+
+export interface XPostsResponse {
+  data?: XPost[];
+  errors?: XApiError[];
+  includes?: {
+    users?: XApiUser[];
+    tweets?: XPost[];
+  };
+  meta?: {
+    next_token?: string;
+    result_count?: number;
   };
 }

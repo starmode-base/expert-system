@@ -42,6 +42,11 @@ const eventSchemas = {
   "blog/scrape-single-blog": z.object({
     blogId: z.string(),
   }),
+  "x/bookmarks.sync.requested": z.object({
+    userId: z.string(),
+    trigger: z.enum(["initial", "daily", "manual"]),
+    runId: z.string().optional(),
+  }),
   "dev/blog.scrape-all-blogs.manual": z.object({}),
 };
 

@@ -15,6 +15,7 @@ import type {
   XUserMeResponse,
   XBookmarkFolder,
   BookmarksFolderResponse,
+  XPostsResponse,
 } from "./types";
 
 /**
@@ -28,7 +29,7 @@ import type {
  * @param accessToken - OAuth2 access token
  * @returns Configured XDK Client instance
  */
-export function createXClient(accessToken: string): Client {
+function createXClient(accessToken: string): Client {
   return new Client({ accessToken });
 }
 
@@ -92,6 +93,77 @@ export async function getBookmarkFolders(
 }
 
 const X_API_BASE = "https://api.x.com/2";
+const REQUEST_TIMEOUT_MS = 20_000;
+const POST_FIELDS = [
+  "article",
+  "author_id",
+  "created_at",
+  "entities",
+  "note_tweet",
+  "referenced_tweets",
+  "text",
+].join(",");
+const EXPANSIONS = [
+  "article.cover_media",
+  "article.media_entities",
+  "author_id",
+  "referenced_tweets.id",
+  "referenced_tweets.id.author_id",
+].join(",");
+
+export class XApiRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly retryAt: Date | null,
+    readonly reconnectRequired: boolean,
+  ) {
+    super(message);
+    this.name = "XApiRequestError";
+  }
+}
+
+async function fetchX(url: URL, accessToken: string): Promise<Response> {
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+
+  if (response.ok) return response;
+
+  const retryAtHeader = response.headers.get("x-rate-limit-reset");
+  const retryAt = retryAtHeader ? new Date(Number(retryAtHeader) * 1000) : null;
+  throw new XApiRequestError(
+    `X API request failed with status ${String(response.status)}`,
+    response.status,
+    retryAt,
+    response.status === 401 || response.status === 403,
+  );
+}
+
+function addPostFields(url: URL): void {
+  url.searchParams.set("tweet.fields", POST_FIELDS);
+  url.searchParams.set("expansions", EXPANSIONS);
+  url.searchParams.set("user.fields", "id,name,username");
+  url.searchParams.set(
+    "media.fields",
+    "media_key,type,url,preview_image_url,alt_text",
+  );
+}
+
+export async function getBookmarksPage(
+  accessToken: string,
+  xUserId: string,
+  paginationToken?: string,
+): Promise<XPostsResponse> {
+  const url = new URL(`${X_API_BASE}/users/${xUserId}/bookmarks`);
+  url.searchParams.set("max_results", "100");
+  if (paginationToken)
+    url.searchParams.set("pagination_token", paginationToken);
+  addPostFields(url);
+  const response = await fetchX(url, accessToken);
+  return response.json() as Promise<XPostsResponse>;
+}
 
 /**
  * Get bookmarked tweet IDs from a specific folder.
@@ -110,36 +182,26 @@ export async function getBookmarksByFolder(
   accessToken: string,
   xUserId: string,
   folderId: string,
+  paginationToken?: string,
 ): Promise<BookmarksFolderResponse> {
-  const url = `${X_API_BASE}/users/${xUserId}/bookmarks/folders/${folderId}`;
-
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-
-    if (response.status === 429) {
-      const limit = response.headers.get("x-rate-limit-limit");
-      const remaining = response.headers.get("x-rate-limit-remaining");
-      const reset = response.headers.get("x-rate-limit-reset");
-      const resetDate = reset ? new Date(Number(reset) * 1000) : null;
-
-      console.error("Rate limit exceeded:");
-      console.error(`  Limit: ${limit ?? "unknown"}`);
-      console.error(`  Remaining: ${remaining ?? "unknown"}`);
-      console.error(
-        `  Reset: ${reset ?? "unknown"} (${resetDate?.toISOString() ?? "unknown"})`,
-      );
-    }
-
-    throw new Error(
-      `Failed to get bookmarks from folder: ${response.status} ${errorText}`,
-    );
-  }
-
+  const url = new URL(
+    `${X_API_BASE}/users/${xUserId}/bookmarks/folders/${folderId}`,
+  );
+  url.searchParams.set("max_results", "100");
+  if (paginationToken)
+    url.searchParams.set("pagination_token", paginationToken);
+  const response = await fetchX(url, accessToken);
   return response.json() as Promise<BookmarksFolderResponse>;
+}
+
+export async function getPostsByIds(
+  accessToken: string,
+  ids: string[],
+): Promise<XPostsResponse> {
+  if (ids.length === 0) return { data: [] };
+  const url = new URL(`${X_API_BASE}/tweets`);
+  url.searchParams.set("ids", ids.slice(0, 100).join(","));
+  addPostFields(url);
+  const response = await fetchX(url, accessToken);
+  return response.json() as Promise<XPostsResponse>;
 }

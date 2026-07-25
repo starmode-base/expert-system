@@ -19,6 +19,8 @@ import {
   insightReferences,
   apiUsage,
   documentImages,
+  xBookmarkItems,
+  xBookmarkSyncRuns,
 } from "./schema";
 
 export const takeawaysRelations = relations(takeaways, ({ one, many }) => ({
@@ -63,6 +65,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   apiKeys: many(apiKeys),
   organizationMembers: many(organizationMembers),
   apiUsages: many(apiUsage),
+  xBookmarkItems: many(xBookmarkItems),
+  xBookmarkSyncRuns: many(xBookmarkSyncRuns),
 }));
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
@@ -86,6 +90,7 @@ export const documentsRelations = relations(documents, ({ many }) => ({
   takeaways: many(takeaways),
   images: many(documentImages),
   earningsCalls: many(earningsCalls),
+  xBookmarkItems: many(xBookmarkItems),
 }));
 
 export const documentImagesRelations = relations(documentImages, ({ one }) => ({
@@ -134,6 +139,27 @@ export const xBookmarksAuthRelations = relations(xBookmarksAuth, ({ one }) => ({
   user: one(users, {
     fields: [xBookmarksAuth.userId],
     references: [users.id],
+  }),
+}));
+
+export const xBookmarkSyncRunsRelations = relations(
+  xBookmarkSyncRuns,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [xBookmarkSyncRuns.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+export const xBookmarkItemsRelations = relations(xBookmarkItems, ({ one }) => ({
+  user: one(users, {
+    fields: [xBookmarkItems.userId],
+    references: [users.id],
+  }),
+  document: one(documents, {
+    fields: [xBookmarkItems.documentId],
+    references: [documents.id],
   }),
 }));
 
