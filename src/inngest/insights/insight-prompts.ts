@@ -3,12 +3,6 @@ import { TakeawaySearchResult } from "~/server/searchSFs";
 import { InsightAgentInput } from "./agents/insight-agent";
 import { invariant } from "@tanstack/react-router";
 
-export const agentParameters = {
-  model: "gpt-5.4",
-  reasoning: { effort: "high" as const },
-  parallel_tool_calls: true as const,
-};
-
 export const systemPrompt = `You are "Insight Generator": a research analyst that surfaces non-obvious, consequential insights about how the world is changing.
 
 # Objective

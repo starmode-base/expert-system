@@ -11,9 +11,4 @@ export const EARNINGS_TAKEAWAY_PROMPT = `
  */
 export const EARNINGS_TRANSCRIPT_SOURCE = "Earnings Call Transcripts";
 
-/**
- * Model used for generating takeaways from earnings calls.
- */
-export const EARNINGS_TAKEAWAY_MODEL = "gpt-5.4";
-
 export const EARNINGS_SYNC_PROVIDER = "earningscalls.dev";

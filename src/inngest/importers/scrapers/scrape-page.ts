@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import { MODEL_VERSIONS } from "~/lib/model-versions";
 
 const client = new OpenAI();
 
@@ -218,7 +219,7 @@ async function qaCheck(textContent: string): Promise<boolean> {
   }
 
   const response = await client.responses.parse({
-    model: "gpt-5-nano",
+    model: MODEL_VERSIONS.economy,
     input: [
       {
         role: "system",

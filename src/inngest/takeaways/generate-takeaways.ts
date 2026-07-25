@@ -80,7 +80,7 @@ export const generateTakeaways = inngest.createFunction(
         const takeaways = await getTakeaways(
           document.articleText,
           event.data.takeawayPrompt,
-          event.data.model,
+          event.data.modelPower,
           sourceAttribution || undefined,
           document.images,
         );

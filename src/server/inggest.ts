@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { inngest } from "~/inngest/client";
+import { MODEL_POWERS } from "~/lib/model-versions";
 import { authMiddleware } from "~/middleware/auth-middleware";
 
 export const sendEventScienceDailyScraperSF = createServerFn({ method: "POST" })
@@ -25,7 +26,7 @@ export const sendEventGenerateTakeawaysSF = createServerFn({ method: "POST" })
     z.object({
       documentId: z.string(),
       takeawayPrompt: z.string().optional(),
-      model: z.string().optional(),
+      modelPower: z.enum(MODEL_POWERS).optional(),
     }),
   )
   .handler(async ({ context, data }) => {
@@ -59,7 +60,6 @@ export const sendEventGenerateInsightSF = createServerFn({ method: "POST" })
     z.object({
       seedText: z.string(),
       insightPrompt: z.string().optional(),
-      model: z.string().optional(),
     }),
   )
   .handler(async ({ context, data }) => {

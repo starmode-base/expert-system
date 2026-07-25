@@ -2,6 +2,7 @@ import type { GetStepTools } from "inngest";
 import { inArray } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 import type { inngest } from "~/inngest/client";
+import type { ModelPower } from "~/lib/model-versions";
 import type { ProcessedImage } from "../scrapers/process-images";
 import { getDocumentSummary } from "./get-document-summary";
 
@@ -16,7 +17,7 @@ export interface IngestCandidate {
 export interface IngestPipelineConfig {
   source: string;
   takeawayPrompt: string;
-  takeawayModel?: string;
+  takeawayPower?: ModelPower;
   /** Only fan out takeaways for substantive articles (default: false) */
   substantiveOnly?: boolean;
 }
@@ -127,7 +128,9 @@ export async function ingestDocuments(
         data: {
           documentId: doc.id,
           takeawayPrompt: config.takeawayPrompt,
-          ...(config.takeawayModel && { model: config.takeawayModel }),
+          ...(config.takeawayPower && {
+            modelPower: config.takeawayPower,
+          }),
           user: { id: "", email: "" },
         },
       });

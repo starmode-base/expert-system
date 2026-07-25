@@ -1,5 +1,6 @@
 import { EventSchemas, Inngest } from "inngest";
 import { z } from "zod";
+import { MODEL_POWERS } from "~/lib/model-versions";
 
 const userSchema = z.object({
   id: z.string(),
@@ -22,7 +23,7 @@ const eventSchemas = {
   "app/generate-takeaways": z.object({
     documentId: z.string(),
     takeawayPrompt: z.string().optional(),
-    model: z.string().optional(),
+    modelPower: z.enum(MODEL_POWERS).optional(),
     user: userSchema,
   }),
   "app/generate-insight": z.object({

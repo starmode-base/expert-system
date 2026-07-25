@@ -1,5 +1,6 @@
 import { Agent, tool, type FunctionTool } from "@openai/agents";
 import { z } from "zod";
+import { MODEL_VERSIONS } from "~/lib/model-versions";
 import {
   fetchTakeawayPreviews,
   fetchFormattedTakeawaysByIds,
@@ -93,7 +94,7 @@ export function createResearcherAgent() {
   return new Agent({
     name: "Researcher Agent",
     instructions: researcherSystemPrompt,
-    model: "gpt-5-mini",
+    model: MODEL_VERSIONS.balanced,
     tools: [fetchTakeawayPreviewsTool, fetchFormattedTakeawayPreviewsByIdsTool],
     toolUseBehavior: {
       stopAtToolNames: ["fetchFormattedTakeawayPreviewsByIds"],

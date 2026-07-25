@@ -101,7 +101,6 @@ export const macroVoicesScraper = inngest.createFunction(
       {
         source: "MacroVoices",
         takeawayPrompt: macroVoicesTakeawayPrompt,
-        takeawayModel: "gpt-5.4",
       },
     );
 

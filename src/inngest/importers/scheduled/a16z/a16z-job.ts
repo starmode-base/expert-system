@@ -89,7 +89,6 @@ export const a16zNewsScraper = inngest.createFunction(
       {
         source: "a16z News",
         takeawayPrompt: a16zTakeawayPrompt,
-        takeawayModel: "gpt-5.4",
       },
     );
 

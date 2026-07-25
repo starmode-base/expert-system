@@ -1,5 +1,6 @@
 import { Agent, tool, type FunctionTool } from "@openai/agents";
 import { z } from "zod";
+import { MODEL_VERSIONS } from "~/lib/model-versions";
 import {
   fetchLatestFredObservations,
   fetchFredObservationsByDateRange,
@@ -310,7 +311,7 @@ export function createMacroResearcherAgent() {
   return new Agent({
     name: "Macro Research Agent",
     instructions: macroResearcherSystemPrompt,
-    model: "gpt-5-mini",
+    model: MODEL_VERSIONS.balanced,
     tools: fredTools,
     outputType: macroAnalysisSchema,
   });
