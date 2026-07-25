@@ -7,6 +7,7 @@ import {
 } from "../insight-prompts";
 import { fetchTakeawayById } from "../tool-functions/tools-takeaways";
 import { invariant } from "@tanstack/react-router";
+import { MODEL_VERSIONS } from "~/lib/model-versions";
 import { createMacroResearcherAgent } from "./macro-researcher";
 import { createResearcherAgent } from "./researcher";
 
@@ -98,7 +99,7 @@ function createInsightAgent() {
   return new Agent({
     name: "Insight Generator",
     instructions: systemPrompt,
-    model: "gpt-5.4",
+    model: MODEL_VERSIONS.high,
     tools: [macroResearcherTool, researcherTool, fetchTakeawayByIdTool],
     outputType: insightSchema,
     modelSettings: {

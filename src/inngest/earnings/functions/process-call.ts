@@ -1,9 +1,6 @@
 import { NonRetriableError } from "inngest";
 import { inngest } from "~/inngest/client";
-import {
-  EARNINGS_TAKEAWAY_MODEL,
-  EARNINGS_TAKEAWAY_PROMPT,
-} from "../constants";
+import { EARNINGS_TAKEAWAY_PROMPT } from "../constants";
 import { EarningsCallsApiError, fetchTranscript } from "../api/earnings-calls";
 import {
   claimEarningsCall,
@@ -62,7 +59,6 @@ export const processEarningsCall = inngest.createFunction(
       data: {
         documentId,
         takeawayPrompt: EARNINGS_TAKEAWAY_PROMPT,
-        model: EARNINGS_TAKEAWAY_MODEL,
         user: systemUser,
       },
     });

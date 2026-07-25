@@ -2,6 +2,7 @@ import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import { MODEL_VERSIONS } from "~/lib/model-versions";
 
 const client = new OpenAI();
 
@@ -22,7 +23,7 @@ const responseFormat = zodTextFormat(documentSummarySchema, "document_summary");
 
 /**
  * Generate a brief summary of a document and assess whether it contains
- * substantive insights using OpenAI gpt-5-nano structured output.
+ * substantive insights using an economy-tier OpenAI model.
  *
  * @param articleText - The full text of the article to summarize
  * @param title - The title of the article (provides context)
@@ -40,7 +41,7 @@ export async function getDocumentSummary(
       : articleText;
 
   const response = await client.responses.parse({
-    model: "gpt-5-nano",
+    model: MODEL_VERSIONS.economy,
     input: [
       {
         role: "system",

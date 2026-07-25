@@ -12,6 +12,7 @@
 
 import { Agent } from "@openai/agents";
 import { z } from "zod";
+import { MODEL_VERSIONS } from "~/lib/model-versions";
 import { fredTools } from "./macro-researcher";
 
 const queryMacroSystemPrompt = `
@@ -109,7 +110,7 @@ export function createQueryMacroAgent() {
   return new Agent({
     name: "Query Macro Agent",
     instructions: queryMacroSystemPrompt,
-    model: "gpt-5-mini",
+    model: MODEL_VERSIONS.balanced,
     tools: fredTools,
     outputType: queryMacroOutputSchema,
   });

@@ -2,6 +2,7 @@ import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import { MODEL_VERSIONS, type ModelPower } from "~/lib/model-versions";
 
 const client = new OpenAI();
 
@@ -55,7 +56,7 @@ const schema = z.object({
 export async function getTakeaways(
   articleText: string,
   takeawayInstructions?: string,
-  model = "gpt-5.4",
+  modelPower: ModelPower = "high",
   sourceAttribution?: string,
   images?: { blobUrl: string; position: number; altText: string | null }[],
 ) {
@@ -150,7 +151,7 @@ It is better to have less findings, if they are not unique and unrelated.`;
   }
 
   const response = await client.responses.parse({
-    model,
+    model: MODEL_VERSIONS[modelPower],
     text: { format: zodTextFormat(schema, "takeaways") },
     input: [
       {
@@ -178,7 +179,7 @@ It is better to have less findings, if they are not unique and unrelated.`;
 
 async function getTakeawayTitle(takeaway: string) {
   const completion = await client.chat.completions.create({
-    model: "gpt-5-nano",
+    model: MODEL_VERSIONS.economy,
     messages: [
       {
         role: "user",

@@ -2,6 +2,7 @@ import { invariant } from "@tanstack/react-router";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import { MODEL_VERSIONS } from "~/lib/model-versions";
 import { db } from "~/postgres/db";
 
 const client = new OpenAI();
@@ -35,7 +36,7 @@ export async function getCategory(text: string) {
     .join("\n");
 
   const response = await client.responses.parse({
-    model: "gpt-5-mini",
+    model: MODEL_VERSIONS.balanced,
     input: [
       {
         role: "user",

@@ -1,18 +1,18 @@
 import { twMerge } from "tailwind-merge";
 import React from "react";
+import type { ModelPower } from "~/lib/model-versions";
 
-/** Add new options in a single place */
 export const MODEL_OPTIONS = [
-  { value: "gpt-5.1", label: "gpt-5.1 ($10)" },
-  { value: "gpt-5-mini", label: "gpt-5-mini ($2)" },
-  { value: "gpt-5-nano", label: "gpt-5-nano ($0.40)" },
-  { value: "gpt-5-pro", label: "gpt-5-pro ($120)" },
-] as const;
+  { value: "max", label: "Maximum" },
+  { value: "high", label: "High" },
+  { value: "balanced", label: "Balanced" },
+  { value: "economy", label: "Economy" },
+] as const satisfies readonly { value: ModelPower; label: string }[];
 
-export type ModelValue = (typeof MODEL_OPTIONS)[number]["value"];
+export type ModelValue = ModelPower;
 
 interface ModelSelectorProps {
-  /** The currently‑selected model id */
+  /** The currently selected model power */
   value: ModelValue;
   /** Called when the user chooses a different model */
   onChange: (model: ModelValue) => void;
@@ -21,8 +21,7 @@ interface ModelSelectorProps {
 }
 
 /**
- * A generalized drop‑in selector for LLM model choices.
- * Keeps the option list in one place and hides the markup details.
+ * A generalized drop-in selector for LLM power choices.
  */
 export const ModelSelector: React.FC<ModelSelectorProps> = ({
   value,

@@ -76,7 +76,6 @@ export const dwarkeshPodcastScraper = inngest.createFunction(
       {
         source: "Dwarkesh Podcast",
         takeawayPrompt: dwarkeshPodcastTakeawayPrompt,
-        takeawayModel: "gpt-5.4",
       },
     );
 

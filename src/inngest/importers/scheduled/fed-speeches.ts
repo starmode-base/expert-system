@@ -197,7 +197,6 @@ export const fedSpeechesScraper = inngest.createFunction(
     const { inserted } = await ingestDocuments(step, ingestCandidates, {
       source: FED_SOURCE,
       takeawayPrompt: fedSpeechesTakeawayPrompt,
-      takeawayModel: "gpt-5.4",
     });
 
     return {
