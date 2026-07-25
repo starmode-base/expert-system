@@ -169,6 +169,12 @@ function XSettingsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-gray-500">Last Sync Cursor:</span>
+                  <span className="font-mono text-gray-900">
+                    {xBookmarksStatus.lastSyncCursor ?? "None"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-500">Daily Folder:</span>
                   <span className="text-gray-900">
                     {selectedFolderName ?? "All bookmarks"}

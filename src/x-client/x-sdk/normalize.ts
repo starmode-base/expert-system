@@ -7,7 +7,7 @@ export class IncompleteXArticleError extends Error {
   }
 }
 
-interface NormalizedXDocument {
+export interface NormalizedXDocument {
   externalId: string;
   link: string;
   title: string;

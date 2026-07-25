@@ -45,6 +45,25 @@ export interface XTokenResponse {
 }
 
 /**
+ * Stored auth record for X bookmarks (mirrors the x_bookmarks_auth DB table)
+ */
+export interface XAuthRecord {
+  id: string;
+  /** Our internal user ID (foreign key to users table) */
+  userId: string;
+  /** X's user ID (needed for bookmarks API - must match authenticated user) */
+  xUserId: string;
+  /** Refresh token for automated token refresh */
+  refreshToken: string;
+  /** Current access token */
+  accessToken: string;
+  /** When the access token expires */
+  expiresAt: Date;
+  /** Pagination cursor for incremental bookmark sync */
+  lastSyncCursor: string | null;
+}
+
+/**
  * X user object from the /2/users/me endpoint
  */
 export interface XUser {
@@ -69,6 +88,17 @@ export interface XUserMeResponse {
 export interface XBookmarkFolder {
   id: string;
   name: string;
+}
+
+/**
+ * Response from getBookmarkFolders endpoint
+ */
+export interface XBookmarkFoldersResponse {
+  data?: XBookmarkFolder[];
+  meta?: {
+    next_token?: string;
+    result_count?: number;
+  };
 }
 
 /**
@@ -121,6 +151,7 @@ export interface XPost {
     content?: unknown;
   };
   entities?: { urls?: XPostUrl[] };
+  referenced_tweets?: { id: string; type: string }[];
 }
 
 export interface XApiUser {
@@ -134,6 +165,7 @@ export interface XPostsResponse {
   errors?: XApiError[];
   includes?: {
     users?: XApiUser[];
+    tweets?: XPost[];
   };
   meta?: {
     next_token?: string;
