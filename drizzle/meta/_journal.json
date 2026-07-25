@@ -232,6 +232,13 @@
       "when": 1784909089999,
       "tag": "0032_low_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1784997998335,
+      "tag": "0033_lyrical_deathstrike",
+      "breakpoints": true
     }
   ]
 }
