@@ -659,6 +659,346 @@ function ApiDocsPage() {
 }`}</Pre>
       </EndpointSection>
 
+      {/* Deterministic company financials */}
+      <Section>
+        <H2>Deterministic company financials</H2>
+        <P>
+          The financials API normalizes publicly filed SEC EDGAR company-facts
+          data into stable, versioned metric IDs. It does not use an LLM, infer
+          missing values, or combine different SEC concepts into one series.
+        </P>
+        <P>
+          Company endpoints accept either a ticker symbol such as{" "}
+          <Code>AAPL</Code> or a numeric SEC CIK such as <Code>CIK320193</Code>.
+          Every response includes the normalized 10-digit CIK.
+        </P>
+
+        <H3>Canonical metrics — catalog version 1</H3>
+        <div className="mb-4 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-lg bg-gray-50 p-4">
+            <p className="mb-2 text-xs font-semibold text-gray-700">
+              Income statement
+            </p>
+            <p className="font-mono text-xs leading-relaxed text-gray-600">
+              revenue, costOfRevenue, grossProfit, operatingIncome, netIncome,
+              epsBasic, epsDiluted, researchAndDevelopment,
+              sellingGeneralAdministrative, incomeTaxExpense
+            </p>
+          </div>
+          <div className="rounded-lg bg-gray-50 p-4">
+            <p className="mb-2 text-xs font-semibold text-gray-700">
+              Balance sheet
+            </p>
+            <p className="font-mono text-xs leading-relaxed text-gray-600">
+              cash, accountsReceivable, inventory, currentAssets, totalAssets,
+              accountsPayable, currentLiabilities, totalLiabilities,
+              shortTermDebt, longTermDebt, stockholdersEquity
+            </p>
+          </div>
+          <div className="rounded-lg bg-gray-50 p-4">
+            <p className="mb-2 text-xs font-semibold text-gray-700">
+              Cash flow
+            </p>
+            <p className="font-mono text-xs leading-relaxed text-gray-600">
+              operatingCashFlow, capitalExpenditures, investingCashFlow,
+              financingCashFlow, dividendsPaid, shareRepurchases
+            </p>
+          </div>
+        </div>
+
+        <H3>Period semantics</H3>
+        <div className="grid gap-2 text-xs leading-relaxed text-gray-600 sm:grid-cols-2">
+          <p>
+            <Code>instant</Code> — a balance-sheet value measured as of the
+            observation date.
+          </p>
+          <p>
+            <Code>quarter</Code> — a standalone fiscal-quarter duration.
+          </p>
+          <p>
+            <Code>yearToDate</Code> — a filed multi-quarter cash-flow duration;
+            the response includes its start date.
+          </p>
+          <p>
+            <Code>annual</Code> — a complete fiscal-year duration.
+          </p>
+        </div>
+      </Section>
+
+      {/* GET /api/v1/financials/metrics */}
+      <EndpointSection
+        title="Financial Metric Catalog"
+        method="GET"
+        path="/api/v1/financials/metrics"
+        description="Returns the global versioned catalog of canonical financial metric IDs."
+      >
+        <H3>Response</H3>
+        <Pre>{`{
+  "catalogVersion": "1",
+  "metrics": [
+    {
+      "id": "revenue",
+      "label": "Revenue",
+      "statement": "incomeStatement",
+      "unitType": "monetary"
+    }
+  ]
+}`}</Pre>
+
+        <H3>Example request</H3>
+        <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
+     "https://expert-system.starmode.dev/api/v1/financials/metrics"`}</Pre>
+      </EndpointSection>
+
+      {/* GET /api/v1/financials/{symbol}/metrics */}
+      <EndpointSection
+        title="Company Metric Availability"
+        method="GET"
+        path="/api/v1/financials/{symbol}/metrics"
+        description="Returns only the canonical metrics available for one company and reporting period."
+      >
+        <H3>Path parameters</H3>
+        <ParamTable>
+          <ParamRow
+            name="symbol"
+            type="string"
+            required
+            description="Ticker symbol or SEC CIK."
+          />
+        </ParamTable>
+
+        <H3>Query parameters</H3>
+        <ParamTable>
+          <ParamRow
+            name="period"
+            type="quarterly | annual"
+            description="Reporting period to inspect. Default: quarterly."
+          />
+        </ParamTable>
+
+        <H3>Response</H3>
+        <Pre>{`{
+  "catalogVersion": "1",
+  "symbol": "AAPL",
+  "cik": "0000320193",
+  "company": "Apple Inc.",
+  "period": "quarterly",
+  "metrics": [
+    {
+      "id": "revenue",
+      "label": "Revenue",
+      "statement": "incomeStatement",
+      "unit": "USD"
+    }
+  ],
+  "source": "SEC"
+}`}</Pre>
+
+        <H3>Example request</H3>
+        <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
+     "https://expert-system.starmode.dev/api/v1/financials/AAPL/metrics?period=quarterly"`}</Pre>
+      </EndpointSection>
+
+      {/* GET /api/v1/financials/{symbol}/{metric} */}
+      <EndpointSection
+        title="Company Financial Metric"
+        method="GET"
+        path="/api/v1/financials/{symbol}/{metric}"
+        description="Returns one compact, normalized SEC time series with optional filing provenance."
+      >
+        <H3>Path parameters</H3>
+        <ParamTable>
+          <ParamRow
+            name="symbol"
+            type="string"
+            required
+            description="Ticker symbol or SEC CIK."
+          />
+          <ParamRow
+            name="metric"
+            type="string"
+            required
+            description="Canonical metric ID from the v1 catalog."
+          />
+        </ParamTable>
+
+        <H3>Query parameters</H3>
+        <ParamTable>
+          <ParamRow
+            name="period"
+            type="quarterly | annual"
+            description="Reporting period. Default: quarterly."
+          />
+          <ParamRow
+            name="limit"
+            type="number"
+            description="Observations to return. Default: 8. Minimum: 1. Maximum: 40."
+          />
+          <ParamRow
+            name="include"
+            type="provenance"
+            description="Adds filing date, form, accession number, original concept, and SEC source URL."
+          />
+        </ParamTable>
+
+        <H3>Response fields</H3>
+        <FieldTable>
+          <FieldRow
+            name="catalogVersion"
+            type="string"
+            description="Version of the canonical metric catalog."
+          />
+          <FieldRow
+            name="symbol"
+            type="string"
+            description="Uppercase ticker when the request used a known ticker."
+          />
+          <FieldRow
+            name="cik"
+            type="string"
+            description="Normalized 10-digit SEC CIK."
+          />
+          <FieldRow
+            name="company"
+            type="string"
+            description="SEC entity name."
+          />
+          <FieldRow
+            name="metric"
+            type="string"
+            description="Canonical metric ID."
+          />
+          <FieldRow
+            name="unit"
+            type="string"
+            description="SEC unit, such as USD or USD/shares."
+          />
+          <FieldRow
+            name="data"
+            type="array"
+            description="Newest-first observations with date, value, and periodType."
+          />
+          <FieldRow
+            name="source"
+            type="string | object"
+            description='"SEC" by default; SEC EDGAR provider and URL in provenance mode.'
+          />
+        </FieldTable>
+
+        <H3>Example request</H3>
+        <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
+     "https://expert-system.starmode.dev/api/v1/financials/AAPL/accountsPayable?period=quarterly&limit=4"`}</Pre>
+
+        <H3>Compact response</H3>
+        <Pre>{`{
+  "catalogVersion": "1",
+  "symbol": "AAPL",
+  "cik": "0000320193",
+  "company": "Apple Inc.",
+  "metric": "accountsPayable",
+  "period": "quarterly",
+  "unit": "USD",
+  "data": [
+    {
+      "date": "2026-06-27",
+      "value": 64525000000,
+      "periodType": "instant"
+    }
+  ],
+  "source": "SEC"
+}`}</Pre>
+
+        <H3>Provenance observation</H3>
+        <Pre>{`{
+  "date": "2026-06-27",
+  "value": 64525000000,
+  "periodType": "instant",
+  "filed": "2026-07-31",
+  "form": "10-Q",
+  "accession": "0000320193-26-000020",
+  "concept": "AccountsPayableCurrent"
+}`}</Pre>
+      </EndpointSection>
+
+      {/* POST /api/v1/financials */}
+      <EndpointSection
+        title="Batch Company Financials"
+        method="POST"
+        path="/api/v1/financials"
+        description="Retrieves several canonical metrics with one company-facts lookup and explicit per-metric availability errors."
+      >
+        <H3>Request body (JSON)</H3>
+        <ParamTable>
+          <ParamRow
+            name="symbol"
+            type="string"
+            required
+            description="Ticker symbol or SEC CIK."
+          />
+          <ParamRow
+            name="metrics"
+            type="string[]"
+            required
+            description="Between 1 and 27 unique canonical metric IDs."
+          />
+          <ParamRow
+            name="period"
+            type="quarterly | annual"
+            description="Reporting period. Default: quarterly."
+          />
+          <ParamRow
+            name="limit"
+            type="number"
+            description="Observations per metric. Default: 8. Minimum: 1. Maximum: 40."
+          />
+          <ParamRow
+            name="include"
+            type="provenance"
+            description="Adds filing provenance to returned observations."
+          />
+        </ParamTable>
+
+        <H3>Example request</H3>
+        <Pre>{`curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
+     -H "Content-Type: application/json" \\
+     -d '{"symbol":"AAPL","metrics":["revenue","netIncome","inventory"],"period":"quarterly","limit":4}' \\
+     "https://expert-system.starmode.dev/api/v1/financials"`}</Pre>
+
+        <H3>Partial-success response</H3>
+        <Pre>{`{
+  "catalogVersion": "1",
+  "symbol": "AAPL",
+  "cik": "0000320193",
+  "company": "Apple Inc.",
+  "period": "quarterly",
+  "metrics": {
+    "revenue": {
+      "unit": "USD",
+      "data": [
+        {
+          "date": "2026-06-27",
+          "value": 109417000000,
+          "periodType": "quarter"
+        }
+      ]
+    }
+  },
+  "errors": {
+    "inventory": {
+      "code": "METRIC_UNAVAILABLE",
+      "message": "inventory is unavailable for AAPL"
+    }
+  },
+  "source": "SEC"
+}`}</Pre>
+        <P>
+          Valid but unavailable metrics appear in <Code>errors</Code> while
+          available metrics are returned normally with status 200. An unknown
+          metric ID rejects the whole request with <Code>METRIC_NOT_FOUND</Code>
+          {"."}
+        </P>
+      </EndpointSection>
+
       {/* POST /api/v1/query/macro */}
       <EndpointSection
         title="Query Macro Data"
@@ -786,7 +1126,8 @@ function ApiDocsPage() {
         <H2>Error responses</H2>
         <P>
           Errors return a JSON body with an <Code>error</Code> field and the
-          corresponding HTTP status code.
+          corresponding HTTP status code. Financial endpoints use a nested,
+          machine-readable code and message.
         </P>
         <FieldTable>
           <FieldRow
@@ -800,13 +1141,37 @@ function ApiDocsPage() {
             description="Missing, invalid, or revoked API key."
           />
           <FieldRow
-            name="200 OK"
+            name="404 Not Found"
             type=""
-            description="Successful response. Always returns an items array."
+            description="Company, metric, or company-specific metric data was not found."
+          />
+          <FieldRow
+            name="429 Too Many Requests"
+            type=""
+            description="Monthly API quota or upstream SEC rate limit was reached."
+          />
+          <FieldRow
+            name="502 Bad Gateway"
+            type=""
+            description="SEC EDGAR was unavailable or returned an invalid payload."
           />
         </FieldTable>
-        <H3>Example error body</H3>
+        <H3>Legacy endpoint error</H3>
         <Pre>{`{ "error": "Missing required parameter: ids" }`}</Pre>
+        <H3>Financial endpoint error</H3>
+        <Pre>{`{
+  "error": {
+    "code": "METRIC_UNAVAILABLE",
+    "message": "inventory is unavailable for JPM"
+  }
+}`}</Pre>
+        <P>
+          Financial error codes include <Code>UNAUTHORIZED</Code>,{" "}
+          <Code>INVALID_REQUEST</Code>, <Code>COMPANY_NOT_FOUND</Code>,{" "}
+          <Code>METRIC_NOT_FOUND</Code>, <Code>METRIC_UNAVAILABLE</Code>,{" "}
+          <Code>SEC_UNAVAILABLE</Code>, <Code>RATE_LIMITED</Code>, and{" "}
+          <Code>INTERNAL_ERROR</Code>.
+        </P>
       </Section>
     </div>
   );

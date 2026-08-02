@@ -2,7 +2,7 @@ import { createAPIFileRoute } from "@tanstack/react-start/api";
 
 const DOCS = `# API Reference
 
-REST API for programmatic access to takeaways, documents, and macroeconomic data.
+REST API for programmatic access to takeaways, documents, macroeconomic data, and normalized SEC company financials.
 
 ## Authentication
 
@@ -230,6 +230,139 @@ Sentiment: Consumer Sentiment (UMCSENT).
       ],
       "seriesQueried": ["UNRATE"]
     }
+
+---
+
+## Deterministic company financials
+
+The financials API normalizes publicly filed SEC EDGAR company-facts data into a versioned catalog of stable metric IDs. It does not use an LLM, infer missing values, combine different concepts into one series, or present year-to-date cash flow as a standalone quarter.
+
+Ticker symbols are resolved through the Expert System stock catalog. All company endpoints also accept a numeric SEC CIK, with or without a CIK prefix or leading zeroes.
+
+### GET /api/v1/financials/metrics
+
+Returns the global v1 catalog. Each metric includes its canonical ID, label, financial statement, and unit type.
+
+    curl -H "Authorization: Bearer esak_<your-key>" \
+         "https://expert-system.starmode.dev/api/v1/financials/metrics"
+
+    {
+      "catalogVersion": "1",
+      "metrics": [
+        {
+          "id": "revenue",
+          "label": "Revenue",
+          "statement": "incomeStatement",
+          "unitType": "monetary"
+        }
+      ]
+    }
+
+### GET /api/v1/financials/{symbol}/metrics
+
+Returns only catalog metrics available for the requested company and period.
+
+| Parameter | Values              | Default   |
+|-----------|---------------------|-----------|
+| period    | quarterly or annual | quarterly |
+
+    curl -H "Authorization: Bearer esak_<your-key>" \
+         "https://expert-system.starmode.dev/api/v1/financials/AAPL/metrics?period=quarterly"
+
+### GET /api/v1/financials/{symbol}/{metric}
+
+Returns one compact normalized time series.
+
+| Parameter | Values              | Default   |
+|-----------|---------------------|-----------|
+| period    | quarterly or annual | quarterly |
+| limit     | integer from 1–40   | 8         |
+| include   | provenance          | omitted   |
+
+    curl -H "Authorization: Bearer esak_<your-key>" \
+         "https://expert-system.starmode.dev/api/v1/financials/AAPL/accountsPayable?period=quarterly&limit=4"
+
+    {
+      "catalogVersion": "1",
+      "symbol": "AAPL",
+      "cik": "0000320193",
+      "company": "Apple Inc.",
+      "metric": "accountsPayable",
+      "period": "quarterly",
+      "unit": "USD",
+      "data": [
+        {
+          "date": "2026-06-27",
+          "value": 72516000000,
+          "periodType": "instant"
+        }
+      ],
+      "source": "SEC"
+    }
+
+Request include=provenance to add filed, form, accession, and original SEC concept to each observation. Provenance responses also replace the compact source string with the SEC EDGAR provider and company-facts URL.
+
+### POST /api/v1/financials
+
+Retrieves several related metrics with one company-facts lookup. Metrics must contain 1–27 unique canonical IDs.
+
+    curl -X POST -H "Authorization: Bearer esak_<your-key>" \
+         -H "Content-Type: application/json" \
+         -d '{"symbol":"AAPL","metrics":["revenue","netIncome","inventory"],"period":"quarterly","limit":4}' \
+         "https://expert-system.starmode.dev/api/v1/financials"
+
+    {
+      "catalogVersion": "1",
+      "symbol": "AAPL",
+      "cik": "0000320193",
+      "company": "Apple Inc.",
+      "period": "quarterly",
+      "metrics": {
+        "revenue": {
+          "unit": "USD",
+          "data": [
+            {
+              "date": "2026-06-27",
+              "value": 109417000000,
+              "periodType": "quarter"
+            }
+          ]
+        }
+      },
+      "errors": {
+        "inventory": {
+          "code": "METRIC_UNAVAILABLE",
+          "message": "inventory is unavailable for AAPL"
+        }
+      },
+      "source": "SEC"
+    }
+
+Valid but unavailable batch metrics appear in the errors object while available metrics are returned normally with status 200. An unknown metric ID rejects the entire request with METRIC_NOT_FOUND.
+
+### Financial period semantics
+
+Every observation has a periodType:
+
+- instant: a balance-sheet value measured as of date.
+- quarter: a standalone fiscal-quarter duration.
+- yearToDate: a filed multi-quarter cash-flow duration. The start field is included.
+- annual: a fiscal-year duration.
+
+Quarterly income statement facts are limited to standalone quarters. Cash-flow Q2 and Q3 disclosures are often year-to-date; these values remain unchanged and are explicitly labeled rather than derived.
+
+### Financial error response
+
+Financial endpoints return short machine-readable errors:
+
+    {
+      "error": {
+        "code": "METRIC_UNAVAILABLE",
+        "message": "inventory is unavailable for JPM"
+      }
+    }
+
+Codes include UNAUTHORIZED, INVALID_REQUEST, COMPANY_NOT_FOUND, METRIC_NOT_FOUND, METRIC_UNAVAILABLE, SEC_UNAVAILABLE, RATE_LIMITED, and INTERNAL_ERROR.
 
 ---
 

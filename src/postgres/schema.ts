@@ -4,6 +4,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -218,6 +219,16 @@ export const stockSymbols = pgTable("stock_symbols", {
 
 export type StockSymbolSelect = typeof stockSymbols.$inferSelect;
 export type StockSymbolInsert = typeof stockSymbols.$inferInsert;
+
+/**
+ * Shared SEC company-facts cache. Payloads are validated again when read so a
+ * malformed or outdated cache entry can never leak into the public API.
+ */
+export const secCompanyFactsCache = pgTable("sec_company_facts_cache", {
+  cik: text().primaryKey(),
+  payload: jsonb().$type<unknown>().notNull(),
+  fetchedAt: timestamp().notNull(),
+});
 
 /**
  * Global earnings-call ingestion configuration.

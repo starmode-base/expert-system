@@ -166,4 +166,27 @@ describe("authorizeApiRequest", () => {
 
     expect(result).toEqual({ type: "ok", userId: "user_1" });
   });
+
+  test("returns structured errors for the financial API without changing legacy endpoints", async () => {
+    authenticateMock.mockResolvedValue(null);
+    const request = new Request("https://example.com/api/v1/financials");
+
+    const structured = await authorizeApiRequest(request, "financials", {
+      structuredErrors: true,
+    });
+    const legacy = await authorizeApiRequest(request, "takeaways");
+
+    expect(structured.type).toBe("error");
+    if (structured.type === "error") {
+      await expect(structured.response.json()).resolves.toEqual({
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      });
+    }
+    expect(legacy.type).toBe("error");
+    if (legacy.type === "error") {
+      await expect(legacy.response.json()).resolves.toEqual({
+        error: "Unauthorized",
+      });
+    }
+  });
 });
