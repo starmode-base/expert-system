@@ -109,7 +109,7 @@ describe("checkAndIncrementQuota", () => {
   test("user not found defaults to free tier", async () => {
     findFirstMock.mockResolvedValue(null);
     setQuotaTotal(101);
-    const result = await checkAndIncrementQuota("user_1", "research");
+    const result = await checkAndIncrementQuota("user_1", "takeaways.recent");
 
     expect(result).toEqual({ allowed: false, remaining: 0 });
   });

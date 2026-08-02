@@ -10,8 +10,7 @@ export type ApiEndpoint =
   | "takeaways"
   | "takeaways.recent"
   | "documents"
-  | "query.macro"
-  | "research";
+  | "query.macro";
 
 /**
  * Atomically increments the per-endpoint monthly counter and checks the total
