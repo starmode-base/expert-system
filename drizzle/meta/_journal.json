@@ -239,6 +239,13 @@
       "when": 1784997998335,
       "tag": "0033_lyrical_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1785699067448,
+      "tag": "0034_steady_tana_nile",
+      "breakpoints": true
     }
   ]
 }

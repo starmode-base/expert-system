@@ -10,7 +10,28 @@ export type ApiEndpoint =
   | "takeaways"
   | "takeaways.recent"
   | "documents"
-  | "query.macro";
+  | "query.macro"
+  | "financials";
+
+interface AuthorizationOptions {
+  structuredErrors?: boolean;
+}
+
+function authorizationError(
+  code: "UNAUTHORIZED" | "RATE_LIMITED",
+  message: string,
+  status: number,
+  options: AuthorizationOptions,
+  headers?: HeadersInit,
+): Response {
+  const error = options.structuredErrors ? { code, message } : message;
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set("Content-Type", "application/json");
+  return new Response(JSON.stringify({ error }), {
+    status,
+    headers: responseHeaders,
+  });
+}
 
 /**
  * Atomically increments the per-endpoint monthly counter and checks the total
@@ -70,6 +91,7 @@ export async function checkAndIncrementQuota(
 export async function authorizeApiRequest(
   request: Request,
   endpoint: ApiEndpoint,
+  options: AuthorizationOptions = {},
 ): Promise<
   { type: "ok"; userId: string } | { type: "error"; response: Response }
 > {
@@ -77,10 +99,12 @@ export async function authorizeApiRequest(
   if (!userId) {
     return {
       type: "error",
-      response: new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      }),
+      response: authorizationError(
+        "UNAUTHORIZED",
+        "Unauthorized",
+        401,
+        options,
+      ),
     };
   }
 
@@ -88,18 +112,14 @@ export async function authorizeApiRequest(
   if (!quota.allowed) {
     return {
       type: "error",
-      response: new Response(
-        JSON.stringify({
-          error:
-            "Monthly quota exceeded. Upgrade to Unlimited at expert-system.com/pricing.",
-        }),
+      response: authorizationError(
+        "RATE_LIMITED",
+        "Monthly quota exceeded. Upgrade to Unlimited at expert-system.com/pricing.",
+        429,
+        options,
         {
-          status: 429,
-          headers: {
-            "Content-Type": "application/json",
-            "X-RateLimit-Limit": String(FREE_TIER_LIMIT),
-            "X-RateLimit-Remaining": "0",
-          },
+          "X-RateLimit-Limit": String(FREE_TIER_LIMIT),
+          "X-RateLimit-Remaining": "0",
         },
       ),
     };
