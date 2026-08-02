@@ -230,9 +230,6 @@ export const secCompanyFactsCache = pgTable("sec_company_facts_cache", {
   fetchedAt: timestamp().notNull(),
 });
 
-export type SecCompanyFactsCacheSelect =
-  typeof secCompanyFactsCache.$inferSelect;
-
 /**
  * Global earnings-call ingestion configuration.
  */

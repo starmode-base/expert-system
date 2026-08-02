@@ -1,11 +1,8 @@
 export const FINANCIAL_CATALOG_VERSION = "1";
 
-export type FinancialStatement =
-  | "incomeStatement"
-  | "balanceSheet"
-  | "cashFlow";
+type FinancialStatement = "incomeStatement" | "balanceSheet" | "cashFlow";
 export type FinancialUnitClass = "monetary" | "perShare";
-export type FinancialFactType = "duration" | "instant";
+type FinancialFactType = "duration" | "instant";
 
 export interface FinancialMetricDefinition {
   label: string;

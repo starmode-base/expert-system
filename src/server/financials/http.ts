@@ -6,13 +6,13 @@ import type { FinancialPeriod } from "./normalize";
 const periodSchema = z.enum(["quarterly", "annual"]);
 const limitSchema = z.coerce.number().int().min(1).max(40);
 
-export interface ParsedFinancialQuery {
+interface ParsedFinancialQuery {
   period: FinancialPeriod;
   limit: number;
   includeProvenance: boolean;
 }
 
-export function financialJson(body: unknown, status = 200): Response {
+function financialJson(body: unknown, status = 200): Response {
   return Response.json(body, {
     status,
     headers: { "Cache-Control": "private, no-store" },

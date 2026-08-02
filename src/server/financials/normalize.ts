@@ -39,11 +39,7 @@ type SecFact = z.infer<typeof secFactSchema>;
 type SecConcept = z.infer<typeof secConceptSchema>;
 
 export type FinancialPeriod = "annual" | "quarterly";
-export type FinancialPeriodType =
-  | "instant"
-  | "quarter"
-  | "yearToDate"
-  | "annual";
+type FinancialPeriodType = "instant" | "quarter" | "yearToDate" | "annual";
 
 export interface NormalizedFinancialObservation {
   date: string;

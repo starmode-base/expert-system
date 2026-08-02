@@ -25,7 +25,7 @@ interface CompanyIdentifier {
   symbol?: string;
 }
 
-export interface FinancialQueryOptions {
+interface FinancialQueryOptions {
   period: FinancialPeriod;
   limit: number;
   includeProvenance: boolean;
