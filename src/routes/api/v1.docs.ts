@@ -2,7 +2,7 @@ import { createAPIFileRoute } from "@tanstack/react-start/api";
 
 const DOCS = `# API Reference
 
-REST API for programmatic access to takeaways, research, and documents.
+REST API for programmatic access to takeaways, documents, and macroeconomic data.
 
 ## Authentication
 
@@ -36,6 +36,7 @@ Returns the most recent takeaways ordered by source document publication date (n
 | documentId | string | ID of the source document.               |
 | title      | string | Short headline summarising the takeaway. |
 | summary    | string | Brief summary of the takeaway.           |
+| publicationDate | string (ISO 8601) | Publication date of the source document. |
 
 ### Example request
 
@@ -50,7 +51,8 @@ Returns the most recent takeaways ordered by source document publication date (n
           "id": "tak_abc123",
           "documentId": "doc_xyz789",
           "title": "Fed signals pause through Q2",
-          "summary": "The Federal Reserve indicated it will hold rates..."
+          "summary": "The Federal Reserve indicated it will hold rates...",
+          "publicationDate": "2026-03-01T00:00:00.000Z"
         }
       ]
     }
@@ -160,55 +162,6 @@ Fetch up to 50 source documents by their IDs in a single request. Document IDs a
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
          "https://expert-system.starmode.dev/api/v1/documents?ids=doc_xyz789,doc_abc123"
-
----
-
-## GET /api/v1/research
-
-AI-generated research insights. Scoped to the user who owns the API key — each key only returns research belonging to that user. Sorted by creation date (newest first).
-
-### Query parameters
-
-| Parameter | Type   | Required | Description                                                                                 |
-|-----------|--------|----------|---------------------------------------------------------------------------------------------|
-| cursor    | string | no       | Opaque pagination cursor from the previous response's nextCursor field.                     |
-| limit     | number | no       | Items per page. Default: 4. Max: 100.                                                       |
-| date      | string | no       | Filter to a single day in YYYY-MM-DD format (UTC). Returns only research created on that date. |
-
-### Response
-
-    {
-      "items": [ ResearchObject, ... ],
-      "nextCursor": "<string> | null"
-    }
-
-### Research object
-
-| Field     | Type             | Description                                                   |
-|-----------|------------------|---------------------------------------------------------------|
-| id        | string           | Unique identifier.                                            |
-| title     | string           | Title of the research insight.                                |
-| summary   | string or null   | Short summary of the insight's main finding.                  |
-| insight   | string or null   | Full insight text. Only insights with a non-null value are returned. |
-| research  | string or null   | Background research notes used to generate the insight.       |
-| url       | string           | Link to the research insight on expert-system.                |
-| takeaways | array            | Takeaways linked to this insight. Each entry has id and title.|
-| createdAt | string (ISO 8601)| When the insight was created.                                 |
-| updatedAt | string (ISO 8601)| When the insight was last updated.                            |
-
-### Cursor pagination
-
-Pass the opaque nextCursor value from a response as the cursor parameter on the next request. When nextCursor is null, you have reached the last page. Do not parse or construct cursor values — treat them as opaque strings.
-
-### Example request
-
-    curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://expert-system.starmode.dev/api/v1/research?limit=10"
-
-### Example request — filter by date
-
-    curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://expert-system.starmode.dev/api/v1/research?date=2026-03-05"
 
 ---
 

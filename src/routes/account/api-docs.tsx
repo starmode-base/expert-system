@@ -381,6 +381,11 @@ function ApiDocsPage() {
             type="string"
             description="Brief summary of the takeaway."
           />
+          <FieldRow
+            name="publicationDate"
+            type="string (ISO 8601)"
+            description="Publication date of the source document."
+          />
         </FieldTable>
 
         <H3>Example request</H3>
@@ -394,7 +399,8 @@ function ApiDocsPage() {
       "id": "tak_abc123",
       "documentId": "doc_xyz789",
       "title": "Fed signals pause through Q2",
-      "summary": "The Federal Reserve indicated it will hold rates..."
+      "summary": "The Federal Reserve indicated it will hold rates...",
+      "publicationDate": "2026-03-01T00:00:00.000Z"
     }
   ]
 }`}</Pre>
@@ -650,121 +656,6 @@ function ApiDocsPage() {
       "updatedAt": "2026-03-01T08:15:00.000Z"
     }
   ]
-}`}</Pre>
-      </EndpointSection>
-
-      {/* GET /api/v1/research */}
-      <EndpointSection
-        title="Research"
-        method="GET"
-        path="/api/v1/research"
-        description="AI-generated research insights scoped to the API key owner. Supports cursor pagination and date filtering."
-      >
-        <H3>Query parameters</H3>
-        <ParamTable>
-          <ParamRow
-            name="cursor"
-            type="string"
-            description="Opaque pagination cursor from the previous response's nextCursor field. Omit to start from the beginning."
-          />
-          <ParamRow
-            name="limit"
-            type="number"
-            description="Items per page. Default: 4. Max: 100."
-          />
-          <ParamRow
-            name="date"
-            type="string"
-            description="Filter to a single day in YYYY-MM-DD format (UTC). Returns only research created on that date."
-          />
-        </ParamTable>
-
-        <H3>Response</H3>
-        <Pre>{`{
-  "items": [ ResearchObject, ... ],
-  "nextCursor": "<string> | null"
-}`}</Pre>
-
-        <H3>Research object</H3>
-        <FieldTable>
-          <FieldRow name="id" type="string" description="Unique identifier." />
-          <FieldRow
-            name="title"
-            type="string"
-            description="Title of the research insight."
-          />
-          <FieldRow
-            name="summary"
-            type="string | null"
-            description="Short summary of the insight's main finding."
-          />
-          <FieldRow
-            name="insight"
-            type="string | null"
-            description="Full insight text. Only insights with a non-null value are returned."
-          />
-          <FieldRow
-            name="research"
-            type="string | null"
-            description="Background research notes used to generate the insight."
-          />
-          <FieldRow
-            name="url"
-            type="string"
-            description="Link to the research insight on expert-system."
-          />
-          <FieldRow
-            name="takeaways"
-            type="array"
-            description="Takeaways linked to this insight. Each entry has id and title."
-          />
-          <FieldRow
-            name="createdAt"
-            type="string (ISO 8601)"
-            description="When the insight was created."
-          />
-          <FieldRow
-            name="updatedAt"
-            type="string (ISO 8601)"
-            description="When the insight was last updated."
-          />
-        </FieldTable>
-
-        <H3>Cursor pagination</H3>
-        <P>
-          Pass the opaque <Code>nextCursor</Code> value from a response as the{" "}
-          <Code>cursor</Code> parameter on the next request. When{" "}
-          <Code>nextCursor</Code> is <Code>null</Code>, you have reached the
-          last page. Do not parse or construct cursor values — treat them as
-          opaque strings.
-        </P>
-
-        <H3>Example request</H3>
-        <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/research?limit=10"`}</Pre>
-
-        <H3>Example request — filter by date</H3>
-        <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/research?date=2026-03-05"`}</Pre>
-
-        <H3>Example response</H3>
-        <Pre>{`{
-  "items": [
-    {
-      "id": "ins_def456",
-      "title": "Rate cycle and tech valuations",
-      "summary": "Rising rates historically compress growth multiples...",
-      "insight": "Analysis shows a strong inverse correlation between...",
-      "research": null,
-      "url": "https://expert-system.starmode.dev/insight/ins_def456",
-      "takeaways": [
-        { "id": "tak_abc123", "title": "Fed signals pause through Q2" }
-      ],
-      "createdAt": "2026-03-05T14:30:00.000Z",
-      "updatedAt": "2026-03-05T14:30:00.000Z"
-    }
-  ],
-  "nextCursor": null
 }`}</Pre>
       </EndpointSection>
 

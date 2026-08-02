@@ -23,9 +23,13 @@ export const APIRoute = createAPIFileRoute("/api/v1/takeaways/recent")({
     }
     const limit = Math.min(Math.max(1, limitParam), 100);
 
-    const idRows = await db
+    const takeaways = await db
       .select({
         id: schema.takeaways.id,
+        documentId: schema.takeaways.documentId,
+        title: schema.takeaways.title,
+        summary: schema.takeaways.summary,
+        publicationDate: schema.documents.publicationDate,
       })
       .from(schema.takeaways)
       .innerJoin(
@@ -37,21 +41,6 @@ export const APIRoute = createAPIFileRoute("/api/v1/takeaways/recent")({
         desc(schema.takeaways.id),
       )
       .limit(limit);
-
-    if (idRows.length === 0) {
-      return json({ items: [] });
-    }
-
-    const ids = idRows.map((r) => r.id);
-    const takeaways = await db.query.takeaways.findMany({
-      columns: { id: true, documentId: true, title: true, summary: true },
-      where: (t, { inArray }) => inArray(t.id, ids),
-    });
-
-    const orderMap = new Map(ids.map((id, i) => [id, i]));
-    takeaways.sort(
-      (a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0),
-    );
 
     return json({ items: takeaways });
   },
