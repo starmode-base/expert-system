@@ -275,7 +275,7 @@ function LandingPage() {
                 description={
                   <>
                     Ask natural language questions about macroeconomic
-                    indicators or company financials. Get clean JSON back,{" "}
+                    indicators. Get clean JSON back,{" "}
                     <span className="font-medium text-amber-600">
                       no scraping, no parsing.
                     </span>
