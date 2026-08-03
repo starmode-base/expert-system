@@ -295,7 +295,7 @@ export interface PublicFredSeries {
   sourceUrl: string;
 }
 
-export function getFredSeriesSourceUrl(seriesId: FredSeriesId): string {
+function getFredSeriesSourceUrl(seriesId: FredSeriesId): string {
   return `https://fred.stlouisfed.org/series/${seriesId}`;
 }
 

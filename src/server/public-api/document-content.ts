@@ -1,4 +1,4 @@
-export interface DocumentContentPage {
+interface DocumentContentPage {
   text: string;
   offset: number;
   nextOffset: number | null;
