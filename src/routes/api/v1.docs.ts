@@ -184,7 +184,24 @@ Read one source document in bounded character ranges. Use this after takeaway re
 | offset    | integer | 0       | Zero-based character offset.          |
 | limit     | integer | 12000   | Characters to return. Maximum: 30000. |
 
-The content object contains text, offset, nextOffset, totalCharacters, and truncated.
+The response wraps document metadata and the bounded text range in an item object:
+
+    {
+      "item": {
+        "id": "doc_xyz789",
+        "title": "Remarks on the Economic Outlook",
+        "source": "Fed Speeches",
+        "link": "https://www.federalreserve.gov/...",
+        "publicationDate": "2026-03-01T00:00:00.000Z",
+        "content": {
+          "text": "Thank you for the opportunity to speak...",
+          "offset": 0,
+          "nextOffset": 12000,
+          "totalCharacters": 48320,
+          "truncated": true
+        }
+      }
+    }
 
 ---
 
@@ -201,7 +218,7 @@ List the supported FRED series, or search the catalog with an optional query par
 
 Fetch observations for one to five supported FRED series. Each series can use its own time window and transformation. The API never interpolates, forward-fills, or implicitly aligns series.
 
-Each series accepts either lastN (default 12, max 120) or startDate and endDate. Value transformations are lin, chg, ch1, pch, pc1, pca, cch, and cca. Lower-frequency aggregation supports avg, sum, and eop.
+Each series accepts either lastN (default 12, max 120) or startDate and endDate. Set the units field to one of the supported value transformations: lin, chg, ch1, pch, pc1, pca, cch, or cca. Lower-frequency aggregation supports avg, sum, and eop.
 
 Transformation semantics: lin returns levels; chg and ch1 return the period and year-ago changes; pch and pc1 return the period and year-ago percent changes; pca is compounded annualized percent change; cch and cca are continuously compounded period and annualized changes.
 
@@ -273,6 +290,23 @@ Returns only catalog metrics available for the requested company and period.
     curl -H "Authorization: Bearer esak_<your-key>" \
          "https://expert-system.starmode.dev/api/v1/financials/AAPL/metrics?period=quarterly"
 
+    {
+      "catalogVersion": "1",
+      "symbol": "AAPL",
+      "cik": "0000320193",
+      "company": "Apple Inc.",
+      "period": "quarterly",
+      "metrics": [
+        {
+          "id": "revenue",
+          "label": "Revenue",
+          "statement": "incomeStatement",
+          "unit": "USD"
+        }
+      ],
+      "source": "SEC"
+    }
+
 ### GET /api/v1/financials/{symbol}/{metric}
 
 Returns one compact normalized time series.
@@ -297,7 +331,7 @@ Returns one compact normalized time series.
       "data": [
         {
           "date": "2026-06-27",
-          "value": 72516000000,
+          "value": 64525000000,
           "periodType": "instant"
         }
       ],
@@ -310,24 +344,32 @@ Request include=provenance to add filed, form, accession, and original SEC conce
 
 Retrieves several related metrics with one company-facts lookup. Metrics must contain 1–27 unique canonical IDs.
 
+| Field   | Type                    | Required | Description                                      |
+|---------|-------------------------|----------|--------------------------------------------------|
+| symbol  | string                  | yes      | Ticker symbol or SEC CIK.                        |
+| metrics | array of strings        | yes      | Between 1 and 27 unique canonical metric IDs.    |
+| period  | quarterly or annual     | no       | Reporting period. Default: quarterly.            |
+| limit   | integer from 1–40       | no       | Observations per metric. Default: 8.             |
+| include | provenance              | no       | Adds filing provenance to returned observations. |
+
     curl -X POST -H "Authorization: Bearer esak_<your-key>" \
          -H "Content-Type: application/json" \
-         -d '{"symbol":"AAPL","metrics":["revenue","netIncome","inventory"],"period":"quarterly","limit":4}' \
+         -d '{"symbol":"JPM","metrics":["netIncome","inventory"],"period":"quarterly","limit":4}' \
          "https://expert-system.starmode.dev/api/v1/financials"
 
     {
       "catalogVersion": "1",
-      "symbol": "AAPL",
-      "cik": "0000320193",
-      "company": "Apple Inc.",
+      "symbol": "JPM",
+      "cik": "0000019617",
+      "company": "JPMORGAN CHASE & CO",
       "period": "quarterly",
       "metrics": {
-        "revenue": {
+        "netIncome": {
           "unit": "USD",
           "data": [
             {
-              "date": "2026-06-27",
-              "value": 109417000000,
+              "date": "2026-03-31",
+              "value": 16494000000,
               "periodType": "quarter"
             }
           ]
@@ -336,7 +378,7 @@ Retrieves several related metrics with one company-facts lookup. Metrics must co
       "errors": {
         "inventory": {
           "code": "METRIC_UNAVAILABLE",
-          "message": "inventory is unavailable for AAPL"
+          "message": "inventory is unavailable for JPM"
         }
       },
       "source": "SEC"
@@ -374,11 +416,13 @@ Codes include UNAUTHORIZED, INVALID_REQUEST, COMPANY_NOT_FOUND, METRIC_NOT_FOUND
 
 Errors return a JSON body with an error field and the corresponding HTTP status code.
 
-| Status            | Description                                                                              |
-|-------------------|------------------------------------------------------------------------------------------|
-| 400 Bad Request   | Missing or invalid parameter (e.g. missing ids, invalid limit, malformed cursor or date).|
-| 401 Unauthorized  | Missing, invalid, or revoked API key.                                                    |
-| 200 OK            | Successful response. Always returns an items array.                                      |
+| Status                | Description                                                                              |
+|-----------------------|------------------------------------------------------------------------------------------|
+| 400 Bad Request       | Missing or invalid parameter (e.g. missing ids, invalid limit, malformed cursor or date).|
+| 401 Unauthorized      | Missing, invalid, or revoked API key.                                                    |
+| 404 Not Found         | Company, metric, or company-specific metric data was not found.                          |
+| 429 Too Many Requests | Monthly API quota or upstream SEC rate limit was reached.                                |
+| 502 Bad Gateway       | SEC EDGAR was unavailable or returned an invalid payload.                                |
 
 ### Example error body
 

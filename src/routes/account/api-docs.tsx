@@ -1030,23 +1030,23 @@ function ApiDocsPage() {
         <H3>Example request</H3>
         <Pre>{`curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
      -H "Content-Type: application/json" \\
-     -d '{"symbol":"AAPL","metrics":["revenue","netIncome","inventory"],"period":"quarterly","limit":4}' \\
+     -d '{"symbol":"JPM","metrics":["netIncome","inventory"],"period":"quarterly","limit":4}' \\
      "https://expert-system.starmode.dev/api/v1/financials"`}</Pre>
 
         <H3>Partial-success response</H3>
         <Pre>{`{
   "catalogVersion": "1",
-  "symbol": "AAPL",
-  "cik": "0000320193",
-  "company": "Apple Inc.",
+  "symbol": "JPM",
+  "cik": "0000019617",
+  "company": "JPMORGAN CHASE & CO",
   "period": "quarterly",
   "metrics": {
-    "revenue": {
+    "netIncome": {
       "unit": "USD",
       "data": [
         {
-          "date": "2026-06-27",
-          "value": 109417000000,
+          "date": "2026-03-31",
+          "value": 16494000000,
           "periodType": "quarter"
         }
       ]
@@ -1055,7 +1055,7 @@ function ApiDocsPage() {
   "errors": {
     "inventory": {
       "code": "METRIC_UNAVAILABLE",
-      "message": "inventory is unavailable for AAPL"
+      "message": "inventory is unavailable for JPM"
     }
   },
   "source": "SEC"
