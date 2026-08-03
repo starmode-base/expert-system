@@ -1,17 +1,17 @@
 import {
-  fetchFredObservations,
-  fetchFredSeriesInfo,
-  fredSeriesDescriptions,
   type FredAggregationMethod,
   type FredFrequency,
-  type FredObservation,
   type FredSeriesId,
-  type FredSeriesInfo,
   type FredUnit,
 } from "~/server/fred-data-api/fred-api";
-
-// Rate-limit helper – FRED allows 120 requests / minute on free keys.
-const RATE_LIMIT_MS = 600;
+import {
+  getFredSeriesMetadata,
+  type PublicFredSeries,
+} from "~/server/fred-data-api/catalog";
+import {
+  getFredObservationBatch,
+  type FredObservationItem,
+} from "~/server/fred-data-api/service";
 
 /**
  * Fetch the latest N observations for a FRED series.
@@ -31,26 +31,21 @@ export async function fetchLatestFredObservations(
   units?: FredUnit,
   frequency?: FredFrequency,
   aggregationMethod?: FredAggregationMethod,
-): Promise<{ seriesId: string; description: string; data: FredObservation[] }> {
-  await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_MS));
-
-  const response = await fetchFredObservations(seriesId, {
-    sortOrder: "desc",
-    limit: lastN,
-    units,
-    frequency,
-    aggregationMethod,
-  });
-
-  // Filter out "." values that FRED uses for missing/pending observations
-  const cleaned = response.observations.filter(
-    (obs: FredObservation) => obs.value !== ".",
-  );
-
+): Promise<{
+  seriesId: string;
+  description: string;
+  data: FredObservationItem["observations"];
+}> {
+  const result = await getFredObservationBatch([
+    { id: seriesId, lastN, units, frequency, aggregationMethod },
+  ]);
+  const item = result.items[0];
+  if (!item)
+    throw new Error(result.errors[0]?.message ?? "FRED request failed");
   return {
     seriesId,
-    description: fredSeriesDescriptions[seriesId],
-    data: cleaned,
+    description: item.description,
+    data: item.observations,
   };
 }
 
@@ -71,25 +66,28 @@ export async function fetchFredObservationsByDateRange(
   units?: FredUnit,
   frequency?: FredFrequency,
   aggregationMethod?: FredAggregationMethod,
-): Promise<{ seriesId: string; description: string; data: FredObservation[] }> {
-  await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_MS));
-
-  const response = await fetchFredObservations(seriesId, {
-    observationStart,
-    observationEnd,
-    units,
-    frequency,
-    aggregationMethod,
-  });
-
-  const cleaned = response.observations.filter(
-    (obs: FredObservation) => obs.value !== ".",
-  );
-
+): Promise<{
+  seriesId: string;
+  description: string;
+  data: FredObservationItem["observations"];
+}> {
+  const result = await getFredObservationBatch([
+    {
+      id: seriesId,
+      startDate: observationStart,
+      endDate: observationEnd,
+      units,
+      frequency,
+      aggregationMethod,
+    },
+  ]);
+  const item = result.items[0];
+  if (!item)
+    throw new Error(result.errors[0]?.message ?? "FRED request failed");
   return {
     seriesId,
-    description: fredSeriesDescriptions[seriesId],
-    data: cleaned,
+    description: item.description,
+    data: item.observations,
   };
 }
 
@@ -98,11 +96,10 @@ export async function fetchFredObservationsByDateRange(
  *
  * @param seriesId  FRED series identifier.
  */
-export async function fetchFredSeriesMetadata(
+export function fetchFredSeriesMetadata(
   seriesId: FredSeriesId,
-): Promise<FredSeriesInfo> {
-  await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_MS));
-  return await fetchFredSeriesInfo(seriesId);
+): PublicFredSeries {
+  return getFredSeriesMetadata(seriesId);
 }
 
 /**
@@ -123,25 +120,29 @@ export async function fetchMultipleFredSeries(
   units?: FredUnit,
   frequency?: FredFrequency,
   aggregationMethod?: FredAggregationMethod,
-): Promise<Record<string, { description: string; data: FredObservation[] }>> {
-  const results: Record<
+): Promise<
+  Record<
     string,
-    { description: string; data: FredObservation[] }
-  > = {};
-
-  for (const seriesId of seriesIds) {
-    const result = await fetchLatestFredObservations(
-      seriesId,
+    { description: string; data: FredObservationItem["observations"] }
+  >
+> {
+  const batch = await getFredObservationBatch(
+    seriesIds.map((id) => ({
+      id,
       lastN,
       units,
       frequency,
       aggregationMethod,
-    );
-    results[seriesId] = {
-      description: result.description,
-      data: result.data,
-    };
+    })),
+  );
+  if (batch.errors.length > 0) {
+    throw new Error(batch.errors.map((error) => error.message).join("; "));
   }
 
-  return results;
+  return Object.fromEntries(
+    batch.items.map((item) => [
+      item.seriesId,
+      { description: item.description, data: item.observations },
+    ]),
+  );
 }

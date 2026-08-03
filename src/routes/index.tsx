@@ -274,15 +274,15 @@ function LandingPage() {
                 title="Query structured data"
                 description={
                   <>
-                    Ask natural language questions about macroeconomic
-                    indicators. Get clean JSON back,{" "}
+                    Pull supported macroeconomic indicators directly from FRED.
+                    Get clean JSON back,{" "}
                     <span className="font-medium text-amber-600">
-                      no scraping, no parsing.
+                      no nested research agent.
                     </span>
                   </>
                 }
-                example={`POST /api/v1/query/macro
-  {"query": "Current GDP growth"}
+                example={`POST /api/v1/macro/observations
+  {"series": [{"id": "GDPC1", "lastN": 8}]}
 
 → Structured FRED data`}
               />

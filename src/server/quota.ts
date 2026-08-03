@@ -10,7 +10,10 @@ export type ApiEndpoint =
   | "takeaways"
   | "takeaways.recent"
   | "documents"
+  | "documents.content"
   | "query.macro"
+  | "macro.series"
+  | "macro.observations"
   | "financials";
 
 interface AuthorizationOptions {

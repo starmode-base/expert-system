@@ -37,6 +37,7 @@ Returns the most recent takeaways ordered by source document publication date (n
 | title      | string | Short headline summarising the takeaway. |
 | summary    | string | Brief summary of the takeaway.           |
 | publicationDate | string (ISO 8601) | Publication date of the source document. |
+| document   | object | Source metadata: id, title, source, link, publicationDate. |
 
 ### Example request
 
@@ -52,7 +53,14 @@ Returns the most recent takeaways ordered by source document publication date (n
           "documentId": "doc_xyz789",
           "title": "Fed signals pause through Q2",
           "summary": "The Federal Reserve indicated it will hold rates...",
-          "publicationDate": "2026-03-01T00:00:00.000Z"
+          "publicationDate": "2026-03-01T00:00:00.000Z",
+          "document": {
+            "id": "doc_xyz789",
+            "title": "Remarks on the Economic Outlook",
+            "source": "Fed Speeches",
+            "link": "https://www.federalreserve.gov/...",
+            "publicationDate": "2026-03-01T00:00:00.000Z"
+          }
         }
       ]
     }
@@ -79,6 +87,7 @@ Fetch up to 50 takeaways by their IDs in a single request. Results are returned 
 |--------------------|--------|------------------------------------------------------------------------------------------|
 | id                 | string | Unique identifier.                                                                       |
 | title              | string | Short headline summarising the takeaway.                                                 |
+| summary            | string | Brief summary of the takeaway.                                                           |
 | takeaway           | string | Full takeaway text — the actionable or notable finding.                                  |
 | url                | string | Link to the takeaway on expert-system.                                                   |
 | document           | object | Source document metadata: id, title, source, link, publicationDate.                      |
@@ -116,6 +125,7 @@ Semantic search across all takeaways using vector similarity. Returns lightweigh
 | title           | string            | Short headline summarising the takeaway. |
 | summary         | string            | Brief summary of the takeaway.           |
 | publicationDate | string (ISO 8601) | Publication date of the source document. |
+| document        | object            | Source metadata: id, title, source, link, publicationDate. |
 
 ### Example request
 
@@ -165,70 +175,64 @@ Fetch up to 50 source documents by their IDs in a single request. Document IDs a
 
 ---
 
-## POST /api/v1/query/macro
+## GET /api/v1/documents/{documentId}/content
 
-Natural language query interface for macroeconomic data. An AI agent translates your question into FRED API calls and returns structured data. Ask about any of the series listed below using plain English — the agent resolves series IDs automatically.
+Read one source document in bounded character ranges. Use this after takeaway retrieval when an agent needs more primary-source context without loading an entire document.
 
-### Available data
+| Parameter | Type    | Default | Description                           |
+|-----------|---------|---------|---------------------------------------|
+| offset    | integer | 0       | Zero-based character offset.          |
+| limit     | integer | 12000   | Characters to return. Maximum: 30000. |
 
-Growth / Real Economy: Real GDP (GDPC1), Industrial Production (INDPRO), Capacity Utilization (TCU), Real Personal Consumption (PCEC96), Real Business Fixed Investment (PNFIC1).
+The content object contains text, offset, nextOffset, totalCharacters, and truncated.
 
-Labor Market: Unemployment Rate (UNRATE), Labor Force Participation (CIVPART), Employment-Population Ratio (EMRATIO), Nonfarm Payrolls (PAYEMS), Initial Jobless Claims (ICSA), Continuing Jobless Claims (CCSA), Job Openings Rate (JTSJOR), Quits Rate (JTSQUR).
+---
 
-Inflation / Prices: CPI All Items (CPIAUCSL), Core CPI (CPILFESL), PCE Price Index (PCEPI), Core PCE (PCEPILFE), Trimmed Mean PCE (PCETRIM1M158SFRBDAL), Median CPI (MEDCPIM158SFRBCLE).
+## GET /api/v1/macro/series
 
-Wages / Income: Average Hourly Earnings (CES0500000003), Employment Cost Index (ECIALLCIV), Real Disposable Personal Income (DSPIC96).
+List the supported FRED series, or search the catalog with an optional query parameter. Results include description, category, native frequency, native units, and the FRED source URL.
 
-Monetary Policy / Liquidity: Fed Funds Rate (FEDFUNDS), Effective Fed Funds Rate (EFFR), Interest on Reserve Balances (IORB), Fed Total Assets (WALCL), Reserve Balances (WRESBAL), Overnight Reverse Repo (RRPONTSYD), M2 Money Supply (M2SL).
+    curl -H "Authorization: Bearer esak_<your-key>" \\
+         "https://expert-system.starmode.dev/api/v1/macro/series?query=unemployment"
 
-Rates / Yield Curve: 2-Year Treasury (DGS2), 10-Year Treasury (DGS10), 10Y-2Y Spread (T10Y2Y), 10-Year Term Premium (THREEFYTP10), 10-Year Breakeven Inflation (T10YIE).
+---
 
-Credit / Financial Stress: Baa Corporate Spread (BAA10Y), High Yield OAS (BAMLH0A0HYM2), Senior Loan Officer Survey (DRTSCILM), Financial Conditions Index (NFCI), Bank Credit (TOTBKCR).
+## POST /api/v1/macro/observations
 
-Housing: Housing Starts (HOUST), Building Permits (PERMIT), Existing Home Sales (EXHOSLUSM495S), Case-Shiller Home Price Index (CSUSHPINSA), 30-Year Mortgage Rate (MORTGAGE30US).
+Fetch observations for one to five supported FRED series. Each series can use its own time window and transformation. The API never interpolates, forward-fills, or implicitly aligns series.
 
-Sentiment: Consumer Sentiment (UMCSENT).
+Each series accepts either lastN (default 12, max 120) or startDate and endDate. Value transformations are lin, chg, ch1, pch, pc1, pca, cch, and cca. Lower-frequency aggregation supports avg, sum, and eop.
 
-### Request body (JSON)
+Transformation semantics: lin returns levels; chg and ch1 return the period and year-ago changes; pch and pc1 return the period and year-ago percent changes; pca is compounded annualized percent change; cch and cca are continuously compounded period and annualized changes.
 
-| Field | Type   | Required | Description                                          |
-|-------|--------|----------|------------------------------------------------------|
-| query | string | yes      | Natural-language macro question (e.g. "What is the current unemployment rate?"). |
-
-### Response
-
-    {
-      "data": [ { ... }, ... ],
-      "seriesQueried": [ "UNRATE", ... ]
-    }
-
-### Response fields
-
-| Field         | Type     | Description                                                        |
-|---------------|----------|--------------------------------------------------------------------|
-| data          | array    | Array of result objects from tool calls, preserving original structure (e.g. seriesId, observations, metadata). |
-| seriesQueried | string[] | List of FRED series IDs that were queried.                         |
+Use one series for simple questions and batches for comparisons. Keep native frequency by default; request an explicit lower frequency and aggregation method only when comparable periods are required.
 
 ### Example request
 
     curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
          -H "Content-Type: application/json" \\
-         -d '{"query": "What is the current unemployment rate?"}' \\
-         "https://expert-system.starmode.dev/api/v1/query/macro"
+         -d '{"series":[{"id":"UNRATE","lastN":12},{"id":"ICSA","lastN":12,"frequency":"m","aggregationMethod":"avg"}]}' \\
+         "https://expert-system.starmode.dev/api/v1/macro/observations"
 
 ### Example response
 
     {
-      "data": [
+      "asOf": "2026-08-02T00:00:00.000Z",
+      "items": [
         {
           "seriesId": "UNRATE",
+          "description": "Civilian Unemployment Rate (%)",
+          "sourceUrl": "https://fred.stlouisfed.org/series/UNRATE",
+          "nativeFrequency": "monthly",
+          "returnedFrequency": "monthly",
+          "nativeUnits": "Percent",
+          "transformation": "lin",
           "observations": [
-            { "date": "2026-02-01", "value": "4.4" },
-            { "date": "2026-01-01", "value": "4.0" }
+            { "date": "2026-07-01", "value": 4.2 }
           ]
         }
       ],
-      "seriesQueried": ["UNRATE"]
+      "errors": []
     }
 
 ---

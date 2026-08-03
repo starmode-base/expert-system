@@ -1,10 +1,7 @@
 import { json } from "@tanstack/react-start";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { authorizeApiRequest } from "~/server/quota";
-import {
-  vectorTakeawaySearch,
-  vectorTakeawaySearchTimeWeighted,
-} from "~/server/vector-queries";
+import { searchTakeawayPreviews } from "~/server/public-api/research";
 
 const apiError = (message: string, status: number) =>
   new Response(JSON.stringify({ error: message }), {
@@ -32,18 +29,8 @@ export const APIRoute = createAPIFileRoute("/api/v1/takeaways/search")({
 
     const recent = url.searchParams.get("recent") === "true";
 
-    const results = recent
-      ? await vectorTakeawaySearchTimeWeighted(query, { limit })
-      : await vectorTakeawaySearch(query, limit);
-
-    const items = results.map((result) => ({
-      id: result.id,
-      documentId: result.documentId,
-      title: result.title,
-      summary: result.summary,
-      publicationDate: result.publicationDate,
-    }));
-
-    return json({ items });
+    return json({
+      items: await searchTakeawayPreviews(query, { limit, recent }),
+    });
   },
 });

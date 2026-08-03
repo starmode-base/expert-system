@@ -2,7 +2,6 @@ import { ensureEnv } from "~/lib/env";
 import { z } from "zod";
 
 const FRED_API_BASE_URL = "https://api.stlouisfed.org/fred";
-const FRED_API_KEY = ensureEnv("FRED_API_KEY");
 
 // ---------------------------------------------------------------------------
 // Series ID registry – comprehensive macro indicator coverage
@@ -287,7 +286,7 @@ async function fetchFredJson(
   const url = new URL(`${FRED_API_BASE_URL}/${endpoint}`);
   url.search = new URLSearchParams({
     ...params,
-    api_key: FRED_API_KEY,
+    api_key: ensureEnv("FRED_API_KEY"),
     file_type: "json",
   }).toString();
 
