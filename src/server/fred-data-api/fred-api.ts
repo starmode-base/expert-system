@@ -2,7 +2,6 @@ import { ensureEnv } from "~/lib/env";
 import { z } from "zod";
 
 const FRED_API_BASE_URL = "https://api.stlouisfed.org/fred";
-const FRED_API_KEY = ensureEnv("FRED_API_KEY");
 
 // ---------------------------------------------------------------------------
 // Series ID registry – comprehensive macro indicator coverage
@@ -188,44 +187,12 @@ const FredObservationsResponseSchema = z
   .loose();
 
 // ---------------------------------------------------------------------------
-// Zod schemas – Series metadata
-// ---------------------------------------------------------------------------
-
-const FredSeriesInfoSchema = z
-  .object({
-    id: z.string(),
-    realtime_start: z.string(),
-    realtime_end: z.string(),
-    title: z.string(),
-    observation_start: z.string(),
-    observation_end: z.string(),
-    frequency: z.string(),
-    frequency_short: z.string(),
-    units: z.string(),
-    units_short: z.string(),
-    seasonal_adjustment: z.string(),
-    seasonal_adjustment_short: z.string(),
-    last_updated: z.string(),
-    popularity: z.number(),
-    notes: z.string().optional(),
-  })
-  .loose();
-
-const FredSeriesResponseSchema = z
-  .object({
-    seriess: z.array(FredSeriesInfoSchema),
-  })
-  .loose();
-
-// ---------------------------------------------------------------------------
 // Exported types
 // ---------------------------------------------------------------------------
 
-export type FredObservation = z.infer<typeof FredObservationSchema>;
 export type FredObservationsResponse = z.infer<
   typeof FredObservationsResponseSchema
 >;
-export type FredSeriesInfo = z.infer<typeof FredSeriesInfoSchema>;
 
 // ---------------------------------------------------------------------------
 // Unit / frequency enums (exposed for tool parameter schemas)
@@ -287,7 +254,7 @@ async function fetchFredJson(
   const url = new URL(`${FRED_API_BASE_URL}/${endpoint}`);
   url.search = new URLSearchParams({
     ...params,
-    api_key: FRED_API_KEY,
+    api_key: ensureEnv("FRED_API_KEY"),
     file_type: "json",
   }).toString();
 
@@ -348,22 +315,4 @@ export async function fetchFredObservations(
 
   const json = await fetchFredJson("series/observations", params);
   return FredObservationsResponseSchema.parse(json);
-}
-
-/**
- * Fetch metadata for a FRED series.
- *
- * @param seriesId  FRED series identifier.
- * @returns         Parsed series metadata.
- */
-export async function fetchFredSeriesInfo(
-  seriesId: string,
-): Promise<FredSeriesInfo> {
-  const json = await fetchFredJson("series", { series_id: seriesId });
-  const parsed = FredSeriesResponseSchema.parse(json);
-  const series = parsed.seriess[0];
-  if (!series) {
-    throw new Error(`No series info returned for ${seriesId}`);
-  }
-  return series;
 }

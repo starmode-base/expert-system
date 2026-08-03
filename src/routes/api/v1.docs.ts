@@ -37,6 +37,7 @@ Returns the most recent takeaways ordered by source document publication date (n
 | title      | string | Short headline summarising the takeaway. |
 | summary    | string | Brief summary of the takeaway.           |
 | publicationDate | string (ISO 8601) | Publication date of the source document. |
+| document   | object | Source metadata: id, title, source, link, publicationDate. |
 
 ### Example request
 
@@ -52,7 +53,14 @@ Returns the most recent takeaways ordered by source document publication date (n
           "documentId": "doc_xyz789",
           "title": "Fed signals pause through Q2",
           "summary": "The Federal Reserve indicated it will hold rates...",
-          "publicationDate": "2026-03-01T00:00:00.000Z"
+          "publicationDate": "2026-03-01T00:00:00.000Z",
+          "document": {
+            "id": "doc_xyz789",
+            "title": "Remarks on the Economic Outlook",
+            "source": "Fed Speeches",
+            "link": "https://www.federalreserve.gov/...",
+            "publicationDate": "2026-03-01T00:00:00.000Z"
+          }
         }
       ]
     }
@@ -79,6 +87,7 @@ Fetch up to 50 takeaways by their IDs in a single request. Results are returned 
 |--------------------|--------|------------------------------------------------------------------------------------------|
 | id                 | string | Unique identifier.                                                                       |
 | title              | string | Short headline summarising the takeaway.                                                 |
+| summary            | string | Brief summary of the takeaway.                                                           |
 | takeaway           | string | Full takeaway text — the actionable or notable finding.                                  |
 | url                | string | Link to the takeaway on expert-system.                                                   |
 | document           | object | Source document metadata: id, title, source, link, publicationDate.                      |
@@ -116,6 +125,7 @@ Semantic search across all takeaways using vector similarity. Returns lightweigh
 | title           | string            | Short headline summarising the takeaway. |
 | summary         | string            | Brief summary of the takeaway.           |
 | publicationDate | string (ISO 8601) | Publication date of the source document. |
+| document        | object            | Source metadata: id, title, source, link, publicationDate. |
 
 ### Example request
 
@@ -165,70 +175,81 @@ Fetch up to 50 source documents by their IDs in a single request. Document IDs a
 
 ---
 
-## POST /api/v1/query/macro
+## GET /api/v1/documents/{documentId}/content
 
-Natural language query interface for macroeconomic data. An AI agent translates your question into FRED API calls and returns structured data. Ask about any of the series listed below using plain English — the agent resolves series IDs automatically.
+Read one source document in bounded character ranges. Use this after takeaway retrieval when an agent needs more primary-source context without loading an entire document.
 
-### Available data
+| Parameter | Type    | Default | Description                           |
+|-----------|---------|---------|---------------------------------------|
+| offset    | integer | 0       | Zero-based character offset.          |
+| limit     | integer | 12000   | Characters to return. Maximum: 30000. |
 
-Growth / Real Economy: Real GDP (GDPC1), Industrial Production (INDPRO), Capacity Utilization (TCU), Real Personal Consumption (PCEC96), Real Business Fixed Investment (PNFIC1).
-
-Labor Market: Unemployment Rate (UNRATE), Labor Force Participation (CIVPART), Employment-Population Ratio (EMRATIO), Nonfarm Payrolls (PAYEMS), Initial Jobless Claims (ICSA), Continuing Jobless Claims (CCSA), Job Openings Rate (JTSJOR), Quits Rate (JTSQUR).
-
-Inflation / Prices: CPI All Items (CPIAUCSL), Core CPI (CPILFESL), PCE Price Index (PCEPI), Core PCE (PCEPILFE), Trimmed Mean PCE (PCETRIM1M158SFRBDAL), Median CPI (MEDCPIM158SFRBCLE).
-
-Wages / Income: Average Hourly Earnings (CES0500000003), Employment Cost Index (ECIALLCIV), Real Disposable Personal Income (DSPIC96).
-
-Monetary Policy / Liquidity: Fed Funds Rate (FEDFUNDS), Effective Fed Funds Rate (EFFR), Interest on Reserve Balances (IORB), Fed Total Assets (WALCL), Reserve Balances (WRESBAL), Overnight Reverse Repo (RRPONTSYD), M2 Money Supply (M2SL).
-
-Rates / Yield Curve: 2-Year Treasury (DGS2), 10-Year Treasury (DGS10), 10Y-2Y Spread (T10Y2Y), 10-Year Term Premium (THREEFYTP10), 10-Year Breakeven Inflation (T10YIE).
-
-Credit / Financial Stress: Baa Corporate Spread (BAA10Y), High Yield OAS (BAMLH0A0HYM2), Senior Loan Officer Survey (DRTSCILM), Financial Conditions Index (NFCI), Bank Credit (TOTBKCR).
-
-Housing: Housing Starts (HOUST), Building Permits (PERMIT), Existing Home Sales (EXHOSLUSM495S), Case-Shiller Home Price Index (CSUSHPINSA), 30-Year Mortgage Rate (MORTGAGE30US).
-
-Sentiment: Consumer Sentiment (UMCSENT).
-
-### Request body (JSON)
-
-| Field | Type   | Required | Description                                          |
-|-------|--------|----------|------------------------------------------------------|
-| query | string | yes      | Natural-language macro question (e.g. "What is the current unemployment rate?"). |
-
-### Response
+The response wraps document metadata and the bounded text range in an item object:
 
     {
-      "data": [ { ... }, ... ],
-      "seriesQueried": [ "UNRATE", ... ]
+      "item": {
+        "id": "doc_xyz789",
+        "title": "Remarks on the Economic Outlook",
+        "source": "Fed Speeches",
+        "link": "https://www.federalreserve.gov/...",
+        "publicationDate": "2026-03-01T00:00:00.000Z",
+        "content": {
+          "text": "Thank you for the opportunity to speak...",
+          "offset": 0,
+          "nextOffset": 12000,
+          "totalCharacters": 48320,
+          "truncated": true
+        }
+      }
     }
 
-### Response fields
+---
 
-| Field         | Type     | Description                                                        |
-|---------------|----------|--------------------------------------------------------------------|
-| data          | array    | Array of result objects from tool calls, preserving original structure (e.g. seriesId, observations, metadata). |
-| seriesQueried | string[] | List of FRED series IDs that were queried.                         |
+## GET /api/v1/macro/series
+
+List the supported FRED series, or search the catalog with an optional query parameter. Results include description, category, native frequency, native units, and the FRED source URL.
+
+    curl -H "Authorization: Bearer esak_<your-key>" \\
+         "https://expert-system.starmode.dev/api/v1/macro/series?query=unemployment"
+
+---
+
+## POST /api/v1/macro/observations
+
+Fetch observations for one to five supported FRED series. Each series can use its own time window and transformation. The API never interpolates, forward-fills, or implicitly aligns series.
+
+Each series accepts either lastN (default 12, max 120) or startDate and endDate. Set the units field to one of the supported value transformations: lin, chg, ch1, pch, pc1, pca, cch, or cca. Lower-frequency aggregation supports avg, sum, and eop.
+
+Transformation semantics: lin returns levels; chg and ch1 return the period and year-ago changes; pch and pc1 return the period and year-ago percent changes; pca is compounded annualized percent change; cch and cca are continuously compounded period and annualized changes.
+
+Use one series for simple questions and batches for comparisons. Keep native frequency by default; request an explicit lower frequency and aggregation method only when comparable periods are required.
 
 ### Example request
 
     curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
          -H "Content-Type: application/json" \\
-         -d '{"query": "What is the current unemployment rate?"}' \\
-         "https://expert-system.starmode.dev/api/v1/query/macro"
+         -d '{"series":[{"id":"UNRATE","lastN":12},{"id":"ICSA","lastN":12,"frequency":"m","aggregationMethod":"avg"}]}' \\
+         "https://expert-system.starmode.dev/api/v1/macro/observations"
 
 ### Example response
 
     {
-      "data": [
+      "asOf": "2026-08-02T00:00:00.000Z",
+      "items": [
         {
           "seriesId": "UNRATE",
+          "description": "Civilian Unemployment Rate (%)",
+          "sourceUrl": "https://fred.stlouisfed.org/series/UNRATE",
+          "nativeFrequency": "monthly",
+          "returnedFrequency": "monthly",
+          "nativeUnits": "Percent",
+          "transformation": "lin",
           "observations": [
-            { "date": "2026-02-01", "value": "4.4" },
-            { "date": "2026-01-01", "value": "4.0" }
+            { "date": "2026-07-01", "value": 4.2 }
           ]
         }
       ],
-      "seriesQueried": ["UNRATE"]
+      "errors": []
     }
 
 ---
@@ -269,6 +290,23 @@ Returns only catalog metrics available for the requested company and period.
     curl -H "Authorization: Bearer esak_<your-key>" \
          "https://expert-system.starmode.dev/api/v1/financials/AAPL/metrics?period=quarterly"
 
+    {
+      "catalogVersion": "1",
+      "symbol": "AAPL",
+      "cik": "0000320193",
+      "company": "Apple Inc.",
+      "period": "quarterly",
+      "metrics": [
+        {
+          "id": "revenue",
+          "label": "Revenue",
+          "statement": "incomeStatement",
+          "unit": "USD"
+        }
+      ],
+      "source": "SEC"
+    }
+
 ### GET /api/v1/financials/{symbol}/{metric}
 
 Returns one compact normalized time series.
@@ -293,7 +331,7 @@ Returns one compact normalized time series.
       "data": [
         {
           "date": "2026-06-27",
-          "value": 72516000000,
+          "value": 64525000000,
           "periodType": "instant"
         }
       ],
@@ -306,24 +344,32 @@ Request include=provenance to add filed, form, accession, and original SEC conce
 
 Retrieves several related metrics with one company-facts lookup. Metrics must contain 1–27 unique canonical IDs.
 
+| Field   | Type                    | Required | Description                                      |
+|---------|-------------------------|----------|--------------------------------------------------|
+| symbol  | string                  | yes      | Ticker symbol or SEC CIK.                        |
+| metrics | array of strings        | yes      | Between 1 and 27 unique canonical metric IDs.    |
+| period  | quarterly or annual     | no       | Reporting period. Default: quarterly.            |
+| limit   | integer from 1–40       | no       | Observations per metric. Default: 8.             |
+| include | provenance              | no       | Adds filing provenance to returned observations. |
+
     curl -X POST -H "Authorization: Bearer esak_<your-key>" \
          -H "Content-Type: application/json" \
-         -d '{"symbol":"AAPL","metrics":["revenue","netIncome","inventory"],"period":"quarterly","limit":4}' \
+         -d '{"symbol":"JPM","metrics":["netIncome","inventory"],"period":"quarterly","limit":4}' \
          "https://expert-system.starmode.dev/api/v1/financials"
 
     {
       "catalogVersion": "1",
-      "symbol": "AAPL",
-      "cik": "0000320193",
-      "company": "Apple Inc.",
+      "symbol": "JPM",
+      "cik": "0000019617",
+      "company": "JPMORGAN CHASE & CO",
       "period": "quarterly",
       "metrics": {
-        "revenue": {
+        "netIncome": {
           "unit": "USD",
           "data": [
             {
-              "date": "2026-06-27",
-              "value": 109417000000,
+              "date": "2026-03-31",
+              "value": 16494000000,
               "periodType": "quarter"
             }
           ]
@@ -332,7 +378,7 @@ Retrieves several related metrics with one company-facts lookup. Metrics must co
       "errors": {
         "inventory": {
           "code": "METRIC_UNAVAILABLE",
-          "message": "inventory is unavailable for AAPL"
+          "message": "inventory is unavailable for JPM"
         }
       },
       "source": "SEC"
@@ -370,11 +416,13 @@ Codes include UNAUTHORIZED, INVALID_REQUEST, COMPANY_NOT_FOUND, METRIC_NOT_FOUND
 
 Errors return a JSON body with an error field and the corresponding HTTP status code.
 
-| Status            | Description                                                                              |
-|-------------------|------------------------------------------------------------------------------------------|
-| 400 Bad Request   | Missing or invalid parameter (e.g. missing ids, invalid limit, malformed cursor or date).|
-| 401 Unauthorized  | Missing, invalid, or revoked API key.                                                    |
-| 200 OK            | Successful response. Always returns an items array.                                      |
+| Status                | Description                                                                              |
+|-----------------------|------------------------------------------------------------------------------------------|
+| 400 Bad Request       | Missing or invalid parameter (e.g. missing ids, invalid limit, malformed cursor or date).|
+| 401 Unauthorized      | Missing, invalid, or revoked API key.                                                    |
+| 404 Not Found         | Company, metric, or company-specific metric data was not found.                          |
+| 429 Too Many Requests | Monthly API quota or upstream SEC rate limit was reached.                                |
+| 502 Bad Gateway       | SEC EDGAR was unavailable or returned an invalid payload.                                |
 
 ### Example error body
 

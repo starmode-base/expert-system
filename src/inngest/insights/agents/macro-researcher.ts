@@ -131,11 +131,11 @@ const fetchFredSeriesMetadataTool: FunctionTool<
 > = tool({
   name: "fetchFredSeriesMetadata",
   description:
-    "Fetch metadata for a FRED series including title, units, frequency, seasonal adjustment, and last updated date.",
+    "Fetch supported-series metadata including description, category, native units, native frequency, and FRED source URL.",
   parameters: fetchFredSeriesMetadataParams,
   strict: true,
-  execute: async (args: z.infer<typeof fetchFredSeriesMetadataParams>) => {
-    return await fetchFredSeriesMetadata(args.seriesId);
+  execute: (args: z.infer<typeof fetchFredSeriesMetadataParams>) => {
+    return fetchFredSeriesMetadata(args.seriesId);
   },
 });
 
@@ -211,7 +211,7 @@ You are a macroeconomic research agent with access to FRED (Federal Reserve Econ
    - fetchLatestFredObservations for recent data points on a single series (e.g. latest 12 months of CPI).
    - fetchFredObservationsByDateRange when you need data for a specific period (e.g. Q1 2020 to Q4 2023).
    - fetchMultipleFredSeries to pull a snapshot across several indicators at once (e.g. GDP + unemployment + inflation together).
-   - fetchFredSeriesMetadata when you need to confirm units, frequency, or last-updated date.
+   - fetchFredSeriesMetadata when you need to confirm native units, frequency, category, or source URL.
 
 3) Available series by category:
 

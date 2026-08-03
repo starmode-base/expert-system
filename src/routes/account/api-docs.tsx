@@ -386,6 +386,11 @@ function ApiDocsPage() {
             type="string (ISO 8601)"
             description="Publication date of the source document."
           />
+          <FieldRow
+            name="document"
+            type="object"
+            description="Source metadata: id, title, source, link, publicationDate."
+          />
         </FieldTable>
 
         <H3>Example request</H3>
@@ -400,7 +405,14 @@ function ApiDocsPage() {
       "documentId": "doc_xyz789",
       "title": "Fed signals pause through Q2",
       "summary": "The Federal Reserve indicated it will hold rates...",
-      "publicationDate": "2026-03-01T00:00:00.000Z"
+      "publicationDate": "2026-03-01T00:00:00.000Z",
+      "document": {
+        "id": "doc_xyz789",
+        "title": "Remarks on the Economic Outlook",
+        "source": "Fed Speeches",
+        "link": "https://www.federalreserve.gov/...",
+        "publicationDate": "2026-03-01T00:00:00.000Z"
+      }
     }
   ]
 }`}</Pre>
@@ -437,6 +449,11 @@ function ApiDocsPage() {
             description="Short headline summarising the takeaway."
           />
           <FieldRow
+            name="summary"
+            type="string"
+            description="Brief summary of the takeaway."
+          />
+          <FieldRow
             name="takeaway"
             type="string"
             description="Full takeaway text — the actionable or notable finding."
@@ -468,6 +485,7 @@ function ApiDocsPage() {
     {
       "id": "tak_abc123",
       "title": "Fed signals pause through Q2",
+      "summary": "The Fed expects inflation to cool before changing rates.",
       "takeaway": "The Federal Reserve indicated it will hold rates...",
       "url": "https://expert-system.starmode.dev/takeaway/tak_abc123",
       "document": {
@@ -544,6 +562,11 @@ function ApiDocsPage() {
             type="string"
             description="ISO 8601 publication date of the source document."
           />
+          <FieldRow
+            name="document"
+            type="object"
+            description="Source metadata: id, title, source, link, publicationDate."
+          />
         </FieldTable>
 
         <H3>Example request</H3>
@@ -562,7 +585,14 @@ function ApiDocsPage() {
       "documentId": "doc_xyz789",
       "title": "Inflation expectations remain anchored",
       "summary": "Long-term inflation expectations hold steady near 2%...",
-      "publicationDate": "2026-03-01T00:00:00.000Z"
+      "publicationDate": "2026-03-01T00:00:00.000Z",
+      "document": {
+        "id": "doc_xyz789",
+        "title": "Remarks on the Economic Outlook",
+        "source": "Fed Speeches",
+        "link": "https://www.federalreserve.gov/...",
+        "publicationDate": "2026-03-01T00:00:00.000Z"
+      }
     }
   ]
 }`}</Pre>
@@ -656,6 +686,45 @@ function ApiDocsPage() {
       "updatedAt": "2026-03-01T08:15:00.000Z"
     }
   ]
+}`}</Pre>
+      </EndpointSection>
+
+      {/* GET /api/v1/documents/{documentId}/content */}
+      <EndpointSection
+        title="Document Content"
+        method="GET"
+        path="/api/v1/documents/{documentId}/content"
+        description="Read one source document in bounded character ranges for primary-source verification and deeper context."
+      >
+        <H3>Query parameters</H3>
+        <ParamTable>
+          <ParamRow
+            name="offset"
+            type="integer"
+            description="Zero-based character offset. Default: 0."
+          />
+          <ParamRow
+            name="limit"
+            type="integer"
+            description="Characters to return. Default: 12000. Max: 30000."
+          />
+        </ParamTable>
+        <H3>Response</H3>
+        <Pre>{`{
+  "item": {
+    "id": "doc_xyz789",
+    "title": "Remarks on the Economic Outlook",
+    "source": "Fed Speeches",
+    "link": "https://www.federalreserve.gov/...",
+    "publicationDate": "2026-03-01T00:00:00.000Z",
+    "content": {
+      "text": "Thank you for the opportunity to speak...",
+      "offset": 0,
+      "nextOffset": 12000,
+      "totalCharacters": 48320,
+      "truncated": true
+    }
+  }
 }`}</Pre>
       </EndpointSection>
 
@@ -961,23 +1030,23 @@ function ApiDocsPage() {
         <H3>Example request</H3>
         <Pre>{`curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
      -H "Content-Type: application/json" \\
-     -d '{"symbol":"AAPL","metrics":["revenue","netIncome","inventory"],"period":"quarterly","limit":4}' \\
+     -d '{"symbol":"JPM","metrics":["netIncome","inventory"],"period":"quarterly","limit":4}' \\
      "https://expert-system.starmode.dev/api/v1/financials"`}</Pre>
 
         <H3>Partial-success response</H3>
         <Pre>{`{
   "catalogVersion": "1",
-  "symbol": "AAPL",
-  "cik": "0000320193",
-  "company": "Apple Inc.",
+  "symbol": "JPM",
+  "cik": "0000019617",
+  "company": "JPMORGAN CHASE & CO",
   "period": "quarterly",
   "metrics": {
-    "revenue": {
+    "netIncome": {
       "unit": "USD",
       "data": [
         {
-          "date": "2026-06-27",
-          "value": 109417000000,
+          "date": "2026-03-31",
+          "value": 16494000000,
           "periodType": "quarter"
         }
       ]
@@ -986,7 +1055,7 @@ function ApiDocsPage() {
   "errors": {
     "inventory": {
       "code": "METRIC_UNAVAILABLE",
-      "message": "inventory is unavailable for AAPL"
+      "message": "inventory is unavailable for JPM"
     }
   },
   "source": "SEC"
@@ -999,17 +1068,48 @@ function ApiDocsPage() {
         </P>
       </EndpointSection>
 
-      {/* POST /api/v1/query/macro */}
+      {/* GET /api/v1/macro/series */}
       <EndpointSection
-        title="Query Macro Data"
+        title="Macro Series Catalog"
+        method="GET"
+        path="/api/v1/macro/series"
+        description="List or search the supported FRED series before requesting observations."
+      >
+        <H3>Query parameters</H3>
+        <ParamTable>
+          <ParamRow
+            name="query"
+            type="string"
+            description="Optional search across series IDs, descriptions, categories, and keywords."
+          />
+        </ParamTable>
+        <H3>Response</H3>
+        <Pre>{`{
+  "items": [
+    {
+      "id": "UNRATE",
+      "description": "Civilian Unemployment Rate (%)",
+      "category": "Labor Market",
+      "nativeFrequency": "monthly",
+      "nativeUnits": "Percent",
+      "sourceUrl": "https://fred.stlouisfed.org/series/UNRATE"
+    }
+  ]
+}`}</Pre>
+      </EndpointSection>
+
+      {/* POST /api/v1/macro/observations */}
+      <EndpointSection
+        title="Macro Observations"
         method="POST"
-        path="/api/v1/query/macro"
-        description="Natural language interface for macroeconomic data. An AI agent translates your question into FRED API calls and returns structured data."
+        path="/api/v1/macro/observations"
+        description="Fetch independently configured observations for one to five supported FRED series."
       >
         <H3>Available data</H3>
         <P>
-          Ask about any of the series below using plain English — the agent
-          resolves series IDs automatically.
+          Select series directly or search the macro series catalog first. Each
+          series keeps its native timeline unless you explicitly request a lower
+          frequency.
         </P>
         <div className="mb-4 space-y-2 text-xs leading-relaxed text-gray-600">
           <p>
@@ -1071,54 +1171,77 @@ function ApiDocsPage() {
         </div>
 
         <H3>Request body (JSON)</H3>
-        <ParamTable>
-          <ParamRow
-            name="query"
-            type="string"
-            required
-            description='Natural-language macro question (e.g. "What is the current unemployment rate?").'
-          />
-        </ParamTable>
+        <Pre>{`{
+  "series": [
+    { "id": "UNRATE", "lastN": 12, "units": "lin" },
+    {
+      "id": "ICSA",
+      "lastN": 12,
+      "frequency": "m",
+      "aggregationMethod": "avg"
+    }
+  ]
+}`}</Pre>
+        <P>
+          Send one to five unique series. Each accepts either <Code>lastN</Code>{" "}
+          or a complete <Code>startDate</Code>/<Code>endDate</Code> range.
+          Transformations are <Code>lin</Code>, <Code>chg</Code>,{" "}
+          <Code>ch1</Code>, <Code>pch</Code>, <Code>pc1</Code>, <Code>pca</Code>
+          , <Code>cch</Code>, and <Code>cca</Code>. Frequency aggregation
+          supports <Code>avg</Code>, <Code>sum</Code>, and <Code>eop</Code>;
+          upsampling is rejected.
+        </P>
+        <P>
+          <Code>lin</Code> returns levels; <Code>chg</Code> and <Code>ch1</Code>{" "}
+          return period and year-ago changes; <Code>pch</Code> and{" "}
+          <Code>pc1</Code> return period and year-ago percent changes;{" "}
+          <Code>pca</Code> is compounded annualized percent change; and{" "}
+          <Code>cch</Code>/<Code>cca</Code> are continuously compounded period
+          and annualized changes.
+        </P>
+        <P>
+          Use one series for simple questions and batches for comparisons. Keep
+          native frequency by default; request an explicit lower frequency and
+          aggregation method only when comparable periods are required.
+        </P>
 
         <H3>Response</H3>
         <Pre>{`{
-  "data": [ { ... }, ... ],
-  "seriesQueried": [ "UNRATE", ... ]
+  "asOf": "2026-08-02T00:00:00.000Z",
+  "items": [
+    {
+      "seriesId": "UNRATE",
+      "description": "Civilian Unemployment Rate (%)",
+      "sourceUrl": "https://fred.stlouisfed.org/series/UNRATE",
+      "nativeFrequency": "monthly",
+      "returnedFrequency": "monthly",
+      "nativeUnits": "Percent",
+      "transformation": "lin",
+      "observations": [{ "date": "2026-07-01", "value": 4.2 }]
+    }
+  ],
+  "errors": []
 }`}</Pre>
 
         <H3>Response fields</H3>
         <FieldTable>
           <FieldRow
-            name="data"
+            name="items"
             type="array"
-            description="Array of result objects from tool calls, preserving original structure (e.g. seriesId, observations, metadata)."
+            description="Successful series with independent frequency, transformation, source, and observations."
           />
           <FieldRow
-            name="seriesQueried"
-            type="string[]"
-            description="List of FRED series IDs that were queried."
+            name="errors"
+            type="array"
+            description="Per-series provider errors; successful series remain available."
           />
         </FieldTable>
 
         <H3>Example request</H3>
         <Pre>{`curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
      -H "Content-Type: application/json" \\
-     -d '{"query": "What is the current unemployment rate?"}' \\
-     "https://expert-system.starmode.dev/api/v1/query/macro"`}</Pre>
-
-        <H3>Example response</H3>
-        <Pre>{`{
-  "data": [
-    {
-      "seriesId": "UNRATE",
-      "observations": [
-        { "date": "2026-02-01", "value": "4.4" },
-        { "date": "2026-01-01", "value": "4.0" }
-      ]
-    }
-  ],
-  "seriesQueried": ["UNRATE"]
-}`}</Pre>
+     -d '{"series":[{"id":"UNRATE","lastN":12}]}' \\
+     "https://expert-system.starmode.dev/api/v1/macro/observations"`}</Pre>
       </EndpointSection>
 
       {/* Error reference */}

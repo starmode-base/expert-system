@@ -12,8 +12,12 @@ const ENDPOINT_META: Record<string, { label: string; color: string }> = {
   "takeaways.search": { label: "Search", color: "#8b5cf6" }, // violet
   takeaways: { label: "By ID", color: "#a78bfa" }, // violet-light
   documents: { label: "Docs", color: "#3b82f6" }, // blue
+  "documents.content": { label: "Doc content", color: "#2563eb" }, // blue-dark
   research: { label: "Research", color: "#06b6d4" }, // cyan
-  "query.macro": { label: "Macro", color: "#10b981" }, // emerald
+  "query.macro": { label: "Macro (legacy)", color: "#6ee7b7" }, // emerald-light
+  "macro.series": { label: "Macro catalog", color: "#34d399" }, // emerald
+  "macro.observations": { label: "Macro data", color: "#059669" }, // emerald-dark
+  financials: { label: "Financials", color: "#f59e0b" }, // amber
 };
 
 const FREE_TIER_LIMIT = 100;
