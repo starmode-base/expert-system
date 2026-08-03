@@ -25,9 +25,6 @@ const { APIRoute: batchRoute } = await import("./v1.financials");
 const { APIRoute: globalCatalogRoute } = await import(
   "./v1.financials.metrics"
 );
-const { APIRoute: companyCatalogRoute } = await import(
-  "./v1.financials.$symbol.metrics"
-);
 const { APIRoute: singleMetricRoute } = await import(
   "./v1.financials.$symbol.$metric"
 );
@@ -180,7 +177,7 @@ describe("financial API routes", () => {
   it("supports global and company-specific metric discovery", async () => {
     getCompanyCatalogMock.mockResolvedValue({ metrics: [{ id: "revenue" }] });
     const globalHandler = globalCatalogRoute.methods.GET;
-    const companyHandler = companyCatalogRoute.methods.GET;
+    const companyHandler = singleMetricRoute.methods.GET;
     if (!globalHandler || !companyHandler) {
       throw new Error("Missing catalog GET handler");
     }
@@ -193,12 +190,13 @@ describe("financial API routes", () => {
       request: new Request(
         "https://example.com/api/v1/financials/AAPL/metrics?period=annual",
       ),
-      params: { symbol: "AAPL" },
+      params: { symbol: "AAPL", metric: "metrics" },
     });
 
     const globalBody = (await globalResponse.json()) as { metrics: unknown[] };
     expect(globalBody.metrics).toHaveLength(27);
     expect(companyResponse.status).toBe(200);
     expect(getCompanyCatalogMock).toHaveBeenCalledWith("AAPL", "annual");
+    expect(getSingleMetricMock).not.toHaveBeenCalled();
   });
 });

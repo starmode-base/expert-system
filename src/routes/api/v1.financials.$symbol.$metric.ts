@@ -5,13 +5,25 @@ import {
   parseFinancialQuery,
   runFinancialRoute,
 } from "~/server/financials/http";
-import { getSingleFinancialMetric } from "~/server/financials/service";
+import {
+  getCompanyFinancialCatalog,
+  getSingleFinancialMetric,
+} from "~/server/financials/service";
 
 export const APIRoute = createAPIFileRoute(
   "/api/v1/financials/$symbol/$metric",
 )({
   GET: ({ request, params }) =>
     runFinancialRoute(request, async () => {
+      // TanStack Start 1.114.x ranks API routes only by segment count, so the
+      // dynamic `$metric` route wins over the equally deep static `/metrics`
+      // route. Treat `metrics` as a reserved path segment here to preserve the
+      // documented company-catalog endpoint until route specificity is fixed.
+      if (params.metric === "metrics") {
+        const { period } = parseFinancialQuery(request);
+        return getCompanyFinancialCatalog(params.symbol, period);
+      }
+
       if (!isFinancialMetricId(params.metric)) {
         throw new FinancialApiError(
           "METRIC_NOT_FOUND",
