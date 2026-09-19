@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FinancialApiError } from "../../server/financials/errors";
 
 const authorizeMock = vi.fn();
+const quotaMock = vi.fn();
 const getBatchMock = vi.fn();
 const getCompanyCatalogMock = vi.fn();
 const getSingleMetricMock = vi.fn();
@@ -14,7 +15,10 @@ vi.mock("@tanstack/react-start/api", () => ({
       methods,
     }),
 }));
-vi.mock("~/server/quota", () => ({ authorizeApiRequest: authorizeMock }));
+vi.mock("~/server/quota", () => ({
+  authenticateApiRequest: authorizeMock,
+  enforceApiQuota: quotaMock,
+}));
 vi.mock("~/server/financials/service", () => ({
   getBatchFinancialMetrics: getBatchMock,
   getCompanyFinancialCatalog: getCompanyCatalogMock,
@@ -32,9 +36,69 @@ const { APIRoute: singleMetricRoute } = await import(
 beforeEach(() => {
   vi.clearAllMocks();
   authorizeMock.mockResolvedValue({ type: "ok", userId: "user_1" });
+  quotaMock.mockResolvedValue({ type: "ok", userId: "user_1" });
 });
 
 describe("financial API routes", () => {
+  it.each([
+    ["revenue", "?period=invalid", 400],
+    ["revenue", "?limit=0", 400],
+    ["revenue", "?include=invalid", 400],
+    ["metrics", "?period=invalid", 400],
+    ["unknown", "", 404],
+  ])(
+    "does not charge invalid financial queries: %s%s",
+    async (metric, query, status) => {
+      const handler = singleMetricRoute.methods.GET;
+      if (!handler) throw new Error("Missing GET handler");
+      const response = await handler({
+        request: new Request(
+          `https://example.com/api/v1/financials/AAPL/${metric}${query}`,
+        ),
+        params: { symbol: "AAPL", metric },
+      });
+      expect(response.status).toBe(status);
+      expect(quotaMock).not.toHaveBeenCalled();
+      expect(getSingleMetricMock).not.toHaveBeenCalled();
+      expect(getCompanyCatalogMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not charge malformed JSON", async () => {
+    const handler = batchRoute.methods.POST;
+    if (!handler) throw new Error("Missing POST handler");
+    const response = await handler({
+      request: new Request("https://example.com/api/v1/financials", {
+        method: "POST",
+        body: "not-json",
+      }),
+      params: {},
+    });
+    expect(response.status).toBe(400);
+    expect(quotaMock).not.toHaveBeenCalled();
+  });
+
+  it("enforces quota after validation and before executing financial requests", async () => {
+    quotaMock.mockResolvedValue({
+      type: "error",
+      response: Response.json(
+        { error: { code: "RATE_LIMITED", message: "Monthly quota exceeded" } },
+        { status: 429 },
+      ),
+    });
+    const handler = singleMetricRoute.methods.GET;
+    if (!handler) throw new Error("Missing GET handler");
+    const response = await handler({
+      request: new Request(
+        "https://example.com/api/v1/financials/AAPL/revenue",
+      ),
+      params: { symbol: "AAPL", metric: "revenue" },
+    });
+    expect(response.status).toBe(429);
+    expect(quotaMock).toHaveBeenCalledTimes(1);
+    expect(getSingleMetricMock).not.toHaveBeenCalled();
+  });
+
   it("returns structured authentication failures before executing a route", async () => {
     authorizeMock.mockResolvedValue({
       type: "error",
@@ -59,6 +123,7 @@ describe("financial API routes", () => {
       error: { code: "UNAUTHORIZED", message: "Unauthorized" },
     });
     expect(getBatchMock).not.toHaveBeenCalled();
+    expect(quotaMock).not.toHaveBeenCalled();
   });
 
   it("rejects malformed batch requests with INVALID_REQUEST", async () => {
@@ -76,6 +141,7 @@ describe("financial API routes", () => {
     expect(response.status).toBe(400);
     const body = (await response.json()) as { error: { code: string } };
     expect(body.error.code).toBe("INVALID_REQUEST");
+    expect(quotaMock).not.toHaveBeenCalled();
   });
 
   it("rejects unknown canonical metric IDs before execution", async () => {
@@ -91,6 +157,7 @@ describe("financial API routes", () => {
     });
 
     expect(response.status).toBe(404);
+    expect(quotaMock).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({
       error: {
         code: "METRIC_NOT_FOUND",
@@ -131,6 +198,9 @@ describe("financial API routes", () => {
       errors: { inventory: { code: string } };
     };
     expect(body.errors.inventory.code).toBe("METRIC_UNAVAILABLE");
+    expect(quotaMock).toHaveBeenCalledExactlyOnceWith("user_1", "financials", {
+      structuredErrors: true,
+    });
   });
 
   it("parses single-metric period, limit, and provenance controls", async () => {
@@ -172,6 +242,7 @@ describe("financial API routes", () => {
     expect(response.status).toBe(404);
     const body = (await response.json()) as { error: { code: string } };
     expect(body.error.code).toBe("METRIC_UNAVAILABLE");
+    expect(quotaMock).toHaveBeenCalledTimes(1);
   });
 
   it("supports global and company-specific metric discovery", async () => {

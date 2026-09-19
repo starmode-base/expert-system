@@ -1,6 +1,6 @@
 import { json } from "@tanstack/react-start";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { authorizeApiRequest } from "~/server/quota";
+import { authenticateApiRequest, enforceApiQuota } from "~/server/quota";
 import { searchTakeawayPreviews } from "~/server/public-api/research";
 
 const apiError = (message: string, status: number) =>
@@ -11,7 +11,7 @@ const apiError = (message: string, status: number) =>
 
 export const APIRoute = createAPIFileRoute("/api/v1/takeaways/search")({
   GET: async ({ request }) => {
-    const auth = await authorizeApiRequest(request, "takeaways.search");
+    const auth = await authenticateApiRequest(request);
     if (auth.type === "error") return auth.response;
 
     const url = new URL(request.url);
@@ -28,6 +28,9 @@ export const APIRoute = createAPIFileRoute("/api/v1/takeaways/search")({
     const limit = Math.min(Math.max(1, limitParam), 100);
 
     const recent = url.searchParams.get("recent") === "true";
+
+    const quota = await enforceApiQuota(auth.userId, "takeaways.search");
+    if (quota.type === "error") return quota.response;
 
     return json({
       items: await searchTakeawayPreviews(query, { limit, recent }),

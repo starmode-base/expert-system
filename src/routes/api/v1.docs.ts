@@ -412,6 +412,14 @@ Codes include UNAUTHORIZED, INVALID_REQUEST, COMPANY_NOT_FOUND, METRIC_NOT_FOUND
 
 ---
 
+## Usage accounting
+
+Requests are authenticated and their inputs are validated before monthly quota is charged. Missing or invalid credentials, malformed JSON, invalid request parameters, and unknown canonical financial metric IDs do not consume quota.
+
+Valid operations count once before execution, including batch requests, catalog lookups, provider failures, and partial results. Errors that require execution to discover, such as missing documents, offsets beyond actual document length, unresolved companies, or unavailable company metrics, still count. Over-quota attempts continue to be recorded under the existing monthly accounting policy.
+
+---
+
 ## Error responses
 
 Errors return a JSON body with an error field and the corresponding HTTP status code.

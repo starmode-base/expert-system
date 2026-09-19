@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { authorizeApiRequest } from "~/server/quota";
+import { authenticateApiRequest, enforceApiQuota } from "~/server/quota";
 import { FinancialApiError, invalidFinancialRequest } from "./errors";
 import type { FinancialPeriod } from "./normalize";
 
@@ -87,17 +87,23 @@ function financialErrorResponse(error: unknown): Response {
   );
 }
 
+/** Prepare validates inputs; defer service calls to the function executed after quota. */
 export async function runFinancialRoute(
   request: Request,
-  handler: () => unknown,
+  prepare: () => (() => unknown) | Promise<() => unknown>,
 ): Promise<Response> {
-  const auth = await authorizeApiRequest(request, "financials", {
+  const auth = await authenticateApiRequest(request, {
     structuredErrors: true,
   });
   if (auth.type === "error") return auth.response;
 
   try {
-    return financialJson(await handler());
+    const execute = await prepare();
+    const quota = await enforceApiQuota(auth.userId, "financials", {
+      structuredErrors: true,
+    });
+    if (quota.type === "error") return quota.response;
+    return financialJson(await execute());
   } catch (error) {
     return financialErrorResponse(error);
   }

@@ -46,7 +46,12 @@ vi.mock("~/server/api-keys", () => ({
 }));
 
 // Import after mocks are set up
-const { checkAndIncrementQuota, authorizeApiRequest } = await import("./quota");
+const {
+  checkAndIncrementQuota,
+  authorizeApiRequest,
+  authenticateApiRequest,
+  enforceApiQuota,
+} = await import("./quota");
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -118,6 +123,21 @@ describe("checkAndIncrementQuota", () => {
 // ── authorizeApiRequest ──────────────────────────────────────────────────────
 
 describe("authorizeApiRequest", () => {
+  test("authentication alone never increments usage", async () => {
+    authenticateMock.mockResolvedValue("user_1");
+    const result = await authenticateApiRequest(
+      new Request("https://example.com"),
+    );
+    expect(result).toEqual({ type: "ok", userId: "user_1" });
+    expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  test("quota enforcement charges the authenticated user without authenticating again", async () => {
+    const result = await enforceApiQuota("user_1", "takeaways.search");
+    expect(result.type).toBe("ok");
+    expect(insertMock).toHaveBeenCalledTimes(1);
+    expect(authenticateMock).not.toHaveBeenCalled();
+  });
   // No Bearer token or invalid API key — reject before checking quota.
   test("returns 401 when authentication fails", async () => {
     authenticateMock.mockResolvedValue(null);

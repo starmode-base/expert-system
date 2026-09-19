@@ -14,14 +14,14 @@ export const APIRoute = createAPIFileRoute(
   "/api/v1/financials/$symbol/$metric",
 )({
   GET: ({ request, params }) =>
-    runFinancialRoute(request, async () => {
+    runFinancialRoute(request, () => {
       // TanStack Start 1.114.x ranks API routes only by segment count, so the
       // dynamic `$metric` route wins over the equally deep static `/metrics`
       // route. Treat `metrics` as a reserved path segment here to preserve the
       // documented company-catalog endpoint until route specificity is fixed.
       if (params.metric === "metrics") {
         const { period } = parseFinancialQuery(request);
-        return getCompanyFinancialCatalog(params.symbol, period);
+        return () => getCompanyFinancialCatalog(params.symbol, period);
       }
 
       if (!isFinancialMetricId(params.metric)) {
@@ -35,6 +35,7 @@ export const APIRoute = createAPIFileRoute(
         includeLimit: true,
         includeProvenance: true,
       });
-      return getSingleFinancialMetric(params.symbol, params.metric, options);
+      const metric = params.metric;
+      return () => getSingleFinancialMetric(params.symbol, metric, options);
     }),
 });

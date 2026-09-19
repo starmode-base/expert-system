@@ -1,7 +1,7 @@
 import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { z } from "zod";
 import { getDocumentContent } from "~/server/public-api/research";
-import { authorizeApiRequest } from "~/server/quota";
+import { authenticateApiRequest, enforceApiQuota } from "~/server/quota";
 
 const querySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
@@ -21,7 +21,7 @@ export const APIRoute = createAPIFileRoute(
   "/api/v1/documents/$documentId/content",
 )({
   GET: async ({ request, params }) => {
-    const auth = await authorizeApiRequest(request, "documents.content");
+    const auth = await authenticateApiRequest(request);
     if (auth.type === "error") return auth.response;
 
     const url = new URL(request.url);
@@ -34,6 +34,9 @@ export const APIRoute = createAPIFileRoute(
         parsed.error.issues.map((issue) => issue.message).join(", "),
       );
     }
+
+    const quota = await enforceApiQuota(auth.userId, "documents.content");
+    if (quota.type === "error") return quota.response;
 
     const result = await getDocumentContent(
       params.documentId,

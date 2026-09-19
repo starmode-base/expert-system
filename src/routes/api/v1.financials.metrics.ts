@@ -7,7 +7,7 @@ import { runFinancialRoute } from "~/server/financials/http";
 
 export const APIRoute = createAPIFileRoute("/api/v1/financials/metrics")({
   GET: ({ request }) =>
-    runFinancialRoute(request, () => ({
+    runFinancialRoute(request, () => () => ({
       catalogVersion: FINANCIAL_CATALOG_VERSION,
       metrics: getPublicFinancialCatalog(),
     })),

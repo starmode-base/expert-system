@@ -1,6 +1,6 @@
 import { json } from "@tanstack/react-start";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { authorizeApiRequest } from "~/server/quota";
+import { authenticateApiRequest, enforceApiQuota } from "~/server/quota";
 import {
   getDocumentsByIds,
   MAX_PUBLIC_IDS,
@@ -14,7 +14,7 @@ const apiError = (message: string, status: number) =>
 
 export const APIRoute = createAPIFileRoute("/api/v1/documents")({
   GET: async ({ request }) => {
-    const auth = await authorizeApiRequest(request, "documents");
+    const auth = await authenticateApiRequest(request);
     if (auth.type === "error") return auth.response;
 
     const url = new URL(request.url);
@@ -35,6 +35,9 @@ export const APIRoute = createAPIFileRoute("/api/v1/documents")({
     if (ids.length > MAX_PUBLIC_IDS) {
       return apiError(`Maximum ${MAX_PUBLIC_IDS} IDs per request`, 400);
     }
+
+    const quota = await enforceApiQuota(auth.userId, "documents");
+    if (quota.type === "error") return quota.response;
 
     return json({ items: await getDocumentsByIds(ids) });
   },

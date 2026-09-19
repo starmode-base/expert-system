@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorizeMock = vi.fn();
+const quotaMock = vi.fn();
 const listSeriesMock = vi.fn();
 const getBatchMock = vi.fn();
 
@@ -12,7 +13,10 @@ vi.mock("@tanstack/react-start/api", () => ({
       methods,
     }),
 }));
-vi.mock("~/server/quota", () => ({ authorizeApiRequest: authorizeMock }));
+vi.mock("~/server/quota", () => ({
+  authenticateApiRequest: authorizeMock,
+  enforceApiQuota: quotaMock,
+}));
 vi.mock("~/server/fred-data-api/catalog", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("~/server/fred-data-api/catalog")>();
@@ -30,6 +34,7 @@ const { APIRoute: observationsRoute } = await import("./v1.macro.observations");
 beforeEach(() => {
   vi.clearAllMocks();
   authorizeMock.mockResolvedValue({ type: "ok", userId: "user_1" });
+  quotaMock.mockResolvedValue({ type: "ok", userId: "user_1" });
   listSeriesMock.mockReturnValue([]);
   getBatchMock.mockResolvedValue({ asOf: "now", items: [], errors: [] });
 });
@@ -55,17 +60,12 @@ describe("macro API routes", () => {
       params: {},
     });
 
-    expect(authorizeMock).toHaveBeenNthCalledWith(
-      1,
-      expect.any(Request),
-      "macro.series",
-      {
-        structuredErrors: true,
-      },
-    );
-    expect(authorizeMock).toHaveBeenNthCalledWith(
+    expect(quotaMock).toHaveBeenNthCalledWith(1, "user_1", "macro.series", {
+      structuredErrors: true,
+    });
+    expect(quotaMock).toHaveBeenNthCalledWith(
       2,
-      expect.any(Request),
+      "user_1",
       "macro.observations",
       { structuredErrors: true },
     );
@@ -85,6 +85,7 @@ describe("macro API routes", () => {
 
     expect(response.status).toBe(401);
     expect(listSeriesMock).not.toHaveBeenCalled();
+    expect(quotaMock).not.toHaveBeenCalled();
   });
 
   it("searches the supported series catalog", async () => {
@@ -125,6 +126,7 @@ describe("macro API routes", () => {
 
     expect(malformed.status).toBe(400);
     expect(duplicate.status).toBe(400);
+    expect(quotaMock).not.toHaveBeenCalled();
     expect(getBatchMock).not.toHaveBeenCalled();
   });
 
@@ -159,6 +161,7 @@ describe("macro API routes", () => {
         params: {},
       });
       expect(response.status).toBe(400);
+      expect(quotaMock).not.toHaveBeenCalled();
     }
     expect(getBatchMock).not.toHaveBeenCalled();
   });
@@ -191,6 +194,7 @@ describe("macro API routes", () => {
         params: {},
       });
       expect(response.status).toBe(400);
+      expect(quotaMock).not.toHaveBeenCalled();
     }
   });
 
@@ -219,6 +223,14 @@ describe("macro API routes", () => {
 
     expect(response.status).toBe(200);
     expect(getBatchMock).toHaveBeenCalledWith(body.series);
+    expect(quotaMock).toHaveBeenCalledExactlyOnceWith(
+      "user_1",
+      "macro.observations",
+      { structuredErrors: true },
+    );
+    expect(quotaMock.mock.invocationCallOrder[0]).toBeLessThan(
+      getBatchMock.mock.invocationCallOrder[0] ?? 0,
+    );
   });
 
   it("returns 502 when every provider request fails", async () => {
@@ -247,5 +259,10 @@ describe("macro API routes", () => {
     expect(response.status).toBe(502);
     const body = (await response.json()) as { error: { code: string } };
     expect(body.error.code).toBe("FRED_UNAVAILABLE");
+    expect(quotaMock).toHaveBeenCalledExactlyOnceWith(
+      "user_1",
+      "macro.observations",
+      { structuredErrors: true },
+    );
   });
 });
