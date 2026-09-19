@@ -1,20 +1,8 @@
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { authenticateApiRequest, enforceApiQuota } from "~/server/quota";
-import { listFredSeries } from "~/server/fred-data-api/catalog";
+import { macroSeries } from "~/server/public-api/macro-operations";
+import { queryInput, runRestOperation } from "~/server/public-api/rest";
 
 export const APIRoute = createAPIFileRoute("/api/v1/macro/series")({
-  GET: async ({ request }) => {
-    const auth = await authenticateApiRequest(request, {
-      structuredErrors: true,
-    });
-    if (auth.type === "error") return auth.response;
-
-    const query = new URL(request.url).searchParams.get("query") ?? undefined;
-    const quota = await enforceApiQuota(auth.userId, "macro.series", {
-      structuredErrors: true,
-    });
-    if (quota.type === "error") return quota.response;
-
-    return Response.json({ items: listFredSeries(query) });
-  },
+  GET: ({ request }) =>
+    runRestOperation(request, macroSeries, () => queryInput(request)),
 });

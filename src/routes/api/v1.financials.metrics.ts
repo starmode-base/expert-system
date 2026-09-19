@@ -1,14 +1,8 @@
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import {
-  FINANCIAL_CATALOG_VERSION,
-  getPublicFinancialCatalog,
-} from "~/server/financials/catalog";
-import { runFinancialRoute } from "~/server/financials/http";
+import { financialCatalog } from "~/server/public-api/financial-operations";
+import { queryInput, runRestOperation } from "~/server/public-api/rest";
 
 export const APIRoute = createAPIFileRoute("/api/v1/financials/metrics")({
   GET: ({ request }) =>
-    runFinancialRoute(request, () => () => ({
-      catalogVersion: FINANCIAL_CATALOG_VERSION,
-      metrics: getPublicFinancialCatalog(),
-    })),
+    runRestOperation(request, financialCatalog, () => queryInput(request)),
 });
