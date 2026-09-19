@@ -1,41 +1,21 @@
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { isFinancialMetricId } from "~/server/financials/catalog";
-import { FinancialApiError } from "~/server/financials/errors";
 import {
-  parseFinancialQuery,
-  runFinancialRoute,
-} from "~/server/financials/http";
-import {
-  getCompanyFinancialCatalog,
-  getSingleFinancialMetric,
-} from "~/server/financials/service";
+  companyFinancialCatalog,
+  singleFinancialMetric,
+} from "~/server/public-api/financial-operations";
+import { queryInput, runRestOperation } from "~/server/public-api/rest";
 
 export const APIRoute = createAPIFileRoute(
   "/api/v1/financials/$symbol/$metric",
 )({
   GET: ({ request, params }) =>
-    runFinancialRoute(request, () => {
-      // TanStack Start 1.114.x ranks API routes only by segment count, so the
-      // dynamic `$metric` route wins over the equally deep static `/metrics`
-      // route. Treat `metrics` as a reserved path segment here to preserve the
-      // documented company-catalog endpoint until route specificity is fixed.
-      if (params.metric === "metrics") {
-        const { period } = parseFinancialQuery(request);
-        return () => getCompanyFinancialCatalog(params.symbol, period);
-      }
-
-      if (!isFinancialMetricId(params.metric)) {
-        throw new FinancialApiError(
-          "METRIC_NOT_FOUND",
-          `Unknown financial metric: ${params.metric}`,
-          404,
-        );
-      }
-      const options = parseFinancialQuery(request, {
-        includeLimit: true,
-        includeProvenance: true,
-      });
-      const metric = params.metric;
-      return () => getSingleFinancialMetric(params.symbol, metric, options);
-    }),
+    // TanStack Start 1.114.x ranks by segment count: keep the reserved catalog
+    // segment here because the dynamic route wins over an equally deep static route.
+    runRestOperation(
+      request,
+      params.metric === "metrics"
+        ? companyFinancialCatalog
+        : singleFinancialMetric,
+      () => ({ ...queryInput(request), ...params }),
+    ),
 });

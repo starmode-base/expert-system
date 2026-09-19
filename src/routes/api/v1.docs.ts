@@ -14,6 +14,30 @@ A missing or invalid key returns 401 Unauthorized. Revoked keys are rejected imm
 
 ---
 
+## MCP access
+
+Connect an HTTP MCP client to /api/mcp on the same host, with the same Authorization: Bearer esak_<your-key> header. No separate skill installation is required. Field mappings, common aliases, citations, units, date semantics, transformations, and bounded-read guidance are included in MCP discovery.
+
+| REST operation | MCP tool |
+|----------------|----------|
+| GET /api/v1/takeaways/search | search_takeaways |
+| GET /api/v1/takeaways/recent | get_recent_takeaways |
+| GET /api/v1/takeaways | get_takeaways |
+| GET /api/v1/documents | get_documents |
+| GET /api/v1/documents/{documentId}/content | get_document_content |
+| GET /api/v1/macro/series | list_macro_series |
+| POST /api/v1/macro/observations | get_macro_observations |
+| GET /api/v1/financials/metrics | list_financial_metrics |
+| GET /api/v1/financials/{symbol}/metrics | list_company_financial_metrics |
+| GET /api/v1/financials/{symbol}/{metric} | get_company_financial_metric |
+| POST /api/v1/financials | get_company_financials |
+
+Tool arguments use the same field names as REST, with native arrays for ids and a boolean for recent. Path parameters become tool arguments. POST arguments match the REST JSON body. Results are REST-equivalent JSON in structuredContent and serialized text; application failures set isError and include _meta.httpStatus (plus relevant HTTP headers in _meta.httpHeaders).
+
+MCP and REST share quotas and endpoint buckets. Authentication and validation failures, discovery, initialization and protocol errors are free. Valid tool calls, including catalogs, provider failures and partial results, count once. Current MCP and older Streamable HTTP clients share the stateless endpoint; OAuth and legacy HTTP+SSE are not supported.
+
+---
+
 ## GET /api/v1/takeaways/recent
 
 Returns the most recent takeaways ordered by source document publication date (newest first). Returns lightweight results — use the returned IDs with /api/v1/takeaways to fetch full details.

@@ -275,38 +275,38 @@ function ApiDocsPage() {
               2
             </span>
             <h3 className="text-sm font-medium text-gray-900">
-              Install the skill
+              Connect your agent
             </h3>
           </div>
-          <p className="mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase">
-            Claude Code
-          </p>
-          <div className="mb-3">
-            <CopyPre>
-              {`/plugin install github://starmode-base/expert-system-plugin`}
-            </CopyPre>
-          </div>
-          <p className="mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase">
-            Any agent (Cursor, Copilot, Cline, Codex)
-          </p>
-          <CopyPre>
-            {`npx skills add starmode-base/expert-system-plugin`}
-          </CopyPre>
+          <P>
+            Add the MCP URL to your agent with your API key as a Bearer token.
+            All tools, field mappings, and usage guidance are built in.
+          </P>
+          <CopyPre>{`https://expert-system.starmode.dev/api/mcp`}</CopyPre>
+          <Pre>{`Authorization: Bearer esak_<your-key>`}</Pre>
         </div>
       </div>
       <p className="mb-6 text-center text-xs text-gray-500">
-        The plugin ships three focused skills that trigger automatically based
-        on context. See the{" "}
-        <a
-          href="https://github.com/starmode-base/expert-system-plugin"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 underline hover:text-blue-800"
-        >
-          plugin repository
-        </a>{" "}
-        for details.
+        MCP and REST share the same monthly allowance. No separate skill
+        installation is required.
       </p>
+
+      <Section>
+        <H2>MCP access</H2>
+        <P>
+          Use an HTTP MCP connection to <Code>/api/mcp</Code> on this service.
+          Existing API keys work for both interfaces. MCP exposes all eleven
+          operations documented below, including catalog discovery, with the
+          same results and billing. Tool discovery is free; catalog tool calls
+          count like other valid requests.
+        </P>
+        <P>
+          Tool arguments use the REST parameter names. Pass IDs as arrays and
+          <Code>recent</Code> as a boolean; path parameters become tool
+          arguments. Errors include the original error body and{" "}
+          <Code>_meta.httpStatus</Code>.
+        </P>
+      </Section>
 
       {/* Getting Started */}
       <Section>
