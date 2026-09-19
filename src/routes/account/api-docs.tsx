@@ -1244,6 +1244,24 @@ function ApiDocsPage() {
      "https://expert-system.starmode.dev/api/v1/macro/observations"`}</Pre>
       </EndpointSection>
 
+      <Section>
+        <H2>Usage accounting</H2>
+        <P>
+          Requests are authenticated and their inputs are validated before
+          monthly quota is charged. Missing or invalid credentials, malformed
+          JSON, invalid request parameters, and unknown canonical financial
+          metric IDs do not consume quota.
+        </P>
+        <P>
+          Valid operations count once before execution, including batch
+          requests, catalog lookups, provider failures, and partial results.
+          Errors that require execution to discover, such as missing documents,
+          offsets beyond actual document length, unresolved companies, or
+          unavailable company metrics, still count. Over-quota attempts continue
+          to be recorded under the existing monthly accounting policy.
+        </P>
+      </Section>
+
       {/* Error reference */}
       <Section>
         <H2>Error responses</H2>
