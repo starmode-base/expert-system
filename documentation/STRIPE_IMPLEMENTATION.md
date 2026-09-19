@@ -15,18 +15,18 @@ Stripe handles checkout, billing, renewals, and cancellation UI. Our webhook kee
 
 ### Files
 
-| File                               | Purpose                                                                                           | Auth             |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------- |
-| `src/server/stripe.ts`             | Server functions for creating Checkout and Billing Portal sessions                                | Clerk            |
-| `src/server/stripe-events.ts`      | Extracted webhook event handler with `StripeEventRepo` interface                                  | —                |
-| `src/routes/api/stripe.webhook.ts` | Webhook route — verifies Stripe signature, delegates to `handleStripeEvent`                       | Stripe signature |
-| `src/server/quota.ts`              | Quota enforcement (`authorizeApiRequest`) for API routes                                          | API key          |
-| `src/routes/pricing.tsx`           | Pricing page with monthly/annual toggle and checkout button                                       | —                |
-| `src/routes/account/plan.tsx`      | Plan management page — shows current tier, manage subscription button                             | Clerk            |
-| `src/postgres/schema.ts`           | `users` table (planTier, stripeCustomerId, stripeSubscriptionId, paymentStatus), `apiUsage` table | —                |
-| `src/lib/env.ts`                   | Stripe env vars                                                                                   | —                |
-| `src/server/stripe-events.test.ts` | Webhook event handler tests (9 tests)                                                             | —                |
-| `src/server/quota.test.ts`         | Quota and authorization tests (9 tests)                                                           | —                |
+| File                               | Purpose                                                                                                     | Auth             |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------- |
+| `src/server/stripe.ts`             | Server functions for creating Checkout and Billing Portal sessions                                          | Clerk            |
+| `src/server/stripe-events.ts`      | Extracted webhook event handler with `StripeEventRepo` interface                                            | —                |
+| `src/routes/api/stripe.webhook.ts` | Webhook route — verifies Stripe signature, delegates to `handleStripeEvent`                                 | Stripe signature |
+| `src/server/quota.ts`              | Separate authentication (`authenticateApiRequest`) and quota enforcement (`enforceApiQuota`) for API routes | API key          |
+| `src/routes/pricing.tsx`           | Pricing page with monthly/annual toggle and checkout button                                                 | —                |
+| `src/routes/account/plan.tsx`      | Plan management page — shows current tier, manage subscription button                                       | Clerk            |
+| `src/postgres/schema.ts`           | `users` table (planTier, stripeCustomerId, stripeSubscriptionId, paymentStatus), `apiUsage` table           | —                |
+| `src/lib/env.ts`                   | Stripe env vars                                                                                             | —                |
+| `src/server/stripe-events.test.ts` | Webhook event handler tests (9 tests)                                                                       | —                |
+| `src/server/quota.test.ts`         | Quota and authorization tests                                                                               | —                |
 
 ### Database Fields
 
@@ -108,15 +108,30 @@ New user → planTier = "free"
 
 ```
 API request with Bearer token
-  → authorizeApiRequest(request, "takeaways.search")
-    → authenticate(request)          // validate API key
+  → authenticateApiRequest(request) // validate API key; failures return 401 without usage
+  → Decode and validate request inputs // failures return without usage
+  → enforceApiQuota(userId, "takeaways.search")
     → checkAndIncrementQuota(userId, endpoint)
       → Atomic UPSERT into apiUsage (increment requestCount)
       → If "unlimited": allowed (still tracked for analytics)
       → If "free": SUM all endpoints for month
         → total > 100 → 429 response
         → total ≤ 100 → allowed, return remaining
+  → Execute the operation // only after quota allows it
 ```
+
+Request validation includes malformed JSON, invalid parameters, and unknown
+canonical financial metric IDs. Authentication takes precedence over validation.
+Valid operations count once, including batch requests, catalog lookups, provider
+failures, and partial results. Resource-dependent errors discovered during execution
+(missing documents, offsets beyond actual document length, unresolved companies,
+or unavailable metrics) still count. Over-quota attempts continue incrementing
+usage under the existing accounting policy.
+
+Financial routes use a preparation callback to validate inputs before quota
+enforcement, then execute the returned service callback. The combined
+`authorizeApiRequest` helper remains available, but public data routes use the
+separate helpers to preserve the validation boundary.
 
 ### Cancellation Flow
 

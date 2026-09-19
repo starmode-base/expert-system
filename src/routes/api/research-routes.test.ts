@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorizeMock = vi.fn();
+const quotaMock = vi.fn();
 const searchMock = vi.fn();
 const recentMock = vi.fn();
 const takeawaysMock = vi.fn();
@@ -18,7 +19,10 @@ vi.mock("@tanstack/react-start/api", () => ({
       methods,
     }),
 }));
-vi.mock("~/server/quota", () => ({ authorizeApiRequest: authorizeMock }));
+vi.mock("~/server/quota", () => ({
+  authenticateApiRequest: authorizeMock,
+  enforceApiQuota: quotaMock,
+}));
 vi.mock("~/server/public-api/research", () => ({
   MAX_PUBLIC_IDS: 50,
   searchTakeawayPreviews: searchMock,
@@ -39,6 +43,7 @@ const { APIRoute: documentContentRoute } = await import(
 beforeEach(() => {
   vi.clearAllMocks();
   authorizeMock.mockResolvedValue({ type: "ok", userId: "user_1" });
+  quotaMock.mockResolvedValue({ type: "ok", userId: "user_1" });
   searchMock.mockResolvedValue([]);
   recentMock.mockResolvedValue([]);
   takeawaysMock.mockResolvedValue([]);
@@ -46,6 +51,91 @@ beforeEach(() => {
 });
 
 describe("research API routes", () => {
+  it.each([
+    [searchRoute, "takeaways/search", {}],
+    [searchRoute, "takeaways/search?query=ai&limit=invalid", {}],
+    [recentRoute, "takeaways/recent?limit=invalid", {}],
+    [takeawaysRoute, "takeaways", {}],
+    [takeawaysRoute, "takeaways?ids=,,", {}],
+    [
+      takeawaysRoute,
+      `takeaways?ids=${Array.from({ length: 51 }, (_, i) => i).join(",")}`,
+      {},
+    ],
+    [documentsRoute, "documents", {}],
+    [documentsRoute, "documents?ids=,,", {}],
+    [
+      documentsRoute,
+      `documents?ids=${Array.from({ length: 51 }, (_, i) => i).join(",")}`,
+      {},
+    ],
+    [
+      documentContentRoute,
+      "documents/doc_1/content?offset=-1",
+      { documentId: "doc_1" },
+    ],
+    [
+      documentContentRoute,
+      "documents/doc_1/content?limit=0",
+      { documentId: "doc_1" },
+    ],
+  ])("does not charge invalid inputs: %s %s", async (route, path, params) => {
+    const handler = route.methods.GET;
+    if (!handler) throw new Error("Missing GET handler");
+    const response = await handler({
+      request: new Request(`https://example.com/api/v1/${path}`),
+      params: { documentId: "doc_1", ...params },
+    });
+    expect(response.status).toBe(400);
+    expect(authorizeMock).toHaveBeenCalledTimes(1);
+    expect(quotaMock).not.toHaveBeenCalled();
+    for (const service of [
+      searchMock,
+      recentMock,
+      takeawaysMock,
+      documentsMock,
+      documentContentMock,
+    ]) {
+      expect(service).not.toHaveBeenCalled();
+    }
+  });
+
+  it("rejects unauthenticated invalid requests before validation or quota", async () => {
+    authorizeMock.mockResolvedValue({
+      type: "error",
+      response: Response.json({ error: "Unauthorized" }, { status: 401 }),
+    });
+    const handler = searchRoute.methods.GET;
+    if (!handler) throw new Error("Missing GET handler");
+    const response = await handler({
+      request: new Request("https://example.com/api/v1/takeaways/search"),
+      params: {},
+    });
+    expect(response.status).toBe(401);
+    expect(quotaMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks execution when a validated request exceeds quota", async () => {
+    quotaMock.mockResolvedValue({
+      type: "error",
+      response: Response.json(
+        { error: "Monthly quota exceeded" },
+        { status: 429 },
+      ),
+    });
+    const handler = searchRoute.methods.GET;
+    if (!handler) throw new Error("Missing GET handler");
+    const response = await handler({
+      request: new Request(
+        "https://example.com/api/v1/takeaways/search?query=ai",
+      ),
+      params: {},
+    });
+    expect(response.status).toBe(429);
+    expect(quotaMock).toHaveBeenCalledTimes(1);
+    expect(searchMock).not.toHaveBeenCalled();
+  });
+
   it("passes search options to the shared service", async () => {
     const item = {
       id: "tak_1",
@@ -67,6 +157,13 @@ describe("research API routes", () => {
 
     expect(searchMock).toHaveBeenCalledWith("ai", { limit: 4, recent: true });
     expect(await response.json()).toEqual({ items: [item] });
+    expect(quotaMock).toHaveBeenCalledExactlyOnceWith(
+      "user_1",
+      "takeaways.search",
+    );
+    expect(quotaMock.mock.invocationCallOrder[0]).toBeLessThan(
+      searchMock.mock.invocationCallOrder[0] ?? 0,
+    );
   });
 
   it("uses the shared services for recent and ordered ID lookups", async () => {
@@ -184,5 +281,6 @@ describe("research API routes", () => {
       params: { documentId: "missing" },
     });
     expect(response.status).toBe(404);
+    expect(quotaMock).toHaveBeenCalledTimes(1);
   });
 });

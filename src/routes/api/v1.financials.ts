@@ -55,14 +55,15 @@ export const APIRoute = createAPIFileRoute("/api/v1/financials")({
         );
       }
 
-      return getBatchFinancialMetrics(
-        parsed.data.symbol,
-        parsed.data.metrics as FinancialMetricId[],
-        {
-          period: parsed.data.period,
-          limit: parsed.data.limit,
-          includeProvenance: parsed.data.include === "provenance",
-        },
-      );
+      return () =>
+        getBatchFinancialMetrics(
+          parsed.data.symbol,
+          parsed.data.metrics as FinancialMetricId[],
+          {
+            period: parsed.data.period,
+            limit: parsed.data.limit,
+            includeProvenance: parsed.data.include === "provenance",
+          },
+        );
     }),
 });

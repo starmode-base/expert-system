@@ -10,7 +10,7 @@ import {
   getFredObservationBatch,
   getInvalidFrequencyMessage,
 } from "~/server/fred-data-api/service";
-import { authorizeApiRequest } from "~/server/quota";
+import { authenticateApiRequest, enforceApiQuota } from "~/server/quota";
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -101,7 +101,7 @@ function issueMessage(error: z.ZodError): string {
 
 export const APIRoute = createAPIFileRoute("/api/v1/macro/observations")({
   POST: async ({ request }) => {
-    const auth = await authorizeApiRequest(request, "macro.observations", {
+    const auth = await authenticateApiRequest(request, {
       structuredErrors: true,
     });
     if (auth.type === "error") return auth.response;
@@ -128,6 +128,11 @@ export const APIRoute = createAPIFileRoute("/api/v1/macro/observations")({
         { status: 400 },
       );
     }
+
+    const quota = await enforceApiQuota(auth.userId, "macro.observations", {
+      structuredErrors: true,
+    });
+    if (quota.type === "error") return quota.response;
 
     const result = await getFredObservationBatch(parsed.data.series);
     if (result.items.length === 0 && result.errors.length > 0) {

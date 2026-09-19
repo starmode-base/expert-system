@@ -98,6 +98,18 @@ export async function authorizeApiRequest(
 ): Promise<
   { type: "ok"; userId: string } | { type: "error"; response: Response }
 > {
+  const auth = await authenticateApiRequest(request, options);
+  if (auth.type === "error") return auth;
+  return enforceApiQuota(auth.userId, endpoint, options);
+}
+
+/** Authenticate without charging usage so routes can validate inputs first. */
+export async function authenticateApiRequest(
+  request: Request,
+  options: AuthorizationOptions = {},
+): Promise<
+  { type: "ok"; userId: string } | { type: "error"; response: Response }
+> {
   const userId = await authenticate(request);
   if (!userId) {
     return {
@@ -111,6 +123,17 @@ export async function authorizeApiRequest(
     };
   }
 
+  return { type: "ok", userId };
+}
+
+/** Charge one validated operation before execution, including provider failures. */
+export async function enforceApiQuota(
+  userId: string,
+  endpoint: ApiEndpoint,
+  options: AuthorizationOptions = {},
+): Promise<
+  { type: "ok"; userId: string } | { type: "error"; response: Response }
+> {
   const quota = await checkAndIncrementQuota(userId, endpoint);
   if (!quota.allowed) {
     return {
