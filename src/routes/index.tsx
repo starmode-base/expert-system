@@ -190,10 +190,10 @@ function LandingPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              to="/account/api-keys"
+              to="/account"
               className="rounded-full bg-amber-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-amber-700"
             >
-              Get an API key
+              Sign in with OAuth
             </Link>
             <a
               href="#how-it-works"
@@ -304,7 +304,7 @@ function LandingPage() {
         <FadeIn>
           <div>
             <h2 className="mb-5 text-center text-xl font-semibold text-slate-900 sm:text-2xl">
-              Get started in 30 seconds
+              Connect your agent
             </h2>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -315,17 +315,18 @@ function LandingPage() {
                     1
                   </span>
                   <h3 className="text-sm font-medium text-slate-900">
-                    Get an API key
+                    Sign in with OAuth
                   </h3>
                 </div>
                 <p className="mb-4 text-sm leading-relaxed text-slate-600">
-                  Create a free account and generate your key.
+                  Install the plugin, then follow your agent’s sign-in prompt to
+                  connect your Expert System account.
                 </p>
                 <Link
-                  to="/account/api-keys"
+                  to="/account"
                   className="inline-block rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
                 >
-                  Get API key
+                  Open your account
                 </Link>
               </div>
 
@@ -336,7 +337,7 @@ function LandingPage() {
                     2
                   </span>
                   <h3 className="text-sm font-medium text-slate-900">
-                    Install the skill
+                    Install the plugin
                   </h3>
                 </div>
                 <p className="mb-3 text-xs font-medium tracking-wide text-slate-500 uppercase">
@@ -344,20 +345,21 @@ function LandingPage() {
                 </p>
                 <div className="mb-3">
                   <CopyPre>
-                    {`/plugin install github://starmode-base/expert-system-plugin`}
+                    {`/plugin marketplace add starmode-base/expert-system-plugin
+/plugin install expert-system@expert-system`}
                   </CopyPre>
                 </div>
                 <p className="mb-3 text-xs font-medium tracking-wide text-slate-500 uppercase">
-                  Any agent (Cursor, Copilot, Cline, Codex)
+                  Codex and other MCP clients
                 </p>
                 <CopyPre>
-                  {`npx skills add starmode-base/expert-system-plugin`}
+                  {`https://expert-system.starmode.dev/api/mcp`}
                 </CopyPre>
               </div>
             </div>
 
             <p className="mt-4 text-center text-xs text-slate-500">
-              Works with any agent that supports the{" "}
+              Shared workflows for agents that support the{" "}
               <a
                 href="https://agentskills.io"
                 target="_blank"
@@ -366,7 +368,8 @@ function LandingPage() {
               >
                 Agent Skills
               </a>{" "}
-              standard. Or use the{" "}
+              standard. See GitHub for Codex plugin installation. REST
+              developers can use the{" "}
               <Link
                 to="/account/api-docs"
                 className="text-blue-600 underline hover:text-blue-800"
@@ -379,7 +382,7 @@ function LandingPage() {
         </FadeIn>
 
         {/* Footer links */}
-        <div className="flex justify-center gap-3 py-8">
+        <div className="flex flex-wrap justify-center gap-3 py-8">
           <Link
             to="/account/api-docs"
             className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
@@ -393,6 +396,24 @@ function LandingPage() {
             className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
           >
             GitHub
+          </a>
+          <a
+            href="/privacy.html"
+            className="px-5 py-2.5 text-sm text-slate-700 underline"
+          >
+            Privacy
+          </a>
+          <a
+            href="/terms.html"
+            className="px-5 py-2.5 text-sm text-slate-700 underline"
+          >
+            Terms
+          </a>
+          <a
+            href="https://github.com/starmode-base/expert-system-plugin/issues"
+            className="px-5 py-2.5 text-sm text-slate-700 underline"
+          >
+            Support
           </a>
         </div>
       </div>

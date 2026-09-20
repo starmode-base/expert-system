@@ -34,7 +34,7 @@ Connect an OAuth-capable HTTP MCP client to the canonical https://expert-system.
 
 Tool arguments use the same field names as REST, with native arrays for ids and a boolean for recent. Path parameters become tool arguments. POST arguments match the REST JSON body. Results are REST-equivalent JSON in structuredContent and serialized text; application failures set isError and include _meta.httpStatus (plus relevant HTTP headers in _meta.httpHeaders).
 
-MCP and REST share quotas and endpoint buckets. Authentication and validation failures, discovery, initialization and protocol errors are free. Valid tool calls, including catalogs, provider failures and partial results, count once. Current MCP and older Streamable HTTP clients share the stateless endpoint; OAuth and legacy HTTP+SSE are not supported.
+MCP and REST share quotas and endpoint buckets. Authentication and validation failures, discovery, initialization and protocol errors are free. Valid tool calls, including catalogs, provider failures and partial results, count once. Current MCP and older Streamable HTTP clients share the stateless endpoint; OAuth is required; legacy HTTP+SSE is not supported.
 
 ---
 

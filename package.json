@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "lint": "eslint --max-warnings 0 --fix",
     "test": "vitest",
+    "plugin:check": "root=$PWD; cd \"${EXPERT_SYSTEM_PLUGIN_ROOT:-../expert-system-plugin}\" && EXPERT_SYSTEM_SERVER_ROOT=\"$root\" bun run plugin:check",
     "env:pull": "bunx vercel@latest env pull .env && ./scripts/dev-env.sh",
     "clean": "rm -rf node_modules tsconfig.tsbuildinfo bun.lock .output .vinxi && bun install",
     "db:generate": "drizzle-kit generate",
