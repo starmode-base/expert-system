@@ -1,9 +1,13 @@
 import { createHash, randomBytes } from "node:crypto";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, lt } from "drizzle-orm";
 import { db, schema } from "~/postgres/db";
 
 export const SESSION_COOKIE = "__Host-es_session";
 export const TRANSACTION_COOKIE = "__Host-es_transaction";
+/** Web sessions last 90 days and slide: activity renews them (see touchSession). */
+export const SESSION_TTL_SECONDS = 90 * 86_400;
+/** Renew at most once a day to keep the write off most requests. */
+const SESSION_RENEW_AFTER_MS = 86_400_000;
 export const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
 export const newToken = () => randomBytes(32).toString("base64url");
@@ -34,6 +38,32 @@ export async function getSessionUser(request: Request) {
     )
     .limit(1);
   return result?.user ?? null;
+}
+/**
+ * Slides an active session forward to a full TTL from now, but only once the
+ * previous renewal is at least a day old. Returns the cookie to re-issue, or
+ * null when nothing changed. Revoked or expired sessions are never extended.
+ */
+export async function touchSession(request: Request) {
+  const token = readCookie(request, SESSION_COOKIE);
+  if (!token) return null;
+  const now = Date.now();
+  const [renewed] = await db
+    .update(schema.authSessions)
+    .set({ expiresAt: new Date(now + SESSION_TTL_SECONDS * 1000) })
+    .where(
+      and(
+        eq(schema.authSessions.tokenHash, hashToken(token)),
+        isNull(schema.authSessions.revokedAt),
+        gt(schema.authSessions.expiresAt, new Date(now)),
+        lt(
+          schema.authSessions.expiresAt,
+          new Date(now + SESSION_TTL_SECONDS * 1000 - SESSION_RENEW_AFTER_MS),
+        ),
+      ),
+    )
+    .returning({ id: schema.authSessions.id });
+  return renewed ? cookie(SESSION_COOKIE, token, SESSION_TTL_SECONDS) : null;
 }
 export async function getAuth0Subject(request: Request) {
   return (await getSessionUser(request))?.auth0Subject ?? null;

@@ -11,6 +11,7 @@ import {
   readCookie,
   revokeSession,
   SESSION_COOKIE,
+  SESSION_TTL_SECONDS,
   TRANSACTION_COOKIE,
   upsertUser,
 } from "~/server/auth";
@@ -132,11 +133,11 @@ export async function callback(request: Request) {
       tokenHash: hashToken(sessionToken),
       userId: user.id,
       auth0Sid: claims.sid,
-      expiresAt: new Date(Date.now() + 86_400_000),
+      expiresAt: new Date(Date.now() + SESSION_TTL_SECONDS * 1000),
     });
     return redirect(`${config.origin}${safeReturnTo(transaction.returnTo)}`, [
       clearTransaction,
-      cookie(SESSION_COOKIE, sessionToken, 86_400),
+      cookie(SESSION_COOKIE, sessionToken, SESSION_TTL_SECONDS),
     ]);
   } catch (error) {
     // Server-side detail only; the client gets a generic message.

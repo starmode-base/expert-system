@@ -21,10 +21,14 @@ import { getSiteOrigin } from "~/lib/env";
 
 import { createServerFn } from "@tanstack/react-start";
 const loadAuth = createServerFn({ method: "GET" }).handler(async () => {
-  const { getSessionUser } = await import("~/server/auth");
-  const { getWebRequest } = await import("vinxi/http");
+  const { getSessionUser, touchSession } = await import("~/server/auth");
+  const { getWebRequest, appendResponseHeader } = await import("vinxi/http");
   const { isDevUser } = await import("~/lib/dev-user");
-  const user = await getSessionUser(getWebRequest());
+  const request = getWebRequest();
+  const user = await getSessionUser(request);
+  // Sliding expiry: page activity renews the session and its cookie.
+  const renewedCookie = user ? await touchSession(request) : null;
+  if (renewedCookie) appendResponseHeader("Set-Cookie", renewedCookie);
   return {
     isSignedIn: !!user,
     userId: user?.auth0Subject ?? null,

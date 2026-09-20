@@ -43,8 +43,10 @@ Developer access is disabled until `DEV_AUTH0_SUBJECT` is set.
 
 Web login uses Authorization Code + S256 PKCE, state, nonce, and verified email.
 Transactions expire after ten minutes and are atomically consumed before exchange.
-Sessions rotate on login, expire after 24 hours, and store only SHA-256 bearer
-hashes. `__Host-` cookies are Secure, HttpOnly, SameSite=Lax, Path=/ with no Domain.
+Sessions rotate on login, last 90 days, and slide: any page load renews the
+session and cookie to a fresh 90 days (at most once a day), so a session only
+ends after 90 days without a visit, or on logout/back-channel revocation. Only
+SHA-256 bearer hashes are stored. `__Host-` cookies are Secure, HttpOnly, SameSite=Lax, Path=/ with no Domain.
 Local browser support must accept Secure localhost cookies; use HTTPS locally if
 needed. Logout is a same-origin POST. Auth0 back-channel logout validates signed
 logout claims and revokes matching sessions (sid and sub are conjunctive).
@@ -75,7 +77,10 @@ CIMD URLs are `https://chatgpt.com/oauth/client.json` and
 `https://claude.ai/oauth/mcp-oauth-client-metadata`. Redirect URIs were read from
 the published documents before registration. Auth0 third-party clients use strict
 security mode, explicit consent, and a default **user** grant containing only
-`expert-system:read`. Both registered clients use rotating refresh tokens.
+`expert-system:read`. All web and registered MCP clients use rotating refresh
+tokens with a one-year absolute lifetime and a 90-day idle lifetime, so a
+connected MCP client stays signed in for up to a year if used at least
+quarterly. Ten-minute access tokens keep revocation meaningful.
 
 Database and Google connections are promoted to domain level for third-party login.
 DCR is enabled for compatibility. Treat its registration endpoint as public:
