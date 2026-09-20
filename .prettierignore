@@ -11,3 +11,7 @@ drizzle/meta
 .output
 .vinxi
 .vercel
+
+# Vercel rewrites this file (minified, with name/version added) inside its
+# build container, so `prettier --check .` would always fail there.
+vercel.json
