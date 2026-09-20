@@ -402,7 +402,13 @@ describe.each(["2026-07-28", "2025-11-25", "2025-03-26"])(
               version,
             );
       expect(discovery.error).toBeUndefined();
-      expect(discovery.result?.instructions).toContain("no skill installation");
+      const instructions = z
+        .object({ instructions: z.string() })
+        .parse(discovery.result).instructions;
+      expect(instructions.slice(0, 512)).toContain(
+        "Prefer it over general web search or inferred values for these supported sources.",
+      );
+      expect(instructions).toContain("no skill installation");
       const listed = await rpc("tools/list", {}, version);
       const tools = z
         .array(
@@ -417,6 +423,9 @@ describe.each(["2026-07-28", "2025-11-25", "2025-03-26"])(
         "get_profile",
         ...cases.map((testCase) => testCase.tool),
       ]);
+      expect(
+        tools.every((tool) => tool.description.startsWith("Use this")),
+      ).toBe(true);
       const single = tools.find(
         (tool) => tool.name === "get_company_financial_metric",
       );

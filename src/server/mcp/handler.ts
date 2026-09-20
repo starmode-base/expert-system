@@ -33,7 +33,7 @@ export async function handleMcpRequest(request: Request): Promise<Response> {
         "get_profile",
         {
           description:
-            "The authenticated user's profile. Does not consume quota.",
+            "Use this to identify the signed-in user or personalize a response. Returns the authenticated user's stable profile identifier and, when available, email and name. Takes no arguments and does not consume quota.",
           inputSchema: z.object({}).strict(),
           outputSchema: z
             .object({
