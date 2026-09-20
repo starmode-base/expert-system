@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Expert System Privacy Policy" />
+    <title>Privacy Policy — Expert System</title>
+    <style>
+      body {
+        font:
+          17px/1.65 system-ui,
+          sans-serif;
+        color: #172033;
+        background: #f8fafc;
+        margin: 0;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 48px 24px 72px;
+      }
+      h1,
+      h2 {
+        line-height: 1.2;
+      }
+      h1 {
+        font-size: 2.5rem;
+      }
+      h2 {
+        margin-top: 2em;
+        font-size: 1.35rem;
+      }
+      a {
+        color: #1d4ed8;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      footer {
+        border-top: 1px solid #cbd5e1;
+        margin-top: 40px;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav aria-label="Main">
+        <a href="/">Expert System</a><a href="/privacy.html">Privacy</a
+        ><a href="/terms.html">Terms</a>
+      </nav>
+      <h1>Privacy Policy</h1>
+      <p>Last updated: September 20, 2026</p>
+      <p>
+        This policy describes how STAR MODE handles information when you use
+        Expert System, including its website, REST API, and MCP plugin
+        connections.
+      </p>
+      <h2>Information processed</h2>
+      <ul>
+        <li>
+          <strong>Account information:</strong> authentication identifiers and
+          available email, display name, and nickname; plan tier and
+          subscription status.
+        </li>
+        <li>
+          <strong>Requests:</strong> the search text, company identifiers,
+          document IDs, series IDs, date ranges, and other arguments your client
+          sends to fulfill a request. The MCP integration receives tool
+          arguments, not automatic access to your full chat history or local
+          files.
+        </li>
+        <li>
+          <strong>Usage and technical information:</strong> per-account monthly
+          request counts by endpoint, session and token-revocation records, and
+          operational error logs. Hosting and authentication providers may
+          process connection metadata such as IP addresses and device/browser
+          information.
+        </li>
+        <li>
+          <strong>Billing:</strong> Stripe customer and subscription identifiers
+          and payment status. Payment details are handled through Stripe.
+        </li>
+      </ul>
+      <h2>How information is used</h2>
+      <p>
+        We process information to authenticate users, return requested research
+        and data, enforce access and usage limits, manage subscriptions,
+        troubleshoot failures, and protect the service. Browser sign-in uses
+        cookies and server-side session records. MCP credentials are managed by
+        your client and authentication provider; the distributed plugin contains
+        no user credentials.
+      </p>
+      <h2>Service providers and your AI client</h2>
+      <p>
+        Auth0 handles authentication, Vercel hosts the service, Neon provides
+        database infrastructure, and Stripe handles payments. Research search
+        text is sent to OpenAI to generate embeddings for semantic search.
+        Requests for economic and company data may involve FRED and SEC data
+        services. These providers process information needed for their functions
+        under their applicable terms and privacy practices.
+      </p>
+      <p>
+        Results and, when requested through the profile tool, your available
+        account identifier, name, and email are returned to your connected
+        client. Claude, Codex, and other clients have their own data policies.
+        Information may be processed in countries where we or our providers
+        operate.
+      </p>
+      <h2>Retention and choices</h2>
+      <p>
+        Account, usage, billing, and operational records persist as needed to
+        operate the service and address security, accounting, or legal
+        requirements. There is no single automatic deletion period for all
+        records. Signing out or uninstalling a plugin does not delete your
+        account, cancel a subscription, or remove provider logs and backups.
+      </p>
+      <p>
+        You can stop sending requests, disconnect the plugin, sign out, and
+        manage your subscription from your account. Contact us to request
+        access, correction, or deletion of account information. We may need to
+        verify account ownership; applicable obligations and backup retention
+        may limit immediate deletion. Rights vary by location.
+      </p>
+      <h2>Security and changes</h2>
+      <p>
+        Use the client’s sign-in flow and keep credentials private. No service
+        can guarantee absolute security. We may update this policy as the
+        service changes; the date below identifies this version.
+      </p>
+      <h2>Contact</h2>
+      <p>
+        Contact STAR MODE through
+        <a href="https://github.com/starmode-base/expert-system/issues"
+          >Expert System support</a
+        >. For an account or privacy request, ask for a private contact channel
+        before providing identifying information. Do not post personal data,
+        credentials, or billing details in public issues.
+      </p>
+      <footer>STAR MODE · Expert System</footer>
+    </main>
+  </body>
+</html>

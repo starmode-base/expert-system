@@ -1,11 +1,21 @@
 {
-  "name": "Expert System",
+  "name": "expert-system",
+  "owner": {
+    "name": "STAR MODE",
+    "url": "https://github.com/starmode-base"
+  },
   "plugins": [
     {
       "name": "expert-system",
-      "source": "github://starmode-base/expert-system-plugin",
-      "version": "1.0.0",
-      "description": "Research intelligence and macroeconomic data for Claude Code"
+      "source": {
+        "source": "github",
+        "repo": "starmode-base/expert-system-plugin"
+      },
+      "version": "2.0.0",
+      "description": "Curated research, FRED macroeconomic data, and SEC company financials with source provenance."
     }
-  ]
+  ],
+  "metadata": {
+    "description": "Expert System research, macroeconomic data, and financials plugins."
+  }
 }

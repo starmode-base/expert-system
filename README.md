@@ -1,6 +1,19 @@
-# STΛR MODΞ 🦨
+# Expert System
 
-Production deployment: https://sworks.starmode.app/
+Backend and website for Expert System research, macroeconomic data, and company financials.
+
+Production: [expert-system.starmode.dev](https://expert-system.starmode.dev).
+
+## Agent plugin
+
+The Claude Code and Codex plugin is maintained and released in
+[expert-system-plugin](https://github.com/starmode-base/expert-system-plugin).
+See that repository for installation, shared skills, manifests, and release checks.
+This repository owns the MCP server, OAuth, website, and public privacy/terms pages.
+
+The hosted `public/marketplace.json` is a compatibility copy of the plugin repo's
+`.claude-plugin/marketplace.json`. When releasing the plugin, update this copy and
+run its cross-repository check with `EXPERT_SYSTEM_SERVER_ROOT` pointing here.
 
 ## Contributing
 
