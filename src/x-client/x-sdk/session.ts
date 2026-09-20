@@ -28,18 +28,11 @@ const COOKIE_NAME = "x_oauth_session";
 /** AES-256-GCM provides both encryption and authentication */
 const ALGORITHM = "aes-256-gcm";
 
-/**
- * Derive a 256-bit encryption key from CLERK_SECRET_KEY.
- *
- * We reuse the Clerk secret as the source of entropy since:
- * - It's already a high-entropy secret
- * - It's already required for the app to function
- * - Avoids adding another secret to manage
- */
+/** Derive a purpose-specific key from the dedicated application cookie secret. */
 function getEncryptionKey(): Buffer {
-  const secret = ensureEnv("CLERK_SECRET_KEY");
+  const secret = ensureEnv("APP_COOKIE_SECRET");
   // SHA-256 produces exactly 32 bytes (256 bits) for AES-256
-  return crypto.createHash("sha256").update(secret).digest();
+  return crypto.createHash("sha256").update(`x-oauth:${secret}`).digest();
 }
 
 /**

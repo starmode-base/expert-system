@@ -6,7 +6,7 @@
  * This endpoint initiates the OAuth2 + PKCE flow for connecting a user's
  * X account. It:
  *
- * 1. Verifies the user is logged in (via Clerk)
+ * 1. Verifies an active local session
  * 2. Creates an OAuth session with PKCE parameters
  * 3. Stores the session in an encrypted cookie
  * 4. Redirects to X's authorization page
@@ -17,7 +17,7 @@
  * The session cookie contains:
  * - state: CSRF protection token
  * - codeVerifier: PKCE verifier for token exchange
- * - viewerId: Our user ID (needed because Clerk auth fails on callback)
+ * - viewerId: initiating internal user ID
  */
 
 import { createAPIFileRoute } from "@tanstack/react-start/api";
@@ -38,8 +38,6 @@ export const APIRoute = createAPIFileRoute("/api/x-bookmarks-start")({
     }
 
     // Create OAuth session with PKCE parameters
-    // We store viewerId because Clerk auth doesn't work on the callback
-    // (external redirect from X breaks Clerk's session handshake)
     const session = createOAuthSession(viewerId);
 
     // Build the X authorization URL with PKCE challenge

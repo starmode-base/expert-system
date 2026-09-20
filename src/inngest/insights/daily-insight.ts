@@ -92,19 +92,21 @@ export const dailyInsight = inngest.createFunction(
 
     // Send all user/prompt combinations in parallel
     const sendCounts = await Promise.all(
-      users.map((user) =>
-        Promise.all(
-          researchThemes.map((researchTheme, promptIndex) =>
-            step.sendEvent(`generate-insight-${user.id}-${promptIndex}`, {
-              name: "app/generate-insight",
-              data: {
-                seedText: researchTheme,
-                user: { id: user.id, email: user.email },
-              },
-            }),
-          ),
-        ).then((results) => results.length),
-      ),
+      users
+        .filter((user): user is typeof user & { email: string } => !!user.email)
+        .map((user) =>
+          Promise.all(
+            researchThemes.map((researchTheme, promptIndex) =>
+              step.sendEvent(`generate-insight-${user.id}-${promptIndex}`, {
+                name: "app/generate-insight",
+                data: {
+                  seedText: researchTheme,
+                  user: { id: user.id, email: user.email },
+                },
+              }),
+            ),
+          ).then((results) => results.length),
+        ),
     );
 
     const totalInsightsSent = sendCounts.reduce(

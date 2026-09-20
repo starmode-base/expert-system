@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { SignInButton } from "@clerk/tanstack-start";
+import { SignInButton } from "~/components/auth";
 import {
   createApiKeySF,
   listApiKeysSF,
@@ -12,19 +12,19 @@ import { createPortalSessionSF } from "~/server/stripe";
 
 const loadApiKeys = createServerFn({ method: "GET" }).handler(async () => {
   const { getWebRequest } = await import("vinxi/http");
-  const { getClerkUserId } = await import("~/server/auth");
+  const { getAuth0Subject } = await import("~/server/auth");
   const { db } = await import("~/postgres/db");
   const { users } = await import("~/postgres/schema");
   const { eq } = await import("drizzle-orm");
 
-  const userId = await getClerkUserId(getWebRequest());
+  const userId = await getAuth0Subject(getWebRequest());
   if (!userId) {
     return { authenticated: false as const, apiKeys: [], plan: null };
   }
   const apiKeys = await listApiKeysSF();
 
   const user = await db.query.users.findFirst({
-    where: eq(users.clerkUserId, userId),
+    where: eq(users.auth0Subject, userId),
     columns: {
       planTier: true,
       stripeCustomerId: true,
@@ -89,7 +89,7 @@ function ApiKeysPage() {
           <p className="mb-4 text-sm text-gray-600">
             Sign in to create and manage API keys.
           </p>
-          <SignInButton mode="modal">
+          <SignInButton>
             <button className="cursor-pointer rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
               Sign in
             </button>

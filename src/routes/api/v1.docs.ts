@@ -16,7 +16,7 @@ A missing or invalid key returns 401 Unauthorized. Revoked keys are rejected imm
 
 ## MCP access
 
-Connect an HTTP MCP client to /api/mcp on the same host, with the same Authorization: Bearer esak_<your-key> header. No separate skill installation is required. Field mappings, common aliases, citations, units, date semantics, transformations, and bounded-read guidance are included in MCP discovery.
+Connect an OAuth-capable HTTP MCP client to the canonical https://expert-system.starmode.dev/api/mcp endpoint and sign in through Auth0. MCP requires expert-system:read and never accepts REST API keys. No separate skill installation is required. Field mappings, common aliases, citations, units, date semantics, transformations, and bounded-read guidance are included in MCP discovery.
 
 | REST operation | MCP tool |
 |----------------|----------|

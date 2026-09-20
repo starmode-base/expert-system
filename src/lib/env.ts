@@ -16,7 +16,7 @@ const rawEnv = {
   /**
    * Application environment variables
    */
-  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+  APP_COOKIE_SECRET: process.env.APP_COOKIE_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
   DATABASE_URL_UNPOOLED: process.env.DATABASE_URL_UNPOOLED,
   ABLY_API_KEY: process.env.ABLY_API_KEY,

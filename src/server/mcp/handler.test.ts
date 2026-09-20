@@ -20,6 +20,15 @@ const mocks = vi.hoisted(() => ({
   batch: vi.fn(),
   company: vi.fn(),
 }));
+vi.mock("~/server/auth/mcp", () => ({
+  authenticateMcpRequest: mocks.auth,
+  oauthOptions: () => new Response(null, { status: 204 }),
+}));
+vi.mock("~/server/auth/config", () => ({
+  authConfig: () => ({ resource: "https://example.com/api/mcp" }),
+  MCP_SCOPE: "expert-system:read",
+  METADATA_PATH: "/.well-known/oauth-protected-resource/api/mcp",
+}));
 vi.mock("~/server/quota", () => ({
   authenticateApiRequest: mocks.auth,
   enforceApiQuota: mocks.quota,
@@ -159,6 +168,8 @@ beforeEach(() => {
   mocks.auth.mockImplementation((request: Request) =>
     Promise.resolve({
       type: "ok",
+      user: {},
+      info: { token: "test", clientId: "test", scopes: ["expert-system:read"] },
       userId: request.headers.get("authorization")?.slice(7) ?? "user_1",
     }),
   );
@@ -408,9 +419,10 @@ describe.each(["2026-07-28", "2025-11-25", "2025-03-26"])(
           }),
         )
         .parse(listed.result?.tools);
-      expect(tools.map((tool) => tool.name)).toEqual(
-        cases.map((testCase) => testCase.tool),
-      );
+      expect(tools.map((tool) => tool.name)).toEqual([
+        "get_profile",
+        ...cases.map((testCase) => testCase.tool),
+      ]);
       expect(
         tools.every((tool) => tool.description.startsWith("Use this")),
       ).toBe(true);
@@ -648,3 +660,52 @@ it.each(["GET", "DELETE", "PUT", "PATCH", "HEAD"])(
     expect(mocks.quota).not.toHaveBeenCalled();
   },
 );
+
+describe("authenticated profile", () => {
+  it("advertises the exact profile identity constraints", async () => {
+    const result = await rpc("tools/list");
+    const tools = z
+      .array(
+        z.object({
+          name: z.string(),
+          outputSchema: object.optional(),
+          _meta: object.optional(),
+        }),
+      )
+      .parse(result.result?.tools);
+    const profile = tools.find((tool) => tool.name === "get_profile");
+    expect(profile?._meta).toEqual({ "openai/profile": true });
+    expect(profile?.outputSchema).toMatchObject({
+      type: "object",
+      required: ["id"],
+      additionalProperties: false,
+      properties: { id: { type: "string", minLength: 1, pattern: "\\S" } },
+    });
+  });
+  it("returns only the request identity, without billing", async () => {
+    const responses = await Promise.all(
+      ["user_a", "user_b", "user_a"].map((token) =>
+        rpc(
+          "tools/call",
+          { name: "get_profile", arguments: {} },
+          "2026-07-28",
+          token,
+        ),
+      ),
+    );
+    expect(responses.map((r) => r.result?.structuredContent)).toEqual([
+      { id: "user_a" },
+      { id: "user_b" },
+      { id: "user_a" },
+    ]);
+    expect(mocks.quota).not.toHaveBeenCalled();
+  });
+  it("rejects account selectors without billing", async () => {
+    const result = await rpc("tools/call", {
+      name: "get_profile",
+      arguments: { userId: "someone_else" },
+    });
+    expect(result.error ?? result.result?.isError).toBeTruthy();
+    expect(mocks.quota).not.toHaveBeenCalled();
+  });
+});

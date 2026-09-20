@@ -8,7 +8,7 @@ vi.mock("~/postgres/db", () => ({
   },
 }));
 vi.mock("~/lib/dev-user", () => ({
-  DEV_CLERK_USER_ID: "dev-user",
+  DEV_AUTH0_SUBJECT: "dev-user",
 }));
 
 const { matchTrackedCalls } = await import("./earnings-repository");

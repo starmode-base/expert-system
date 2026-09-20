@@ -40,7 +40,6 @@ const SCOPES = ["tweet.read", "users.read", "bookmark.read", "offline.access"];
  * This session is stored in an encrypted cookie and used to:
  * 1. Verify the callback came from our auth request (state parameter)
  * 2. Complete the PKCE flow (code verifier)
- * 3. Identify the user without Clerk auth (viewerId)
  *
  * @param viewerId - Our internal user ID to associate with the X account
  */

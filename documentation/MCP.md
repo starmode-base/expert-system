@@ -1,44 +1,43 @@
 # MCP interface
 
-Connect an HTTP MCP client to `https://expert-system.starmode.dev/api/mcp`
-(or `/api/mcp` on your local/preview host). Send the existing API key in
-`Authorization: Bearer esak_<your-key>`. No OAuth, Redis, extra deployment,
-plugin, or skill installation is required.
-
-The server's discovery instructions and tool schemas include all operation
-mappings, canonical financial IDs and common aliases, macro discovery,
-transformation semantics, dates, units, citations, and bounded document reads.
-The same operation functions validate, charge quota, and execute for REST and MCP;
-neither transport sends HTTP requests back to the application.
+Connect an OAuth-capable HTTP MCP client to
+`https://expert-system.starmode.dev/api/mcp` and complete Auth0 sign-in and consent.
+The canonical resource/audience is that exact URL; the required permission is
+`expert-system:read`. REST API keys are accepted only by `/api/v1`, never MCP.
 
 ## Client configuration
 
-For Codex, set `EXPERT_SYSTEM_API_KEY` in the client environment and add:
+For Codex:
 
 ```toml
 [mcp_servers.expert-system]
 url = "https://expert-system.starmode.dev/api/mcp"
-bearer_token_env_var = "EXPERT_SYSTEM_API_KEY"
 ```
 
-For Claude Code, use an HTTP MCP server entry (environment substitution keeps the
-key out of the configuration):
+Then use the client's MCP login flow. For Claude Code:
 
 ```json
 {
   "mcpServers": {
     "expert-system": {
       "type": "http",
-      "url": "https://expert-system.starmode.dev/api/mcp",
-      "headers": { "Authorization": "Bearer ${EXPERT_SYSTEM_API_KEY}" }
+      "url": "https://expert-system.starmode.dev/api/mcp"
     }
   }
 }
 ```
 
-For protected Vercel previews, additionally supply the
-`x-vercel-protection-bypass` header from your automation bypass secret. That
-header does not replace the API key. Do not commit either secret.
+CIMD is preferred, with DCR available for older clients. The server publishes
+`/.well-known/oauth-protected-resource/api/mcp` and the root compatibility alias.
+Missing/invalid tokens return 401 with discovery information; a valid token
+missing permission returns 403 `insufficient_scope`. Neither consumes quota.
+Ephemeral previews have OAuth disabled. Development uses the separate
+`http://localhost:3009/api/mcp` resource and web application.
+
+`get_profile` is the twelfth tool. It accepts `{}`, consumes no quota, and returns
+exactly the authenticated user's stable internal `id`, plus optional `email`,
+`name`, and `nickname`. It advertises the OpenAI profile schema and
+`_meta["openai/profile"] = true`. Email is populated only after verified web login.
 
 ## Wire contract
 
@@ -68,8 +67,10 @@ carries the equivalent REST status; `_meta.httpHeaders` carries response headers
 when present. The MCP transport itself can return HTTP 200 for a tool error.
 Malformed protocol messages and unknown methods/tools remain SDK protocol errors.
 
-Authentication runs on every HTTP request, so revocation takes effect on the next
-request. Identity is captured in a request-local handler. Authentication, request
+Authentication runs on every HTTP request. Explicit resource-side token
+revocation takes effect on the next request. Auth0 grant/refresh-token revocation
+prevents renewal; already-issued JWTs expire within ten minutes unless explicitly
+revoked locally. Auth0 does not provide live introspection for these JWTs. Identity is captured in a request-local handler. Authentication, request
 validation, discovery, initialization, and protocol errors consume no quota.
 Valid operations count once, including catalogs, partial results, missing
 resources, and provider failures. REST and MCP share monthly allowances and

@@ -1,5 +1,5 @@
 import { and, eq, inArray, lt, sql } from "drizzle-orm";
-import { DEV_CLERK_USER_ID } from "~/lib/dev-user";
+
 import { db, schema } from "~/postgres/db";
 import type {
   EarningsCallMetadata,
@@ -366,15 +366,15 @@ export async function markEarningsCallComplete(
 
 export async function getSystemUser(): Promise<{ id: string; email: string }> {
   const user = await db.query.users.findFirst({
-    where: eq(schema.users.clerkUserId, DEV_CLERK_USER_ID),
+    where: eq(schema.users.auth0Subject, process.env.DEV_AUTH0_SUBJECT ?? ""),
     columns: { id: true, email: true },
   });
 
-  if (!user) {
+  if (!user?.email) {
     throw new Error(
       "The configured earnings system user is not in the database",
     );
   }
 
-  return user;
+  return { id: user.id, email: user.email };
 }

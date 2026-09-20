@@ -11,16 +11,30 @@ import { DefaultCatchBoundary } from "~/components/default-catch-boundary";
 import { NotFound } from "~/components/not-found";
 import appCss from "~/styles/app.css?url";
 import {
-  ClerkProvider,
   SignedIn,
   SignedOut,
   SignInButton,
   useAuth,
   UserButton,
-} from "@clerk/tanstack-start";
+} from "~/components/auth";
 import { getSiteOrigin } from "~/lib/env";
-import { isDevUser } from "~/lib/dev-user";
 
+import { createServerFn } from "@tanstack/react-start";
+const loadAuth = createServerFn({ method: "GET" }).handler(async () => {
+  const { getSessionUser, touchSession } = await import("~/server/auth");
+  const { getWebRequest, appendResponseHeader } = await import("vinxi/http");
+  const { isDevUser } = await import("~/lib/dev-user");
+  const request = getWebRequest();
+  const user = await getSessionUser(request);
+  // Sliding expiry: page activity renews the session and its cookie.
+  const renewedCookie = user ? await touchSession(request) : null;
+  if (renewedCookie) appendResponseHeader("Set-Cookie", renewedCookie);
+  return {
+    isSignedIn: !!user,
+    userId: user?.auth0Subject ?? null,
+    isDev: isDevUser(user?.auth0Subject),
+  };
+});
 const head = {
   meta: [
     {
@@ -59,6 +73,7 @@ const head = {
 };
 
 export const Route = createRootRoute({
+  beforeLoad: async () => ({ auth: await loadAuth() }),
   head: () => head,
   errorComponent: (props) => {
     return (
@@ -81,7 +96,7 @@ function RootComponent() {
 
 function RootDocument(props: React.PropsWithChildren) {
   return (
-    <ClerkProvider>
+    <>
       <html>
         <head>
           <HeadContent />
@@ -95,7 +110,7 @@ function RootDocument(props: React.PropsWithChildren) {
           <Scripts />
         </body>
       </html>
-    </ClerkProvider>
+    </>
   );
 }
 
@@ -105,7 +120,7 @@ function NavBar() {
   // TODO: add user role for dev permissions.
   const devNavItems = [{ key: "dev", to: "/dev/scrape", label: "Dev" }];
 
-  const isDev = isDevUser(auth.userId);
+  const isDev = auth.isDev;
 
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-slate-200/60 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
@@ -182,7 +197,7 @@ function NavBar() {
 
         <div className="shrink-0">
           <SignedOut>
-            <SignInButton mode="modal">
+            <SignInButton>
               <button className="cursor-pointer rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
                 Sign in
               </button>

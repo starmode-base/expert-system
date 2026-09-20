@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { SignInButton, useAuth } from "@clerk/tanstack-start";
+import { SignInButton, useAuth } from "~/components/auth";
 import { createCheckoutSessionSF } from "~/server/stripe";
 
 export const Route = createFileRoute("/pricing")({
@@ -101,7 +101,7 @@ function PricingPage() {
               Get started
             </button>
           ) : (
-            <SignInButton mode="modal">
+            <SignInButton>
               <button className="w-full cursor-pointer rounded-md border border-gray-200 px-4 py-2 text-center text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
                 Sign up free
               </button>
@@ -145,7 +145,7 @@ function PricingPage() {
               {loading ? "Redirecting..." : "Upgrade"}
             </button>
           ) : (
-            <SignInButton mode="modal">
+            <SignInButton>
               <button className="w-full cursor-pointer rounded-md bg-slate-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-slate-800">
                 Sign up to upgrade
               </button>

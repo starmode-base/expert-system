@@ -37,8 +37,10 @@ const baseSchema = {
  */
 export const users = pgTable("users", {
   ...baseSchema,
-  email: text().notNull(),
-  clerkUserId: text().notNull().unique(),
+  email: text(),
+  displayName: text(),
+  nickname: text(),
+  auth0Subject: text().notNull().unique(),
   planTier: text().$type<"free" | "unlimited">().notNull().default("free"),
   stripeCustomerId: text(),
   stripeSubscriptionId: text(),
@@ -593,3 +595,31 @@ export const apiUsage = pgTable(
     primaryKey({ columns: [table.userId, table.month, table.endpoint] }),
   ],
 );
+
+/** Opaque browser sessions: raw bearer secrets never enter the database. */
+export const authSessions = pgTable("auth_sessions", {
+  ...baseSchema,
+  tokenHash: text().notNull().unique(),
+  userId: text()
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  auth0Sid: text(),
+  expiresAt: timestamp().notNull(),
+  revokedAt: timestamp(),
+});
+
+/** Single-use, short-lived OAuth transactions, bound to an HttpOnly cookie. */
+export const authTransactions = pgTable("auth_transactions", {
+  tokenHash: text().primaryKey(),
+  state: text().notNull(),
+  nonce: text().notNull(),
+  verifier: text().notNull(),
+  returnTo: text().notNull(),
+  expiresAt: timestamp().notNull(),
+});
+
+/** Explicit resource-side access-token revocation until the JWT expires. */
+export const revokedMcpTokens = pgTable("revoked_mcp_tokens", {
+  tokenHash: text().primaryKey(),
+  expiresAt: timestamp().notNull(),
+});

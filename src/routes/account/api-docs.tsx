@@ -279,11 +279,11 @@ function ApiDocsPage() {
             </h3>
           </div>
           <P>
-            Add the MCP URL to your agent with your API key as a Bearer token.
-            All tools, field mappings, and usage guidance are built in.
+            Add the MCP URL to your agent, then sign in through Auth0 and
+            approve access. All tools, field mappings, and usage guidance are
+            built in.
           </P>
           <CopyPre>{`https://expert-system.starmode.dev/api/mcp`}</CopyPre>
-          <Pre>{`Authorization: Bearer esak_<your-key>`}</Pre>
         </div>
       </div>
       <p className="mb-6 text-center text-xs text-gray-500">
@@ -295,10 +295,10 @@ function ApiDocsPage() {
         <H2>MCP access</H2>
         <P>
           Use an HTTP MCP connection to <Code>/api/mcp</Code> on this service.
-          Existing API keys work for both interfaces. MCP exposes all eleven
-          operations documented below, including catalog discovery, with the
-          same results and billing. Tool discovery is free; catalog tool calls
-          count like other valid requests.
+          MCP requires OAuth sign-in; API keys work only with REST. MCP exposes
+          all eleven operations documented below, including catalog discovery,
+          with the same results and billing. Tool discovery and get_profile are
+          free; catalog tool calls count like other valid requests.
         </P>
         <P>
           Tool arguments use the REST parameter names. Pass IDs as arrays and

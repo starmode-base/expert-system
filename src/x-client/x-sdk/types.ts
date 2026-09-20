@@ -11,18 +11,13 @@
  * This session is created when the user starts OAuth (/api/x-bookmarks-start)
  * and read back when X redirects to the callback (/api/x-bookmarks-callback).
  *
- * IMPORTANT: We store viewerId here because Clerk auth doesn't work on the
- * callback endpoint - when X redirects back, it's an external redirect and
- * Clerk needs to do a "handshake" which breaks the flow. By storing the
- * viewerId in the encrypted session cookie, we can identify the user without
- * relying on Clerk in the callback.
+ * The encrypted transaction binds the X callback to the initiating internal user.
  */
 export interface XOAuthSession {
   /** Random string for CSRF protection - must match on callback */
   state: string;
   /** PKCE code verifier - used to prove we initiated the auth request */
   codeVerifier: string;
-  /** Our internal user ID - stored because Clerk auth fails on external redirects */
   viewerId: string;
 }
 
