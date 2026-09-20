@@ -167,8 +167,14 @@ describe("web OAuth", () => {
         email_verified: false,
       }),
     });
-    expect((await callback(request())).status).toBe(400);
+    const response = await callback(request());
+    expect(response.status).toBe(403);
+    expect(await response.text()).toContain("not verified");
+    expect(response.headers.get("set-cookie")).toContain(
+      `${TRANSACTION_COOKIE}=;`,
+    );
     expect(mocks.upsert).not.toHaveBeenCalled();
+    expect(mocks.values).not.toHaveBeenCalled();
   });
   it("logout revokes the session and clears cookies before Auth0 redirect", async () => {
     const response = await logout(

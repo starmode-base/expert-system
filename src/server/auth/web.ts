@@ -100,13 +100,27 @@ export async function callback(request: Request) {
     const claims = z
       .object({
         sub: z.string().min(1),
-        email: z.email(),
-        email_verified: z.literal(true),
+        email: z.email().optional(),
+        email_verified: z.boolean().optional(),
         name: z.string().optional(),
         nickname: z.string().optional(),
         sid: z.string().optional(),
       })
       .parse(tokens.claims());
+    // Password signups arrive with email_verified=false until the user follows
+    // Auth0's verification link. Say so instead of failing generically.
+    if (!claims.email || claims.email_verified !== true) {
+      return new Response(
+        "Your email address is not verified yet. Open the verification email from Auth0, follow its link, then sign in again.",
+        {
+          status: 403,
+          headers: {
+            "Set-Cookie": clearTransaction,
+            "Cache-Control": "no-store",
+          },
+        },
+      );
+    }
     const user = await upsertUser(claims.sub, {
       email: claims.email,
       displayName: claims.name,
@@ -124,17 +138,19 @@ export async function callback(request: Request) {
       clearTransaction,
       cookie(SESSION_COOKIE, sessionToken, 86_400),
     ]);
-  } catch {
-    return new Response(
-      "Sign-in failed. Please start again and use a verified email address.",
-      {
-        status: 400,
-        headers: {
-          "Set-Cookie": clearTransaction,
-          "Cache-Control": "no-store",
-        },
-      },
+  } catch (error) {
+    // Server-side detail only; the client gets a generic message.
+    console.error(
+      "Auth0 callback failed:",
+      error instanceof Error ? error.message : error,
     );
+    return new Response("Sign-in failed. Please start again.", {
+      status: 400,
+      headers: {
+        "Set-Cookie": clearTransaction,
+        "Cache-Control": "no-store",
+      },
+    });
   }
 }
 export async function logout(request: Request) {
