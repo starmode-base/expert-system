@@ -13,13 +13,13 @@ The plugin's `.claude-plugin/marketplace.json` is canonical. Keep the server's `
 
 ## Checking
 
-Run this **from the plugin repository**, in addition to each repository's relevant checks:
+Run this from either repository, in addition to each repository's relevant checks:
 
 ```bash
-EXPERT_SYSTEM_SERVER_ROOT=../expert-system bun run plugin:check
+bun run plugin:check
 ```
 
-Use the actual server checkout path if the repositories are not siblings. The cross-repository test is skipped when `EXPERT_SYSTEM_SERVER_ROOT` is unset; a standalone green run is not synchronization validation.
+This repository's script runs the plugin repository's test suite against this checkout. It assumes the repositories are siblings; set `EXPERT_SYSTEM_PLUGIN_ROOT` if they are not. Run from the plugin repository instead with `EXPERT_SYSTEM_SERVER_ROOT=../expert-system bun run plugin:check` — the cross-repository test is skipped when that variable is unset there, so a standalone green run is not synchronization validation.
 
 The plugin repository's CI runs this check on its own pull requests and nightly. Server pull requests do **not** run it, so drift originating here surfaces on the next nightly run at the earliest — run the check locally when changing the contract.
 

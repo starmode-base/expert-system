@@ -32,7 +32,7 @@ The plugin lives in the sibling `expert-system-plugin` repository. Do not duplic
 When changing MCP tool names, arguments, responses, errors, limits, endpoint URLs, OAuth requirements, `public/marketplace.json`, or the policy pages, update the plugin repository in the same change and run its check:
 
 ```bash
-EXPERT_SYSTEM_SERVER_ROOT=../expert-system bun run plugin:check
+bun run plugin:check
 ```
 
 Server CI does not run that check. See [documentation/PLUGIN_SYNC.md](documentation/PLUGIN_SYNC.md) for what it covers, what it misses, and release rules.
