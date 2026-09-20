@@ -19,7 +19,7 @@
  * - X_CLIENT_ID: OAuth2 client ID from X Developer Portal
  * - X_CLIENT_SECRET: OAuth2 client secret
  * - X_REDIRECT_URI: Callback URL (must match X app settings exactly)
- * - CLERK_SECRET_KEY: Used to derive encryption key for session cookies
+ * - APP_COOKIE_SECRET: Used to derive encryption key for session cookies
  */
 
 export * from "./types";

@@ -44,7 +44,7 @@ Production deployment: https://sworks.starmode.app/
 
 - 🆓 [GitHub](https://github.com/starmode-base/starmode-sworks)
 - 💰 [Vercel](https://vercel.com/)
-- 🆓 [Clerk](https://clerk.com/)
+- 🆓 [Auth0](https://auth0.com/)
 - 💰 [Neon](https://neon.tech/)
 - 🆓 [Inngest](https://www.inngest.com/)
 - 💰 [OpenAI](https://platform.openai.com/)
@@ -151,3 +151,5 @@ pnpm dev
 
 > [!WARNING]
 > You will need to update the `docs/config.json` file (in the project's repo) if you add a new doc page!
+
+Authentication setup and rollout: [Auth0 operations](documentation/AUTH0.md).

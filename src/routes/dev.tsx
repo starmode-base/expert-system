@@ -1,6 +1,5 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { useAuth } from "@clerk/tanstack-start";
-import { isDevUser } from "~/lib/dev-user";
+import { useAuth } from "~/components/auth";
 
 export const Route = createFileRoute("/dev")({
   component: DevLayout,
@@ -9,7 +8,7 @@ export const Route = createFileRoute("/dev")({
 function DevLayout() {
   const auth = useAuth();
 
-  if (!isDevUser(auth.userId)) {
+  if (!auth.isDev) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">

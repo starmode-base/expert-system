@@ -15,18 +15,18 @@ Stripe handles checkout, billing, renewals, and cancellation UI. Our webhook kee
 
 ### Files
 
-| File                               | Purpose                                                                                                     | Auth             |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------- |
-| `src/server/stripe.ts`             | Server functions for creating Checkout and Billing Portal sessions                                          | Clerk            |
-| `src/server/stripe-events.ts`      | Extracted webhook event handler with `StripeEventRepo` interface                                            | —                |
-| `src/routes/api/stripe.webhook.ts` | Webhook route — verifies Stripe signature, delegates to `handleStripeEvent`                                 | Stripe signature |
-| `src/server/quota.ts`              | Separate authentication (`authenticateApiRequest`) and quota enforcement (`enforceApiQuota`) for API routes | API key          |
-| `src/routes/pricing.tsx`           | Pricing page with monthly/annual toggle and checkout button                                                 | —                |
-| `src/routes/account/plan.tsx`      | Plan management page — shows current tier, manage subscription button                                       | Clerk            |
-| `src/postgres/schema.ts`           | `users` table (planTier, stripeCustomerId, stripeSubscriptionId, paymentStatus), `apiUsage` table           | —                |
-| `src/lib/env.ts`                   | Stripe env vars                                                                                             | —                |
-| `src/server/stripe-events.test.ts` | Webhook event handler tests (9 tests)                                                                       | —                |
-| `src/server/quota.test.ts`         | Quota and authorization tests                                                                               | —                |
+| File                               | Purpose                                                                                                     | Auth                |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------- |
+| `src/server/stripe.ts`             | Server functions for creating Checkout and Billing Portal sessions                                          | Auth0 local-session |
+| `src/server/stripe-events.ts`      | Extracted webhook event handler with `StripeEventRepo` interface                                            | —                   |
+| `src/routes/api/stripe.webhook.ts` | Webhook route — verifies Stripe signature, delegates to `handleStripeEvent`                                 | Stripe signature    |
+| `src/server/quota.ts`              | Separate authentication (`authenticateApiRequest`) and quota enforcement (`enforceApiQuota`) for API routes | API key             |
+| `src/routes/pricing.tsx`           | Pricing page with monthly/annual toggle and checkout button                                                 | —                   |
+| `src/routes/account/plan.tsx`      | Plan management page — shows current tier, manage subscription button                                       | Auth0 local-session |
+| `src/postgres/schema.ts`           | `users` table (planTier, stripeCustomerId, stripeSubscriptionId, paymentStatus), `apiUsage` table           | —                   |
+| `src/lib/env.ts`                   | Stripe env vars                                                                                             | —                   |
+| `src/server/stripe-events.test.ts` | Webhook event handler tests (9 tests)                                                                       | —                   |
+| `src/server/quota.test.ts`         | Quota and authorization tests                                                                               | —                   |
 
 ### Database Fields
 
@@ -97,7 +97,7 @@ New user → planTier = "free"
 
 1. User clicks "$4/mo" or "$30/yr" button on `/pricing`
 2. `createCheckoutSessionSF` is called with `{ interval }`
-3. Server function authenticates via Clerk middleware, creates/reuses Stripe customer
+3. Server function authenticates via Auth0 local-session middleware, creates/reuses Stripe customer
 4. `stripeCustomerId` saved to DB immediately (so webhook can match)
 5. Checkout session created, URL returned
 6. Browser redirects to Stripe Checkout

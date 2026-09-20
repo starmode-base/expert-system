@@ -6,3 +6,8 @@ routeTree.gen.ts
 
 # Drizzle migrations
 drizzle/meta
+
+# Build output and Vercel artifacts
+.output
+.vinxi
+.vercel

@@ -366,7 +366,7 @@ export const syncXBookmarks = inngest.createFunction(
                   ),
                 }),
               );
-              if (user && item?.documentId) {
+              if (user?.email && item?.documentId) {
                 await step.sendEvent(`takeaways-${post.id}`, {
                   name: "app/generate-takeaways",
                   data: {

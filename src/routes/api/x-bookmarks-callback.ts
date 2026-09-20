@@ -15,9 +15,7 @@
  * 6. Store tokens in the database
  * 7. Redirect to settings page with success message
  *
- * IMPORTANT: We don't use Clerk auth here because external redirects from X
- * break Clerk's session handshake. Instead, we stored the viewerId in the
- * encrypted session cookie during the start flow.
+ * Identity comes from the authenticated, encrypted transaction cookie.
  */
 
 import { createAPIFileRoute } from "@tanstack/react-start/api";
@@ -72,8 +70,7 @@ export const APIRoute = createAPIFileRoute("/api/x-bookmarks-callback")({
       return new Response("Missing or invalid OAuth session", { status: 400 });
     }
 
-    // Get viewerId from session (we stored it during start because Clerk
-    // auth doesn't work on callbacks from external redirects)
+    // Bind the callback to the initiating internal Auth0-backed user.
     const viewerId = session.viewerId;
     if (!viewerId) {
       return new Response("Missing viewerId in session", {

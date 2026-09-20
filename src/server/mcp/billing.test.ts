@@ -8,6 +8,7 @@ import {
 } from "@modelcontextprotocol/server";
 
 const state = vi.hoisted(() => ({
+  principals: new Map<string, { userId: string; revoked: boolean }>(),
   keys: new Map<string, { id: string; userId: string; revoked: boolean }>(),
   tiers: new Map<string, string>(),
   usage: new Map<string, number>(),
@@ -18,6 +19,29 @@ const state = vi.hoisted(() => ({
     requestCount: number;
   }[],
   search: vi.fn(),
+}));
+vi.mock("~/server/auth/config", () => ({
+  authConfig: () => ({ resource: "https://example.com/api/mcp" }),
+  MCP_SCOPE: "expert-system:read",
+  METADATA_PATH: "/.well-known/oauth-protected-resource/api/mcp",
+}));
+vi.mock("~/server/auth/mcp", () => ({
+  oauthOptions: () => new Response(null, { status: 204 }),
+  authenticateMcpRequest: (request: Request) => {
+    const token = request.headers.get("authorization")?.slice(7) ?? "";
+    const principal = state.principals.get(token);
+    if (!principal || principal.revoked)
+      return Promise.resolve({
+        type: "error",
+        response: Response.json({ error: "unauthorized" }, { status: 401 }),
+      });
+    return Promise.resolve({
+      type: "ok",
+      userId: principal.userId,
+      user: {},
+      info: { token, clientId: "test", scopes: ["expert-system:read"] },
+    });
+  },
 }));
 vi.mock("@tanstack/react-start", () => ({
   createServerFn: () => {
@@ -105,6 +129,8 @@ const { queryInput, runRestOperation } = await import(
 );
 
 async function addKey(token: string, userId: string) {
+  const oauthToken = token;
+  token = token.replace("oauth_", "esak_");
   const bytes = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(token),
@@ -114,12 +140,13 @@ async function addKey(token: string, userId: string) {
   ).join("");
   const key = { id: hash, userId, revoked: false };
   state.keys.set(hash, key);
+  state.principals.set(oauthToken, key);
   return key;
 }
 function request(
   name: string,
   args: Record<string, unknown> = {},
-  token: string | null = "esak_valid",
+  token: string | null = "oauth_valid",
   version = "2026-07-28",
 ) {
   return new Request("https://example.com/api/mcp", {
@@ -154,7 +181,7 @@ function request(
 async function call(
   name: string,
   args: Record<string, unknown> = {},
-  token = "esak_valid",
+  token = "oauth_valid",
   version = "2026-07-28",
 ) {
   const response = await handleMcpRequest(request(name, args, token, version));
@@ -176,7 +203,8 @@ async function call(
     })
     .parse(body).result;
 }
-function rest(token = "esak_valid", query = "?query=AI") {
+function rest(token = "oauth_valid", query = "?query=AI") {
+  token = token.replace("oauth_", "esak_");
   const req = new Request(
     `https://example.com/api/v1/takeaways/search${query}`,
     { headers: { authorization: `Bearer ${token}` } },
@@ -192,14 +220,15 @@ function seed(user: string, endpoint: string, count: number) {
 beforeEach(async () => {
   vi.clearAllMocks();
   state.keys.clear();
+  state.principals.clear();
   state.tiers.clear();
   state.usage.clear();
   state.charges.length = 0;
   state.search.mockResolvedValue([]);
-  await addKey("esak_valid", "user_1");
+  await addKey("oauth_valid", "user_1");
 });
 
-it.each([null, "invalid", "esak_unknown"])(
+it.each([null, "invalid", "oauth_unknown"])(
   "rejects missing/invalid credentials %s before validation and billing",
   async (token) => {
     const response = await handleMcpRequest(
@@ -207,27 +236,27 @@ it.each([null, "invalid", "esak_unknown"])(
     );
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({
-      error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      error: "unauthorized",
     });
     expect(state.charges).toHaveLength(0);
     expect(state.search).not.toHaveBeenCalled();
   },
 );
-it("rejects a revoked key on the very next REST and MCP request", async () => {
-  const key = await addKey("esak_revoke", "user_1");
+it("rejects a revoked credentials on the next REST and MCP request", async () => {
+  const key = await addKey("oauth_revoke", "user_1");
   expect(
-    (await call("search_takeaways", { query: "AI" }, "esak_revoke"))._meta
+    (await call("search_takeaways", { query: "AI" }, "oauth_revoke"))._meta
       .httpStatus,
   ).toBe(200);
   key.revoked = true;
   expect(
     (
       await handleMcpRequest(
-        request("search_takeaways", { query: "AI" }, "esak_revoke"),
+        request("search_takeaways", { query: "AI" }, "oauth_revoke"),
       )
     ).status,
   ).toBe(401);
-  expect((await rest("esak_revoke")).status).toBe(401);
+  expect((await rest("oauth_revoke")).status).toBe(401);
   expect(state.charges).toHaveLength(1);
 });
 describe.each(["2026-07-28", "2025-11-25"])("billing through %s", (version) => {
@@ -235,13 +264,13 @@ describe.each(["2026-07-28", "2025-11-25"])("billing through %s", (version) => {
     seed("user_1", "documents", 98);
     expect((await rest()).status).toBe(200);
     expect(
-      (await call("list_financial_metrics", {}, "esak_valid", version))._meta
+      (await call("list_financial_metrics", {}, "oauth_valid", version))._meta
         .httpStatus,
     ).toBe(200);
     const over = await call(
       "search_takeaways",
       { query: "AI" },
-      "esak_valid",
+      "oauth_valid",
       version,
     );
     expect(over._meta.httpStatus).toBe(429);
@@ -265,9 +294,9 @@ describe.each(["2026-07-28", "2025-11-25"])("billing through %s", (version) => {
   });
   it("does not charge invalid requests even at the quota boundary", async () => {
     seed("user_1", "documents", 100);
-    expect((await rest("esak_valid", "")).status).toBe(400);
+    expect((await rest("oauth_valid", "")).status).toBe(400);
     expect(
-      (await call("search_takeaways", {}, "esak_valid", version))._meta
+      (await call("search_takeaways", {}, "oauth_valid", version))._meta
         .httpStatus,
     ).toBe(400);
     expect(
@@ -275,7 +304,7 @@ describe.each(["2026-07-28", "2025-11-25"])("billing through %s", (version) => {
         await call(
           "get_company_financial_metric",
           { symbol: "AAPL", metric: "unknown" },
-          "esak_valid",
+          "oauth_valid",
           version,
         )
       )._meta.httpStatus,
@@ -287,7 +316,7 @@ describe.each(["2026-07-28", "2025-11-25"])("billing through %s", (version) => {
     seed("user_1", "documents", 1000);
     expect((await rest()).status).toBe(200);
     expect(
-      (await call("search_takeaways", { query: "AI" }, "esak_valid", version))
+      (await call("search_takeaways", { query: "AI" }, "oauth_valid", version))
         ._meta.httpStatus,
     ).toBe(200);
     expect(state.charges).toHaveLength(2);
@@ -297,8 +326,14 @@ describe.each(["2026-07-28", "2025-11-25"])("billing through %s", (version) => {
     state.search.mockRejectedValue(new Error("provider unavailable"));
     try {
       expect(
-        (await call("search_takeaways", { query: "AI" }, "esak_valid", version))
-          ._meta.httpStatus,
+        (
+          await call(
+            "search_takeaways",
+            { query: "AI" },
+            "oauth_valid",
+            version,
+          )
+        )._meta.httpStatus,
       ).toBe(500);
       expect(state.charges).toHaveLength(1);
     } finally {
@@ -306,8 +341,8 @@ describe.each(["2026-07-28", "2025-11-25"])("billing through %s", (version) => {
     }
   });
 });
-it("isolates concurrent users with different plans and keys", async () => {
-  await addKey("esak_second", "user_2");
+it("isolates concurrent users with different plans and OAuth principals", async () => {
+  await addKey("oauth_second", "user_2");
   seed("user_1", "documents", 100);
   seed("user_2", "documents", 1000);
   state.tiers.set("user_2", "unlimited");
@@ -316,7 +351,7 @@ it("isolates concurrent users with different plans and keys", async () => {
       call(
         "search_takeaways",
         { query: "AI" },
-        i % 2 ? "esak_second" : "esak_valid",
+        i % 2 ? "oauth_second" : "oauth_valid",
       ),
     ),
   );

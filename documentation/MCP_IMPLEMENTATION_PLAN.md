@@ -9,7 +9,7 @@ data routes. No database migration is required.
 
 The billing contract for both interfaces is:
 
-1. Authenticate the API key.
+1. Authenticate the OAuth access token for MCP (REST retains API keys).
 2. Decode and validate request inputs, including JSON bodies and canonical metric IDs.
 3. Charge and enforce the existing endpoint quota.
 4. Execute the operation and format its response.
@@ -58,7 +58,7 @@ of mcp-handler v2 and @modelcontextprotocol/server v2. Support current MCP and t
 adapter's older Streamable HTTP compatibility path. Use stateless request handling
 and delegate HTTP method handling to the adapter.
 
-Reuse Bearer API-key authentication and request-local identity. Protocol discovery,
+Use Auth0 OAuth-only authentication and request-local identity. Protocol discovery,
 initialization compatibility, and protocol errors are free. Catalog tool calls
 are billed like their REST equivalents. Both interfaces share the same monthly
 allowance and endpoint buckets, including the financials bucket.
@@ -86,4 +86,4 @@ packaging is required for this release.
   use Vercel deployment rollback if needed.
 
 Acceptance: agents can use every public data operation with only the MCP URL and
-an existing API key, and REST/MCP validation and billing cannot drift independently.
+OAuth sign-in, and REST/MCP validation and billing cannot drift independently.

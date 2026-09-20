@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { SignInButton } from "@clerk/tanstack-start";
+import { SignInButton } from "~/components/auth";
 import { useState } from "react";
 
 // ---------------------------------------------------------------------------
@@ -34,18 +34,18 @@ interface UsageRow {
 
 const loadUsage = createServerFn({ method: "GET" }).handler(async () => {
   const { getWebRequest } = await import("vinxi/http");
-  const { getClerkUserId } = await import("~/server/auth");
+  const { getAuth0Subject } = await import("~/server/auth");
   const { db } = await import("~/postgres/db");
   const { users, apiUsage } = await import("~/postgres/schema");
   const { eq, and, gte } = await import("drizzle-orm");
 
-  const clerkUserId = await getClerkUserId(getWebRequest());
-  if (!clerkUserId) {
+  const auth0Subject = await getAuth0Subject(getWebRequest());
+  if (!auth0Subject) {
     return { authenticated: false as const, rows: [], planTier: "free" };
   }
 
   const user = await db.query.users.findFirst({
-    where: eq(users.clerkUserId, clerkUserId),
+    where: eq(users.auth0Subject, auth0Subject),
     columns: { id: true, planTier: true },
   });
 
@@ -341,7 +341,7 @@ function UsagePage() {
           <p className="mb-4 text-sm text-gray-600">
             Sign in to view your API usage.
           </p>
-          <SignInButton mode="modal">
+          <SignInButton>
             <button className="cursor-pointer rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
               Sign in
             </button>

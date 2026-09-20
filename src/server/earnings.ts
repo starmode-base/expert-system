@@ -96,14 +96,14 @@ function buildCatalogConditions(filters: z.infer<typeof catalogFiltersSchema>) {
   return conditions;
 }
 
-function ensureDev(clerkUserId: string): void {
-  assertDevUser(clerkUserId);
+function ensureDev(auth0Subject: string): void {
+  assertDevUser(auth0Subject);
 }
 
 export const listTrackedStocksSF = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<TrackedStockView[]> => {
-    ensureDev(context.viewer.clerkUserId);
+    ensureDev(context.viewer.auth0Subject);
 
     const [stocks, calls] = await Promise.all([
       db
@@ -168,7 +168,7 @@ export const queryEarningsCatalogSF = createServerFn({ method: "GET" })
       context,
       data,
     }): Promise<PaginatedResult<EarningsCatalogCompanyView>> => {
-      ensureDev(context.viewer.clerkUserId);
+      ensureDev(context.viewer.auth0Subject);
 
       const conditions = buildCatalogConditions(data);
 
@@ -247,7 +247,7 @@ export const queryEarningsCatalogSF = createServerFn({ method: "GET" })
 export const getEarningsCatalogStatusSF = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    ensureDev(context.viewer.clerkUserId);
+    ensureDev(context.viewer.auth0Subject);
 
     const [catalogCount, latest, requestsUsed, hydrationCounts] =
       await Promise.all([
@@ -281,7 +281,7 @@ export const getEarningsCatalogStatusSF = createServerFn({ method: "GET" })
 export const listEarningsCatalogSectorsSF = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<string[]> => {
-    ensureDev(context.viewer.clerkUserId);
+    ensureDev(context.viewer.auth0Subject);
 
     const rows = await db
       .selectDistinct({ sector: schema.earningsCompanyCatalog.sector })
@@ -307,7 +307,7 @@ export const activateEarningsCatalogStocksSF = createServerFn({
     }),
   )
   .handler(async ({ context, data }) => {
-    ensureDev(context.viewer.clerkUserId);
+    ensureDev(context.viewer.auth0Subject);
 
     const uniqueIds = [...new Set(data.catalogIds)];
     const hydrationQueued = await activateCatalogStocks(uniqueIds);
@@ -322,7 +322,7 @@ export const deactivateTrackedStockSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ stockId: z.string() }))
   .handler(async ({ context, data }) => {
-    ensureDev(context.viewer.clerkUserId);
+    ensureDev(context.viewer.auth0Subject);
 
     const [stock] = await db
       .update(schema.trackedStocks)
@@ -341,7 +341,7 @@ export const pullLatestTranscriptSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ stockId: z.string() }))
   .handler(async ({ context, data }) => {
-    ensureDev(context.viewer.clerkUserId);
+    ensureDev(context.viewer.auth0Subject);
 
     const stock = await db.query.trackedStocks.findFirst({
       where: eq(schema.trackedStocks.id, data.stockId),
@@ -373,7 +373,7 @@ export const pullLatestTranscriptSF = createServerFn({ method: "POST" })
 export const pullAllLatestTranscriptsSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    ensureDev(context.viewer.clerkUserId);
+    ensureDev(context.viewer.auth0Subject);
 
     const queued = await queueAllActiveStockHydrations();
     return { queued };
@@ -382,7 +382,7 @@ export const pullAllLatestTranscriptsSF = createServerFn({ method: "POST" })
 export const requestEarningsSyncSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    ensureDev(context.viewer.clerkUserId);
+    ensureDev(context.viewer.auth0Subject);
     await inngest.send({ name: "earnings/sync.requested", data: {} });
     return { success: true };
   });
@@ -390,7 +390,7 @@ export const requestEarningsSyncSF = createServerFn({ method: "POST" })
 export const requestEarningsCatalogSyncSF = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    ensureDev(context.viewer.clerkUserId);
+    ensureDev(context.viewer.auth0Subject);
     await inngest.send({
       name: "earnings/catalog.sync.requested",
       data: {},

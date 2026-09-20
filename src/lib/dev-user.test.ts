@@ -1,11 +1,14 @@
-import { describe, expect, test } from "vitest";
-import { DEV_CLERK_USER_ID, assertDevUser, isDevUser } from "./dev-user";
+import { describe, expect, test, vi, afterEach } from "vitest";
+import { assertDevUser, isDevUser } from "./dev-user";
 
+const DEV_AUTH0_SUBJECT = "auth0|curator";
+afterEach(() => vi.unstubAllEnvs());
 describe("dev user authorization", () => {
   test("recognizes the configured system curator", () => {
-    expect(isDevUser(DEV_CLERK_USER_ID)).toBe(true);
+    vi.stubEnv("DEV_AUTH0_SUBJECT", DEV_AUTH0_SUBJECT);
+    expect(isDevUser(DEV_AUTH0_SUBJECT)).toBe(true);
     expect(() => {
-      assertDevUser(DEV_CLERK_USER_ID);
+      assertDevUser(DEV_AUTH0_SUBJECT);
     }).not.toThrow();
   });
 
