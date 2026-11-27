@@ -16,7 +16,7 @@ A missing or invalid key returns 401 Unauthorized. Revoked keys are rejected imm
 
 ## MCP access
 
-Connect an OAuth-capable HTTP MCP client to the canonical https://expert-system.starmode.dev/api/mcp endpoint and sign in through Auth0. MCP requires expert-system:read and never accepts REST API keys. No separate skill installation is required. Field mappings, common aliases, citations, units, date semantics, transformations, and bounded-read guidance are included in MCP discovery.
+Connect an OAuth-capable HTTP MCP client to the canonical https://expert-system.spencer-smith.io/api/mcp endpoint and sign in through Auth0. MCP requires expert-system:read and never accepts REST API keys. No separate skill installation is required. Field mappings, common aliases, citations, units, date semantics, transformations, and bounded-read guidance are included in MCP discovery.
 
 | REST operation | MCP tool |
 |----------------|----------|
@@ -66,7 +66,7 @@ Returns the most recent takeaways ordered by source document publication date (n
 ### Example request
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://expert-system.starmode.dev/api/v1/takeaways/recent?limit=5"
+         "https://expert-system.spencer-smith.io/api/v1/takeaways/recent?limit=5"
 
 ### Example response
 
@@ -120,7 +120,7 @@ Fetch up to 50 takeaways by their IDs in a single request. Results are returned 
 ### Example request
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://expert-system.starmode.dev/api/v1/takeaways?ids=tak_abc123,tak_def456"
+         "https://expert-system.spencer-smith.io/api/v1/takeaways?ids=tak_abc123,tak_def456"
 
 ---
 
@@ -154,12 +154,12 @@ Semantic search across all takeaways using vector similarity. Returns lightweigh
 ### Example request
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://expert-system.starmode.dev/api/v1/takeaways/search?query=inflation+expectations&limit=5"
+         "https://expert-system.spencer-smith.io/api/v1/takeaways/search?query=inflation+expectations&limit=5"
 
 ### Example request — time-weighted
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://expert-system.starmode.dev/api/v1/takeaways/search?query=inflation+expectations&recent=true"
+         "https://expert-system.spencer-smith.io/api/v1/takeaways/search?query=inflation+expectations&recent=true"
 
 ---
 
@@ -195,7 +195,7 @@ Fetch up to 50 source documents by their IDs in a single request. Document IDs a
 ### Example request
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://expert-system.starmode.dev/api/v1/documents?ids=doc_xyz789,doc_abc123"
+         "https://expert-system.spencer-smith.io/api/v1/documents?ids=doc_xyz789,doc_abc123"
 
 ---
 
@@ -234,7 +234,7 @@ The response wraps document metadata and the bounded text range in an item objec
 List the supported FRED series, or search the catalog with an optional query parameter. Results include description, category, native frequency, native units, and the FRED source URL.
 
     curl -H "Authorization: Bearer esak_<your-key>" \\
-         "https://expert-system.starmode.dev/api/v1/macro/series?query=unemployment"
+         "https://expert-system.spencer-smith.io/api/v1/macro/series?query=unemployment"
 
 ---
 
@@ -253,7 +253,7 @@ Use one series for simple questions and batches for comparisons. Keep native fre
     curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
          -H "Content-Type: application/json" \\
          -d '{"series":[{"id":"UNRATE","lastN":12},{"id":"ICSA","lastN":12,"frequency":"m","aggregationMethod":"avg"}]}' \\
-         "https://expert-system.starmode.dev/api/v1/macro/observations"
+         "https://expert-system.spencer-smith.io/api/v1/macro/observations"
 
 ### Example response
 
@@ -289,7 +289,7 @@ Ticker symbols are resolved through the Expert System stock catalog. All company
 Returns the global v1 catalog. Each metric includes its canonical ID, label, financial statement, and unit type.
 
     curl -H "Authorization: Bearer esak_<your-key>" \
-         "https://expert-system.starmode.dev/api/v1/financials/metrics"
+         "https://expert-system.spencer-smith.io/api/v1/financials/metrics"
 
     {
       "catalogVersion": "1",
@@ -312,7 +312,7 @@ Returns only catalog metrics available for the requested company and period.
 | period    | quarterly or annual | quarterly |
 
     curl -H "Authorization: Bearer esak_<your-key>" \
-         "https://expert-system.starmode.dev/api/v1/financials/AAPL/metrics?period=quarterly"
+         "https://expert-system.spencer-smith.io/api/v1/financials/AAPL/metrics?period=quarterly"
 
     {
       "catalogVersion": "1",
@@ -342,7 +342,7 @@ Returns one compact normalized time series.
 | include   | provenance          | omitted   |
 
     curl -H "Authorization: Bearer esak_<your-key>" \
-         "https://expert-system.starmode.dev/api/v1/financials/AAPL/accountsPayable?period=quarterly&limit=4"
+         "https://expert-system.spencer-smith.io/api/v1/financials/AAPL/accountsPayable?period=quarterly&limit=4"
 
     {
       "catalogVersion": "1",
@@ -379,7 +379,7 @@ Retrieves several related metrics with one company-facts lookup. Metrics must co
     curl -X POST -H "Authorization: Bearer esak_<your-key>" \
          -H "Content-Type: application/json" \
          -d '{"symbol":"JPM","metrics":["netIncome","inventory"],"period":"quarterly","limit":4}' \
-         "https://expert-system.starmode.dev/api/v1/financials"
+         "https://expert-system.spencer-smith.io/api/v1/financials"
 
     {
       "catalogVersion": "1",

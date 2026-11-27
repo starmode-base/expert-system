@@ -5,24 +5,44 @@
 Tenant: `dev-jpxui5jt72ix5l8d.us.auth0.com` (separate applications/resources for
 production and local development).
 
-| Environment | Site origin                          | MCP audience                                 | Web client                         |
-| ----------- | ------------------------------------ | -------------------------------------------- | ---------------------------------- |
-| Production  | `https://expert-system.starmode.dev` | `https://expert-system.starmode.dev/api/mcp` | `9oIQIT4yglG0sUQsTp01kryZZRjl3jxs` |
-| Development | `http://localhost:3009`              | `http://localhost:3009/api/mcp`              | `l39dZnVnW1ekDchSxlZ3JJ3zVL0qLQS7` |
-| Preview     | Unconfigured                         | None                                         | `AUTH0_DISABLED=true`              |
+| Environment | Site origin                              | MCP audience                                     | Web client                         |
+| ----------- | ---------------------------------------- | ------------------------------------------------ | ---------------------------------- |
+| Production  | `https://expert-system.spencer-smith.io` | `https://expert-system.spencer-smith.io/api/mcp` | `9oIQIT4yglG0sUQsTp01kryZZRjl3jxs` |
+| Development | `http://localhost:3009`                  | `http://localhost:3009/api/mcp`                  | `l39dZnVnW1ekDchSxlZ3JJ3zVL0qLQS7` |
+| Preview     | Unconfigured                             | None                                             | `AUTH0_DISABLED=true`              |
 
 Ephemeral Vercel previews deliberately cannot authenticate. For staging, provision
 an owned stable origin, a separate Auth0 application and resource, and a separate
 database, then replace the Preview disable flag for that stable branch only.
 Never point preview callbacks or resources at production.
 
-Server variables in Vercel (`--scope starmode`): `AUTH0_ISSUER`,
+Server variables in Vercel (`--scope griffin-ai`): `AUTH0_ISSUER`,
 `AUTH0_WEB_CLIENT_ID`, `AUTH0_WEB_CLIENT_SECRET`, `AUTH0_MCP_RESOURCE`,
 `APP_COOKIE_SECRET`, and `SITE_ORIGIN`. Cookie secrets differ by environment.
 Production/Preview secrets are sensitive and cannot be downloaded by Vercel CLI.
 No local `.env` or `.env.local` was modified during migration. Local testing needs
 the development variables exported into the process (or an explicitly approved
 local environment-file update). Use port 3009, matching the registered callback.
+
+## Domain cutover (2026-11-27)
+
+The target canonical origin is `https://expert-system.spencer-smith.io`. Add its
+`/api/auth/callback` and applicable logout/back-channel URLs to the production
+Auth0 application before changing `SITE_ORIGIN` and deploying. Keep the existing
+callback entries during transition. The tenant, web client, users, and cookie
+secret stay the same; users sign in again on the new cookie host.
+
+The new MCP audience must be provisioned in Auth0 with the existing production
+API's scopes, RFC 9068 token dialect, consent policy, token lifetimes, and refresh
+access settings. Copy applicable **user** client grants without broadening scopes
+or granting machine access. Auth0 API identifiers cannot be renamed. Retain the
+old API during transition, and switch `AUTH0_MCP_RESOURCE` only after the new
+resource is ready. Existing MCP clients must reconnect to the new endpoint; old
+audience tokens are not valid for the new audience.
+
+Leave ephemeral-preview and local-development authentication unchanged. Verify
+new-domain login and a real MCP authorization flow before removing old-domain
+configuration. Adding the Vercel hostname alone does not complete these steps.
 
 ## Developer access after first login
 
@@ -33,7 +53,7 @@ Developer access is disabled until `DEV_AUTH0_SUBJECT` is set.
    its exact `user_id` (for example `auth0|...` or `google-oauth2|...`). Do not use
    an email, web client ID, or the internal database user ID.
 3. Set `DEV_AUTH0_SUBJECT` using `vercel env add DEV_AUTH0_SUBJECT production
---scope starmode`, entering the subject when prompted. Set Development
+--scope griffin-ai`, entering the subject when prompted. Set Development
    separately if desired. Redeploy so the new value takes effect.
 4. Confirm the Dev navigation and protected server operations work for that
    account and remain denied to other users. The earnings system curator also

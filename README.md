@@ -2,7 +2,7 @@
 
 Backend and website for Expert System research, macroeconomic data, and company financials.
 
-Production: [expert-system.starmode.dev](https://expert-system.starmode.dev).
+Production: [expert-system.spencer-smith.io](https://expert-system.spencer-smith.io).
 
 ## Agent plugin
 

@@ -140,7 +140,7 @@ export async function enforceApiQuota(
       type: "error",
       response: authorizationError(
         "RATE_LIMITED",
-        "Monthly quota exceeded. Upgrade to Unlimited at expert-system.com/pricing.",
+        "Monthly quota exceeded. Upgrade to Unlimited at expert-system.spencer-smith.io/pricing.",
         429,
         options,
         {

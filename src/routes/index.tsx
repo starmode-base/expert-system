@@ -353,7 +353,7 @@ function LandingPage() {
                   Codex and other MCP clients
                 </p>
                 <CopyPre>
-                  {`https://expert-system.starmode.dev/api/mcp`}
+                  {`https://expert-system.spencer-smith.io/api/mcp`}
                 </CopyPre>
               </div>
             </div>
