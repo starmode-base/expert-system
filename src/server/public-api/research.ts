@@ -121,7 +121,7 @@ export async function getTakeawaysByIds(ids: string[]) {
 
   return takeaways.map((takeaway) => ({
     ...takeaway,
-    url: `https://expert-system.starmode.dev/takeaway/${takeaway.id}`,
+    url: `https://expert-system.spencer-smith.io/takeaway/${takeaway.id}`,
   }));
 }
 

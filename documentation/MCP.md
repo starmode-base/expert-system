@@ -1,7 +1,7 @@
 # MCP interface
 
 Connect an OAuth-capable HTTP MCP client to
-`https://expert-system.starmode.dev/api/mcp` and complete Auth0 sign-in and consent.
+`https://expert-system.spencer-smith.io/api/mcp` and complete Auth0 sign-in and consent.
 The canonical resource/audience is that exact URL; the required permission is
 `expert-system:read`. REST API keys are accepted only by `/api/v1`, never MCP.
 
@@ -11,7 +11,7 @@ For Codex:
 
 ```toml
 [mcp_servers.expert-system]
-url = "https://expert-system.starmode.dev/api/mcp"
+url = "https://expert-system.spencer-smith.io/api/mcp"
 ```
 
 Then use the client's MCP login flow. For Claude Code:
@@ -21,7 +21,7 @@ Then use the client's MCP login flow. For Claude Code:
   "mcpServers": {
     "expert-system": {
       "type": "http",
-      "url": "https://expert-system.starmode.dev/api/mcp"
+      "url": "https://expert-system.spencer-smith.io/api/mcp"
     }
   }
 }

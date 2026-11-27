@@ -203,7 +203,7 @@ function EndpointSection({
 
 function LlmDocsLabel() {
   const [copied, setCopied] = useState(false);
-  const curlCommand = "curl https://expert-system.starmode.dev/api/v1/docs";
+  const curlCommand = "curl https://expert-system.spencer-smith.io/api/v1/docs";
 
   const handleCopy = () => {
     void navigator.clipboard.writeText(curlCommand).then(() => {
@@ -283,7 +283,7 @@ function ApiDocsPage() {
             approve access. All tools, field mappings, and usage guidance are
             built in.
           </P>
-          <CopyPre>{`https://expert-system.starmode.dev/api/mcp`}</CopyPre>
+          <CopyPre>{`https://expert-system.spencer-smith.io/api/mcp`}</CopyPre>
         </div>
       </div>
       <p className="mb-6 text-center text-xs text-gray-500">
@@ -326,7 +326,7 @@ function ApiDocsPage() {
 
         <H3>Example</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     https://expert-system.starmode.dev/api/v1/takeaways/recent`}</Pre>
+     https://expert-system.spencer-smith.io/api/v1/takeaways/recent`}</Pre>
 
         <P>
           A missing or invalid key returns <Code>401 Unauthorized</Code>.
@@ -395,7 +395,7 @@ function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/takeaways/recent?limit=5"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/takeaways/recent?limit=5"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
@@ -477,7 +477,7 @@ function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/takeaways?ids=tak_abc123,tak_def456"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/takeaways?ids=tak_abc123,tak_def456"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
@@ -487,7 +487,7 @@ function ApiDocsPage() {
       "title": "Fed signals pause through Q2",
       "summary": "The Fed expects inflation to cool before changing rates.",
       "takeaway": "The Federal Reserve indicated it will hold rates...",
-      "url": "https://expert-system.starmode.dev/takeaway/tak_abc123",
+      "url": "https://expert-system.spencer-smith.io/takeaway/tak_abc123",
       "document": {
         "id": "doc_xyz789",
         "title": "Remarks on the Economic Outlook",
@@ -571,11 +571,11 @@ function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/takeaways/search?query=inflation+expectations&limit=5"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/takeaways/search?query=inflation+expectations&limit=5"`}</Pre>
 
         <H3>Example request — time-weighted</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/takeaways/search?query=inflation+expectations&recent=true"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/takeaways/search?query=inflation+expectations&recent=true"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
@@ -668,7 +668,7 @@ function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/documents?ids=doc_xyz789,doc_abc123"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/documents?ids=doc_xyz789,doc_abc123"`}</Pre>
 
         <H3>Example response</H3>
         <Pre>{`{
@@ -816,7 +816,7 @@ function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/financials/metrics"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/financials/metrics"`}</Pre>
       </EndpointSection>
 
       {/* GET /api/v1/financials/{symbol}/metrics */}
@@ -865,7 +865,7 @@ function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/financials/AAPL/metrics?period=quarterly"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/financials/AAPL/metrics?period=quarterly"`}</Pre>
       </EndpointSection>
 
       {/* GET /api/v1/financials/{symbol}/{metric} */}
@@ -956,7 +956,7 @@ function ApiDocsPage() {
 
         <H3>Example request</H3>
         <Pre>{`curl -H "Authorization: Bearer esak_<your-key>" \\
-     "https://expert-system.starmode.dev/api/v1/financials/AAPL/accountsPayable?period=quarterly&limit=4"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/financials/AAPL/accountsPayable?period=quarterly&limit=4"`}</Pre>
 
         <H3>Compact response</H3>
         <Pre>{`{
@@ -1031,7 +1031,7 @@ function ApiDocsPage() {
         <Pre>{`curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
      -H "Content-Type: application/json" \\
      -d '{"symbol":"JPM","metrics":["netIncome","inventory"],"period":"quarterly","limit":4}' \\
-     "https://expert-system.starmode.dev/api/v1/financials"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/financials"`}</Pre>
 
         <H3>Partial-success response</H3>
         <Pre>{`{
@@ -1241,7 +1241,7 @@ function ApiDocsPage() {
         <Pre>{`curl -X POST -H "Authorization: Bearer esak_<your-key>" \\
      -H "Content-Type: application/json" \\
      -d '{"series":[{"id":"UNRATE","lastN":12}]}' \\
-     "https://expert-system.starmode.dev/api/v1/macro/observations"`}</Pre>
+     "https://expert-system.spencer-smith.io/api/v1/macro/observations"`}</Pre>
       </EndpointSection>
 
       <Section>

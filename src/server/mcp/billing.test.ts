@@ -277,7 +277,7 @@ describe.each(["2026-07-28", "2025-11-25"])("billing through %s", (version) => {
     expect(over.isError).toBe(true);
     expect(over.structuredContent).toEqual({
       error:
-        "Monthly quota exceeded. Upgrade to Unlimited at expert-system.com/pricing.",
+        "Monthly quota exceeded. Upgrade to Unlimited at expert-system.spencer-smith.io/pricing.",
     });
     expect(over._meta.httpHeaders).toMatchObject({
       "x-ratelimit-remaining": "0",
